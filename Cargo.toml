@@ -1,16 +1,20 @@
 [package]
 name = "mqtt-protocol-core"
 version = "0.1.1"
-edition = "2024"
+edition = "2021"
 license = "MIT"
 authors = ["Takatoshi Kondo <redboltz@gmail.com>"]
 description = "A Sans-I/O style MQTT protocol library for Rust that supports both MQTT v5.0 and v3.1.1."
 repository = "https://github.com/redboltz/mqtt-protocol-core"
+homepage = "https://github.com/redboltz/mqtt-protocol-core"
+documentation = "https://docs.rs/mqtt-protocol-core"
 readme = "README.md"
+keywords = ["mqtt", "protocol", "networking", "iot", "sans-io"]
+categories = ["network-programming", "embedded", "api-bindings"]
 
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }  # MQTT packet serialize/deserialize
-serde_json = "1.0"  # Testing for JSON format serialize
+serde_json = "1.0"  # JSON serialization for Display implementations
 thiserror = "1.0"   # Error handling
 delegate = "0.13"
 arrayvec = "0.7"
@@ -23,18 +27,15 @@ num_enum = "0.7"
 derive_builder = "0.20"
 getset = "0.1.5"
 enum_dispatch = "0.3"
+multi_index_map = "0.15.0"
 
 # logging
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt", "ansi"] }
 tracing-appender = "0.2"
-multi_index_map = "0.15.0"
-#tracing-syslog = "0.1"
-#syslog = "6.0"  # if needed
 
 [dev-dependencies]
 static_assertions = "1.1"
-
 
 # Release optimization settings
 [profile.release]
@@ -44,7 +45,5 @@ opt-level = 3
 lto = true
 # Use 1 codegen unit for better optimization (slower compile, faster runtime)
 codegen-units = 1
-# Enable panic = abort for smaller binary size and better performance
-panic = "abort"
 # Strip debug symbols to reduce binary size
 strip = true
