@@ -1,0 +1,15 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug Rust Program",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/target/debug/あなたのバイナリ名",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "terminal": "integrated",
+            "sourceLanguages": ["rust"]
+        }
+    ]
+}
