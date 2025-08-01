@@ -278,7 +278,7 @@ impl PropertySize for String {
     }
 }
 
-/// Implementation of PropertySize for Vec<u8> values (binary data with 2-byte length prefix)
+/// Implementation of PropertySize for `Vec<u8>` values (binary data with 2-byte length prefix)
 impl PropertySize for Vec<u8> {
     fn size(&self) -> usize {
         2 + self.len()
