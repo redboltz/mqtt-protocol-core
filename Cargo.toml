@@ -1,8 +1,12 @@
 [package]
-name = "mqtt_protocol_core"
-version = "0.1.0"
+name = "mqtt-protocol-core"
+version = "0.1.1"
 edition = "2024"
 license = "MIT"
+authors = ["Takatoshi Kondo <redboltz@gmail.com>"]
+description = "A Sans-I/O style MQTT protocol library for Rust that supports both MQTT v5.0 and v3.1.1."
+repository = "https://github.com/redboltz/mqtt-protocol-core"
+readme = "README.md"
 
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }  # MQTT packet serialize/deserialize
