@@ -38,4 +38,8 @@ Cargo.lock
 
 #/target
 
+.claude/
+.vscode/
+
+
 CLAUDE.md
