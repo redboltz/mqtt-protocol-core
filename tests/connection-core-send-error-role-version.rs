@@ -485,9 +485,11 @@ fn v3_1_1_server_not_allowed_to_send_v3_1_1_subscribe() {
     let mut con_v3_1_1 = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V3_1_1);
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Subscribe::builder()
         .packet_id(1)
-        .entries(vec![
-            mqtt::packet::SubEntry::new("test/topic", mqtt::packet::SubOpts::default()).unwrap(),
-        ])
+        .entries(vec![mqtt::packet::SubEntry::new(
+            "test/topic",
+            mqtt::packet::SubOpts::default(),
+        )
+        .unwrap()])
         .build()
         .expect("Failed to build Subscribe packet")
         .into();
@@ -1351,9 +1353,11 @@ fn v5_0_server_not_allowed_to_send_v5_0_subscribe() {
     let mut con_v5_0 = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Subscribe::builder()
         .packet_id(1)
-        .entries(vec![
-            mqtt::packet::SubEntry::new("test/topic", mqtt::packet::SubOpts::default()).unwrap(),
-        ])
+        .entries(vec![mqtt::packet::SubEntry::new(
+            "test/topic",
+            mqtt::packet::SubOpts::default(),
+        )
+        .unwrap()])
         .build()
         .expect("Failed to build Subscribe packet")
         .into();

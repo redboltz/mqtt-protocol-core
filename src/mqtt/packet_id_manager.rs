@@ -1,3 +1,4 @@
+use crate::mqtt::packet::IsPacketId;
 /**
  * MIT License
  *
@@ -22,7 +23,6 @@
  * SOFTWARE.
  */
 use crate::mqtt::result_code::MqttError;
-use crate::mqtt::packet::IsPacketId;
 use crate::mqtt::value_allocator::ValueAllocator;
 
 pub struct PacketIdManager<T>

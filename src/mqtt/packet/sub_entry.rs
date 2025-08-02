@@ -25,8 +25,8 @@ use crate::mqtt::packet::MqttString;
 use crate::mqtt::packet::Qos;
 use crate::mqtt::packet::RetainHandling;
 use crate::mqtt::result_code::MqttError;
-use serde::Serialize;
 use serde::ser::{SerializeStruct, Serializer};
+use serde::Serialize;
 use std::fmt;
 use std::io::IoSlice;
 
@@ -446,8 +446,8 @@ impl Default for SubOpts {
 impl fmt::Display for SubOpts {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match serde_json::to_string(self) {
-            Ok(json) => write!(f, "{}", json),
-            Err(e) => write!(f, "{{\"error\": \"{}\"}}", e),
+            Ok(json) => write!(f, "{json}"),
+            Err(e) => write!(f, "{{\"error\": \"{e}\"}}"),
         }
     }
 }
@@ -805,8 +805,8 @@ impl Default for SubEntry {
 impl fmt::Display for SubEntry {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match serde_json::to_string(self) {
-            Ok(json) => write!(f, "{}", json),
-            Err(e) => write!(f, "{{\"error\": \"{}\"}}", e),
+            Ok(json) => write!(f, "{json}"),
+            Err(e) => write!(f, "{{\"error\": \"{e}\"}}"),
         }
     }
 }

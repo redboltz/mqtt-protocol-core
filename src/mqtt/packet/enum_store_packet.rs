@@ -1,4 +1,3 @@
-use crate::mqtt::packet::PacketType;
 /**
  * MIT License
  *
@@ -26,8 +25,9 @@ use crate::mqtt::packet::enum_packet::{GenericPacket, GenericPacketDisplay, Gene
 use crate::mqtt::packet::qos::Qos;
 use crate::mqtt::packet::v3_1_1;
 use crate::mqtt::packet::v5_0;
-use crate::mqtt::result_code::MqttError;
 use crate::mqtt::packet::IsPacketId;
+use crate::mqtt::packet::PacketType;
+use crate::mqtt::result_code::MqttError;
 use serde::Serialize;
 use std::io::IoSlice;
 

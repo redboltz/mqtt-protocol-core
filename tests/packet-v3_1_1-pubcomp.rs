@@ -68,7 +68,7 @@ fn display_minimal() {
         .build()
         .unwrap();
 
-    let display_str = format!("{}", packet);
+    let display_str = format!("{packet}");
     assert!(display_str.contains("\"packet_id\":1"));
 }
 
@@ -80,7 +80,7 @@ fn debug_minimal() {
         .build()
         .unwrap();
 
-    let debug_str = format!("{:?}", packet);
+    let debug_str = format!("{packet:?}");
     assert!(debug_str.contains("\"packet_id\":42"));
 }
 

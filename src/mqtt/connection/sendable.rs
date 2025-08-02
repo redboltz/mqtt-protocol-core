@@ -1,3 +1,7 @@
+use crate::mqtt::connection::role;
+use crate::mqtt::connection::role::RoleType;
+use crate::mqtt::connection::sendable_role::SendableRole;
+use crate::mqtt::connection::sendable_version::SendableVersion;
 /**
  * MIT License
  *
@@ -23,14 +27,10 @@
  */
 use crate::mqtt::connection::GenericConnection;
 use crate::mqtt::connection::GenericEvent;
-use crate::mqtt::connection::role;
-use crate::mqtt::connection::role::RoleType;
-use crate::mqtt::connection::sendable_role::SendableRole;
-use crate::mqtt::connection::sendable_version::SendableVersion;
-use crate::mqtt::packet::GenericPacket;
 use crate::mqtt::packet::kind::PacketKind;
-use crate::mqtt::result_code::MqttError;
+use crate::mqtt::packet::GenericPacket;
 use crate::mqtt::packet::IsPacketId;
+use crate::mqtt::result_code::MqttError;
 use std::fmt::Debug;
 use tracing::trace;
 

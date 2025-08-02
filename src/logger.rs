@@ -23,7 +23,7 @@
  */
 use once_cell::sync::OnceCell;
 use tracing::Level;
-use tracing_subscriber::{EnvFilter, fmt};
+use tracing_subscriber::{fmt, EnvFilter};
 
 static LOGGER: OnceCell<()> = OnceCell::new();
 

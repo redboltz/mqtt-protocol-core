@@ -179,7 +179,7 @@ fn display_minimal() {
         .build()
         .unwrap();
 
-    let display_str = format!("{}", packet);
+    let display_str = format!("{packet}");
     assert!(display_str.contains("\"type\":\"connect\""));
     assert!(display_str.contains("\"client_id\":\"test\""));
     assert!(display_str.contains("\"clean_start\":true"));
@@ -196,7 +196,7 @@ fn display_with_will() {
         .build()
         .unwrap();
 
-    let display_str = format!("{}", packet);
+    let display_str = format!("{packet}");
     assert!(display_str.contains("\"will_qos\":\"AtLeastOnce\""));
     assert!(display_str.contains("\"will_retain\":true"));
     assert!(display_str.contains("\"will_topic\":\"topic\""));
@@ -215,7 +215,7 @@ fn display_with_password_masked() {
         .build()
         .unwrap();
 
-    let display_str = format!("{}", packet);
+    let display_str = format!("{packet}");
     assert!(display_str.contains("\"user_name\":\"user\""));
     assert!(display_str.contains("\"password\":\"*****\""));
 }
@@ -235,7 +235,7 @@ fn display_with_binary_will_payload() {
         .build()
         .unwrap();
 
-    let display_str = format!("{}", packet);
+    let display_str = format!("{packet}");
     assert!(display_str.contains("\"will_payload\":[0,1,255]"));
 }
 
@@ -248,7 +248,7 @@ fn debug_output() {
         .build()
         .unwrap();
 
-    let debug_str = format!("{:?}", packet);
+    let debug_str = format!("{packet:?}");
     assert!(debug_str.contains("\"type\":\"connect\""));
     assert!(debug_str.contains("\"client_id\":\"debug_test\""));
 }
@@ -538,7 +538,7 @@ fn parse_invalid_short_data() {
     data.extend_from_slice(&[0x00, 0x04, b'M', b'Q', b'T', b'T']); // protocol name
     data.push(0x04); // version
     data.push(0x02); // flags
-    // Missing keep alive and rest
+                     // Missing keep alive and rest
 
     let err = mqtt::packet::v3_1_1::Connect::parse(&data).unwrap_err();
     assert_eq!(err, mqtt::result_code::MqttError::MalformedPacket);

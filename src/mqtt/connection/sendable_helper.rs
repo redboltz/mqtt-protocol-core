@@ -1,3 +1,5 @@
+use crate::mqtt::connection::role;
+use crate::mqtt::connection::sendable::SendableHelper;
 /**
  * MIT License
  *
@@ -23,10 +25,8 @@
  */
 use crate::mqtt::connection::GenericConnection;
 use crate::mqtt::connection::GenericEvent;
-use crate::mqtt::connection::role;
-use crate::mqtt::connection::sendable::SendableHelper;
-use crate::mqtt::packet::{v3_1_1, v5_0};
 use crate::mqtt::packet::IsPacketId;
+use crate::mqtt::packet::{v3_1_1, v5_0};
 
 macro_rules! impl_sendable_helper {
     ($role:ty, $packet_type:ty, $method:ident, $process_method:ident) => {

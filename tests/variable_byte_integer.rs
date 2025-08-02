@@ -45,7 +45,7 @@ fn test_encode_decode_normal_values() {
                 assert_eq!(decoded.to_u32(), value);
                 assert_eq!(size, expected_bytes.len());
             }
-            other => panic!("decode_stream failed: {:?}", other),
+            other => panic!("decode_stream failed: {other:?}"),
         }
     }
 }
@@ -61,7 +61,7 @@ fn test_decode_invalid_length() {
     let bytes = vec![0x80, 0x80, 0x80, 0x80, 0x01]; // 5 bytes: invalid
     match VariableByteInteger::decode_stream(&bytes) {
         DecodeResult::Err(_) => {} // expected
-        other => panic!("Expected Err, got {:?}", other),
+        other => panic!("Expected Err, got {other:?}"),
     }
 }
 
@@ -70,6 +70,6 @@ fn test_decode_incomplete_sequence() {
     let bytes = vec![0x80, 0x80]; // not enough for termination
     match VariableByteInteger::decode_stream(&bytes) {
         DecodeResult::Incomplete => {} // expected
-        other => panic!("Expected Incomplete, got {:?}", other),
+        other => panic!("Expected Incomplete, got {other:?}"),
     }
 }

@@ -257,7 +257,7 @@ impl fmt::Display for PacketType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match serde_json::to_string(self) {
             Ok(json) => write!(f, "{json}"),
-            Err(e) => write!(f, "{{\"error\": \"{}\"}}", e),
+            Err(e) => write!(f, "{{\"error\": \"{e}\"}}"),
         }
     }
 }
@@ -284,7 +284,7 @@ impl fmt::Display for FixedHeader {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match serde_json::to_string(self) {
             Ok(json) => write!(f, "{json}"),
-            Err(e) => write!(f, "{{\"error\": \"{}\"}}", e),
+            Err(e) => write!(f, "{{\"error\": \"{e}\"}}"),
         }
     }
 }

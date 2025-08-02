@@ -23,12 +23,12 @@
  */
 use std::fmt;
 
-use serde::Serialize;
 use serde::ser::{SerializeStruct, Serializer};
+use serde::Serialize;
 
 use crate::mqtt::packet::GenericPacket;
-use crate::mqtt::result_code::MqttError;
 use crate::mqtt::packet::IsPacketId;
+use crate::mqtt::result_code::MqttError;
 
 /// Represents different types of MQTT timers
 ///
@@ -259,7 +259,7 @@ where
             GenericEvent::NotifyError(error) => {
                 let mut state = serializer.serialize_struct("GenericEvent", 2)?;
                 state.serialize_field("type", "notify_error")?;
-                state.serialize_field("error", &format!("{:?}", error))?;
+                state.serialize_field("error", &format!("{error:?}"))?;
                 state.end()
             }
             GenericEvent::RequestClose => {
@@ -282,8 +282,8 @@ where
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match serde_json::to_string(self) {
-            Ok(json) => write!(f, "{}", json),
-            Err(e) => write!(f, "{{\"error\": \"{}\"}}", e),
+            Ok(json) => write!(f, "{json}"),
+            Err(e) => write!(f, "{{\"error\": \"{e}\"}}"),
         }
     }
 }

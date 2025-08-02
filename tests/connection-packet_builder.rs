@@ -90,9 +90,7 @@ fn test_raw_packet_methods() {
     // Test data access
     assert_eq!(
         publish_packet.data_as_slice(),
-        &[
-            0x00, 0x04, b't', b'e', b's', b't', b'p', b'a', b'y', b'l', b'o', b'a', b'd'
-        ]
+        &[0x00, 0x04, b't', b'e', b's', b't', b'p', b'a', b'y', b'l', b'o', b'a', b'd']
     );
 }
 

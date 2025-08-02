@@ -164,7 +164,7 @@ fn display_qos0() {
         .unwrap();
 
     let mut output = String::new();
-    write!(&mut output, "{}", packet).unwrap();
+    write!(&mut output, "{packet}").unwrap();
     assert!(output.contains(r#""type":"publish""#));
     assert!(output.contains(r#""topic_name":"test/topic""#));
     assert!(output.contains(r#""qos":"AtMostOnce""#));
@@ -183,7 +183,7 @@ fn display_qos1_with_packet_id() {
         .unwrap();
 
     let mut output = String::new();
-    write!(&mut output, "{}", packet).unwrap();
+    write!(&mut output, "{packet}").unwrap();
     assert!(output.contains(r#""type":"publish""#));
     assert!(output.contains(r#""topic_name":"test/topic""#));
     assert!(output.contains(r#""qos":"AtLeastOnce""#));
@@ -203,7 +203,7 @@ fn display_with_flags() {
         .unwrap();
 
     let mut output = String::new();
-    write!(&mut output, "{}", packet).unwrap();
+    write!(&mut output, "{packet}").unwrap();
     assert!(output.contains(r#""retain":false"#));
     assert!(output.contains(r#""dup":false"#));
 }
@@ -218,7 +218,7 @@ fn display_binary_payload() {
         .unwrap();
 
     let mut output = String::new();
-    write!(&mut output, "{}", packet).unwrap();
+    write!(&mut output, "{packet}").unwrap();
     assert!(output.contains(r#""payload":"\u0000ab""#));
 }
 
@@ -234,7 +234,7 @@ fn display_binary_payload_array() {
         .unwrap();
 
     let mut output = String::new();
-    write!(&mut output, "{}", packet).unwrap();
+    write!(&mut output, "{packet}").unwrap();
     assert!(output.contains(r#""payload":[128,129,130,131]"#));
 }
 
@@ -250,7 +250,7 @@ fn debug_qos0() {
         .unwrap();
 
     let mut output = String::new();
-    write!(&mut output, "{:?}", packet).unwrap();
+    write!(&mut output, "{packet:?}").unwrap();
     assert!(output.contains(r#""type":"publish""#));
     assert!(output.contains(r#""topic_name":"test/topic""#));
     assert!(output.contains(r#""qos":"AtMostOnce""#));
@@ -464,7 +464,7 @@ fn parse_empty_payload() {
     let mut raw = Vec::new();
     raw.extend_from_slice(&(4u16).to_be_bytes()); // topic length
     raw.extend_from_slice(b"test"); // topic
-    // no payload
+                                    // no payload
 
     let data_arc: Arc<[u8]> = Arc::from(raw.into_boxed_slice());
     let (packet, consumed) = mqtt::packet::v3_1_1::Publish::parse(0, data_arc).unwrap();

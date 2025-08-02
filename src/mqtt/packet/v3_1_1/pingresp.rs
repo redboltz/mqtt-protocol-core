@@ -24,15 +24,15 @@
 use std::fmt;
 use std::io::IoSlice;
 
-use serde::Serialize;
 use serde::ser::{SerializeStruct, Serializer};
+use serde::Serialize;
 
 use derive_builder::Builder;
 
-use crate::mqtt::packet::GenericPacketDisplay;
-use crate::mqtt::packet::GenericPacketTrait;
 use crate::mqtt::packet::packet_type::{FixedHeader, PacketType};
 use crate::mqtt::packet::variable_byte_integer::VariableByteInteger;
+use crate::mqtt::packet::GenericPacketDisplay;
+use crate::mqtt::packet::GenericPacketTrait;
 use crate::mqtt::result_code::MqttError;
 
 /// MQTT v3.1.1 PINGRESP packet representation
@@ -375,8 +375,8 @@ impl Serialize for Pingresp {
 impl fmt::Display for Pingresp {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match serde_json::to_string(self) {
-            Ok(json) => write!(f, "{}", json),
-            Err(e) => write!(f, "{{\"error\": \"{}\"}}", e),
+            Ok(json) => write!(f, "{json}"),
+            Err(e) => write!(f, "{{\"error\": \"{e}\"}}"),
         }
     }
 }

@@ -24,18 +24,18 @@
 use std::fmt;
 use std::io::IoSlice;
 
-use serde::Serialize;
 use serde::ser::{SerializeStruct, Serializer};
+use serde::Serialize;
 
 use derive_builder::Builder;
 use getset::{CopyGetters, Getters};
 
-use crate::mqtt::packet::GenericPacketDisplay;
-use crate::mqtt::packet::GenericPacketTrait;
 use crate::mqtt::packet::json_bin_encode::escape_binary_json_string;
 use crate::mqtt::packet::mqtt_binary::MqttBinary;
 use crate::mqtt::packet::mqtt_string::MqttString;
 use crate::mqtt::packet::packet_type::{FixedHeader, PacketType};
+use crate::mqtt::packet::GenericPacketDisplay;
+use crate::mqtt::packet::GenericPacketTrait;
 
 use crate::mqtt::packet::qos::Qos;
 use crate::mqtt::packet::variable_byte_integer::VariableByteInteger;
@@ -1150,8 +1150,8 @@ impl Serialize for Connect {
 impl fmt::Display for Connect {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match serde_json::to_string(self) {
-            Ok(json) => write!(f, "{}", json),
-            Err(e) => write!(f, "{{\"error\": \"{}\"}}", e),
+            Ok(json) => write!(f, "{json}"),
+            Err(e) => write!(f, "{{\"error\": \"{e}\"}}"),
         }
     }
 }

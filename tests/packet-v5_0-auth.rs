@@ -41,11 +41,9 @@ fn build_fail_props_without_rc() {
 fn build_fail_invalid_prop() {
     let err = mqtt::packet::v5_0::Auth::builder()
         .reason_code(mqtt::result_code::AuthReasonCode::Success)
-        .props(vec![
-            mqtt::packet::ContentType::new("application/json")
-                .unwrap()
-                .into(),
-        ])
+        .props(vec![mqtt::packet::ContentType::new("application/json")
+            .unwrap()
+            .into()])
         .build()
         .unwrap_err();
 
@@ -56,11 +54,11 @@ fn build_fail_invalid_prop() {
 fn build_fail_auth_data_without_method() {
     let err = mqtt::packet::v5_0::Auth::builder()
         .reason_code(mqtt::result_code::AuthReasonCode::Success)
-        .props(vec![
-            mqtt::packet::AuthenticationData::new(vec![1, 2, 3, 4])
-                .unwrap()
-                .into(),
+        .props(vec![mqtt::packet::AuthenticationData::new(vec![
+            1, 2, 3, 4,
         ])
+        .unwrap()
+        .into()])
         .build()
         .unwrap_err();
 
@@ -104,11 +102,11 @@ fn build_fail_continue_auth_without_auth_method() {
     // ContinueAuthentication reason code without Authentication Method should fail
     let err = mqtt::packet::v5_0::Auth::builder()
         .reason_code(mqtt::result_code::AuthReasonCode::ContinueAuthentication)
-        .props(vec![
-            mqtt::packet::ReasonString::new("Continue authentication")
-                .unwrap()
-                .into(),
-        ])
+        .props(vec![mqtt::packet::ReasonString::new(
+            "Continue authentication",
+        )
+        .unwrap()
+        .into()])
         .build()
         .unwrap_err();
 
@@ -120,11 +118,9 @@ fn build_fail_reauth_without_auth_method() {
     // ReAuthenticate reason code without Authentication Method should fail
     let err = mqtt::packet::v5_0::Auth::builder()
         .reason_code(mqtt::result_code::AuthReasonCode::ReAuthenticate)
-        .props(vec![
-            mqtt::packet::UserProperty::new("client", "test")
-                .unwrap()
-                .into(),
-        ])
+        .props(vec![mqtt::packet::UserProperty::new("client", "test")
+            .unwrap()
+            .into()])
         .build()
         .unwrap_err();
 
@@ -171,7 +167,7 @@ fn display_empty() {
     let packet = mqtt::packet::v5_0::Auth::builder().build().unwrap();
 
     let mut output = String::new();
-    write!(&mut output, "{}", packet).unwrap();
+    write!(&mut output, "{packet}").unwrap();
     assert_eq!(output, r#"{"type":"auth"}"#);
 }
 
@@ -183,7 +179,7 @@ fn display_rc() {
         .unwrap();
 
     let mut output = String::new();
-    write!(&mut output, "{}", packet).unwrap();
+    write!(&mut output, "{packet}").unwrap();
     assert_eq!(
         output,
         r#"{"type":"auth","reason_code":"Success","props":[]}"#
@@ -194,16 +190,16 @@ fn display_rc() {
 fn display_rc_props() {
     let packet = mqtt::packet::v5_0::Auth::builder()
         .reason_code(mqtt::result_code::AuthReasonCode::ContinueAuthentication)
-        .props(vec![
-            mqtt::packet::AuthenticationMethod::new("SCRAM-SHA-256")
-                .unwrap()
-                .into(),
-        ])
+        .props(vec![mqtt::packet::AuthenticationMethod::new(
+            "SCRAM-SHA-256",
+        )
+        .unwrap()
+        .into()])
         .build()
         .unwrap();
 
     let mut output = String::new();
-    write!(&mut output, "{}", packet).unwrap();
+    write!(&mut output, "{packet}").unwrap();
     assert_eq!(
         output,
         r#"{"type":"auth","reason_code":"ContinueAuthentication","props":[{"AuthenticationMethod":{"id":21,"val":"SCRAM-SHA-256"}}]}"#
@@ -217,7 +213,7 @@ fn debug_empty() {
     let packet = mqtt::packet::v5_0::Auth::builder().build().unwrap();
 
     let mut output = String::new();
-    write!(&mut output, "{:?}", packet).unwrap();
+    write!(&mut output, "{packet:?}").unwrap();
     assert_eq!(output, r#"{"type":"auth"}"#);
 }
 
@@ -229,7 +225,7 @@ fn debug_rc() {
         .unwrap();
 
     let mut output = String::new();
-    write!(&mut output, "{:?}", packet).unwrap();
+    write!(&mut output, "{packet:?}").unwrap();
     assert_eq!(
         output,
         r#"{"type":"auth","reason_code":"Success","props":[]}"#
@@ -244,7 +240,7 @@ fn debug_rc_prop0() {
         .unwrap();
 
     let mut output = String::new();
-    write!(&mut output, "{:?}", packet).unwrap();
+    write!(&mut output, "{packet:?}").unwrap();
     assert_eq!(
         output,
         r#"{"type":"auth","reason_code":"Success","props":[]}"#
@@ -279,11 +275,9 @@ fn getter_rc() {
 
 #[test]
 fn getter_rc_props_auth_method() {
-    let props = vec![
-        mqtt::packet::AuthenticationMethod::new("SCRAM-SHA-256")
-            .unwrap()
-            .into(),
-    ];
+    let props = vec![mqtt::packet::AuthenticationMethod::new("SCRAM-SHA-256")
+        .unwrap()
+        .into()];
     let packet = mqtt::packet::v5_0::Auth::builder()
         .reason_code(mqtt::result_code::AuthReasonCode::ContinueAuthentication)
         .props(props.clone())
@@ -361,11 +355,11 @@ fn to_buffers_rc() {
 fn to_buffers_rc_props_auth_method() {
     let packet = mqtt::packet::v5_0::Auth::builder()
         .reason_code(mqtt::result_code::AuthReasonCode::ContinueAuthentication)
-        .props(vec![
-            mqtt::packet::AuthenticationMethod::new("SCRAM-SHA-256")
-                .unwrap()
-                .into(),
-        ])
+        .props(vec![mqtt::packet::AuthenticationMethod::new(
+            "SCRAM-SHA-256",
+        )
+        .unwrap()
+        .into()])
         .build()
         .unwrap();
 
@@ -445,11 +439,11 @@ fn parse_rc_prop_auth_method() {
 
     let expected = mqtt::packet::v5_0::Auth::builder()
         .reason_code(mqtt::result_code::AuthReasonCode::ContinueAuthentication)
-        .props(vec![
-            mqtt::packet::AuthenticationMethod::new("SCRAM-SHA-256")
-                .unwrap()
-                .into(),
-        ])
+        .props(vec![mqtt::packet::AuthenticationMethod::new(
+            "SCRAM-SHA-256",
+        )
+        .unwrap()
+        .into()])
         .build()
         .unwrap();
     assert_eq!(packet, expected);
@@ -530,11 +524,9 @@ fn parse_rc_prop_reason_string() {
 
     let expected = mqtt::packet::v5_0::Auth::builder()
         .reason_code(mqtt::result_code::AuthReasonCode::Success)
-        .props(vec![
-            mqtt::packet::ReasonString::new("Authentication OK")
-                .unwrap()
-                .into(),
-        ])
+        .props(vec![mqtt::packet::ReasonString::new("Authentication OK")
+            .unwrap()
+            .into()])
         .build()
         .unwrap();
     assert_eq!(packet, expected);
@@ -618,11 +610,11 @@ fn build_success_continue_auth_with_auth_method() {
     // ContinueAuthentication reason code with Authentication Method should succeed
     let packet = mqtt::packet::v5_0::Auth::builder()
         .reason_code(mqtt::result_code::AuthReasonCode::ContinueAuthentication)
-        .props(vec![
-            mqtt::packet::AuthenticationMethod::new("SCRAM-SHA-256")
-                .unwrap()
-                .into(),
-        ])
+        .props(vec![mqtt::packet::AuthenticationMethod::new(
+            "SCRAM-SHA-256",
+        )
+        .unwrap()
+        .into()])
         .build()
         .unwrap();
 
@@ -714,11 +706,11 @@ fn parse_success_continue_auth_with_auth_method() {
 
     let expected = mqtt::packet::v5_0::Auth::builder()
         .reason_code(mqtt::result_code::AuthReasonCode::ContinueAuthentication)
-        .props(vec![
-            mqtt::packet::AuthenticationMethod::new("SCRAM-SHA-256")
-                .unwrap()
-                .into(),
-        ])
+        .props(vec![mqtt::packet::AuthenticationMethod::new(
+            "SCRAM-SHA-256",
+        )
+        .unwrap()
+        .into()])
         .build()
         .unwrap();
     assert_eq!(packet, expected);

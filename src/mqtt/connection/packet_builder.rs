@@ -155,7 +155,7 @@ impl PacketBuilder {
     }
 
     /// Build packet from data stream
-    pub fn feed<'a>(&mut self, data: &mut Cursor<&'a [u8]>) -> PacketBuildResult {
+    pub fn feed(&mut self, data: &mut Cursor<&[u8]>) -> PacketBuildResult {
         let available = data.get_ref().len() as u64 - data.position();
         if available == 0 {
             return PacketBuildResult::Incomplete;

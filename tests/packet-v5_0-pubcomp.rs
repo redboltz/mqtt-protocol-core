@@ -59,11 +59,9 @@ fn build_fail_invalid_prop() {
     let err = mqtt::packet::v5_0::Pubcomp::builder()
         .packet_id(1234)
         .reason_code(mqtt::result_code::PubcompReasonCode::Success)
-        .props(vec![
-            mqtt::packet::ContentType::new("application/json")
-                .unwrap()
-                .into(),
-        ])
+        .props(vec![mqtt::packet::ContentType::new("application/json")
+            .unwrap()
+            .into()])
         .build()
         .unwrap_err();
 
@@ -95,7 +93,7 @@ fn display_pid() {
         .unwrap();
 
     let mut output = String::new();
-    write!(&mut output, "{}", packet).unwrap();
+    write!(&mut output, "{packet}").unwrap();
     assert_eq!(output, r#"{"type":"pubcomp","packet_id":1234}"#);
 }
 
@@ -108,7 +106,7 @@ fn display_pid_rc() {
         .unwrap();
 
     let mut output = String::new();
-    write!(&mut output, "{}", packet).unwrap();
+    write!(&mut output, "{packet}").unwrap();
     assert_eq!(
         output,
         r#"{"type":"pubcomp","packet_id":1234,"reason_code":"Success"}"#
@@ -125,7 +123,7 @@ fn debug_pid() {
         .unwrap();
 
     let mut output = String::new();
-    write!(&mut output, "{:?}", packet).unwrap();
+    write!(&mut output, "{packet:?}").unwrap();
     assert_eq!(output, r#"{"type":"pubcomp","packet_id":1234}"#);
 }
 
@@ -138,7 +136,7 @@ fn debug_pid_rc() {
         .unwrap();
 
     let mut output = String::new();
-    write!(&mut output, "{:?}", packet).unwrap();
+    write!(&mut output, "{packet:?}").unwrap();
     assert_eq!(
         output,
         r#"{"type":"pubcomp","packet_id":1234,"reason_code":"Success"}"#
@@ -155,7 +153,7 @@ fn debug_pid_rc_prop0() {
         .unwrap();
 
     let mut output = String::new();
-    write!(&mut output, "{:?}", packet).unwrap();
+    write!(&mut output, "{packet:?}").unwrap();
     assert_eq!(
         output,
         r#"{"type":"pubcomp","packet_id":1234,"reason_code":"Success","props":[]}"#
@@ -389,9 +387,9 @@ fn parse_pid_rc_prop_reason_string() {
     let expected = mqtt::packet::v5_0::Pubcomp::builder()
         .packet_id(1234)
         .reason_code(mqtt::result_code::PubcompReasonCode::PacketIdentifierNotFound)
-        .props(vec![
-            mqtt::packet::ReasonString::new("test").unwrap().into(),
-        ])
+        .props(vec![mqtt::packet::ReasonString::new("test")
+            .unwrap()
+            .into()])
         .build()
         .unwrap();
     assert_eq!(packet, expected);

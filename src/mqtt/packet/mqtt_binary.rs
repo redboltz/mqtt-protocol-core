@@ -80,7 +80,7 @@ impl MqttBinary {
     /// # Parameters
     ///
     /// * `data` - Binary data to store. Can be any type that implements `AsRef<[u8]>`
-    ///           such as `&[u8]`, `Vec<u8>`, or `&str`
+    ///   such as `&[u8]`, `Vec<u8>`, or `&str`
     ///
     /// # Returns
     ///
@@ -342,7 +342,7 @@ impl TryFrom<&str> for MqttBinary {
     type Error = MqttError;
 
     fn try_from(s: &str) -> Result<Self, Self::Error> {
-        Self::new(s.as_bytes().to_vec())
+        Self::new(s.as_bytes())
     }
 }
 

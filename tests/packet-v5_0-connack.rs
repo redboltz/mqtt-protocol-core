@@ -51,11 +51,9 @@ fn build_fail_invalid_prop() {
     let err = mqtt::packet::v5_0::Connack::builder()
         .session_present(true)
         .reason_code(mqtt::result_code::ConnectReasonCode::Success)
-        .props(vec![
-            mqtt::packet::ContentType::new("application/json")
-                .unwrap()
-                .into(),
-        ])
+        .props(vec![mqtt::packet::ContentType::new("application/json")
+            .unwrap()
+            .into()])
         .build()
         .unwrap_err();
 
@@ -228,7 +226,7 @@ fn display_sp_rc() {
         .unwrap();
 
     let mut output = String::new();
-    write!(&mut output, "{}", packet).unwrap();
+    write!(&mut output, "{packet}").unwrap();
     assert_eq!(
         output,
         r#"{"type":"connack","session_present":true,"reason_code":"Success","props":[]}"#
@@ -246,7 +244,7 @@ fn debug_sp_rc() {
         .unwrap();
 
     let mut output = String::new();
-    write!(&mut output, "{:?}", packet).unwrap();
+    write!(&mut output, "{packet:?}").unwrap();
     assert_eq!(
         output,
         r#"{"type":"connack","session_present":true,"reason_code":"Success","props":[]}"#
@@ -296,9 +294,9 @@ fn to_buffers_sp_rc_prop1() {
     let packet = mqtt::packet::v5_0::Connack::builder()
         .session_present(true)
         .reason_code(mqtt::result_code::ConnectReasonCode::Success)
-        .props(vec![
-            mqtt::packet::SessionExpiryInterval::new(1).unwrap().into(),
-        ])
+        .props(vec![mqtt::packet::SessionExpiryInterval::new(1)
+            .unwrap()
+            .into()])
         .build()
         .unwrap();
 

@@ -24,16 +24,16 @@
 use std::fmt;
 use std::io::IoSlice;
 
-use serde::Serialize;
 use serde::ser::{SerializeStruct, Serializer};
+use serde::Serialize;
 
 use derive_builder::Builder;
 use getset::{CopyGetters, Getters};
 
-use crate::mqtt::packet::GenericPacketDisplay;
-use crate::mqtt::packet::GenericPacketTrait;
 use crate::mqtt::packet::packet_type::{FixedHeader, PacketType};
 use crate::mqtt::packet::variable_byte_integer::VariableByteInteger;
+use crate::mqtt::packet::GenericPacketDisplay;
+use crate::mqtt::packet::GenericPacketTrait;
 use crate::mqtt::packet::{
     Properties, PropertiesParse, PropertiesSize, PropertiesToBuffers, Property,
 };
@@ -579,8 +579,8 @@ impl Serialize for Auth {
 impl fmt::Display for Auth {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match serde_json::to_string(self) {
-            Ok(json) => write!(f, "{}", json),
-            Err(e) => write!(f, "{{\"error\": \"{}\"}}", e),
+            Ok(json) => write!(f, "{json}"),
+            Err(e) => write!(f, "{{\"error\": \"{e}\"}}"),
         }
     }
 }

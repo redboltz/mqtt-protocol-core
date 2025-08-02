@@ -1,7 +1,7 @@
 use crate::mqtt::packet::GenericStorePacket;
+use crate::mqtt::packet::IsPacketId;
 use crate::mqtt::packet::ResponsePacket;
 use crate::mqtt::result_code::MqttError;
-use crate::mqtt::packet::IsPacketId;
 use indexmap::IndexMap;
 /**
  * MIT License
@@ -101,7 +101,7 @@ impl<PacketIdType: IsPacketId> GenericStore<PacketIdType> {
         }
         for id in to_remove {
             self.map.shift_remove(&id);
-            println!("[store] removed pid: {:?}", id);
+            println!("[store] removed pid: {id:?}");
         }
     }
 

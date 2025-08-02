@@ -111,7 +111,7 @@ fn display_sp_rc() {
         .unwrap();
 
     let mut output = String::new();
-    write!(&mut output, "{}", packet).unwrap();
+    write!(&mut output, "{packet}").unwrap();
     assert!(output.contains(r#""type":"connack""#));
     assert!(output.contains(r#""session_present":true"#));
     assert!(output.contains(r#""return_code":"Accepted""#));
@@ -126,7 +126,7 @@ fn display_no_sp() {
         .unwrap();
 
     let mut output = String::new();
-    write!(&mut output, "{}", packet).unwrap();
+    write!(&mut output, "{packet}").unwrap();
     assert!(output.contains(r#""type":"connack""#));
     assert!(output.contains(r#""session_present":false"#));
     assert!(output.contains(r#""return_code":"NotAuthorized""#));
@@ -143,7 +143,7 @@ fn debug_sp_rc() {
         .unwrap();
 
     let mut output = String::new();
-    write!(&mut output, "{:?}", packet).unwrap();
+    write!(&mut output, "{packet:?}").unwrap();
     assert!(output.contains(r#""type":"connack""#));
     assert!(output.contains(r#""session_present":true"#));
     assert!(output.contains(r#""return_code":"Accepted""#));

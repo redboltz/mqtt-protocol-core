@@ -1,4 +1,3 @@
-use crate::mqtt::packet::PacketType;
 /**
  * MIT License
  *
@@ -25,6 +24,7 @@ use crate::mqtt::packet::PacketType;
 use crate::mqtt::packet::v3_1_1;
 use crate::mqtt::packet::v5_0;
 use crate::mqtt::packet::IsPacketId;
+use crate::mqtt::packet::PacketType;
 use crate::mqtt::version::Version;
 use enum_dispatch::enum_dispatch;
 use serde::Serialize;

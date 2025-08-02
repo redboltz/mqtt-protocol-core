@@ -41,7 +41,7 @@ fn display() {
     let packet = mqtt::packet::v5_0::Pingreq::builder().build().unwrap();
 
     let mut output = String::new();
-    write!(&mut output, "{}", packet).unwrap();
+    write!(&mut output, "{packet}").unwrap();
     assert_eq!(output, r#"{"type":"pingreq"}"#);
 }
 
@@ -52,7 +52,7 @@ fn debug() {
     let packet = mqtt::packet::v5_0::Pingreq::builder().build().unwrap();
 
     let mut output = String::new();
-    write!(&mut output, "{:?}", packet).unwrap();
+    write!(&mut output, "{packet:?}").unwrap();
     assert_eq!(output, r#"{"type":"pingreq"}"#);
 }
 

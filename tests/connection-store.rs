@@ -24,8 +24,8 @@
 // tests/store.rs
 // Integration tests for Store in async-mqtt-rust crate
 use mqtt_protocol_core::mqtt::connection::{GenericStore, Store};
-use mqtt_protocol_core::mqtt::packet::Qos;
 use mqtt_protocol_core::mqtt::packet::v3_1_1;
+use mqtt_protocol_core::mqtt::packet::Qos;
 use mqtt_protocol_core::mqtt::packet::{GenericStorePacket, ResponsePacket};
 
 /// Helper to create a GenericStorePacket with given id for testing.
