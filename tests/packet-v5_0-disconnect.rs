@@ -40,11 +40,9 @@ fn build_fail_props_without_rc() {
 fn build_fail_invalid_prop() {
     let err = mqtt::packet::v5_0::Disconnect::builder()
         .reason_code(mqtt::result_code::DisconnectReasonCode::NormalDisconnection)
-        .props(vec![
-            mqtt::packet::ContentType::new("application/json")
-                .unwrap()
-                .into(),
-        ])
+        .props(vec![mqtt::packet::ContentType::new("application/json")
+            .unwrap()
+            .into()])
         .build()
         .unwrap_err();
 
@@ -127,11 +125,9 @@ fn display_rc() {
 fn display_rc_props() {
     let packet = mqtt::packet::v5_0::Disconnect::builder()
         .reason_code(mqtt::result_code::DisconnectReasonCode::ServerShuttingDown)
-        .props(vec![
-            mqtt::packet::ReasonString::new("Server maintenance")
-                .unwrap()
-                .into(),
-        ])
+        .props(vec![mqtt::packet::ReasonString::new("Server maintenance")
+            .unwrap()
+            .into()])
         .build()
         .unwrap();
 
@@ -229,11 +225,9 @@ fn getter_rc_prop0() {
 
 #[test]
 fn getter_rc_props_session_expiry() {
-    let props = vec![
-        mqtt::packet::SessionExpiryInterval::new(300)
-            .unwrap()
-            .into(),
-    ];
+    let props = vec![mqtt::packet::SessionExpiryInterval::new(300)
+        .unwrap()
+        .into()];
     let packet = mqtt::packet::v5_0::Disconnect::builder()
         .reason_code(mqtt::result_code::DisconnectReasonCode::NormalDisconnection)
         .props(props.clone())
@@ -327,11 +321,9 @@ fn to_buffers_rc_prop0() {
 fn to_buffers_rc_props_session_expiry() {
     let packet = mqtt::packet::v5_0::Disconnect::builder()
         .reason_code(mqtt::result_code::DisconnectReasonCode::NormalDisconnection)
-        .props(vec![
-            mqtt::packet::SessionExpiryInterval::new(300)
-                .unwrap()
-                .into(),
-        ])
+        .props(vec![mqtt::packet::SessionExpiryInterval::new(300)
+            .unwrap()
+            .into()])
         .build()
         .unwrap();
 
@@ -420,11 +412,9 @@ fn parse_rc_prop_session_expiry() {
 
     let expected = mqtt::packet::v5_0::Disconnect::builder()
         .reason_code(mqtt::result_code::DisconnectReasonCode::NormalDisconnection)
-        .props(vec![
-            mqtt::packet::SessionExpiryInterval::new(300)
-                .unwrap()
-                .into(),
-        ])
+        .props(vec![mqtt::packet::SessionExpiryInterval::new(300)
+            .unwrap()
+            .into()])
         .build()
         .unwrap();
     assert_eq!(packet, expected);
@@ -457,11 +447,9 @@ fn parse_rc_prop_reason_string() {
 
     let expected = mqtt::packet::v5_0::Disconnect::builder()
         .reason_code(mqtt::result_code::DisconnectReasonCode::ServerShuttingDown)
-        .props(vec![
-            mqtt::packet::ReasonString::new("Server maintenance")
-                .unwrap()
-                .into(),
-        ])
+        .props(vec![mqtt::packet::ReasonString::new("Server maintenance")
+            .unwrap()
+            .into()])
         .build()
         .unwrap();
     assert_eq!(packet, expected);
@@ -498,11 +486,9 @@ fn parse_rc_prop_server_reference() {
 
     let expected = mqtt::packet::v5_0::Disconnect::builder()
         .reason_code(mqtt::result_code::DisconnectReasonCode::ServerMoved)
-        .props(vec![
-            mqtt::packet::ServerReference::new("new.example.com")
-                .unwrap()
-                .into(),
-        ])
+        .props(vec![mqtt::packet::ServerReference::new("new.example.com")
+            .unwrap()
+            .into()])
         .build()
         .unwrap();
     assert_eq!(packet, expected);

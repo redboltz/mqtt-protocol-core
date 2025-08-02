@@ -62,14 +62,14 @@ pub enum Version {
     /// from the client. The server will accept either v3.1.1 or v5.0 connections
     /// and adapt accordingly. Not a valid protocol level value itself.
     Undetermined = 0,
-    
+
     /// MQTT version 3.1.1 (protocol level 4)
     ///
     /// The widely adopted MQTT v3.1.1 specification. This version provides
     /// the core MQTT functionality including QoS levels, retained messages,
     /// last will and testament, and persistent sessions.
     V3_1_1 = 4,
-    
+
     /// MQTT version 5.0 (protocol level 5)
     ///
     /// The latest MQTT specification with enhanced features including:

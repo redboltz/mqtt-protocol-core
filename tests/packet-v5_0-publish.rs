@@ -594,7 +594,7 @@ fn parse_empty_payload() {
     raw.extend_from_slice(&(4u16).to_be_bytes()); // topic length
     raw.extend_from_slice(b"test"); // topic
     raw.push(0x00); // property length 0
-    // no payload
+                    // no payload
 
     let data_arc: Arc<[u8]> = Arc::from(raw.into_boxed_slice());
     let (packet, consumed) = mqtt::packet::v5_0::Publish::parse(0, data_arc).unwrap();
@@ -609,7 +609,7 @@ fn parse_no_properties() {
     let mut raw = Vec::new();
     raw.extend_from_slice(&(4u16).to_be_bytes()); // topic length
     raw.extend_from_slice(b"test"); // topic
-    // no property length - parsing ends at cursor position
+                                    // no property length - parsing ends at cursor position
 
     let data_arc: Arc<[u8]> = Arc::from(raw.into_boxed_slice());
     let (packet, consumed) = mqtt::packet::v5_0::Publish::parse(0, data_arc).unwrap();

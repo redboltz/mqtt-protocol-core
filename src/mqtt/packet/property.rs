@@ -1,8 +1,8 @@
-use crate::mqtt::packet::DecodeResult;
-use crate::mqtt::packet::VariableByteInteger;
 use crate::mqtt::packet::escape_binary_json_string;
 use crate::mqtt::packet::mqtt_binary::MqttBinary;
 use crate::mqtt::packet::mqtt_string::MqttString;
+use crate::mqtt::packet::DecodeResult;
+use crate::mqtt::packet::VariableByteInteger;
 use crate::mqtt::result_code::MqttError;
 use num_enum::TryFromPrimitive;
 use serde::ser::SerializeStruct;

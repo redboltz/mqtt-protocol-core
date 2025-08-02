@@ -25,18 +25,18 @@ use std::fmt;
 use std::io::IoSlice;
 use std::mem;
 
-use serde::Serialize;
 use serde::ser::{SerializeStruct, Serializer};
+use serde::Serialize;
 
 use derive_builder::Builder;
 use getset::{CopyGetters, Getters};
 
-use crate::mqtt::packet::GenericPacketDisplay;
-use crate::mqtt::packet::GenericPacketTrait;
 use crate::mqtt::packet::packet_type::{FixedHeader, PacketType};
 use crate::mqtt::packet::variable_byte_integer::VariableByteInteger;
-use crate::mqtt::result_code::MqttError;
+use crate::mqtt::packet::GenericPacketDisplay;
+use crate::mqtt::packet::GenericPacketTrait;
 use crate::mqtt::packet::IsPacketId;
+use crate::mqtt::result_code::MqttError;
 
 /// MQTT v3.1.1 UNSUBACK packet representation with generic packet ID support
 ///

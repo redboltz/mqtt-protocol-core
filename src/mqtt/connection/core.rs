@@ -25,8 +25,8 @@ use std::collections::HashSet;
 use std::io::Cursor;
 use std::marker::PhantomData;
 
-use crate::mqtt::connection::GenericStore;
 use crate::mqtt::connection::event::{GenericEvent, TimerKind};
+use crate::mqtt::connection::GenericStore;
 
 use serde::Serialize;
 
@@ -45,19 +45,19 @@ use crate::mqtt::connection::packet_builder::{
 use crate::mqtt::connection::role;
 use crate::mqtt::connection::role::RoleType;
 use crate::mqtt::connection::sendable::Sendable;
-use crate::mqtt::packet::GenericPacket;
-use crate::mqtt::packet::GenericStorePacket;
-use crate::mqtt::packet::Qos;
-use crate::mqtt::packet::ResponsePacket;
 use crate::mqtt::packet::v3_1_1;
 use crate::mqtt::packet::v5_0;
+use crate::mqtt::packet::GenericPacket;
+use crate::mqtt::packet::GenericStorePacket;
+use crate::mqtt::packet::IsPacketId;
+use crate::mqtt::packet::Qos;
+use crate::mqtt::packet::ResponsePacket;
 use crate::mqtt::packet::{Property, TopicAliasRecv, TopicAliasSend};
 use crate::mqtt::packet_id_manager::PacketIdManager;
 use crate::mqtt::prelude::GenericPacketTrait;
 use crate::mqtt::result_code::{
     ConnectReasonCode, ConnectReturnCode, DisconnectReasonCode, MqttError, PubrecReasonCode,
 };
-use crate::mqtt::packet::IsPacketId;
 use crate::mqtt::version::*;
 
 /// MQTT protocol maximum packet size limit

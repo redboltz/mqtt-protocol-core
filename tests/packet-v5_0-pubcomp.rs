@@ -59,11 +59,9 @@ fn build_fail_invalid_prop() {
     let err = mqtt::packet::v5_0::Pubcomp::builder()
         .packet_id(1234)
         .reason_code(mqtt::result_code::PubcompReasonCode::Success)
-        .props(vec![
-            mqtt::packet::ContentType::new("application/json")
-                .unwrap()
-                .into(),
-        ])
+        .props(vec![mqtt::packet::ContentType::new("application/json")
+            .unwrap()
+            .into()])
         .build()
         .unwrap_err();
 
@@ -389,9 +387,9 @@ fn parse_pid_rc_prop_reason_string() {
     let expected = mqtt::packet::v5_0::Pubcomp::builder()
         .packet_id(1234)
         .reason_code(mqtt::result_code::PubcompReasonCode::PacketIdentifierNotFound)
-        .props(vec![
-            mqtt::packet::ReasonString::new("test").unwrap().into(),
-        ])
+        .props(vec![mqtt::packet::ReasonString::new("test")
+            .unwrap()
+            .into()])
         .build()
         .unwrap();
     assert_eq!(packet, expected);

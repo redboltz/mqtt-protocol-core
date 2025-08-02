@@ -25,8 +25,8 @@ use crate::mqtt::packet::MqttString;
 use crate::mqtt::packet::Qos;
 use crate::mqtt::packet::RetainHandling;
 use crate::mqtt::result_code::MqttError;
-use serde::Serialize;
 use serde::ser::{SerializeStruct, Serializer};
+use serde::Serialize;
 use std::fmt;
 use std::io::IoSlice;
 

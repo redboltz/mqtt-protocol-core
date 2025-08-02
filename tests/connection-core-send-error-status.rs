@@ -38,9 +38,11 @@ fn v3_1_1_client_not_allowed_to_send_invalid_pid_subscribe() {
     v3_1_1_client_establish_connection(&mut con, true, false);
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Subscribe::builder()
         .packet_id(1)
-        .entries(vec![
-            mqtt::packet::SubEntry::new("test/topic", mqtt::packet::SubOpts::default()).unwrap(),
-        ])
+        .entries(vec![mqtt::packet::SubEntry::new(
+            "test/topic",
+            mqtt::packet::SubOpts::default(),
+        )
+        .unwrap()])
         .build()
         .expect("Failed to build Subscribe packet")
         .into();
@@ -328,9 +330,11 @@ fn v3_1_1_client_not_allowed_to_send_on_status_connecting_subscribe() {
     let packet_id = con.acquire_packet_id().unwrap();
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Subscribe::builder()
         .packet_id(packet_id)
-        .entries(vec![
-            mqtt::packet::SubEntry::new("test/topic", mqtt::packet::SubOpts::default()).unwrap(),
-        ])
+        .entries(vec![mqtt::packet::SubEntry::new(
+            "test/topic",
+            mqtt::packet::SubOpts::default(),
+        )
+        .unwrap()])
         .build()
         .expect("Failed to build Subscribe packet")
         .into();
@@ -507,9 +511,11 @@ fn v3_1_1_client_not_allowed_to_send_on_status_disconnected_subscribe() {
     let packet_id = con.acquire_packet_id().unwrap();
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Subscribe::builder()
         .packet_id(packet_id)
-        .entries(vec![
-            mqtt::packet::SubEntry::new("test/topic", mqtt::packet::SubOpts::default()).unwrap(),
-        ])
+        .entries(vec![mqtt::packet::SubEntry::new(
+            "test/topic",
+            mqtt::packet::SubOpts::default(),
+        )
+        .unwrap()])
         .build()
         .expect("Failed to build Subscribe packet")
         .into();

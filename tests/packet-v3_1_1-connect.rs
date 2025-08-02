@@ -538,7 +538,7 @@ fn parse_invalid_short_data() {
     data.extend_from_slice(&[0x00, 0x04, b'M', b'Q', b'T', b'T']); // protocol name
     data.push(0x04); // version
     data.push(0x02); // flags
-    // Missing keep alive and rest
+                     // Missing keep alive and rest
 
     let err = mqtt::packet::v3_1_1::Connect::parse(&data).unwrap_err();
     assert_eq!(err, mqtt::result_code::MqttError::MalformedPacket);
