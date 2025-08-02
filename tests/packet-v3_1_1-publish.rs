@@ -164,7 +164,7 @@ fn display_qos0() {
         .unwrap();
 
     let mut output = String::new();
-    write!(&mut output, "{}", packet).unwrap();
+    write!(&mut output, "{packet}").unwrap();
     assert!(output.contains(r#""type":"publish""#));
     assert!(output.contains(r#""topic_name":"test/topic""#));
     assert!(output.contains(r#""qos":"AtMostOnce""#));
@@ -183,7 +183,7 @@ fn display_qos1_with_packet_id() {
         .unwrap();
 
     let mut output = String::new();
-    write!(&mut output, "{}", packet).unwrap();
+    write!(&mut output, "{packet}").unwrap();
     assert!(output.contains(r#""type":"publish""#));
     assert!(output.contains(r#""topic_name":"test/topic""#));
     assert!(output.contains(r#""qos":"AtLeastOnce""#));
@@ -203,7 +203,7 @@ fn display_with_flags() {
         .unwrap();
 
     let mut output = String::new();
-    write!(&mut output, "{}", packet).unwrap();
+    write!(&mut output, "{packet}").unwrap();
     assert!(output.contains(r#""retain":false"#));
     assert!(output.contains(r#""dup":false"#));
 }
@@ -218,7 +218,7 @@ fn display_binary_payload() {
         .unwrap();
 
     let mut output = String::new();
-    write!(&mut output, "{}", packet).unwrap();
+    write!(&mut output, "{packet}").unwrap();
     assert!(output.contains(r#""payload":"\u0000ab""#));
 }
 
@@ -234,7 +234,7 @@ fn display_binary_payload_array() {
         .unwrap();
 
     let mut output = String::new();
-    write!(&mut output, "{}", packet).unwrap();
+    write!(&mut output, "{packet}").unwrap();
     assert!(output.contains(r#""payload":[128,129,130,131]"#));
 }
 
@@ -250,7 +250,7 @@ fn debug_qos0() {
         .unwrap();
 
     let mut output = String::new();
-    write!(&mut output, "{:?}", packet).unwrap();
+    write!(&mut output, "{packet:?}").unwrap();
     assert!(output.contains(r#""type":"publish""#));
     assert!(output.contains(r#""topic_name":"test/topic""#));
     assert!(output.contains(r#""qos":"AtMostOnce""#));

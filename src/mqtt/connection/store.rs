@@ -101,7 +101,7 @@ impl<PacketIdType: IsPacketId> GenericStore<PacketIdType> {
         }
         for id in to_remove {
             self.map.shift_remove(&id);
-            println!("[store] removed pid: {:?}", id);
+            println!("[store] removed pid: {id:?}");
         }
     }
 

@@ -89,7 +89,7 @@ impl MqttString {
     /// # Parameters
     ///
     /// * `s` - String data to store. Can be any type that implements `AsRef<str>`
-    ///         such as `&str`, `String`, or `Cow<str>`
+    ///   such as `&str`, `String`, or `Cow<str>`
     ///
     /// # Returns
     ///

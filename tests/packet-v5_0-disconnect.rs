@@ -102,7 +102,7 @@ fn display_empty() {
     let packet = mqtt::packet::v5_0::Disconnect::builder().build().unwrap();
 
     let mut output = String::new();
-    write!(&mut output, "{}", packet).unwrap();
+    write!(&mut output, "{packet}").unwrap();
     assert_eq!(output, r#"{"type":"disconnect"}"#);
 }
 
@@ -114,7 +114,7 @@ fn display_rc() {
         .unwrap();
 
     let mut output = String::new();
-    write!(&mut output, "{}", packet).unwrap();
+    write!(&mut output, "{packet}").unwrap();
     assert_eq!(
         output,
         r#"{"type":"disconnect","reason_code":"NormalDisconnection"}"#
@@ -132,7 +132,7 @@ fn display_rc_props() {
         .unwrap();
 
     let mut output = String::new();
-    write!(&mut output, "{}", packet).unwrap();
+    write!(&mut output, "{packet}").unwrap();
     assert_eq!(
         output,
         r#"{"type":"disconnect","reason_code":"ServerShuttingDown","props":[{"ReasonString":{"id":31,"val":"Server maintenance"}}]}"#
@@ -146,7 +146,7 @@ fn debug_empty() {
     let packet = mqtt::packet::v5_0::Disconnect::builder().build().unwrap();
 
     let mut output = String::new();
-    write!(&mut output, "{:?}", packet).unwrap();
+    write!(&mut output, "{packet:?}").unwrap();
     assert_eq!(output, r#"{"type":"disconnect"}"#);
 }
 
@@ -158,7 +158,7 @@ fn debug_rc() {
         .unwrap();
 
     let mut output = String::new();
-    write!(&mut output, "{:?}", packet).unwrap();
+    write!(&mut output, "{packet:?}").unwrap();
     assert_eq!(
         output,
         r#"{"type":"disconnect","reason_code":"NormalDisconnection"}"#
@@ -174,7 +174,7 @@ fn debug_rc_prop0() {
         .unwrap();
 
     let mut output = String::new();
-    write!(&mut output, "{:?}", packet).unwrap();
+    write!(&mut output, "{packet:?}").unwrap();
     assert_eq!(
         output,
         r#"{"type":"disconnect","reason_code":"NormalDisconnection","props":[]}"#

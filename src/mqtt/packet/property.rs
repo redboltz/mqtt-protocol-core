@@ -193,7 +193,7 @@ impl fmt::Display for PropertyId {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match serde_json::to_string(self) {
             Ok(json) => write!(f, "{json}"),
-            Err(e) => write!(f, "{{\"error\": \"{}\"}}", e),
+            Err(e) => write!(f, "{{\"error\": \"{e}\"}}"),
         }
     }
 }
@@ -236,7 +236,7 @@ impl fmt::Display for PayloadFormat {
             PayloadFormat::Binary => "binary",
             PayloadFormat::String => "string",
         };
-        write!(f, "{}", s)
+        write!(f, "{s}")
     }
 }
 
@@ -1087,33 +1087,33 @@ pub enum Property {
 impl fmt::Display for Property {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Property::PayloadFormatIndicator(p) => write!(f, "{}", p),
-            Property::MessageExpiryInterval(p) => write!(f, "{}", p),
-            Property::ContentType(p) => write!(f, "{}", p),
-            Property::ResponseTopic(p) => write!(f, "{}", p),
-            Property::CorrelationData(p) => write!(f, "{}", p),
-            Property::SubscriptionIdentifier(p) => write!(f, "{}", p),
-            Property::SessionExpiryInterval(p) => write!(f, "{}", p),
-            Property::AssignedClientIdentifier(p) => write!(f, "{}", p),
-            Property::ServerKeepAlive(p) => write!(f, "{}", p),
-            Property::AuthenticationMethod(p) => write!(f, "{}", p),
-            Property::AuthenticationData(p) => write!(f, "{}", p),
-            Property::RequestProblemInformation(p) => write!(f, "{}", p),
-            Property::WillDelayInterval(p) => write!(f, "{}", p),
-            Property::RequestResponseInformation(p) => write!(f, "{}", p),
-            Property::ResponseInformation(p) => write!(f, "{}", p),
-            Property::ServerReference(p) => write!(f, "{}", p),
-            Property::ReasonString(p) => write!(f, "{}", p),
-            Property::ReceiveMaximum(p) => write!(f, "{}", p),
-            Property::TopicAliasMaximum(p) => write!(f, "{}", p),
-            Property::TopicAlias(p) => write!(f, "{}", p),
-            Property::MaximumQos(p) => write!(f, "{}", p),
-            Property::RetainAvailable(p) => write!(f, "{}", p),
-            Property::UserProperty(p) => write!(f, "{}", p),
-            Property::MaximumPacketSize(p) => write!(f, "{}", p),
-            Property::WildcardSubscriptionAvailable(p) => write!(f, "{}", p),
-            Property::SubscriptionIdentifierAvailable(p) => write!(f, "{}", p),
-            Property::SharedSubscriptionAvailable(p) => write!(f, "{}", p),
+            Property::PayloadFormatIndicator(p) => write!(f, "{p}"),
+            Property::MessageExpiryInterval(p) => write!(f, "{p}"),
+            Property::ContentType(p) => write!(f, "{p}"),
+            Property::ResponseTopic(p) => write!(f, "{p}"),
+            Property::CorrelationData(p) => write!(f, "{p}"),
+            Property::SubscriptionIdentifier(p) => write!(f, "{p}"),
+            Property::SessionExpiryInterval(p) => write!(f, "{p}"),
+            Property::AssignedClientIdentifier(p) => write!(f, "{p}"),
+            Property::ServerKeepAlive(p) => write!(f, "{p}"),
+            Property::AuthenticationMethod(p) => write!(f, "{p}"),
+            Property::AuthenticationData(p) => write!(f, "{p}"),
+            Property::RequestProblemInformation(p) => write!(f, "{p}"),
+            Property::WillDelayInterval(p) => write!(f, "{p}"),
+            Property::RequestResponseInformation(p) => write!(f, "{p}"),
+            Property::ResponseInformation(p) => write!(f, "{p}"),
+            Property::ServerReference(p) => write!(f, "{p}"),
+            Property::ReasonString(p) => write!(f, "{p}"),
+            Property::ReceiveMaximum(p) => write!(f, "{p}"),
+            Property::TopicAliasMaximum(p) => write!(f, "{p}"),
+            Property::TopicAlias(p) => write!(f, "{p}"),
+            Property::MaximumQos(p) => write!(f, "{p}"),
+            Property::RetainAvailable(p) => write!(f, "{p}"),
+            Property::UserProperty(p) => write!(f, "{p}"),
+            Property::MaximumPacketSize(p) => write!(f, "{p}"),
+            Property::WildcardSubscriptionAvailable(p) => write!(f, "{p}"),
+            Property::SubscriptionIdentifierAvailable(p) => write!(f, "{p}"),
+            Property::SharedSubscriptionAvailable(p) => write!(f, "{p}"),
         }
     }
 }

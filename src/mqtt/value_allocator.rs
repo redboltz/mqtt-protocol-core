@@ -184,7 +184,7 @@ where
 
     pub fn dump(&self) {
         for iv in &self.pool {
-            println!("{:?}", iv);
+            println!("{iv:?}");
         }
     }
 }

@@ -153,7 +153,7 @@ impl std::fmt::Display for MqttError {
             Self::ValueOutOfRange => "ValueOutOfRange",
             Self::InvalidQos => "InvalidQos",
         };
-        write!(f, "{}", s)
+        write!(f, "{s}")
     }
 }
 

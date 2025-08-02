@@ -3438,11 +3438,13 @@ where
 
         match v3_1_1::Pingreq::parse(raw_packet.data_as_slice()) {
             Ok((packet, _)) => {
-                if (Role::IS_SERVER || Role::IS_ANY) && !self.is_client {
-                    if self.auto_ping_response && self.status == ConnectionStatus::Connected {
-                        let pingresp = v3_1_1::Pingresp::new();
-                        events.extend(self.process_send_v3_1_1_pingresp(pingresp));
-                    }
+                if (Role::IS_SERVER || Role::IS_ANY)
+                    && !self.is_client
+                    && self.auto_ping_response
+                    && self.status == ConnectionStatus::Connected
+                {
+                    let pingresp = v3_1_1::Pingresp::new();
+                    events.extend(self.process_send_v3_1_1_pingresp(pingresp));
                 }
                 events.extend(self.refresh_pingreq_recv());
                 events.push(GenericEvent::NotifyPacketReceived(packet.into()));
@@ -3464,11 +3466,13 @@ where
 
         match v5_0::Pingreq::parse(raw_packet.data_as_slice()) {
             Ok((packet, _)) => {
-                if (Role::IS_SERVER || Role::IS_ANY) && !self.is_client {
-                    if self.auto_ping_response && self.status == ConnectionStatus::Connected {
-                        let pingresp = v5_0::Pingresp::new();
-                        events.extend(self.process_send_v5_0_pingresp(pingresp));
-                    }
+                if (Role::IS_SERVER || Role::IS_ANY)
+                    && !self.is_client
+                    && self.auto_ping_response
+                    && self.status == ConnectionStatus::Connected
+                {
+                    let pingresp = v5_0::Pingresp::new();
+                    events.extend(self.process_send_v5_0_pingresp(pingresp));
                 }
                 events.extend(self.refresh_pingreq_recv());
                 events.push(GenericEvent::NotifyPacketReceived(packet.into()));

@@ -523,7 +523,7 @@ fn display_minimal() {
         .build()
         .unwrap();
 
-    let display_str = format!("{}", packet);
+    let display_str = format!("{packet}");
     assert!(display_str.contains("\"type\":\"connect\""));
     assert!(display_str.contains("\"client_id\":\"test\""));
     assert!(display_str.contains("\"clean_start\":true"));
@@ -547,7 +547,7 @@ fn display_with_will() {
         .build()
         .unwrap();
 
-    let display_str = format!("{}", packet);
+    let display_str = format!("{packet}");
     assert!(display_str.contains("\"will_qos\":\"AtLeastOnce\""));
     assert!(display_str.contains("\"will_retain\":true"));
     assert!(display_str.contains("\"will_topic\":\"topic\""));
@@ -566,7 +566,7 @@ fn display_with_password_masked() {
         .build()
         .unwrap();
 
-    let display_str = format!("{}", packet);
+    let display_str = format!("{packet}");
     assert!(display_str.contains("\"user_name\":\"user\""));
     assert!(display_str.contains("\"password\":\"*****\""));
 }
@@ -587,7 +587,7 @@ fn display_with_small_will_payload() {
         .build()
         .unwrap();
 
-    let display_str = format!("{}", packet);
+    let display_str = format!("{packet}");
     assert!(display_str.contains(r#"\u0001\u0002\u0003"#));
 }
 
@@ -600,7 +600,7 @@ fn debug_minimal() {
         .build()
         .unwrap();
 
-    let debug_str = format!("{:?}", packet);
+    let debug_str = format!("{packet:?}");
     assert!(debug_str.contains("\"type\":\"connect\""));
     assert!(debug_str.contains("\"client_id\":\"test\""));
 }
@@ -619,7 +619,7 @@ fn debug_with_properties() {
         .build()
         .unwrap();
 
-    let debug_str = format!("{:?}", packet);
+    let debug_str = format!("{packet:?}");
     assert!(debug_str.contains("\"props\""));
 }
 

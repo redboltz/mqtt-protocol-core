@@ -167,7 +167,7 @@ fn display_empty() {
     let packet = mqtt::packet::v5_0::Auth::builder().build().unwrap();
 
     let mut output = String::new();
-    write!(&mut output, "{}", packet).unwrap();
+    write!(&mut output, "{packet}").unwrap();
     assert_eq!(output, r#"{"type":"auth"}"#);
 }
 
@@ -179,7 +179,7 @@ fn display_rc() {
         .unwrap();
 
     let mut output = String::new();
-    write!(&mut output, "{}", packet).unwrap();
+    write!(&mut output, "{packet}").unwrap();
     assert_eq!(
         output,
         r#"{"type":"auth","reason_code":"Success","props":[]}"#
@@ -199,7 +199,7 @@ fn display_rc_props() {
         .unwrap();
 
     let mut output = String::new();
-    write!(&mut output, "{}", packet).unwrap();
+    write!(&mut output, "{packet}").unwrap();
     assert_eq!(
         output,
         r#"{"type":"auth","reason_code":"ContinueAuthentication","props":[{"AuthenticationMethod":{"id":21,"val":"SCRAM-SHA-256"}}]}"#
@@ -213,7 +213,7 @@ fn debug_empty() {
     let packet = mqtt::packet::v5_0::Auth::builder().build().unwrap();
 
     let mut output = String::new();
-    write!(&mut output, "{:?}", packet).unwrap();
+    write!(&mut output, "{packet:?}").unwrap();
     assert_eq!(output, r#"{"type":"auth"}"#);
 }
 
@@ -225,7 +225,7 @@ fn debug_rc() {
         .unwrap();
 
     let mut output = String::new();
-    write!(&mut output, "{:?}", packet).unwrap();
+    write!(&mut output, "{packet:?}").unwrap();
     assert_eq!(
         output,
         r#"{"type":"auth","reason_code":"Success","props":[]}"#
@@ -240,7 +240,7 @@ fn debug_rc_prop0() {
         .unwrap();
 
     let mut output = String::new();
-    write!(&mut output, "{:?}", packet).unwrap();
+    write!(&mut output, "{packet:?}").unwrap();
     assert_eq!(
         output,
         r#"{"type":"auth","reason_code":"Success","props":[]}"#

@@ -30,27 +30,23 @@ use std::net::TcpStream;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().collect();
     if args.len() != 6 {
-        eprintln!("Usage: {} <host> <port> <topic> <qos> <payload>", args[0]);
-        eprintln!(
-            "Example: {} localhost 1883 test/topic 0 \"Hello World\"",
-            args[0]
-        );
+        let program = &args[0];
+        eprintln!("Usage: {program} <host> <port> <topic> <qos> <payload>");
+        eprintln!("Example: {program} localhost 1883 test/topic 0 \"Hello World\"");
         std::process::exit(1);
     }
 
     let host = &args[1];
-    let port: u16 = args[2]
-        .parse()
-        .map_err(|e| format!("Invalid port: {}", e))?;
+    let port: u16 = args[2].parse().map_err(|e| format!("Invalid port: {e}"))?;
     let topic = &args[3];
-    let qos: u8 = args[4].parse().map_err(|e| format!("Invalid QoS: {}", e))?;
+    let qos: u8 = args[4].parse().map_err(|e| format!("Invalid QoS: {e}"))?;
     let payload = &args[5];
 
     let qos_level = mqtt::packet::Qos::try_from(qos)
         .expect("Error: Invalid QoS level '{qos}'. Must be 0, 1, or 2");
 
-    let mut stream = TcpStream::connect(format!("{}:{}", host, port))?;
-    println!("Connected to {}:{}", host, port);
+    let mut stream = TcpStream::connect(format!("{host}:{port}"))?;
+    println!("Connected to {host}:{port}");
 
     let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
     connection.set_auto_pub_response(true);
@@ -58,7 +54,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .client_id("mqtt_publish_example")
         .unwrap()
         .build()
-        .map_err(|e| format!("Failed to build CONNECT packet: {:?}", e))?;
+        .map_err(|e| format!("Failed to build CONNECT packet: {e:?}"))?;
 
     let events = connection.checked_send(connect_packet);
     handle_events(&mut stream, &mut connection, events)?;
@@ -80,13 +76,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     if qos_level != mqtt::packet::Qos::AtMostOnce {
         let packet_id = connection
             .acquire_packet_id()
-            .map_err(|e| format!("Failed to acquire packet ID: {:?}", e))?;
+            .map_err(|e| format!("Failed to acquire packet ID: {e:?}"))?;
         publish_builder = publish_builder.packet_id(packet_id);
     }
 
     let publish_packet = publish_builder
         .build()
-        .map_err(|e| format!("Failed to build PUBLISH packet: {:?}", e))?;
+        .map_err(|e| format!("Failed to build PUBLISH packet: {e:?}"))?;
 
     let events = connection.checked_send(publish_packet);
     handle_events(&mut stream, &mut connection, events)?;
@@ -101,10 +97,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    println!(
-        "Published message to topic '{}' with QoS {}: {}",
-        topic, qos, payload
-    );
+    println!("Published message to topic '{topic}' with QoS {qos}: {payload}");
 
     Ok(())
 }
@@ -122,44 +115,46 @@ fn handle_events(
                 if bytes_written == 0 {
                     return Err("Failed to write packet data".into());
                 }
-                println!(
-                    "Sent packet: {} ({} bytes)",
-                    packet.packet_type(),
-                    bytes_written
-                );
+                let packet_type = packet.packet_type();
+                println!("Sent packet: {packet_type} ({bytes_written} bytes)");
             }
             mqtt::connection::Event::NotifyPacketReceived(packet) => match packet {
                 mqtt::packet::Packet::V5_0Connack(connack) => {
-                    println!("CONNACK received: {:?}", connack.reason_code());
+                    let reason_code = connack.reason_code();
+                    println!("CONNACK received: {reason_code:?}");
                 }
                 mqtt::packet::Packet::V5_0Puback(puback) => {
-                    println!("PUBACK received for packet ID: {}", puback.packet_id());
+                    let packet_id = puback.packet_id();
+                    println!("PUBACK received for packet ID: {packet_id}");
                 }
                 mqtt::packet::Packet::V5_0Pubrec(pubrec) => {
-                    println!("PUBREC received for packet ID: {}", pubrec.packet_id());
+                    let packet_id = pubrec.packet_id();
+                    println!("PUBREC received for packet ID: {packet_id}");
                 }
                 mqtt::packet::Packet::V5_0Pubcomp(pubcomp) => {
-                    println!("PUBCOMP received for packet ID: {}", pubcomp.packet_id());
+                    let packet_id = pubcomp.packet_id();
+                    println!("PUBCOMP received for packet ID: {packet_id}");
                 }
                 _ => {
-                    println!("Received packet: {}", packet.packet_type());
+                    let packet_type = packet.packet_type();
+                    println!("Received packet: {packet_type}");
                 }
             },
             mqtt::connection::Event::NotifyPacketIdReleased(packet_id) => {
-                println!("Packet ID {} released", packet_id);
+                println!("Packet ID {packet_id} released");
             }
             mqtt::connection::Event::NotifyError(error) => {
-                eprintln!("MQTT Error: {:?}", error);
+                eprintln!("MQTT Error: {error:?}");
             }
             mqtt::connection::Event::RequestClose => {
                 println!("Connection close requested");
                 return Ok(());
             }
             mqtt::connection::Event::RequestTimerReset { kind, duration_ms } => {
-                println!("Timer reset requested: {:?} for {} ms", kind, duration_ms);
+                println!("Timer reset requested: {kind:?} for {duration_ms} ms");
             }
             mqtt::connection::Event::RequestTimerCancel(kind) => {
-                println!("Timer cancel requested: {:?}", kind);
+                println!("Timer cancel requested: {kind:?}");
             }
         }
     }

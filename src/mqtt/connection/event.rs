@@ -259,7 +259,7 @@ where
             GenericEvent::NotifyError(error) => {
                 let mut state = serializer.serialize_struct("GenericEvent", 2)?;
                 state.serialize_field("type", "notify_error")?;
-                state.serialize_field("error", &format!("{:?}", error))?;
+                state.serialize_field("error", &format!("{error:?}"))?;
                 state.end()
             }
             GenericEvent::RequestClose => {
@@ -282,8 +282,8 @@ where
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match serde_json::to_string(self) {
-            Ok(json) => write!(f, "{}", json),
-            Err(e) => write!(f, "{{\"error\": \"{}\"}}", e),
+            Ok(json) => write!(f, "{json}"),
+            Err(e) => write!(f, "{{\"error\": \"{e}\"}}"),
         }
     }
 }

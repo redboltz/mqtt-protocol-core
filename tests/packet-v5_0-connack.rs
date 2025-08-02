@@ -226,7 +226,7 @@ fn display_sp_rc() {
         .unwrap();
 
     let mut output = String::new();
-    write!(&mut output, "{}", packet).unwrap();
+    write!(&mut output, "{packet}").unwrap();
     assert_eq!(
         output,
         r#"{"type":"connack","session_present":true,"reason_code":"Success","props":[]}"#
@@ -244,7 +244,7 @@ fn debug_sp_rc() {
         .unwrap();
 
     let mut output = String::new();
-    write!(&mut output, "{:?}", packet).unwrap();
+    write!(&mut output, "{packet:?}").unwrap();
     assert_eq!(
         output,
         r#"{"type":"connack","session_present":true,"reason_code":"Success","props":[]}"#

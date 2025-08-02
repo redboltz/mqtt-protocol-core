@@ -34,10 +34,10 @@ fn test_packet() {
         .unwrap()
         .build()
         .expect("Failed to build Connect packet");
-    println!("print: {}", packet);
+    println!("print: {packet}");
     println!("print size: {}", packet.size());
     let v: mqtt::packet::Packet = packet.into();
-    println!("print variant: {}", v);
+    println!("print variant: {v}");
     println!("print variant size: {}", v.size());
     let buffers = v.to_buffers();
     println!("print variant to_buffers length: {}", buffers.len());

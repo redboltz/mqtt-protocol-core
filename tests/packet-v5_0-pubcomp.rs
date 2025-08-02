@@ -93,7 +93,7 @@ fn display_pid() {
         .unwrap();
 
     let mut output = String::new();
-    write!(&mut output, "{}", packet).unwrap();
+    write!(&mut output, "{packet}").unwrap();
     assert_eq!(output, r#"{"type":"pubcomp","packet_id":1234}"#);
 }
 
@@ -106,7 +106,7 @@ fn display_pid_rc() {
         .unwrap();
 
     let mut output = String::new();
-    write!(&mut output, "{}", packet).unwrap();
+    write!(&mut output, "{packet}").unwrap();
     assert_eq!(
         output,
         r#"{"type":"pubcomp","packet_id":1234,"reason_code":"Success"}"#
@@ -123,7 +123,7 @@ fn debug_pid() {
         .unwrap();
 
     let mut output = String::new();
-    write!(&mut output, "{:?}", packet).unwrap();
+    write!(&mut output, "{packet:?}").unwrap();
     assert_eq!(output, r#"{"type":"pubcomp","packet_id":1234}"#);
 }
 
@@ -136,7 +136,7 @@ fn debug_pid_rc() {
         .unwrap();
 
     let mut output = String::new();
-    write!(&mut output, "{:?}", packet).unwrap();
+    write!(&mut output, "{packet:?}").unwrap();
     assert_eq!(
         output,
         r#"{"type":"pubcomp","packet_id":1234,"reason_code":"Success"}"#
@@ -153,7 +153,7 @@ fn debug_pid_rc_prop0() {
         .unwrap();
 
     let mut output = String::new();
-    write!(&mut output, "{:?}", packet).unwrap();
+    write!(&mut output, "{packet:?}").unwrap();
     assert_eq!(
         output,
         r#"{"type":"pubcomp","packet_id":1234,"reason_code":"Success","props":[]}"#
