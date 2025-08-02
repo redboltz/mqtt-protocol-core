@@ -33,6 +33,7 @@
 //! // Create a CONNECT packet
 //! let connect = Connect::builder()
 //!     .client_id("my-client")
+//!     .unwrap()
 //!     .clean_start(true)
 //!     .build()
 //!     .unwrap();
@@ -76,16 +77,19 @@
 //!     Connection, version::Version,
 //!     connection::{role::Client, event::GenericEvent},
 //! };
+//! use std::io::Cursor;
 //!
 //! let mut client = Connection::<Client>::new(Version::V5_0);
+//! let data = &[0u8; 0][..];
+//! let mut data_cursor = Cursor::new(data);
 //! let events = client.recv(&mut data_cursor);
 //!
 //! for event in events {
 //!     match event {
-//!         GenericEvent::PacketToSend(packet) => {
+//!         GenericEvent::RequestSendPacket { packet, .. } => {
 //!             // Send packet over network
 //!         }
-//!         GenericEvent::PacketReceived(packet) => {
+//!         GenericEvent::NotifyPacketReceived(packet) => {
 //!             // Handle received packet
 //!         }
 //!         // ... other events
