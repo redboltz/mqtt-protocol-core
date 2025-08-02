@@ -1221,10 +1221,8 @@ where
                     }
                 }
             }
-        } else {
-            if self.packet_id_buf.is_some() && self.packet_id_buf.as_ref().unwrap().is_some() {
-                return Err(MqttError::MalformedPacket);
-            }
+        } else if self.packet_id_buf.is_some() && self.packet_id_buf.as_ref().unwrap().is_some() {
+            return Err(MqttError::MalformedPacket);
         }
 
         if let Some(payload) = &self.payload_buf {

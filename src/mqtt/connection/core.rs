@@ -548,7 +548,7 @@ where
     /// # Parameters
     ///
     /// * `data` - A cursor over the received data bytes. The cursor position will
-    ///           be advanced as data is consumed.
+    ///   be advanced as data is consumed.
     ///
     /// # Returns
     ///
@@ -825,11 +825,8 @@ where
     /// The remaining capacity for outgoing PUBLISH packets, or `None` if no limit is set
     pub fn get_receive_maximum_vacancy_for_send(&self) -> Option<u16> {
         // If publish_recv_max is set, return the remaining capacity
-        if let Some(max) = self.publish_send_max {
-            Some(max.saturating_sub(self.publish_send_count))
-        } else {
-            None // No limit set
-        }
+        self.publish_send_max
+            .map(|max| max.saturating_sub(self.publish_send_count))
     }
 
     /// Enable or disable offline publishing
@@ -1189,7 +1186,7 @@ where
                 packet: packet.clone().into(),
                 release_packet_id_if_send_error: None,
             });
-            return true; // Keep in store
+            true // Keep in store
         });
 
         events
@@ -1576,57 +1573,53 @@ where
                 }
                 return events;
             }
-        } else {
-            if let Some(ta) = ta_opt {
-                // Topic alias is provided
-                if self.validate_topic_alias_range(ta) {
-                    tracing::trace!(
-                        "topic alias: {} - {} is registered.",
-                        packet.topic_name(),
-                        ta
-                    );
-                    if let Some(ref mut topic_alias_send) = self.topic_alias_send {
-                        topic_alias_send.insert_or_update(packet.topic_name(), ta);
-                    }
-                } else {
-                    events.push(GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend));
-                    if let Some(packet_id) = packet_id_opt {
-                        if self.pid_man.is_used_id(packet_id) {
-                            self.pid_man.release_id(packet_id);
-                            events.push(GenericEvent::NotifyPacketIdReleased(packet_id));
-                        }
-                    }
-                    return events;
+        } else if let Some(ta) = ta_opt {
+            // Topic alias is provided
+            if self.validate_topic_alias_range(ta) {
+                tracing::trace!(
+                    "topic alias: {} - {} is registered.",
+                    packet.topic_name(),
+                    ta
+                );
+                if let Some(ref mut topic_alias_send) = self.topic_alias_send {
+                    topic_alias_send.insert_or_update(packet.topic_name(), ta);
                 }
-            } else if self.status == ConnectionStatus::Connected {
-                // process auto applying TopicAlias if the option is enabled
-                if self.auto_map_topic_alias_send {
-                    if let Some(ref mut topic_alias_send) = self.topic_alias_send {
-                        if let Some(found_ta) = topic_alias_send.find_by_topic(packet.topic_name())
-                        {
-                            tracing::trace!(
-                                "topic alias: {} - {} is found.",
-                                packet.topic_name(),
-                                found_ta
-                            );
-                            packet = packet.remove_topic_add_topic_alias(found_ta);
-                        } else {
-                            let lru_ta = topic_alias_send.get_lru_alias();
-                            topic_alias_send.insert_or_update(packet.topic_name(), lru_ta);
-                            packet = packet.remove_topic_add_topic_alias(lru_ta);
-                        }
+            } else {
+                events.push(GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend));
+                if let Some(packet_id) = packet_id_opt {
+                    if self.pid_man.is_used_id(packet_id) {
+                        self.pid_man.release_id(packet_id);
+                        events.push(GenericEvent::NotifyPacketIdReleased(packet_id));
                     }
-                } else if self.auto_replace_topic_alias_send {
-                    if let Some(ref topic_alias_send) = self.topic_alias_send {
-                        if let Some(found_ta) = topic_alias_send.find_by_topic(packet.topic_name())
-                        {
-                            tracing::trace!(
-                                "topic alias: {} - {} is found.",
-                                packet.topic_name(),
-                                found_ta
-                            );
-                            packet = packet.remove_topic_add_topic_alias(found_ta);
-                        }
+                }
+                return events;
+            }
+        } else if self.status == ConnectionStatus::Connected {
+            // process auto applying TopicAlias if the option is enabled
+            if self.auto_map_topic_alias_send {
+                if let Some(ref mut topic_alias_send) = self.topic_alias_send {
+                    if let Some(found_ta) = topic_alias_send.find_by_topic(packet.topic_name()) {
+                        tracing::trace!(
+                            "topic alias: {} - {} is found.",
+                            packet.topic_name(),
+                            found_ta
+                        );
+                        packet = packet.remove_topic_add_topic_alias(found_ta);
+                    } else {
+                        let lru_ta = topic_alias_send.get_lru_alias();
+                        topic_alias_send.insert_or_update(packet.topic_name(), lru_ta);
+                        packet = packet.remove_topic_add_topic_alias(lru_ta);
+                    }
+                }
+            } else if self.auto_replace_topic_alias_send {
+                if let Some(ref topic_alias_send) = self.topic_alias_send {
+                    if let Some(found_ta) = topic_alias_send.find_by_topic(packet.topic_name()) {
+                        tracing::trace!(
+                            "topic alias: {} - {} is found.",
+                            packet.topic_name(),
+                            found_ta
+                        );
+                        packet = packet.remove_topic_add_topic_alias(found_ta);
                     }
                 }
             }

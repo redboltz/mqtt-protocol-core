@@ -604,7 +604,7 @@ where
             packet_id_buf,
             property_length,
             props,
-            entries: entries,
+            entries,
         })
     }
 }
