@@ -32,7 +32,6 @@ use serde::Serialize;
 use derive_builder::Builder;
 use getset::{CopyGetters, Getters};
 
-use crate::mqtt::arc_payload::{ArcPayload, IntoPayload};
 use crate::mqtt::packet::json_bin_encode::escape_binary_json_string;
 use crate::mqtt::packet::mqtt_string::MqttString;
 use crate::mqtt::packet::packet_type::{FixedHeader, PacketType};
@@ -42,6 +41,7 @@ use crate::mqtt::packet::GenericPacketDisplay;
 use crate::mqtt::packet::GenericPacketTrait;
 use crate::mqtt::packet::IsPacketId;
 use crate::mqtt::result_code::MqttError;
+use crate::mqtt::{ArcPayload, IntoPayload};
 
 /// MQTT 3.1.1 PUBLISH packet representation
 ///

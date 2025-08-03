@@ -26,7 +26,7 @@ use std::time::Instant;
 use multi_index_map::MultiIndexMap;
 use tracing::trace;
 
-use crate::mqtt::value_allocator::ValueAllocator;
+use crate::mqtt::ValueAllocator;
 
 /// Type alias for topic alias values
 pub type TopicAliasType = u16;

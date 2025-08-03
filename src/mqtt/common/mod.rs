@@ -21,39 +21,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-pub mod role;
+mod arc_payload;
+pub use arc_payload::{ArcPayload, IntoPayload};
 
-mod version;
-pub use version::Version;
-
-mod packet_id_manager;
-pub use packet_id_manager::PacketIdManager;
-
-pub mod core;
-pub use self::core::Connection;
-pub use self::core::GenericConnection;
-pub use self::core::RecvBehavior;
-
-pub mod event;
-pub use self::event::Event;
-pub use self::event::GenericEvent;
-pub use self::event::TimerKind;
-
-mod packet_builder;
-pub use self::packet_builder::PacketBuildResult;
-pub use self::packet_builder::PacketBuilder;
-pub use self::packet_builder::PacketData;
-pub use self::packet_builder::RawPacket;
-
-mod store;
-pub use self::store::GenericStore;
-pub use self::store::Store;
-
-pub mod prelude;
-mod sendable;
-mod sendable_helper;
-pub mod sendable_role;
-mod sendable_version;
-
-pub use self::sendable::{SendBehavior, Sendable};
-pub use self::sendable_role::SendableRole;
+mod value_allocator;
+pub use value_allocator::ValueAllocator;

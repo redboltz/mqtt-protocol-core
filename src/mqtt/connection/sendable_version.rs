@@ -1,3 +1,4 @@
+use crate::mqtt::connection::version::*;
 /**
  * MIT License
  *
@@ -22,7 +23,6 @@
  * SOFTWARE.
  */
 use crate::mqtt::packet::*;
-use crate::mqtt::version::*;
 
 /// Trait to check if a packet is valid for a specific MQTT version.
 pub trait SendableVersion {

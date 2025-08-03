@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-use mqtt_protocol_core::mqtt::value_allocator::ValueAllocator;
+use mqtt_protocol_core::mqtt::ValueAllocator;
 
 #[test]
 fn one() {

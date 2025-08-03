@@ -23,16 +23,15 @@
  */
 pub mod packet;
 pub mod prelude;
-pub mod version;
-pub use version::Version;
 
 pub mod connection;
 pub use connection::role;
 pub use connection::Connection;
 pub use connection::GenericConnection;
 pub use connection::SendBehavior;
+pub use connection::Version;
 
-pub mod arc_payload;
-pub mod packet_id_manager;
+pub mod common;
+pub use common::{ArcPayload, IntoPayload, ValueAllocator};
+
 pub mod result_code;
-pub mod value_allocator;
