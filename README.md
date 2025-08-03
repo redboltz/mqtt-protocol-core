@@ -36,7 +36,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-mqtt-protocol-core = "0.1.2"
+mqtt-protocol-core = "0.1.3"
 ```
 
 ## Quick Start
