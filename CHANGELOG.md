@@ -1,3 +1,9 @@
+# 0.2.0
+
+## Breaking changes
+
+* Re-organize tree. #7
+
 # 0.1.3
 
 * Add CI. #5

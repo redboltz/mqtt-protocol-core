@@ -22,7 +22,7 @@
 //!
 //! ```rust,no_run
 //! use mqtt_protocol_core::mqtt::{
-//!     Connection, version::Version,
+//!     Connection, Version,
 //!     connection::role::Client,
 //!     packet::v5_0::Connect,
 //! };
@@ -46,7 +46,7 @@
 //!
 //! ```rust,no_run
 //! use mqtt_protocol_core::mqtt::{
-//!     Connection, version::Version,
+//!     Connection, Version,
 //!     connection::role::Server,
 //! };
 //!
@@ -63,8 +63,8 @@
 //!
 //! - [`mqtt::connection`] - Connection state management and packet processing
 //! - [`mqtt::packet`] - MQTT packet definitions for v3.1.1 and v5.0
-//! - [`mqtt::version`] - Protocol version handling
-//! - [`mqtt::arc_payload`] - Efficient payload management
+//! - [`mqtt::Version`] - Protocol version handling
+//! - [`mqtt::ArcPayload`] - Efficient payload management
 //!
 //! ## Sans-I/O Pattern
 //!
@@ -74,7 +74,7 @@
 //!
 //! ```rust,no_run
 //! use mqtt_protocol_core::mqtt::{
-//!     Connection, version::Version,
+//!     Connection, Version,
 //!     connection::{role::Client, event::GenericEvent},
 //! };
 //! use std::io::Cursor;
@@ -108,7 +108,7 @@
 //!
 //! // Use u32 packet IDs instead of standard u16
 //! let mut server = GenericConnection::<Server, u32>::new(
-//!     mqtt_protocol_core::mqtt::version::Version::V5_0
+//!     mqtt_protocol_core::mqtt::Version::V5_0
 //! );
 //! ```
 

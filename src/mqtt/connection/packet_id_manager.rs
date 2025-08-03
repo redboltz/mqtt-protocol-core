@@ -23,7 +23,7 @@ use crate::mqtt::packet::IsPacketId;
  * SOFTWARE.
  */
 use crate::mqtt::result_code::MqttError;
-use crate::mqtt::value_allocator::ValueAllocator;
+use crate::mqtt::ValueAllocator;
 
 pub struct PacketIdManager<T>
 where

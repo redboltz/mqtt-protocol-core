@@ -42,9 +42,11 @@ enum ConnectionStatus {
 use crate::mqtt::connection::packet_builder::{
     PacketBuildResult, PacketBuilder, PacketData, RawPacket,
 };
+use crate::mqtt::connection::packet_id_manager::PacketIdManager;
 use crate::mqtt::connection::role;
 use crate::mqtt::connection::role::RoleType;
 use crate::mqtt::connection::sendable::Sendable;
+use crate::mqtt::connection::version::*;
 use crate::mqtt::packet::v3_1_1;
 use crate::mqtt::packet::v5_0;
 use crate::mqtt::packet::GenericPacket;
@@ -53,12 +55,10 @@ use crate::mqtt::packet::IsPacketId;
 use crate::mqtt::packet::Qos;
 use crate::mqtt::packet::ResponsePacket;
 use crate::mqtt::packet::{Property, TopicAliasRecv, TopicAliasSend};
-use crate::mqtt::packet_id_manager::PacketIdManager;
 use crate::mqtt::prelude::GenericPacketTrait;
 use crate::mqtt::result_code::{
     ConnectReasonCode, ConnectReturnCode, DisconnectReasonCode, MqttError, PubrecReasonCode,
 };
-use crate::mqtt::version::*;
 
 /// MQTT protocol maximum packet size limit
 /// 1 (fixed header) + 4 (remaining length) + 128^4 (maximum remaining length value)
@@ -3706,9 +3706,9 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::mqtt::connection::version::Version;
     use crate::mqtt::packet::TopicAliasSend;
     use crate::mqtt::role;
-    use crate::mqtt::version::Version;
 
     #[test]
     fn test_initialize_client_mode() {
