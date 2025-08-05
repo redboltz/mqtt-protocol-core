@@ -405,3 +405,9 @@ fn roundtrip_multiple_entries_with_qos() {
         assert_eq!(orig.sub_opts().qos(), parsed.sub_opts().qos());
     }
 }
+
+#[test]
+fn test_packet_type() {
+    let packet_type = mqtt::packet::v3_1_1::Subscribe::packet_type();
+    assert_eq!(packet_type, mqtt::packet::PacketType::Subscribe);
+}

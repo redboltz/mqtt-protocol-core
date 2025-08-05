@@ -124,3 +124,9 @@ fn clone() {
 
     assert_eq!(packet1, packet2);
 }
+
+#[test]
+fn test_packet_type() {
+    let packet_type = mqtt::packet::v5_0::Pingreq::packet_type();
+    assert_eq!(packet_type, mqtt::packet::PacketType::Pingreq);
+}

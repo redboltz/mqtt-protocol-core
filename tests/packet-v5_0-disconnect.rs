@@ -564,3 +564,9 @@ fn parse_rc_prop_user_property_twice() {
         .unwrap();
     assert_eq!(packet, expected);
 }
+
+#[test]
+fn test_packet_type() {
+    let packet_type = mqtt::packet::v5_0::Disconnect::packet_type();
+    assert_eq!(packet_type, mqtt::packet::PacketType::Disconnect);
+}

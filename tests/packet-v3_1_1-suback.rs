@@ -480,3 +480,9 @@ fn test_many_return_codes() {
         );
     }
 }
+
+#[test]
+fn test_packet_type() {
+    let packet_type = mqtt::packet::v3_1_1::Suback::packet_type();
+    assert_eq!(packet_type, mqtt::packet::PacketType::Suback);
+}

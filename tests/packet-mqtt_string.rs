@@ -21,19 +21,30 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-use mqtt_protocol_core::mqtt::packet::MqttString;
+use mqtt_protocol_core::mqtt;
 
 #[test]
 fn test_mqttstring_creation() {
-    let s = MqttString::new("test").unwrap();
+    let s = mqtt::packet::MqttString::new("test").unwrap();
     assert_eq!(s.as_str(), "test");
     assert_eq!(s.len(), 4);
     assert_eq!(s.size(), 6); // 2 bytes length + 4 bytes content
 }
 
 #[test]
+fn test_mqttstring_as_bytes() {
+    let s = mqtt::packet::MqttString::new("hi").unwrap();
+    let bytes = s.as_bytes();
+    assert_eq!(bytes, &[0x00, 0x02, b'h', b'i']);
+
+    let empty_s = mqtt::packet::MqttString::new("").unwrap();
+    let empty_bytes = empty_s.as_bytes();
+    assert_eq!(empty_bytes, &[0x00, 0x00]);
+}
+
+#[test]
 fn test_mqttstring_empty() {
-    let s = MqttString::new("").unwrap();
+    let s = mqtt::packet::MqttString::new("").unwrap();
     assert_eq!(s.as_str(), "");
     assert_eq!(s.len(), 0);
     assert_eq!(s.size(), 2); // 2 bytes length only
@@ -43,14 +54,47 @@ fn test_mqttstring_empty() {
 #[test]
 fn test_mqttstring_decode() {
     let data = [0, 4, b't', b'e', b's', b't'];
-    let (s, consumed) = MqttString::decode(&data).unwrap();
+    let (s, consumed) = mqtt::packet::MqttString::decode(&data).unwrap();
     assert_eq!(s.as_str(), "test");
     assert_eq!(consumed, 6);
 }
 
 #[test]
+fn test_mqttstring_decode_insufficient_length() {
+    // Test case where buffer is too short for declared string length
+    let data = [0, 10, b't', b'e']; // Claims 10 bytes but only has 2
+    let result = mqtt::packet::MqttString::decode(&data);
+    assert!(result.is_err());
+    assert_eq!(
+        result.unwrap_err(),
+        mqtt::result_code::MqttError::MalformedPacket
+    );
+
+    // Test case with only partial length header
+    let partial_header = [0];
+    let result = mqtt::packet::MqttString::decode(&partial_header);
+    assert!(result.is_err());
+    assert_eq!(
+        result.unwrap_err(),
+        mqtt::result_code::MqttError::MalformedPacket
+    );
+}
+
+#[test]
+fn test_mqttstring_decode_invalid_utf8() {
+    // Test case with invalid UTF-8 sequence
+    let data = [0, 4, 0xFF, 0xFE, 0xFD, 0xFC]; // Invalid UTF-8 bytes
+    let result = mqtt::packet::MqttString::decode(&data);
+    assert!(result.is_err());
+    assert_eq!(
+        result.unwrap_err(),
+        mqtt::result_code::MqttError::MalformedPacket
+    );
+}
+
+#[test]
 fn test_mqttstring_utf8() {
-    let s = MqttString::new("こんにちは").unwrap();
+    let s = mqtt::packet::MqttString::new("こんにちは").unwrap();
     assert_eq!(s.as_str(), "こんにちは");
 
     // 15 bytes as UTF-8
@@ -60,7 +104,7 @@ fn test_mqttstring_utf8() {
 
 #[test]
 fn test_mqttstring_operations() {
-    let s = MqttString::new("hello world").unwrap();
+    let s = mqtt::packet::MqttString::new("hello world").unwrap();
     assert!(s.contains('o'));
     assert!(s.starts_with("hello"));
     assert!(s.ends_with("world"));
@@ -69,9 +113,9 @@ fn test_mqttstring_operations() {
 
 #[test]
 fn test_mqttstring_comparison() {
-    let s1 = MqttString::new("hello").unwrap();
+    let s1 = mqtt::packet::MqttString::new("hello").unwrap();
 
-    // Comparison with string literal
+    // Comparison with string literal (usually PartialEq<&str>)
     assert_eq!(s1, "hello");
     assert_ne!(s1, "world");
 
@@ -79,11 +123,70 @@ fn test_mqttstring_comparison() {
     let string = "hello".to_string();
     assert_eq!(s1, string);
 
-    // Comparison with another MqttString
-    let s2 = MqttString::new("hello").unwrap();
-    let s3 = MqttString::new("world").unwrap();
+    // Comparison with another mqtt::packet::MqttString
+    let s2 = mqtt::packet::MqttString::new("hello").unwrap();
+    let s3 = mqtt::packet::MqttString::new("world").unwrap();
     assert_eq!(s1, s2);
     assert_ne!(s1, s3);
+}
+
+#[test]
+fn test_mqttstring_partial_eq_str() {
+    let s = mqtt::packet::MqttString::new("test").unwrap();
+
+    // Test PartialEq<str> - this requires dereferencing a &str to get str
+    let str_ref = "test";
+    assert_eq!(s, *str_ref); // This uses PartialEq<str>
+    assert_ne!(s, *"other"); // This uses PartialEq<str>
+
+    // Another way to force PartialEq<str> usage with Box<str>
+    let boxed_str: Box<str> = "test".into();
+    assert_eq!(s, *boxed_str); // This uses PartialEq<str>
+
+    // Test with String deref to str
+    let string = String::from("test");
+    assert_eq!(s, *string); // This dereferences String to str, using PartialEq<str>
+}
+
+#[test]
+fn test_mqttstring_as_ref_str() {
+    let s = mqtt::packet::MqttString::new("test_string").unwrap();
+
+    // Test AsRef<str> trait
+    let str_ref: &str = s.as_ref();
+    assert_eq!(str_ref, "test_string");
+
+    // Test that AsRef works in generic contexts
+    fn takes_str_ref<T: AsRef<str>>(value: T) -> usize {
+        value.as_ref().len()
+    }
+    assert_eq!(takes_str_ref(s), 11);
+}
+
+#[test]
+fn test_mqttstring_display() {
+    let s = mqtt::packet::MqttString::new("display_test").unwrap();
+
+    // Test Display trait
+    assert_eq!(format!("{s}"), "display_test");
+    assert_eq!(format!("{s}"), "display_test");
+
+    let empty_s = mqtt::packet::MqttString::new("").unwrap();
+    assert_eq!(format!("{empty_s}"), "");
+}
+
+#[test]
+fn test_mqttstring_try_from_string() {
+    // Test TryFrom<String> trait
+    let owned_string = "test_convert".to_string();
+    let s: Result<mqtt::packet::MqttString, _> = owned_string.try_into();
+    assert!(s.is_ok());
+    assert_eq!(s.unwrap().as_str(), "test_convert");
+
+    let empty_string = String::new();
+    let empty_s: Result<mqtt::packet::MqttString, _> = empty_string.try_into();
+    assert!(empty_s.is_ok());
+    assert_eq!(empty_s.unwrap().as_str(), "");
 }
 
 #[test]
@@ -91,17 +194,23 @@ fn test_mqttstring_hash() {
     use std::collections::HashMap;
 
     let mut map = HashMap::new();
-    map.insert(MqttString::new("key1"), "value1");
-    map.insert(MqttString::new("key2"), "value2");
+    map.insert(mqtt::packet::MqttString::new("key1"), "value1");
+    map.insert(mqtt::packet::MqttString::new("key2"), "value2");
 
-    assert_eq!(map.get(&MqttString::new("key1")), Some(&"value1"));
-    assert_eq!(map.get(&MqttString::new("key2")), Some(&"value2"));
-    assert_eq!(map.get(&MqttString::new("key3")), None);
+    assert_eq!(
+        map.get(&mqtt::packet::MqttString::new("key1")),
+        Some(&"value1")
+    );
+    assert_eq!(
+        map.get(&mqtt::packet::MqttString::new("key2")),
+        Some(&"value2")
+    );
+    assert_eq!(map.get(&mqtt::packet::MqttString::new("key3")), None);
 }
 
 #[test]
 fn test_mqttstring_serde() {
-    let s = MqttString::new("test_string").unwrap();
+    let s = mqtt::packet::MqttString::new("test_string").unwrap();
 
     // Serialize
     let serialized = serde_json::to_string(&s).unwrap();
@@ -110,7 +219,7 @@ fn test_mqttstring_serde() {
 
 #[test]
 fn test_mqttstring_deref() {
-    let s = MqttString::new("test").unwrap();
+    let s = mqtt::packet::MqttString::new("test").unwrap();
 
     // Call standard string methods through Deref
     assert_eq!(s.len(), 4);

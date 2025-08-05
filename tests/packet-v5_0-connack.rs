@@ -348,3 +348,9 @@ fn parse_no_props() {
         .expect("Failed to build expected Connack packet");
     assert_eq!(packet, expected);
 }
+
+#[test]
+fn test_packet_type() {
+    let packet_type = mqtt::packet::v5_0::Connack::packet_type();
+    assert_eq!(packet_type, mqtt::packet::PacketType::Connack);
+}

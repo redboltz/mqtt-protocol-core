@@ -328,3 +328,9 @@ fn roundtrip_multiple_entries() {
         assert_eq!(orig.as_str(), parsed.as_str());
     }
 }
+
+#[test]
+fn test_packet_type() {
+    let packet_type = mqtt::packet::v3_1_1::Unsubscribe::packet_type();
+    assert_eq!(packet_type, mqtt::packet::PacketType::Unsubscribe);
+}
