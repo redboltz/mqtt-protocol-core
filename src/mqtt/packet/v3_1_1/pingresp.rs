@@ -452,7 +452,7 @@ impl GenericPacketTrait for Pingresp {
 ///
 /// let pingresp = mqtt::packet::v3_1_1::Pingresp::new();
 /// let generic_display: &dyn mqtt::packet::GenericPacketDisplay = &pingresp;
-/// println!("{}", format!("{:?}", generic_display));
+/// println!("{}", format!("{generic_display:?}"));
 /// ```
 impl GenericPacketDisplay for Pingresp {
     fn fmt_debug(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

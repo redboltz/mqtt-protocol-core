@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 use arrayvec::ArrayVec;
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde::{Serialize, Serializer};
 use std::convert::{From, TryFrom};
 use std::fmt;
 use std::io::IoSlice;
@@ -131,17 +131,6 @@ impl Serialize for VariableByteInteger {
         S: Serializer,
     {
         serializer.serialize_u32(self.to_u32())
-    }
-}
-
-impl<'de> Deserialize<'de> for VariableByteInteger {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let val = u32::deserialize(deserializer)?;
-        VariableByteInteger::from_u32(val)
-            .ok_or_else(|| serde::de::Error::custom("Value too large"))
     }
 }
 
