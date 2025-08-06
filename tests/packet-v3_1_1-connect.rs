@@ -32,6 +32,10 @@ fn build_success_no_client_id() {
         .unwrap();
     assert_eq!(packet.client_id(), "");
     assert!(packet.clean_start());
+
+    // Test packet_type method
+    let packet_type = mqtt::packet::v3_1_1::Connect::packet_type();
+    assert_eq!(packet_type, mqtt::packet::PacketType::Connect);
 }
 
 #[test]
@@ -581,4 +585,10 @@ fn size_with_features() {
 
     let expected_size = 1 + 1 + variable_header_payload; // fixed header + remaining length + payload
     assert_eq!(packet.size(), expected_size);
+}
+
+#[test]
+fn test_packet_type() {
+    let packet_type = mqtt::packet::v3_1_1::Connect::packet_type();
+    assert_eq!(packet_type, mqtt::packet::PacketType::Connect);
 }

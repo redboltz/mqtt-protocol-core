@@ -64,6 +64,5 @@ pub use self::topic_alias_send::TopicAliasSend;
 mod topic_alias_recv;
 pub use self::topic_alias_recv::TopicAliasRecv;
 
-pub mod as_concrete;
 pub mod kind;
 pub mod prelude;

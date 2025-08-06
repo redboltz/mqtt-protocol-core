@@ -567,3 +567,9 @@ fn roundtrip_with_all_valid_properties() {
     assert_eq!(parsed.entries()[0].topic_filter(), "sensor/+/temperature");
     assert_eq!(parsed.entries()[1].topic_filter(), "control/#");
 }
+
+#[test]
+fn test_packet_type() {
+    let packet_type = mqtt::packet::v5_0::Subscribe::packet_type();
+    assert_eq!(packet_type, mqtt::packet::PacketType::Subscribe);
+}

@@ -451,3 +451,9 @@ fn roundtrip_no_sp_error() {
     assert_eq!(parsed.session_present(), original.session_present());
     assert_eq!(parsed.return_code(), original.return_code());
 }
+
+#[test]
+fn test_packet_type() {
+    let packet_type = mqtt::packet::v3_1_1::Connack::packet_type();
+    assert_eq!(packet_type, mqtt::packet::PacketType::Connack);
+}

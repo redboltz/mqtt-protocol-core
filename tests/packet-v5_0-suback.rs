@@ -594,3 +594,9 @@ fn roundtrip_with_all_valid_properties() {
         mqtt::result_code::SubackReasonCode::UnspecifiedError
     );
 }
+
+#[test]
+fn test_packet_type() {
+    let packet_type = mqtt::packet::v5_0::Suback::packet_type();
+    assert_eq!(packet_type, mqtt::packet::PacketType::Suback);
+}

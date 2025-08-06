@@ -119,3 +119,9 @@ fn roundtrip_minimal() {
     // since there are no fields to compare
     assert!(true);
 }
+
+#[test]
+fn test_packet_type() {
+    let packet_type = mqtt::packet::v3_1_1::Pingreq::packet_type();
+    assert_eq!(packet_type, mqtt::packet::PacketType::Pingreq);
+}

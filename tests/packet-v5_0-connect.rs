@@ -1194,3 +1194,9 @@ fn roundtrip_with_all_features() {
     assert_eq!(original.will_qos(), parsed.will_qos());
     assert_eq!(original.will_retain(), parsed.will_retain());
 }
+
+#[test]
+fn test_packet_type() {
+    let packet_type = mqtt::packet::v5_0::Connect::packet_type();
+    assert_eq!(packet_type, mqtt::packet::PacketType::Connect);
+}

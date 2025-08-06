@@ -173,3 +173,9 @@ fn roundtrip_minimal() {
     let (parsed, _) = mqtt::packet::v3_1_1::Pubcomp::parse(&data).unwrap();
     assert_eq!(original.packet_id(), parsed.packet_id());
 }
+
+#[test]
+fn test_packet_type() {
+    let packet_type = mqtt::packet::v3_1_1::Pubcomp::packet_type();
+    assert_eq!(packet_type, mqtt::packet::PacketType::Pubcomp);
+}

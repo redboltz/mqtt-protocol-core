@@ -784,3 +784,9 @@ fn parse_fail_reauth_no_props() {
     let err = mqtt::packet::v5_0::Auth::parse(&raw).unwrap_err();
     assert_eq!(err, mqtt::result_code::MqttError::ProtocolError);
 }
+
+#[test]
+fn test_packet_type() {
+    let packet_type = mqtt::packet::v5_0::Auth::packet_type();
+    assert_eq!(packet_type, mqtt::packet::PacketType::Auth);
+}

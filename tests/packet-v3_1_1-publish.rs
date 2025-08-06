@@ -591,3 +591,9 @@ fn test_set_dup_chaining() {
     assert_eq!(result.qos(), mqtt::packet::Qos::ExactlyOnce);
     assert_eq!(result.packet_id(), Some(456u16));
 }
+
+#[test]
+fn test_packet_type() {
+    let packet_type = mqtt::packet::v3_1_1::Publish::packet_type();
+    assert_eq!(packet_type, mqtt::packet::PacketType::Publish);
+}

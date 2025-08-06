@@ -1395,3 +1395,9 @@ fn test_topic_name_extracted_parse_default_false() {
     assert!(!packet.topic_name_extracted());
     assert_eq!(packet.topic_name(), "test/topic");
 }
+
+#[test]
+fn test_packet_type() {
+    let packet_type = mqtt::packet::v5_0::Publish::packet_type();
+    assert_eq!(packet_type, mqtt::packet::PacketType::Publish);
+}
