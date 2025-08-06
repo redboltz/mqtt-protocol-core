@@ -2,6 +2,8 @@
 
 [![Crates.io](https://img.shields.io/crates/v/mqtt-protocol-core.svg)](https://crates.io/crates/mqtt-protocol-core)
 [![Documentation](https://docs.rs/mqtt-protocol-core/badge.svg)](https://docs.rs/mqtt-protocol-core)
+[![CI](https://github.com/redboltz/mqtt-protocol-core/workflows/CI/badge.svg)](https://github.com/redboltz/mqtt-protocol-core/actions)
+[![codecov](https://codecov.io/gh/redboltz/mqtt-protocol-core/branch/main/graph/badge.svg)](https://codecov.io/gh/redboltz/mqtt-protocol-core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A **Sans-I/O** style MQTT protocol library for Rust that supports both **MQTT v5.0** and **v3.1.1**.
