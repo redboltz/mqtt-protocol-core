@@ -766,7 +766,7 @@ impl GenericPacketTrait for Connack {
 ///     .unwrap();
 ///
 /// // Use generic display methods
-/// let debug_output = format!("{:?}", connack);
+/// let debug_output = format!("{connack:?}");
 /// let display_output = format!("{}", connack);
 ///
 /// // Can be used in generic contexts
