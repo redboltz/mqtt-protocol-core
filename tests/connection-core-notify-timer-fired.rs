@@ -44,9 +44,9 @@ fn notify_timer_fired_pingreq_send_v3_1_1_connected() {
     assert!(events.len() >= 1);
 
     // Should contain RequestSendPacket event
-    let has_send_packet = events.iter().any(|e| {
-        matches!(e, mqtt::connection::Event::RequestSendPacket { .. })
-    });
+    let has_send_packet = events
+        .iter()
+        .any(|e| matches!(e, mqtt::connection::Event::RequestSendPacket { .. }));
     assert!(has_send_packet, "Expected RequestSendPacket event");
 }
 
@@ -65,9 +65,9 @@ fn notify_timer_fired_pingreq_send_v5_0_connected() {
     assert!(events.len() >= 1);
 
     // Should contain RequestSendPacket event
-    let has_send_packet = events.iter().any(|e| {
-        matches!(e, mqtt::connection::Event::RequestSendPacket { .. })
-    });
+    let has_send_packet = events
+        .iter()
+        .any(|e| matches!(e, mqtt::connection::Event::RequestSendPacket { .. }));
     assert!(has_send_packet, "Expected RequestSendPacket event");
 }
 
@@ -100,7 +100,7 @@ fn notify_timer_fired_pingreq_recv_v3_1_1() {
     // Should request connection close for v3.1.1
     assert_eq!(events.len(), 1);
     match &events[0] {
-        mqtt::connection::Event::RequestClose => {},
+        mqtt::connection::Event::RequestClose => {}
         _ => panic!("Expected RequestClose event, got {:?}", events[0]),
     }
 }
@@ -120,9 +120,9 @@ fn notify_timer_fired_pingreq_recv_v5_0_connected() {
     assert!(events.len() >= 1);
 
     // Should contain RequestSendPacket event
-    let has_send_packet = events.iter().any(|e| {
-        matches!(e, mqtt::connection::Event::RequestSendPacket { .. })
-    });
+    let has_send_packet = events
+        .iter()
+        .any(|e| matches!(e, mqtt::connection::Event::RequestSendPacket { .. }));
     assert!(has_send_packet, "Expected RequestSendPacket event");
 }
 
@@ -155,7 +155,7 @@ fn notify_timer_fired_pingresp_recv_v3_1_1() {
     // Should request connection close for v3.1.1
     assert_eq!(events.len(), 1);
     match &events[0] {
-        mqtt::connection::Event::RequestClose => {},
+        mqtt::connection::Event::RequestClose => {}
         _ => panic!("Expected RequestClose event, got {:?}", events[0]),
     }
 }
@@ -175,9 +175,9 @@ fn notify_timer_fired_pingresp_recv_v5_0_connected() {
     assert!(events.len() >= 1);
 
     // Should contain RequestSendPacket event
-    let has_send_packet = events.iter().any(|e| {
-        matches!(e, mqtt::connection::Event::RequestSendPacket { .. })
-    });
+    let has_send_packet = events
+        .iter()
+        .any(|e| matches!(e, mqtt::connection::Event::RequestSendPacket { .. }));
     assert!(has_send_packet, "Expected RequestSendPacket event");
 }
 

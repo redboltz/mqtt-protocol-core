@@ -90,7 +90,7 @@ fn recv_error_malformed_packet_invalid_remaining_length() {
 
     // First event should be RequestClose
     match &events[0] {
-        mqtt::connection::Event::RequestClose => {},
+        mqtt::connection::Event::RequestClose => {}
         _ => panic!("Expected RequestClose event, got {:?}", events[0]),
     }
 
@@ -98,7 +98,7 @@ fn recv_error_malformed_packet_invalid_remaining_length() {
     match &events[1] {
         mqtt::connection::Event::NotifyError(error) => {
             assert_eq!(*error, mqtt::result_code::MqttError::MalformedPacket);
-        },
+        }
         _ => panic!("Expected NotifyError event, got {:?}", events[1]),
     }
 }
