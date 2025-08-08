@@ -91,9 +91,7 @@ impl VariableByteInteger {
         let mut read = ArrayVec::<u8, 4>::new();
 
         for (i, &b) in buf.iter().take(4).enumerate() {
-            value = value
-                .checked_add(u32::from(b & 0x7F) * multiplier)
-                .unwrap_or(u32::MAX);
+            value = value.saturating_add(u32::from(b & 0x7F) * multiplier);
             if value > Self::MAX {
                 return DecodeResult::Err("VariableByteInteger too large");
             }
