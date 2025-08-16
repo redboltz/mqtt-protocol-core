@@ -27,7 +27,6 @@ num_enum = "0.7"
 derive_builder = "0.20"
 getset = "0.1.5"
 enum_dispatch = "0.3"
-multi_index_map = "0.15.0"
 
 # logging
 tracing = "0.1"
