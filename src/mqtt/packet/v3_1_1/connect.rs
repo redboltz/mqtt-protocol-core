@@ -1,3 +1,4 @@
+use alloc::vec::Vec;
 /**
  * MIT License
  *
@@ -22,12 +23,13 @@
  * SOFTWARE.
  */
 use core::fmt;
+use derive_builder::Builder;
+#[cfg(feature = "std")]
 use std::io::IoSlice;
 
 use serde::ser::{SerializeStruct, Serializer};
 use serde::Serialize;
 
-use derive_builder::Builder;
 use getset::{CopyGetters, Getters};
 
 use crate::mqtt::packet::json_bin_encode::escape_binary_json_string;
@@ -123,7 +125,7 @@ use crate::mqtt::result_code::MqttError;
 /// let buffers = connect.to_buffers();
 /// ```
 #[derive(PartialEq, Eq, Builder, Clone, Getters, CopyGetters)]
-#[builder(derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
+#[builder(no_std, derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
 pub struct Connect {
     #[builder(private)]
     fixed_header: [u8; 1],
@@ -1180,11 +1182,13 @@ impl GenericPacketTrait for Connect {
         self.size()
     }
 
-    /// Converts the packet to I/O slices for efficient transmission
-    ///
-    /// Delegates to the `Connect::to_buffers()` method.
+    #[cfg(feature = "std")]
     fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         self.to_buffers()
+    }
+
+    fn to_continuous_buffer(&self) -> Vec<u8> {
+        self.to_continuous_buffer()
     }
 }
 
@@ -1198,14 +1202,14 @@ impl GenericPacketDisplay for Connect {
     /// Formats the packet using the Debug trait
     ///
     /// Delegates to the `Debug::fmt()` implementation.
-    fn fmt_debug(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Debug::fmt(self, f)
+    fn fmt_debug(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Debug::fmt(self, f)
     }
 
     /// Formats the packet using the Display trait
     ///
     /// Delegates to the `Display::fmt()` implementation.
-    fn fmt_display(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Display::fmt(self, f)
+    fn fmt_display(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Display::fmt(self, f)
     }
 }

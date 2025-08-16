@@ -245,12 +245,23 @@ fn to_buffers_pid() {
         .build()
         .unwrap();
 
-    let buffers = packet.to_buffers();
-    assert_eq!(buffers.len(), 3);
-    assert_eq!(buffers[0].as_ref(), &[0x70]); // fixed header
-    assert_eq!(buffers[1].as_ref(), &[0x02]); // remaining length
-    assert_eq!(buffers[2].as_ref(), &1234u16.to_be_bytes()); // packet_id
+    let continuous = packet.to_continuous_buffer();
+    assert_eq!(continuous.len(), 4);
+    assert_eq!(continuous[0], 0x70); // fixed header
+    assert_eq!(continuous[1], 0x02); // remaining length
+    assert_eq!(&continuous[2..4], &1234u16.to_be_bytes()); // packet_id
+
+    #[cfg(feature = "std")]
+    {
+        let buffers = packet.to_buffers();
+        let mut buffers_data = Vec::new();
+        for buf in buffers.iter() {
+            buffers_data.extend_from_slice(buf);
+        }
+        assert_eq!(continuous, buffers_data.as_slice());
+    }
     assert_eq!(packet.size(), 4); // 1 + 1 + 2
+    assert_eq!(packet.size(), continuous.len());
 }
 
 #[test]
@@ -261,13 +272,24 @@ fn to_buffers_pid_rc() {
         .build()
         .unwrap();
 
-    let buffers = packet.to_buffers();
-    assert_eq!(buffers.len(), 4);
-    assert_eq!(buffers[0].as_ref(), &[0x70]); // fixed header
-    assert_eq!(buffers[1].as_ref(), &[0x03]); // remaining length
-    assert_eq!(buffers[2].as_ref(), &1234u16.to_be_bytes()); // packet_id
-    assert_eq!(buffers[3].as_ref(), &[0x00]); // reason code
+    let continuous = packet.to_continuous_buffer();
+    assert_eq!(continuous.len(), 5);
+    assert_eq!(continuous[0], 0x70); // fixed header
+    assert_eq!(continuous[1], 0x03); // remaining length
+    assert_eq!(&continuous[2..4], &1234u16.to_be_bytes()); // packet_id
+    assert_eq!(continuous[4], 0x00); // reason code
+
+    #[cfg(feature = "std")]
+    {
+        let buffers = packet.to_buffers();
+        let mut buffers_data = Vec::new();
+        for buf in buffers.iter() {
+            buffers_data.extend_from_slice(buf);
+        }
+        assert_eq!(continuous, buffers_data.as_slice());
+    }
     assert_eq!(packet.size(), 5); // 1 + 1 + 2 + 1
+    assert_eq!(packet.size(), continuous.len());
 }
 
 #[test]
@@ -279,14 +301,25 @@ fn to_buffers_pid_rc_prop0() {
         .build()
         .unwrap();
 
-    let buffers = packet.to_buffers();
-    assert_eq!(buffers.len(), 5);
-    assert_eq!(buffers[0].as_ref(), &[0x70]); // fixed header
-    assert_eq!(buffers[1].as_ref(), &[0x04]); // remaining length
-    assert_eq!(buffers[2].as_ref(), &1234u16.to_be_bytes()); // packet_id
-    assert_eq!(buffers[3].as_ref(), &[0x00]); // reason code
-    assert_eq!(buffers[4].as_ref(), &[0x00]); // property length
+    let continuous = packet.to_continuous_buffer();
+    assert_eq!(continuous.len(), 6);
+    assert_eq!(continuous[0], 0x70); // fixed header
+    assert_eq!(continuous[1], 0x04); // remaining length
+    assert_eq!(&continuous[2..4], &1234u16.to_be_bytes()); // packet_id
+    assert_eq!(continuous[4], 0x00); // reason code
+    assert_eq!(continuous[5], 0x00); // property length
+
+    #[cfg(feature = "std")]
+    {
+        let buffers = packet.to_buffers();
+        let mut buffers_data = Vec::new();
+        for buf in buffers.iter() {
+            buffers_data.extend_from_slice(buf);
+        }
+        assert_eq!(continuous, buffers_data.as_slice());
+    }
     assert_eq!(packet.size(), 6); // 1 + 1 + 2 + 1 + 1
+    assert_eq!(packet.size(), continuous.len());
 }
 
 // Parse tests

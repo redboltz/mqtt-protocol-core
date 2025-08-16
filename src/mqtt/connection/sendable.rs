@@ -31,6 +31,7 @@ use crate::mqtt::packet::kind::PacketKind;
 use crate::mqtt::packet::GenericPacket;
 use crate::mqtt::packet::IsPacketId;
 use crate::mqtt::result_code::MqttError;
+use alloc::vec::Vec;
 use core::fmt::Debug;
 use tracing::trace;
 
@@ -276,7 +277,7 @@ where
     PacketIdType: IsPacketId,
     T: SendableRole<Role>
         + SendableVersion
-        + std::fmt::Display
+        + core::fmt::Display
         + Debug
         + PacketKind
         + SendableHelper<Role, PacketIdType>,

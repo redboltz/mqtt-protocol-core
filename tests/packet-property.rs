@@ -297,10 +297,16 @@ fn test_all_properties() {
         }
 
         // Test serialization and parsing
-        let buffers = prop.to_buffers();
-        let concatenated: Vec<u8> = buffers.iter().flat_map(|s| s.as_ref().to_vec()).collect();
-        let (parsed_prop, parsed_len) = mqtt::packet::Property::parse(&concatenated).unwrap();
-        assert_eq!(parsed_len, concatenated.len());
+        let continuous = prop.to_continuous_buffer();
+
+        #[cfg(feature = "std")]
+        {
+            let buffers = prop.to_buffers();
+            let concatenated: Vec<u8> = buffers.iter().flat_map(|s| s.as_ref().to_vec()).collect();
+            assert_eq!(continuous, concatenated);
+        }
+        let (parsed_prop, parsed_len) = mqtt::packet::Property::parse(&continuous).unwrap();
+        assert_eq!(parsed_len, continuous.len());
         assert_eq!(parsed_prop, prop);
     }
 }
@@ -974,12 +980,16 @@ fn test_property_enum_size_methods() {
     let content_type = mqtt::packet::Property::ContentType(
         mqtt::packet::ContentType::new("application/json").unwrap(),
     );
-    let buffers = content_type.to_buffers();
-    assert!(!buffers.is_empty());
+    let continuous = content_type.to_continuous_buffer();
+    assert_eq!(continuous.len(), content_type.size());
 
-    // Verify the buffers contain the expected data
-    let total_size: usize = buffers.iter().map(|buf| buf.len()).sum();
-    assert_eq!(total_size, content_type.size());
+    #[cfg(feature = "std")]
+    {
+        let buffers = content_type.to_buffers();
+        assert!(!buffers.is_empty());
+        let total_size: usize = buffers.iter().map(|buf| buf.len()).sum();
+        assert_eq!(total_size, content_type.size());
+    }
 }
 
 // Test specific property parsing and validation error cases (lines 909, 925, 977, 1000, 1011, 1022)

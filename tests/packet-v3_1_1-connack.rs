@@ -21,8 +21,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+use core::fmt::Write;
 use mqtt_protocol_core::mqtt;
-use std::fmt::Write;
 
 // Build fail tests
 
@@ -103,6 +103,7 @@ fn build_success_different_return_codes() {
 // Display tests
 
 #[test]
+#[cfg(feature = "std")]
 fn display_sp_rc() {
     let packet = mqtt::packet::v3_1_1::Connack::builder()
         .session_present(true)
@@ -118,6 +119,7 @@ fn display_sp_rc() {
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn display_no_sp() {
     let packet = mqtt::packet::v3_1_1::Connack::builder()
         .session_present(false)
@@ -135,6 +137,7 @@ fn display_no_sp() {
 // Debug tests
 
 #[test]
+#[cfg(feature = "std")]
 fn debug_sp_rc() {
     let packet = mqtt::packet::v3_1_1::Connack::builder()
         .session_present(true)
@@ -184,6 +187,7 @@ fn getter_no_sp() {
 // to_buffers() tests
 
 #[test]
+#[cfg(feature = "std")]
 fn to_buffers_sp_rc() {
     let packet = mqtt::packet::v3_1_1::Connack::builder()
         .session_present(true)
@@ -197,10 +201,19 @@ fn to_buffers_sp_rc() {
     assert_eq!(buffers[1].as_ref(), &[0x02]); // remaining length
     assert_eq!(buffers[2].as_ref(), &[0x01]); // session_present = true
     assert_eq!(buffers[3].as_ref(), &[0x00]); // return_code = Accepted
+
+    // Verify to_buffers() and to_continuous_buffer() produce same result
+    let continuous = packet.to_continuous_buffer();
+    let mut from_buffers = Vec::new();
+    for buf in buffers {
+        from_buffers.extend_from_slice(&buf);
+    }
+    assert_eq!(continuous, from_buffers);
     assert_eq!(packet.size(), 4); // 1 + 1 + 1 + 1 = 4
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn to_buffers_no_sp() {
     let packet = mqtt::packet::v3_1_1::Connack::builder()
         .session_present(false)
@@ -215,9 +228,18 @@ fn to_buffers_no_sp() {
     assert_eq!(buffers[2].as_ref(), &[0x00]); // session_present = false
     assert_eq!(buffers[3].as_ref(), &[0x05]); // return_code = NotAuthorized (5)
     assert_eq!(packet.size(), 4); // 1 + 1 + 1 + 1 = 4
+
+    // Verify to_buffers() and to_continuous_buffer() produce same result
+    let continuous = packet.to_continuous_buffer();
+    let mut from_buffers = Vec::new();
+    for buf in buffers {
+        from_buffers.extend_from_slice(&buf);
+    }
+    assert_eq!(continuous, from_buffers);
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn to_buffers_different_return_codes() {
     let test_cases = [
         (mqtt::result_code::ConnectReturnCode::Accepted, 0x00),
@@ -418,14 +440,23 @@ fn roundtrip_sp_accepted() {
         .build()
         .unwrap();
 
-    let buffers = original.to_buffers();
-    let mut data = Vec::new();
-    for buffer in &buffers[2..] {
-        // Skip fixed header and remaining length for parse
-        data.extend_from_slice(buffer);
+    // Use to_continuous_buffer for no-std compatibility
+    let continuous = original.to_continuous_buffer();
+
+    #[cfg(feature = "std")]
+    {
+        // Also verify to_buffers() produces same result when std is available
+        let buffers = original.to_buffers();
+        let mut from_buffers = Vec::new();
+        for buffer in &buffers {
+            from_buffers.extend_from_slice(buffer);
+        }
+        assert_eq!(continuous, from_buffers);
     }
 
-    let (parsed, consumed) = mqtt::packet::v3_1_1::Connack::parse(&data).unwrap();
+    let data = &continuous[2..]; // Skip fixed header and remaining length
+
+    let (parsed, consumed) = mqtt::packet::v3_1_1::Connack::parse(data).unwrap();
     assert_eq!(consumed, 2);
     assert_eq!(parsed.session_present(), original.session_present());
     assert_eq!(parsed.return_code(), original.return_code());
@@ -439,14 +470,23 @@ fn roundtrip_no_sp_error() {
         .build()
         .unwrap();
 
-    let buffers = original.to_buffers();
-    let mut data = Vec::new();
-    for buffer in &buffers[2..] {
-        // Skip fixed header and remaining length for parse
-        data.extend_from_slice(buffer);
+    // Use to_continuous_buffer for no-std compatibility
+    let continuous = original.to_continuous_buffer();
+
+    #[cfg(feature = "std")]
+    {
+        // Also verify to_buffers() produces same result when std is available
+        let buffers = original.to_buffers();
+        let mut from_buffers = Vec::new();
+        for buffer in &buffers {
+            from_buffers.extend_from_slice(buffer);
+        }
+        assert_eq!(continuous, from_buffers);
     }
 
-    let (parsed, consumed) = mqtt::packet::v3_1_1::Connack::parse(&data).unwrap();
+    let data = &continuous[2..]; // Skip fixed header and remaining length
+
+    let (parsed, consumed) = mqtt::packet::v3_1_1::Connack::parse(data).unwrap();
     assert_eq!(consumed, 2);
     assert_eq!(parsed.session_present(), original.session_present());
     assert_eq!(parsed.return_code(), original.return_code());

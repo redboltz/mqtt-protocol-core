@@ -59,6 +59,7 @@ fn debug() {
 // to_buffers() tests
 
 #[test]
+#[cfg(feature = "std")]
 fn to_buffers() {
     let packet = mqtt::packet::v5_0::Pingreq::builder().build().unwrap();
 
@@ -67,6 +68,14 @@ fn to_buffers() {
     assert_eq!(buffers[0].as_ref(), &[0xc0]); // fixed header (PINGREQ packet type)
     assert_eq!(buffers[1].as_ref(), &[0x00]); // remaining length (0)
     assert_eq!(packet.size(), 2); // 1 + 1
+
+    // Verify to_buffers() and to_continuous_buffer() produce same result
+    let continuous = packet.to_continuous_buffer();
+    let mut from_buffers = Vec::new();
+    for buf in buffers {
+        from_buffers.extend_from_slice(&buf);
+    }
+    assert_eq!(continuous, from_buffers);
 }
 
 // Parse tests

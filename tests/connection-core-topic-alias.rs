@@ -49,9 +49,8 @@ fn test_auto_map_topic_alias_send_v5_0() {
         .build()
         .unwrap();
 
-    let buffers = connack.to_buffers();
-    let bytes: Vec<u8> = buffers.iter().flat_map(|buf| buf.iter()).copied().collect();
-    let _events = connection.recv(&mut std::io::Cursor::new(&bytes));
+    let bytes = connack.to_continuous_buffer();
+    let _events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
 
     // Send QoS0 PUBLISH A
     let publish_a = mqtt::packet::v5_0::Publish::builder()
@@ -151,9 +150,8 @@ fn test_auto_replace_topic_alias_send_v5_0() {
         .build()
         .unwrap();
 
-    let buffers = connect.to_buffers();
-    let bytes: Vec<u8> = buffers.iter().flat_map(|buf| buf.iter()).copied().collect();
-    let _events = connection.recv(&mut std::io::Cursor::new(&bytes));
+    let bytes = connect.to_continuous_buffer();
+    let _events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
 
     // Send CONNACK
     let connack = mqtt::packet::v5_0::Connack::builder()
@@ -279,9 +277,8 @@ fn test_regulate_for_store_topic_alias_v5_0() {
         .build()
         .unwrap();
 
-    let buffers = connack.to_buffers();
-    let bytes: Vec<u8> = buffers.iter().flat_map(|buf| buf.iter()).copied().collect();
-    let _events = connection.recv(&mut std::io::Cursor::new(&bytes));
+    let bytes = connack.to_continuous_buffer();
+    let _events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
 
     let packet_id_1 = connection.acquire_packet_id().unwrap();
     let publish_original = mqtt::packet::v5_0::Publish::builder()

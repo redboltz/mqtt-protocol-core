@@ -1,3 +1,4 @@
+use alloc::vec::Vec;
 /**
  * MIT License
  *
@@ -22,12 +23,12 @@
  * SOFTWARE.
  */
 use core::fmt;
+use derive_builder::Builder;
+#[cfg(feature = "std")]
 use std::io::IoSlice;
 
 use serde::ser::{SerializeStruct, Serializer};
 use serde::Serialize;
-
-use derive_builder::Builder;
 
 use crate::mqtt::packet::packet_type::{FixedHeader, PacketType};
 use crate::mqtt::packet::variable_byte_integer::VariableByteInteger;
@@ -91,7 +92,7 @@ use crate::mqtt::result_code::MqttError;
 /// assert_eq!(buffers.len(), 2); // Fixed header + remaining length
 /// ```
 #[derive(PartialEq, Eq, Builder, Clone)]
-#[builder(derive(Debug), pattern = "owned", build_fn(skip))]
+#[builder(no_std, derive(Debug), pattern = "owned", build_fn(skip))]
 pub struct Pingreq {
     #[builder(private)]
     fixed_header: [u8; 1],
@@ -187,16 +188,15 @@ impl Pingreq {
         1 + self.remaining_length.size() + self.remaining_length.to_u32() as usize
     }
 
-    /// Converts the PINGREQ packet to a vector of I/O slices for efficient network transmission
+    /// Create IoSlice buffers for efficient network I/O
     ///
-    /// This method provides zero-copy serialization by returning references to the
-    /// internal packet data as I/O slices, which can be used directly with vectored I/O operations.
+    /// Returns a vector of `IoSlice` objects that can be used for vectored I/O
+    /// operations, allowing zero-copy writes to network sockets. The buffers
+    /// represent the complete PINGREQ packet in wire format.
     ///
     /// # Returns
     ///
-    /// A vector containing:
-    /// - Fixed header slice (1 byte)
-    /// - Remaining length slice (1 byte)
+    /// A vector of `IoSlice` objects for vectored I/O operations
     ///
     /// # Examples
     ///
@@ -205,11 +205,9 @@ impl Pingreq {
     ///
     /// let pingreq = mqtt::packet::v5_0::Pingreq::new();
     /// let buffers = pingreq.to_buffers();
-    /// assert_eq!(buffers.len(), 2);
-    ///
-    /// // Can be used with vectored write operations
-    /// // stream.write_vectored(&buffers).await?;
+    /// // Use with vectored write: socket.write_vectored(&buffers)?;
     /// ```
+    #[cfg(feature = "std")]
     #[cfg(feature = "std")]
     pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         vec![
@@ -218,23 +216,18 @@ impl Pingreq {
         ]
     }
 
-    /// Converts the PINGREQ packet into a continuous buffer for no-std environments.
+    /// Create a continuous buffer containing the complete packet data
     ///
-    /// This method serializes the entire packet into a single contiguous byte vector,
-    /// which is suitable for no-std environments where `IoSlice` is not available.
-    /// The resulting buffer contains the complete MQTT v5.0 PINGREQ packet ready
-    /// for transmission over a network connection.
+    /// Returns a vector containing all packet bytes in a single continuous buffer.
+    /// This method provides an alternative to `to_buffers()` for no-std environments
+    /// where vectored I/O is not available.
+    ///
+    /// The returned buffer contains the complete PINGREQ packet serialized according
+    /// to the MQTT v5.0 protocol specification.
     ///
     /// # Returns
     ///
-    /// A `Vec<u8>` containing the complete packet data in MQTT wire format:
-    /// - Fixed header (1 byte): Packet type and flags
-    /// - Remaining length (1 byte): Always 0x00 for PINGREQ
-    ///
-    /// # Performance
-    ///
-    /// This method allocates a new vector and copies packet data into it. For
-    /// zero-copy operations in std environments, use [`to_buffers()`] instead.
+    /// A vector containing the complete packet data
     ///
     /// # Examples
     ///
@@ -243,10 +236,7 @@ impl Pingreq {
     ///
     /// let pingreq = mqtt::packet::v5_0::Pingreq::new();
     /// let buffer = pingreq.to_continuous_buffer();
-    /// assert_eq!(buffer.len(), 2); // Fixed header + remaining length
-    ///
-    /// // Use buffer for writing to network streams
-    /// // stream.write_all(&buffer).await?;
+    /// // buffer contains all packet bytes
     /// ```
     ///
     /// [`to_buffers()`]: #method.to_buffers
@@ -419,8 +409,13 @@ impl GenericPacketTrait for Pingreq {
         self.size()
     }
 
+    #[cfg(feature = "std")]
     fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         self.to_buffers()
+    }
+
+    fn to_continuous_buffer(&self) -> Vec<u8> {
+        self.to_continuous_buffer()
     }
 }
 
@@ -434,11 +429,11 @@ impl GenericPacketTrait for Pingreq {
 /// - `fmt_debug()`: Debug formatting
 /// - `fmt_display()`: Display formatting
 impl GenericPacketDisplay for Pingreq {
-    fn fmt_debug(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Debug::fmt(self, f)
+    fn fmt_debug(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Debug::fmt(self, f)
     }
 
-    fn fmt_display(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Display::fmt(self, f)
+    fn fmt_display(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Display::fmt(self, f)
     }
 }

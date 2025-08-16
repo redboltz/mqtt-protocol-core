@@ -52,6 +52,7 @@ fn debug_minimal() {
 
 // to_buffers() tests
 #[test]
+#[cfg(feature = "std")]
 fn to_buffers_minimal() {
     let packet = mqtt::packet::v3_1_1::Pingreq::builder().build().unwrap();
 
@@ -69,6 +70,10 @@ fn to_buffers_minimal() {
 
     // Should be minimal size (just fixed header + remaining length = 0)
     assert_eq!(all_bytes.len(), 2);
+
+    // Verify to_buffers() and to_continuous_buffer() produce same result
+    let continuous = packet.to_continuous_buffer();
+    assert_eq!(continuous, all_bytes);
 }
 
 // Parse tests
@@ -76,14 +81,11 @@ fn to_buffers_minimal() {
 fn parse_minimal() {
     let original = mqtt::packet::v3_1_1::Pingreq::builder().build().unwrap();
 
-    let buffers = original.to_buffers();
-    let mut data = Vec::new();
-    for buf in buffers.iter().skip(2) {
-        // Skip fixed header and remaining length
-        data.extend_from_slice(buf);
-    }
+    // Use to_continuous_buffer for no-std compatibility
+    let continuous = original.to_continuous_buffer();
+    let data = &continuous[2..]; // Skip fixed header and remaining length
 
-    let (_parsed, consumed) = mqtt::packet::v3_1_1::Pingreq::parse(&data).unwrap();
+    let (_parsed, consumed) = mqtt::packet::v3_1_1::Pingreq::parse(data).unwrap();
     assert_eq!(consumed, data.len());
     assert_eq!(consumed, 0); // No payload for PINGREQ
 }
@@ -96,10 +98,24 @@ fn size_minimal() {
     let size = packet.size();
     assert!(size > 0);
 
-    // Verify size matches actual buffer size
-    let buffers = packet.to_buffers();
-    let actual_size: usize = buffers.iter().map(|buf| buf.len()).sum();
-    assert_eq!(size, actual_size);
+    // Verify size matches actual buffer size using to_continuous_buffer
+    let continuous = packet.to_continuous_buffer();
+    assert_eq!(size, continuous.len());
+
+    #[cfg(feature = "std")]
+    {
+        // Also verify to_buffers() produces same result when std is available
+        let buffers = packet.to_buffers();
+        let actual_size: usize = buffers.iter().map(|buf| buf.len()).sum();
+        assert_eq!(size, actual_size);
+
+        // Verify to_buffers() and to_continuous_buffer() produce same result
+        let mut from_buffers = Vec::new();
+        for buf in buffers {
+            from_buffers.extend_from_slice(&buf);
+        }
+        assert_eq!(continuous, from_buffers);
+    }
 }
 
 // Parse/serialize roundtrip tests
@@ -107,11 +123,9 @@ fn size_minimal() {
 fn roundtrip_minimal() {
     let original = mqtt::packet::v3_1_1::Pingreq::builder().build().unwrap();
 
-    let buffers = original.to_buffers();
-    let mut data = Vec::new();
-    for buf in buffers.iter().skip(2) {
-        data.extend_from_slice(buf);
-    }
+    // Use to_continuous_buffer for no-std compatibility
+    let continuous = original.to_continuous_buffer();
+    let data = &continuous[2..]; // Skip fixed header and remaining length
 
     let (_parsed, _) = mqtt::packet::v3_1_1::Pingreq::parse(&data).unwrap();
 

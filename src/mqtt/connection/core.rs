@@ -1,4 +1,3 @@
-use core::marker::PhantomData;
 /**
  * MIT License
  *
@@ -22,9 +21,14 @@ use core::marker::PhantomData;
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-use hashbrown::HashSet;
-use std::io::Cursor;
+use alloc::{
+    string::{String, ToString},
+    vec::Vec,
+};
+use core::marker::PhantomData;
 
+use crate::mqtt::common::Cursor;
+use crate::mqtt::common::HashSet;
 use crate::mqtt::connection::event::{GenericEvent, TimerKind};
 use crate::mqtt::connection::GenericStore;
 
@@ -1148,7 +1152,7 @@ where
     /// - Packet ID tracking sets
     /// - Store requirement flag
     ///
-    /// # Arguments
+    /// # Parameters
     /// * `is_client` - true for client mode, false for server mode
     fn initialize(&mut self, is_client: bool) {
         self.publish_send_max = None;
@@ -1197,7 +1201,7 @@ where
     /// Checks if the topic alias is valid and retrieves the corresponding topic name
     /// from the topic alias send manager.
     ///
-    /// # Arguments
+    /// # Parameters
     /// * `topic_alias_opt` - Optional topic alias value
     ///
     /// # Returns
@@ -1222,7 +1226,7 @@ where
     /// Checks if the topic alias value is valid according to the configured
     /// topic alias maximum for sending.
     ///
-    /// # Arguments
+    /// # Parameters
     /// * `topic_alias` - Topic alias value to validate
     ///
     /// # Returns
@@ -3667,7 +3671,7 @@ pub trait RecvBehavior<Role, PacketIdType>
 where
     PacketIdType: IsPacketId,
 {
-    fn recv(&mut self, data: &mut std::io::Cursor<&[u8]>) -> Vec<GenericEvent<PacketIdType>>;
+    fn recv(&mut self, data: &mut Cursor<&[u8]>) -> Vec<GenericEvent<PacketIdType>>;
 }
 
 // RecvBehavior implementations

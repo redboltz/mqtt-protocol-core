@@ -1,3 +1,4 @@
+use alloc::vec::Vec;
 /**
  * MIT License
  *
@@ -23,12 +24,13 @@
  */
 use core::fmt;
 use core::mem;
+use derive_builder::Builder;
+#[cfg(feature = "std")]
 use std::io::IoSlice;
 
 use serde::ser::{SerializeStruct, Serializer};
 use serde::Serialize;
 
-use derive_builder::Builder;
 use getset::{CopyGetters, Getters};
 
 use crate::mqtt::packet::packet_type::{FixedHeader, PacketType};
@@ -37,9 +39,9 @@ use crate::mqtt::packet::variable_byte_integer::VariableByteInteger;
 use crate::mqtt::packet::GenericPacketDisplay;
 use crate::mqtt::packet::GenericPacketTrait;
 use crate::mqtt::packet::IsPacketId;
-use crate::mqtt::packet::{
-    Properties, PropertiesParse, PropertiesSize, PropertiesToBuffers, Property,
-};
+#[cfg(feature = "std")]
+use crate::mqtt::packet::PropertiesToBuffers;
+use crate::mqtt::packet::{Properties, PropertiesParse, PropertiesSize, Property};
 use crate::mqtt::result_code::MqttError;
 use crate::mqtt::result_code::PubrecReasonCode;
 
@@ -144,7 +146,7 @@ use crate::mqtt::result_code::PubrecReasonCode;
 /// assert!(pubrec.props().is_some());
 /// ```
 #[derive(PartialEq, Eq, Builder, Clone, Getters, CopyGetters)]
-#[builder(derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
+#[builder(no_std, derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
 pub struct GenericPubrec<PacketIdType>
 where
     PacketIdType: IsPacketId,
@@ -374,7 +376,7 @@ where
     /// # Returns
     ///
     /// A `Vec<u8>` containing the complete packet data in MQTT wire format:
-    /// - Fixed header (1 byte): Packet type and flags  
+    /// - Fixed header (1 byte): Packet type and flags
     /// - Remaining length (1-4 bytes): Variable length encoding
     /// - Packet identifier (2 bytes): Matching the PUBLISH packet
     /// - Reason code (1 byte): Optional, if present
@@ -460,7 +462,7 @@ where
         let mut cursor = 0;
 
         // packet_id
-        let buffer_size = std::mem::size_of::<<PacketIdType as IsPacketId>::Buffer>();
+        let buffer_size = core::mem::size_of::<<PacketIdType as IsPacketId>::Buffer>();
         if data.len() < buffer_size {
             return Err(MqttError::MalformedPacket);
         }
@@ -895,8 +897,13 @@ where
         self.size()
     }
 
+    #[cfg(feature = "std")]
     fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         self.to_buffers()
+    }
+
+    fn to_continuous_buffer(&self) -> Vec<u8> {
+        self.to_continuous_buffer()
     }
 }
 
@@ -925,12 +932,12 @@ impl<PacketIdType> GenericPacketDisplay for GenericPubrec<PacketIdType>
 where
     PacketIdType: IsPacketId + Serialize,
 {
-    fn fmt_debug(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Debug::fmt(self, f)
+    fn fmt_debug(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Debug::fmt(self, f)
     }
 
-    fn fmt_display(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Display::fmt(self, f)
+    fn fmt_display(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Display::fmt(self, f)
     }
 }
 

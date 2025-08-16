@@ -21,9 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+use crate::mqtt::common::Cursor;
 use crate::mqtt::result_code::MqttError;
-use alloc::sync::Arc;
-use std::io::{Cursor, Read};
+use alloc::{sync::Arc, vec::Vec};
 
 #[derive(Debug, Clone)]
 pub enum PacketData {

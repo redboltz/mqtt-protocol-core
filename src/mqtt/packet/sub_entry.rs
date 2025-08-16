@@ -1,3 +1,5 @@
+use alloc::string::ToString;
+
 /**
  * MIT License
  *
@@ -25,9 +27,11 @@ use crate::mqtt::packet::MqttString;
 use crate::mqtt::packet::Qos;
 use crate::mqtt::packet::RetainHandling;
 use crate::mqtt::result_code::MqttError;
+use alloc::{string::String, vec::Vec};
 use core::fmt;
 use serde::ser::{SerializeStruct, Serializer};
 use serde::Serialize;
+#[cfg(feature = "std")]
 use std::io::IoSlice;
 
 /// MQTT Subscription Options
@@ -687,15 +691,6 @@ impl SubEntry {
     ///
     /// let entry = mqtt::packet::SubEntry::new("test/topic",
     ///                                        mqtt::packet::SubOpts::new()).unwrap();
-    /// let buffer = entry.to_continuous_buffer();
-    /// // buffer contains all subscription entry bytes
-    /// ```
-    pub fn to_continuous_buffer(&self) -> Vec<u8> {
-        let mut buf = self.topic_filter.to_continuous_buffer();
-        buf.extend_from_slice(self.sub_opts.to_buffer());
-        buf
-    }
-
     /// let buffers = entry.to_buffers();
     /// // Can be used with vectored write operations
     /// // socket.write_vectored(&buffers)?;
@@ -705,6 +700,38 @@ impl SubEntry {
         let mut buffers = self.topic_filter.to_buffers();
         buffers.push(IoSlice::new(self.sub_opts.to_buffer()));
         buffers
+    }
+
+    /// Create a continuous buffer containing the complete entry data
+    ///
+    /// Returns a vector containing all subscription entry bytes in a single continuous buffer.
+    /// This method is compatible with no-std environments and provides an alternative
+    /// to [`to_buffers()`] when vectored I/O is not needed.
+    ///
+    /// The returned buffer contains:
+    /// 1. Topic filter with length prefix
+    /// 2. Subscription options byte
+    ///
+    /// # Returns
+    ///
+    /// A vector containing the complete entry data
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// use mqtt_protocol_core::mqtt;
+    ///
+    /// let entry = mqtt::packet::SubEntry::new("test/topic",
+    ///                                        mqtt::packet::SubOpts::new()).unwrap();
+    /// let buffer = entry.to_continuous_buffer();
+    /// // buffer contains all subscription entry bytes
+    /// ```
+    ///
+    /// [`to_buffers()`]: #method.to_buffers
+    pub fn to_continuous_buffer(&self) -> Vec<u8> {
+        let mut buf = self.topic_filter.to_continuous_buffer();
+        buf.extend_from_slice(self.sub_opts.to_buffer());
+        buf
     }
 
     /// Get the total encoded size of this subscription entry

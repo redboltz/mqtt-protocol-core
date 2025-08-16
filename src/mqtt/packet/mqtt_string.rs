@@ -22,7 +22,9 @@
  * SOFTWARE.
  */
 use crate::mqtt::result_code::MqttError;
+use alloc::{string::String, vec, vec::Vec};
 use serde::{Serialize, Serializer};
+#[cfg(feature = "std")]
 use std::io::IoSlice;
 
 /// MQTT String representation with pre-encoded byte buffer
@@ -172,7 +174,7 @@ impl MqttString {
         // SAFETY: UTF-8 validity verified during MqttString creation or decode
         // Also, no direct modification of encoded field is provided,
         // ensuring buffer immutability
-        unsafe { std::str::from_utf8_unchecked(&self.encoded[2..]) }
+        unsafe { core::str::from_utf8_unchecked(&self.encoded[2..]) }
     }
 
     /// Get the length of the string data in bytes
@@ -247,28 +249,6 @@ impl MqttString {
         self.encoded.len()
     }
 
-    /// Create a continuous buffer containing the complete packet data
-    ///
-    /// Returns a vector containing all packet bytes in a single continuous buffer.
-    /// This method is compatible with no-std environments.
-    ///
-    /// # Returns
-    ///
-    /// A vector containing the complete encoded buffer
-    ///
-    /// # Examples
-    ///
-    /// ```ignore
-    /// use mqtt_protocol_core::mqtt;
-    ///
-    /// let mqtt_str = mqtt::packet::MqttString::new("data").unwrap();
-    /// let buffer = mqtt_str.to_continuous_buffer();
-    /// // buffer contains all packet bytes
-    /// ```
-    pub fn to_continuous_buffer(&self) -> Vec<u8> {
-        self.encoded.clone()
-    }
-
     /// Create IoSlice buffers for efficient network I/O
     ///
     /// Returns a vector of `IoSlice` objects that can be used for vectored I/O
@@ -292,6 +272,31 @@ impl MqttString {
     #[cfg(feature = "std")]
     pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         vec![IoSlice::new(&self.encoded)]
+    }
+
+    /// Create a continuous buffer containing the complete packet data
+    ///
+    /// Returns a vector containing all packet bytes in a single continuous buffer.
+    /// This method is compatible with no-std environments and provides an alternative
+    /// to [`to_buffers()`] when vectored I/O is not needed.
+    ///
+    /// # Returns
+    ///
+    /// A vector containing the complete encoded buffer
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// use mqtt_protocol_core::mqtt;
+    ///
+    /// let mqtt_str = mqtt::packet::MqttString::new("data").unwrap();
+    /// let buffer = mqtt_str.to_continuous_buffer();
+    /// // buffer contains all packet bytes
+    /// ```
+    ///
+    /// [`to_buffers()`]: #method.to_buffers
+    pub fn to_continuous_buffer(&self) -> Vec<u8> {
+        self.encoded.clone()
     }
 
     /// Parse string data from a byte sequence
@@ -331,7 +336,7 @@ impl MqttString {
         }
 
         // Verify UTF-8 validity - return MQTT error on parse failure
-        if std::str::from_utf8(&data[2..2 + string_len]).is_err() {
+        if core::str::from_utf8(&data[2..2 + string_len]).is_err() {
             return Err(MqttError::MalformedPacket);
         }
 
@@ -435,8 +440,8 @@ impl AsRef<str> for MqttString {
 ///
 /// Formats the string content for display purposes.
 /// This allows `MqttString` to be used with `println!`, `format!`, etc.
-impl std::fmt::Display for MqttString {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for MqttString {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "{}", self.as_str())
     }
 }
@@ -446,7 +451,7 @@ impl std::fmt::Display for MqttString {
 /// Allows `MqttString` to be used directly as a string slice in many contexts
 /// through automatic dereferencing. This enables method calls like `mqtt_str.len()`
 /// to work directly on the string content.
-impl std::ops::Deref for MqttString {
+impl core::ops::Deref for MqttString {
     type Target = str;
 
     fn deref(&self) -> &Self::Target {
@@ -470,7 +475,7 @@ impl Serialize for MqttString {
 /// Implementation of `PartialEq<str>` for `MqttString`
 ///
 /// Allows direct comparison between `MqttString` and `str`.
-impl std::cmp::PartialEq<str> for MqttString {
+impl core::cmp::PartialEq<str> for MqttString {
     fn eq(&self, other: &str) -> bool {
         self.as_str() == other
     }
@@ -479,7 +484,7 @@ impl std::cmp::PartialEq<str> for MqttString {
 /// Implementation of `PartialEq<&str>` for `MqttString`
 ///
 /// Allows direct comparison between `MqttString` and `&str`.
-impl std::cmp::PartialEq<&str> for MqttString {
+impl core::cmp::PartialEq<&str> for MqttString {
     fn eq(&self, other: &&str) -> bool {
         self.as_str() == *other
     }
@@ -488,7 +493,7 @@ impl std::cmp::PartialEq<&str> for MqttString {
 /// Implementation of `PartialEq<String>` for `MqttString`
 ///
 /// Allows direct comparison between `MqttString` and `String`.
-impl std::cmp::PartialEq<String> for MqttString {
+impl core::cmp::PartialEq<String> for MqttString {
     fn eq(&self, other: &String) -> bool {
         self.as_str() == other.as_str()
     }
@@ -498,8 +503,8 @@ impl std::cmp::PartialEq<String> for MqttString {
 ///
 /// Hashes the string content, allowing `MqttString` to be used in hash-based
 /// collections like `HashMap` and `HashSet`.
-impl std::hash::Hash for MqttString {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+impl core::hash::Hash for MqttString {
+    fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
         self.as_str().hash(state);
     }
 }

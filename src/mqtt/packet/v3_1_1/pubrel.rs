@@ -1,3 +1,4 @@
+use alloc::vec::Vec;
 /**
  * MIT License
  *
@@ -23,12 +24,13 @@
  */
 use core::fmt;
 use core::mem;
+use derive_builder::Builder;
+#[cfg(feature = "std")]
 use std::io::IoSlice;
 
 use serde::ser::{SerializeStruct, Serializer};
 use serde::Serialize;
 
-use derive_builder::Builder;
 use getset::{CopyGetters, Getters};
 
 use crate::mqtt::packet::packet_type::{FixedHeader, PacketType};
@@ -97,7 +99,7 @@ use crate::mqtt::result_code::PubrelReasonCode;
 /// assert_eq!(pubrel.reason_code(), Some(mqtt::result_code::PubrelReasonCode::Success));
 /// ```
 #[derive(PartialEq, Eq, Builder, Clone, Getters, CopyGetters)]
-#[builder(derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
+#[builder(no_std, derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
 pub struct GenericPubrel<PacketIdType>
 where
     PacketIdType: IsPacketId,
@@ -378,7 +380,7 @@ where
         let mut cursor = 0;
 
         // packet_id
-        let buffer_size = std::mem::size_of::<<PacketIdType as IsPacketId>::Buffer>();
+        let buffer_size = core::mem::size_of::<<PacketIdType as IsPacketId>::Buffer>();
         if data.len() < buffer_size {
             return Err(MqttError::MalformedPacket);
         }
@@ -712,8 +714,13 @@ where
         self.size()
     }
 
+    #[cfg(feature = "std")]
     fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         self.to_buffers()
+    }
+
+    fn to_continuous_buffer(&self) -> Vec<u8> {
+        self.to_continuous_buffer()
     }
 }
 
@@ -731,11 +738,11 @@ impl<PacketIdType> GenericPacketDisplay for GenericPubrel<PacketIdType>
 where
     PacketIdType: IsPacketId + Serialize,
 {
-    fn fmt_debug(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Debug::fmt(self, f)
+    fn fmt_debug(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Debug::fmt(self, f)
     }
 
-    fn fmt_display(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Display::fmt(self, f)
+    fn fmt_display(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Display::fmt(self, f)
     }
 }

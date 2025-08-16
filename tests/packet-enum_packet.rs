@@ -14,6 +14,7 @@ fn test_generic_packet_v3_1_1_connect_size() {
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn test_generic_packet_v3_1_1_connect_to_buffers() {
     let connect = mqtt::packet::v3_1_1::Connect::builder()
         .clean_start(true)
@@ -74,9 +75,12 @@ fn test_generic_packet_v3_1_1_connack() {
     assert_eq!(packet.size(), connack.size());
     assert!(packet.size() > 0);
 
-    let packet_buffers = packet.to_buffers();
-    let connack_buffers = connack.to_buffers();
-    assert_eq!(packet_buffers.len(), connack_buffers.len());
+    #[cfg(feature = "std")]
+    {
+        let packet_buffers = packet.to_buffers();
+        let connack_buffers = connack.to_buffers();
+        assert_eq!(packet_buffers.len(), connack_buffers.len());
+    }
 
     let debug_str = format!("{packet:?}");
     assert!(!debug_str.is_empty());
@@ -99,9 +103,12 @@ fn test_generic_packet_v3_1_1_publish() {
     assert_eq!(packet.size(), publish.size());
     assert!(packet.size() > 0);
 
-    let packet_buffers = packet.to_buffers();
-    let publish_buffers = publish.to_buffers();
-    assert_eq!(packet_buffers.len(), publish_buffers.len());
+    #[cfg(feature = "std")]
+    {
+        let packet_buffers = packet.to_buffers();
+        let publish_buffers = publish.to_buffers();
+        assert_eq!(packet_buffers.len(), publish_buffers.len());
+    }
 
     let debug_str = format!("{packet:?}");
     assert!(debug_str.contains("test/topic"));

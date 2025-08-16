@@ -1,3 +1,5 @@
+#![cfg_attr(not(feature = "std"), no_std)]
+
 //! # MQTT Protocol Core
 //!
 //! A Sans-I/O style MQTT protocol library for Rust that supports both MQTT v5.0 and v3.1.1.
@@ -76,8 +78,8 @@
 //! use mqtt_protocol_core::mqtt::{
 //!     Connection, Version,
 //!     connection::{role::Client, event::GenericEvent},
+//!     common::Cursor,
 //! };
-//! use std::io::Cursor;
 //!
 //! let mut client = Connection::<Client>::new(Version::V5_0);
 //! let data = &[0u8; 0][..];
@@ -111,6 +113,60 @@
 //!     mqtt_protocol_core::mqtt::Version::V5_0
 //! );
 //! ```
+//!
+//! ## No-std Support
+//!
+//! This library fully supports `no_std` environments for embedded systems.
+//! To use in a `no_std` environment, disable the default `std` feature:
+//!
+//! ```toml
+//! [dependencies]
+//! mqtt-protocol-core = { version = "0.3.0", default-features = false }
+//! ```
+//!
+//! **No-std usage example:**
+//!
+//! ```rust,no_run
+//! #![no_std]
+//! extern crate alloc;
+//!
+//! use alloc::{vec::Vec, string::String};
+//! use mqtt_protocol_core::mqtt::{
+//!     Connection, Version,
+//!     connection::role::Client,
+//!     packet::v5_0::Connect,
+//!     common::Cursor,
+//! };
+//!
+//! fn main() {
+//!     // Create client connection
+//!     let mut client = Connection::<Client>::new(Version::V5_0);
+//!
+//!     // Create CONNECT packet
+//!     let connect = Connect::builder()
+//!         .client_id("embedded-client")
+//!         .unwrap()
+//!         .clean_start(true)
+//!         .build()
+//!         .unwrap();
+//!
+//!     // Send packet and handle events
+//!     let events = client.send(connect.into());
+//!
+//!     // Process events in your embedded application
+//!     for event in events {
+//!         match event {
+//!             // Handle RequestSendPacket, NotifyPacketReceived, etc.
+//!             _ => {}
+//!         }
+//!     }
+//! }
+//! ```
+//!
+//! **Key points for no-std usage:**
+//! - Use `extern crate alloc;` to enable heap allocations
+//! - Import types from `alloc` crate instead of `std`
+//! - `IoSlice` functionality is not available in `no_std` mode
 
 /**
  * MIT License
@@ -135,7 +191,19 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
+// Always use alloc types for consistency between std and no-std
+#[macro_use]
 extern crate alloc;
 
+// Common prelude with alloc types
+pub mod prelude {
+    pub use alloc::{boxed::Box, format, string::String, vec, vec::Vec};
+
+    #[cfg(feature = "std")]
+    pub use std::io::IoSlice;
+}
+
+#[cfg(feature = "std")]
 pub mod logger;
 pub mod mqtt;

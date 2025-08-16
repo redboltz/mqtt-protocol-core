@@ -1,3 +1,6 @@
+use alloc::string::ToString;
+
+use crate::mqtt::common::HashMap;
 /**
  * MIT License
  *
@@ -21,7 +24,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-use hashbrown::HashMap;
+use alloc::string::String;
 
 use tracing::trace;
 
@@ -52,7 +55,7 @@ impl TopicAliasRecv {
 
     /// Insert or update a topic-alias mapping
     ///
-    /// # Arguments
+    /// # Parameters
     /// * `topic` - The topic name (must not be empty)
     /// * `alias` - The alias value (must be between MIN_ALIAS and max_alias)
     ///
@@ -68,7 +71,7 @@ impl TopicAliasRecv {
 
     /// Get topic by alias
     ///
-    /// # Arguments
+    /// # Parameters
     /// * `alias` - The alias to look up
     ///
     /// # Returns
@@ -85,7 +88,7 @@ impl TopicAliasRecv {
 
     /// Peek topic by alias (alias for get, for consistency with TopicAliasSend)
     ///
-    /// # Arguments
+    /// # Parameters
     /// * `alias` - The alias to look up
     ///
     /// # Returns

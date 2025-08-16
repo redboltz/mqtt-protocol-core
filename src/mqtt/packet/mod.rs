@@ -47,15 +47,16 @@ pub use self::enum_packet::{GenericPacket, GenericPacketDisplay, GenericPacketTr
 pub use self::enum_store_packet::{GenericStorePacket, ResponsePacket, StorePacket};
 pub use self::property::PayloadFormat;
 mod json_bin_encode;
+#[cfg(feature = "std")]
+pub use self::property::PropertiesToBuffers;
 pub use self::property::{
     AssignedClientIdentifier, AuthenticationData, AuthenticationMethod, ContentType,
     CorrelationData, MaximumPacketSize, MaximumQos, MessageExpiryInterval, PayloadFormatIndicator,
-    Properties, PropertiesParse, PropertiesSize, PropertiesToBuffers, Property, PropertyId,
-    ReasonString, ReceiveMaximum, RequestProblemInformation, RequestResponseInformation,
-    ResponseInformation, ResponseTopic, RetainAvailable, ServerKeepAlive, ServerReference,
-    SessionExpiryInterval, SharedSubscriptionAvailable, SubscriptionIdentifier,
-    SubscriptionIdentifierAvailable, TopicAlias, TopicAliasMaximum, UserProperty,
-    WildcardSubscriptionAvailable, WillDelayInterval,
+    Properties, PropertiesParse, PropertiesSize, Property, PropertyId, ReasonString,
+    ReceiveMaximum, RequestProblemInformation, RequestResponseInformation, ResponseInformation,
+    ResponseTopic, RetainAvailable, ServerKeepAlive, ServerReference, SessionExpiryInterval,
+    SharedSubscriptionAvailable, SubscriptionIdentifier, SubscriptionIdentifierAvailable,
+    TopicAlias, TopicAliasMaximum, UserProperty, WildcardSubscriptionAvailable, WillDelayInterval,
 };
 pub use json_bin_encode::escape_binary_json_string;
 

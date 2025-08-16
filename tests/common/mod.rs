@@ -47,12 +47,8 @@ pub fn v3_1_1_client_establish_connection(
         .return_code(mqtt::result_code::ConnectReturnCode::Accepted)
         .build()
         .expect("Failed to build Connack packet");
-    let buffers = packet.to_buffers();
-    let flattened: Vec<u8> = buffers
-        .iter()
-        .flat_map(|slice| slice.iter().copied())
-        .collect();
-    let mut cursor = std::io::Cursor::new(&flattened[..]);
+    let flattened: Vec<u8> = packet.to_continuous_buffer();
+    let mut cursor = mqtt::common::Cursor::new(&flattened[..]);
     let _ = con.recv(&mut cursor);
 }
 
@@ -67,12 +63,8 @@ pub fn v3_1_1_server_connecting(
         .clean_session(clean_session)
         .build()
         .expect("Failed to build Connect packet");
-    let buffers = packet.to_buffers();
-    let flattened: Vec<u8> = buffers
-        .iter()
-        .flat_map(|slice| slice.iter().copied())
-        .collect();
-    let mut cursor = std::io::Cursor::new(&flattened[..]);
+    let flattened: Vec<u8> = packet.to_continuous_buffer();
+    let mut cursor = mqtt::common::Cursor::new(&flattened[..]);
     let _ = con.recv(&mut cursor);
 }
 
@@ -92,6 +84,7 @@ pub fn v3_1_1_server_establish_connection(
     }
 }
 
+#[cfg(feature = "std")]
 #[allow(dead_code)]
 pub fn v5_0_client_establish_connection(con: &mut mqtt::Connection<mqtt::role::Client>) {
     {
@@ -108,16 +101,13 @@ pub fn v5_0_client_establish_connection(con: &mut mqtt::Connection<mqtt::role::C
             .reason_code(mqtt::result_code::ConnectReasonCode::Success)
             .build()
             .expect("Failed to build Connack packet");
-        let buffers = packet.to_buffers();
-        let flattened: Vec<u8> = buffers
-            .iter()
-            .flat_map(|slice| slice.iter().copied())
-            .collect();
-        let mut cursor = std::io::Cursor::new(&flattened[..]);
+        let flattened: Vec<u8> = packet.to_continuous_buffer();
+        let mut cursor = mqtt::common::Cursor::new(&flattened[..]);
         let _ = con.recv(&mut cursor);
     }
 }
 
+#[cfg(feature = "std")]
 #[allow(dead_code)]
 pub fn v5_0_server_connecting(con: &mut mqtt::Connection<mqtt::role::Server>) {
     let packet = mqtt::packet::v5_0::Connect::builder()
@@ -125,15 +115,12 @@ pub fn v5_0_server_connecting(con: &mut mqtt::Connection<mqtt::role::Server>) {
         .unwrap()
         .build()
         .expect("Failed to build Connect packet");
-    let buffers = packet.to_buffers();
-    let flattened: Vec<u8> = buffers
-        .iter()
-        .flat_map(|slice| slice.iter().copied())
-        .collect();
-    let mut cursor = std::io::Cursor::new(&flattened[..]);
+    let flattened: Vec<u8> = packet.to_continuous_buffer();
+    let mut cursor = mqtt::common::Cursor::new(&flattened[..]);
     let _ = con.recv(&mut cursor);
 }
 
+#[cfg(feature = "std")]
 #[allow(dead_code)]
 pub fn v5_0_server_establish_connection(con: &mut mqtt::Connection<mqtt::role::Server>) {
     v5_0_server_connecting(con);

@@ -1,3 +1,4 @@
+use alloc::vec::Vec;
 /**
  * MIT License
  *
@@ -23,22 +24,24 @@
  */
 use core::fmt;
 use core::mem;
+use derive_builder::Builder;
+#[cfg(feature = "std")]
 use std::io::IoSlice;
 
 use serde::ser::{SerializeStruct, Serializer};
 use serde::Serialize;
 
-use derive_builder::Builder;
 use getset::{CopyGetters, Getters};
 
 use crate::mqtt::packet::packet_type::{FixedHeader, PacketType};
+use crate::mqtt::packet::property::PropertiesToContinuousBuffer;
 use crate::mqtt::packet::variable_byte_integer::VariableByteInteger;
 use crate::mqtt::packet::GenericPacketDisplay;
 use crate::mqtt::packet::GenericPacketTrait;
 use crate::mqtt::packet::IsPacketId;
-use crate::mqtt::packet::{
-    Properties, PropertiesParse, PropertiesSize, PropertiesToBuffers, Property,
-};
+#[cfg(feature = "std")]
+use crate::mqtt::packet::PropertiesToBuffers;
+use crate::mqtt::packet::{Properties, PropertiesParse, PropertiesSize, Property};
 use crate::mqtt::result_code::MqttError;
 use crate::mqtt::result_code::SubackReasonCode;
 
@@ -75,7 +78,7 @@ use crate::mqtt::result_code::SubackReasonCode;
 ///
 /// **Success codes (QoS levels):**
 /// - `0x00` Granted QoS 0 - Maximum QoS 0
-/// - `0x01` Granted QoS 1 - Maximum QoS 1  
+/// - `0x01` Granted QoS 1 - Maximum QoS 1
 /// - `0x02` Granted QoS 2 - Maximum QoS 2
 ///
 /// **Error codes:**
@@ -148,7 +151,7 @@ use crate::mqtt::result_code::SubackReasonCode;
 /// let buffers = suback.to_buffers();
 /// ```
 #[derive(PartialEq, Eq, Builder, Clone, Getters, CopyGetters)]
-#[builder(derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
+#[builder(no_std, derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
 pub struct GenericSuback<PacketIdType>
 where
     PacketIdType: IsPacketId,
@@ -325,7 +328,7 @@ where
     /// Parses the variable header and payload of a SUBACK packet from the provided
     /// byte buffer. The fixed header should already be parsed before calling this method.
     ///
-    /// # Arguments
+    /// # Parameters
     ///
     /// * `data` - The raw bytes containing the SUBACK packet variable header and payload
     ///
@@ -461,6 +464,7 @@ where
     /// // Use buffers for vectored I/O operations
     /// // let bytes_written = socket.write_vectored(&buffers)?;
     /// ```
+    #[cfg(feature = "std")]
     pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         let mut bufs = Vec::new();
         bufs.push(IoSlice::new(&self.fixed_header));
@@ -474,6 +478,50 @@ where
         }
 
         bufs
+    }
+
+    /// Create a continuous buffer containing the complete packet data
+    ///
+    /// Returns a vector containing all packet bytes in a single continuous buffer.
+    /// This method is compatible with no-std environments and provides an alternative
+    /// to [`to_buffers()`] when vectored I/O is not needed.
+    ///
+    /// The returned buffer contains the complete SUBACK packet serialized according
+    /// to the MQTT v5.0 protocol specification, including fixed header, remaining
+    /// length, packet identifier, properties, and reason codes.
+    ///
+    /// # Returns
+    ///
+    /// A vector containing the complete packet data
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// use mqtt_protocol_core::mqtt;
+    ///
+    /// let suback = mqtt::packet::v5_0::Suback::builder()
+    ///     .packet_id(1u16)
+    ///     .build()
+    ///     .unwrap();
+    ///
+    /// let buffer = suback.to_continuous_buffer();
+    /// // buffer contains all packet bytes
+    /// ```
+    ///
+    /// [`to_buffers()`]: #method.to_buffers
+    pub fn to_continuous_buffer(&self) -> Vec<u8> {
+        let mut buf = Vec::new();
+        buf.extend_from_slice(&self.fixed_header);
+        buf.extend_from_slice(self.remaining_length.as_bytes());
+        buf.extend_from_slice(self.packet_id_buf.as_ref());
+        buf.extend_from_slice(self.property_length.as_bytes());
+        buf.append(&mut self.props.to_continuous_buffer());
+
+        if !self.reason_codes_buf.is_empty() {
+            buf.extend_from_slice(&self.reason_codes_buf);
+        }
+
+        buf
     }
 }
 
@@ -492,7 +540,7 @@ where
     /// SUBSCRIBE packet that this SUBACK is responding to. The packet identifier
     /// cannot be zero.
     ///
-    /// # Arguments
+    /// # Parameters
     ///
     /// * `id` - The packet identifier of type `PacketIdType`
     ///
@@ -523,7 +571,7 @@ where
     /// SUBSCRIBE packet. Each reason code corresponds to a topic filter in the SUBSCRIBE
     /// packet, in the same order. At least one reason code must be provided.
     ///
-    /// # Arguments
+    /// # Parameters
     ///
     /// * `codes` - A vector of `SubackReasonCode` values indicating subscription results
     ///
@@ -812,8 +860,13 @@ where
         self.size()
     }
 
+    #[cfg(feature = "std")]
     fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         self.to_buffers()
+    }
+
+    fn to_continuous_buffer(&self) -> Vec<u8> {
+        self.to_continuous_buffer()
     }
 }
 
@@ -843,12 +896,12 @@ impl<PacketIdType> GenericPacketDisplay for GenericSuback<PacketIdType>
 where
     PacketIdType: IsPacketId + Serialize,
 {
-    fn fmt_debug(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Debug::fmt(self, f)
+    fn fmt_debug(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Debug::fmt(self, f)
     }
 
-    fn fmt_display(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Display::fmt(self, f)
+    fn fmt_display(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Display::fmt(self, f)
     }
 }
 
@@ -865,7 +918,7 @@ where
 /// - Multiple `Property::UserProperty` properties are allowed
 /// - All other property types result in a protocol error
 ///
-/// # Arguments
+/// # Parameters
 ///
 /// * `props` - The properties to validate
 ///

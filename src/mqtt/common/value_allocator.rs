@@ -58,7 +58,7 @@ impl<T: PrimInt> ValueInterval<T> {
 }
 
 impl<T: PrimInt> PartialOrd for ValueInterval<T> {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
         Some(self.cmp(other))
     }
 }
@@ -184,7 +184,7 @@ where
 
     pub fn dump(&self) {
         for iv in &self.pool {
-            println!("{iv:?}");
+            tracing::debug!("{iv:?}");
         }
     }
 }

@@ -26,20 +26,37 @@ use crate::mqtt::packet::v5_0;
 use crate::mqtt::packet::IsPacketId;
 use crate::mqtt::packet::PacketType;
 use crate::mqtt::Version;
+use alloc::vec::Vec;
 use enum_dispatch::enum_dispatch;
 use serde::Serialize;
+#[cfg(feature = "std")]
 use std::io::IoSlice;
 
 #[enum_dispatch]
 pub trait GenericPacketTrait {
     fn size(&self) -> usize;
+
+    /// Create a continuous buffer containing the complete packet data
+    ///
+    /// Returns a vector containing all packet bytes in a single continuous buffer.
+    /// This method is compatible with no-std environments.
+    ///
+    /// The returned buffer contains the complete packet serialized according
+    /// to the MQTT protocol specification.
+    ///
+    /// # Returns
+    ///
+    /// A vector containing the complete packet data
+    fn to_continuous_buffer(&self) -> Vec<u8>;
+
+    #[cfg(feature = "std")]
     fn to_buffers(&self) -> Vec<IoSlice<'_>>;
 }
 
 #[enum_dispatch]
 pub trait GenericPacketDisplay {
-    fn fmt_debug(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result;
-    fn fmt_display(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result;
+    fn fmt_debug(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result;
+    fn fmt_display(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result;
 }
 
 #[enum_dispatch(GenericPacketTrait, GenericPacketDisplay)]
@@ -83,20 +100,20 @@ where
 // Type alias for commonly used u16 PacketIdType
 pub type Packet = GenericPacket<u16>;
 
-impl<PacketIdType> std::fmt::Debug for GenericPacket<PacketIdType>
+impl<PacketIdType> core::fmt::Debug for GenericPacket<PacketIdType>
 where
     PacketIdType: IsPacketId + Serialize,
 {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         self.fmt_debug(f)
     }
 }
 
-impl<PacketIdType> std::fmt::Display for GenericPacket<PacketIdType>
+impl<PacketIdType> core::fmt::Display for GenericPacket<PacketIdType>
 where
     PacketIdType: IsPacketId + Serialize,
 {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         self.fmt_display(f)
     }
 }

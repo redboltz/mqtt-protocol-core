@@ -55,12 +55,20 @@ fn v5_0_any_maximum_packet_size_test() {
         .expect("Failed to build Connack packet");
 
     // Convert CONNACK to raw bytes and receive it
-    let buffers = connack_packet.to_buffers();
-    let flattened: Vec<u8> = buffers
-        .iter()
-        .flat_map(|slice| slice.iter().copied())
-        .collect();
-    let mut cursor = std::io::Cursor::new(&flattened[..]);
+    let flattened = connack_packet.to_continuous_buffer();
+
+    #[cfg(feature = "std")]
+    {
+        // Also verify to_buffers() produces same result when std is available
+        let buffers = connack_packet.to_buffers();
+        let from_buffers: Vec<u8> = buffers
+            .iter()
+            .flat_map(|slice| slice.iter().copied())
+            .collect();
+        assert_eq!(flattened, from_buffers);
+    }
+
+    let mut cursor = mqtt::common::Cursor::new(&flattened[..]);
     let events = con.recv(&mut cursor);
 
     // Verify connection is established

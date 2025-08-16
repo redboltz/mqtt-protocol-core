@@ -1,3 +1,4 @@
+use alloc::vec::Vec;
 /**
  * MIT License
  *
@@ -23,23 +24,25 @@
  */
 use core::fmt;
 use core::mem;
+use derive_builder::Builder;
+#[cfg(feature = "std")]
 use std::io::IoSlice;
 
 use serde::ser::{SerializeStruct, Serializer};
 use serde::Serialize;
 
-use derive_builder::Builder;
 use getset::{CopyGetters, Getters};
 
 use crate::mqtt::packet::packet_type::{FixedHeader, PacketType};
+use crate::mqtt::packet::property::PropertiesToContinuousBuffer;
 use crate::mqtt::packet::variable_byte_integer::VariableByteInteger;
 use crate::mqtt::packet::GenericPacketDisplay;
 use crate::mqtt::packet::GenericPacketTrait;
 use crate::mqtt::packet::IsPacketId;
+#[cfg(feature = "std")]
+use crate::mqtt::packet::PropertiesToBuffers;
 use crate::mqtt::packet::SubEntry;
-use crate::mqtt::packet::{
-    Properties, PropertiesParse, PropertiesSize, PropertiesToBuffers, Property,
-};
+use crate::mqtt::packet::{Properties, PropertiesParse, PropertiesSize, Property};
 use crate::mqtt::result_code::MqttError;
 
 /// MQTT 5.0 SUBSCRIBE packet representation
@@ -76,7 +79,7 @@ use crate::mqtt::result_code::MqttError;
 ///
 /// Each subscription specifies a maximum QoS level:
 /// - **QoS 0**: At most once delivery
-/// - **QoS 1**: At least once delivery  
+/// - **QoS 1**: At least once delivery
 /// - **QoS 2**: Exactly once delivery
 ///
 /// # Topic Filters and Wildcards
@@ -157,7 +160,7 @@ use crate::mqtt::result_code::MqttError;
 /// let total_size = subscribe.size();
 /// ```
 #[derive(PartialEq, Eq, Builder, Clone, Getters, CopyGetters)]
-#[builder(derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
+#[builder(no_std, derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
 pub struct GenericSubscribe<PacketIdType>
 where
     PacketIdType: IsPacketId,
@@ -309,7 +312,7 @@ where
     /// extracting the packet identifier, properties, and subscription entries.
     /// The fixed header should be parsed separately before calling this method.
     ///
-    /// # Arguments
+    /// # Parameters
     ///
     /// * `data` - Byte buffer containing the SUBSCRIBE packet data (without fixed header)
     ///
@@ -415,45 +418,36 @@ where
         1 + self.remaining_length.size() + self.remaining_length.to_u32() as usize
     }
 
-    /// Converts the SUBSCRIBE packet to a vector of I/O slices for efficient network transmission
+    /// Create IoSlice buffers for efficient network I/O
     ///
-    /// This method serializes the packet into multiple buffer slices without copying data,
-    /// allowing for efficient vectored I/O operations. The slices are ordered according
-    /// to the MQTT packet structure.
+    /// Returns a vector of `IoSlice` objects that can be used for vectored I/O
+    /// operations, allowing zero-copy writes to network sockets. The buffers
+    /// represent the complete SUBSCRIBE packet in wire format.
     ///
     /// # Returns
     ///
-    /// Vector of `IoSlice` containing the serialized packet data:
-    /// 1. Fixed header (packet type and flags)
-    /// 2. Remaining length encoding
-    /// 3. Packet identifier
-    /// 4. Properties length encoding
-    /// 5. Properties data (if any)
-    /// 6. Subscription entries (topic filters and options)
+    /// A vector of `IoSlice` objects for vectored I/O operations
     ///
     /// # Examples
     ///
     /// ```ignore
     /// use mqtt_protocol_core::mqtt;
-    /// use mqtt_protocol_core::mqtt::packet::qos::Qos;
     /// use mqtt_protocol_core::mqtt::packet::SubEntry;
+    /// use mqtt_protocol_core::mqtt::qos::QoS;
     ///
     /// let subscribe = mqtt::packet::v5_0::Subscribe::builder()
-    ///     .packet_id(1)
+    ///     .packet_id(1u16)
     ///     .entries(vec![
-    ///         SubEntry::builder()
-    ///             .topic_filter("test/topic")
-    ///             .unwrap()
-    ///             .qos(Qos::AtLeastOnce)
-    ///             .build()
-    ///             .unwrap()
+    ///         SubEntry::new("test/topic", QoS::AtLeastOnce),
+    ///         SubEntry::new("another/topic", QoS::ExactlyOnce),
     ///     ])
     ///     .build()
     ///     .unwrap();
     ///
     /// let buffers = subscribe.to_buffers();
-    /// // Use buffers for vectored write operations
+    /// // Use with vectored write: socket.write_vectored(&buffers)?;
     /// ```
+    #[cfg(feature = "std")]
     pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         let mut bufs = Vec::new();
         bufs.push(IoSlice::new(&self.fixed_header));
@@ -467,6 +461,55 @@ where
         }
 
         bufs
+    }
+
+    /// Create a continuous buffer containing the complete packet data
+    ///
+    /// Returns a vector containing all packet bytes in a single continuous buffer.
+    /// This method provides an alternative to `to_buffers()` for no-std environments
+    /// where vectored I/O is not available.
+    ///
+    /// The returned buffer contains the complete SUBSCRIBE packet serialized according
+    /// to the MQTT v5.0 protocol specification, including fixed header, remaining
+    /// length, packet identifier, properties, and subscription entries.
+    ///
+    /// # Returns
+    ///
+    /// A vector containing the complete packet data
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// use mqtt_protocol_core::mqtt;
+    /// use mqtt_protocol_core::mqtt::packet::SubEntry;
+    /// use mqtt_protocol_core::mqtt::qos::QoS;
+    ///
+    /// let subscribe = mqtt::packet::v5_0::Subscribe::builder()
+    ///     .packet_id(1u16)
+    ///     .entries(vec![
+    ///         SubEntry::new("test/topic", QoS::AtLeastOnce),
+    ///     ])
+    ///     .build()
+    ///     .unwrap();
+    ///
+    /// let buffer = subscribe.to_continuous_buffer();
+    /// // buffer contains all packet bytes
+    /// ```
+    ///
+    /// [`to_buffers()`]: #method.to_buffers
+    pub fn to_continuous_buffer(&self) -> Vec<u8> {
+        let mut buf = Vec::new();
+        buf.extend_from_slice(&self.fixed_header);
+        buf.extend_from_slice(self.remaining_length.as_bytes());
+        buf.extend_from_slice(self.packet_id_buf.as_ref());
+        buf.extend_from_slice(self.property_length.as_bytes());
+        buf.append(&mut self.props.to_continuous_buffer());
+
+        for entry in &self.entries {
+            buf.append(&mut entry.to_continuous_buffer());
+        }
+
+        buf
     }
 }
 
@@ -485,7 +528,7 @@ where
     /// It is used to match SUBSCRIBE packets with their corresponding SUBACK responses.
     /// The same packet identifier should not be reused until the SUBACK is received.
     ///
-    /// # Arguments
+    /// # Parameters
     ///
     /// * `id` - The packet identifier (must be non-zero)
     ///
@@ -775,8 +818,13 @@ where
         self.size()
     }
 
+    #[cfg(feature = "std")]
     fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         self.to_buffers()
+    }
+
+    fn to_continuous_buffer(&self) -> Vec<u8> {
+        self.to_continuous_buffer()
     }
 }
 
@@ -789,12 +837,12 @@ impl<PacketIdType> GenericPacketDisplay for GenericSubscribe<PacketIdType>
 where
     PacketIdType: IsPacketId + Serialize,
 {
-    fn fmt_debug(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Debug::fmt(self, f)
+    fn fmt_debug(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Debug::fmt(self, f)
     }
 
-    fn fmt_display(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Display::fmt(self, f)
+    fn fmt_display(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Display::fmt(self, f)
     }
 }
 
@@ -806,7 +854,7 @@ where
 ///
 /// Any other properties will result in a protocol error.
 ///
-/// # Arguments
+/// # Parameters
 ///
 /// * `props` - The properties to validate
 ///

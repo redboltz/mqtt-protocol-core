@@ -1,3 +1,4 @@
+use alloc::vec::Vec;
 /**
  * MIT License
  *
@@ -22,12 +23,13 @@
  * SOFTWARE.
  */
 use core::fmt;
+use derive_builder::Builder;
+#[cfg(feature = "std")]
 use std::io::IoSlice;
 
 use serde::ser::{SerializeStruct, Serializer};
 use serde::Serialize;
 
-use derive_builder::Builder;
 use getset::{CopyGetters, Getters};
 
 use crate::mqtt::packet::json_bin_encode::escape_binary_json_string;
@@ -37,11 +39,12 @@ use crate::mqtt::packet::packet_type::{FixedHeader, PacketType};
 use crate::mqtt::packet::GenericPacketDisplay;
 use crate::mqtt::packet::GenericPacketTrait;
 
+use crate::mqtt::packet::property::PropertiesToContinuousBuffer;
 use crate::mqtt::packet::qos::Qos;
 use crate::mqtt::packet::variable_byte_integer::VariableByteInteger;
-use crate::mqtt::packet::{
-    Properties, PropertiesParse, PropertiesSize, PropertiesToBuffers, Property,
-};
+#[cfg(feature = "std")]
+use crate::mqtt::packet::PropertiesToBuffers;
+use crate::mqtt::packet::{Properties, PropertiesParse, PropertiesSize, Property};
 use crate::mqtt::result_code::MqttError;
 
 /// MQTT 5.0 CONNECT packet representation
@@ -134,7 +137,7 @@ use crate::mqtt::result_code::MqttError;
 /// let buffers = connect.to_buffers();
 /// ```
 #[derive(PartialEq, Eq, Builder, Clone, Getters, CopyGetters)]
-#[builder(derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
+#[builder(no_std, derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
 pub struct Connect {
     #[builder(private)]
     fixed_header: [u8; 1],
@@ -396,15 +399,15 @@ impl Connect {
         1 + self.remaining_length.size() + self.remaining_length.to_u32() as usize
     }
 
-    /// Converts the packet to a vector of I/O slices for efficient network transmission
+    /// Create IoSlice buffers for efficient network I/O
     ///
-    /// This method creates a zero-copy representation of the packet by returning
-    /// references to the internal buffers. This is more efficient than copying
-    /// all data into a single buffer.
+    /// Returns a vector of `IoSlice` objects that can be used for vectored I/O
+    /// operations, allowing zero-copy writes to network sockets. The buffers
+    /// represent the complete CONNECT packet in wire format.
     ///
     /// # Returns
     ///
-    /// A vector of `IoSlice` references that can be used with vectored I/O operations
+    /// A vector of `IoSlice` objects for vectored I/O operations
     ///
     /// # Examples
     ///
@@ -417,8 +420,9 @@ impl Connect {
     ///     .unwrap();
     ///
     /// let buffers = connect.to_buffers();
-    /// // Use buffers for vectored write operations
+    /// // Use with vectored write: socket.write_vectored(&buffers)?;
     /// ```
+    #[cfg(feature = "std")]
     pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         let mut bufs = Vec::new();
         bufs.push(IoSlice::new(&self.fixed_header));
@@ -450,13 +454,73 @@ impl Connect {
         bufs
     }
 
+    /// Create a continuous buffer containing the complete packet data
+    ///
+    /// Returns a vector containing all packet bytes in a single continuous buffer.
+    /// This method provides an alternative to `to_buffers()` for no-std environments
+    /// where vectored I/O is not available.
+    ///
+    /// The returned buffer contains the complete CONNECT packet serialized according
+    /// to the MQTT v5.0 protocol specification, including fixed header, variable
+    /// header, properties, and payload.
+    ///
+    /// # Returns
+    ///
+    /// A vector containing the complete packet data
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// use mqtt_protocol_core::mqtt;
+    ///
+    /// let connect = mqtt::packet::v5_0::Connect::builder()
+    ///     .client_id("client-123")
+    ///     .build()
+    ///     .unwrap();
+    ///
+    /// let buffer = connect.to_continuous_buffer();
+    /// // buffer contains all packet bytes
+    /// ```
+    ///
+    /// [`to_buffers()`]: #method.to_buffers
+    pub fn to_continuous_buffer(&self) -> Vec<u8> {
+        let mut buf = Vec::new();
+        buf.extend_from_slice(&self.fixed_header);
+        buf.extend_from_slice(self.remaining_length.as_bytes());
+        buf.extend_from_slice(&self.protocol_name);
+        buf.extend_from_slice(&self.protocol_version_buf);
+        buf.extend_from_slice(&self.connect_flags_buf);
+        buf.extend_from_slice(&self.keep_alive_buf);
+        buf.extend_from_slice(self.property_length.as_bytes());
+        buf.append(&mut self.props.to_continuous_buffer());
+
+        buf.append(&mut self.client_id_buf.to_continuous_buffer());
+
+        if self.will_flag() {
+            buf.extend_from_slice(self.will_property_length.as_bytes());
+            buf.append(&mut self.will_props.to_continuous_buffer());
+            buf.append(&mut self.will_topic_buf.to_continuous_buffer());
+            buf.append(&mut self.will_payload_buf.to_continuous_buffer());
+        }
+
+        if self.user_name_flag() {
+            buf.append(&mut self.user_name_buf.to_continuous_buffer());
+        }
+
+        if self.password_flag() {
+            buf.append(&mut self.password_buf.to_continuous_buffer());
+        }
+
+        buf
+    }
+
     /// Parses a CONNECT packet from raw bytes
     ///
     /// This method parses the variable header and payload of a CONNECT packet
     /// according to the MQTT 5.0 specification. It validates the protocol name,
     /// version, and flag consistency.
     ///
-    /// # Arguments
+    /// # Parameters
     ///
     /// * `data` - Raw bytes containing the variable header and payload (excluding fixed header)
     ///
@@ -652,7 +716,7 @@ impl ConnectBuilder {
     /// The client identifier uniquely identifies the client to the server.
     /// It must be a valid UTF-8 string and should be unique across all clients.
     ///
-    /// # Arguments
+    /// # Parameters
     ///
     /// * `id` - The client identifier string
     ///
@@ -683,7 +747,7 @@ impl ConnectBuilder {
     /// for this client and starts a new clean session. When false, the server
     /// attempts to resume an existing session if one exists.
     ///
-    /// # Arguments
+    /// # Parameters
     ///
     /// * `clean` - Whether to start a clean session
     ///
@@ -727,7 +791,7 @@ impl ConnectBuilder {
     /// unexpectedly or fails to send keep-alive messages. All parameters must
     /// be provided together.
     ///
-    /// # Arguments
+    /// # Parameters
     ///
     /// * `topic` - Topic where the will message should be published
     /// * `payload` - Will message payload bytes
@@ -779,7 +843,7 @@ impl ConnectBuilder {
     /// The user name is used for client authentication with the MQTT server.
     /// Setting a user name automatically sets the user name flag in the connect flags.
     ///
-    /// # Arguments
+    /// # Parameters
     ///
     /// * `name` - The user name string
     ///
@@ -816,7 +880,7 @@ impl ConnectBuilder {
     /// According to MQTT specification, a password can only be set if a user name
     /// is also provided. Setting a password automatically sets the password flag.
     ///
-    /// # Arguments
+    /// # Parameters
     ///
     /// * `pwd` - The password bytes
     ///
@@ -854,7 +918,7 @@ impl ConnectBuilder {
     /// disconnect the client if it doesn't receive any packets within 1.5 times
     /// the keep alive interval.
     ///
-    /// # Arguments
+    /// # Parameters
     ///
     /// * `seconds` - Keep alive interval in seconds (0 to disable)
     ///
@@ -1211,8 +1275,13 @@ impl GenericPacketTrait for Connect {
         self.size()
     }
 
+    #[cfg(feature = "std")]
     fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         self.to_buffers()
+    }
+
+    fn to_continuous_buffer(&self) -> Vec<u8> {
+        self.to_continuous_buffer()
     }
 }
 
@@ -1244,12 +1313,12 @@ impl GenericPacketTrait for Connect {
 /// write!(&mut output, "{}", connect).unwrap();
 /// ```
 impl GenericPacketDisplay for Connect {
-    fn fmt_debug(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Debug::fmt(self, f)
+    fn fmt_debug(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Debug::fmt(self, f)
     }
 
-    fn fmt_display(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Display::fmt(self, f)
+    fn fmt_display(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Display::fmt(self, f)
     }
 }
 
@@ -1270,7 +1339,7 @@ impl GenericPacketDisplay for Connect {
 /// - Authentication Method (max 1)
 /// - Authentication Data (max 1)
 ///
-/// # Arguments
+/// # Parameters
 ///
 /// * `props` - Properties to validate
 ///
@@ -1339,7 +1408,7 @@ fn validate_connect_properties(props: &Properties) -> Result<(), MqttError> {
 /// - Correlation Data (max 1)
 /// - User Property (multiple allowed)
 ///
-/// # Arguments
+/// # Parameters
 ///
 /// * `props` - Will properties to validate
 ///

@@ -1,3 +1,4 @@
+use alloc::vec::Vec;
 /**
  * MIT License
  *
@@ -23,12 +24,13 @@
  */
 use core::fmt;
 use core::mem;
+use derive_builder::Builder;
+#[cfg(feature = "std")]
 use std::io::IoSlice;
 
 use serde::ser::{SerializeStruct, Serializer};
 use serde::Serialize;
 
-use derive_builder::Builder;
 use getset::{CopyGetters, Getters};
 
 use crate::mqtt::packet::packet_type::{FixedHeader, PacketType};
@@ -72,7 +74,7 @@ use crate::mqtt::result_code::MqttError;
 ///
 /// Each subscription specifies a maximum QoS level:
 /// - **QoS 0**: At most once delivery
-/// - **QoS 1**: At least once delivery  
+/// - **QoS 1**: At least once delivery
 /// - **QoS 2**: Exactly once delivery
 ///
 /// # Topic Filters and Wildcards
@@ -148,7 +150,7 @@ use crate::mqtt::result_code::MqttError;
 /// let total_size = subscribe.size();
 /// ```
 #[derive(PartialEq, Eq, Builder, Clone, Getters, CopyGetters)]
-#[builder(derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
+#[builder(no_std, derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
 pub struct GenericSubscribe<PacketIdType>
 where
     PacketIdType: IsPacketId,
@@ -293,7 +295,7 @@ where
     /// extracting the packet identifier and subscription entries. The fixed header
     /// should be parsed separately before calling this method.
     ///
-    /// # Arguments
+    /// # Parameters
     ///
     /// * `data` - Byte buffer containing the SUBSCRIBE packet data (without fixed header)
     ///
@@ -471,7 +473,7 @@ where
     /// It is used to match SUBSCRIBE packets with their corresponding SUBACK responses.
     /// The same packet identifier should not be reused until the SUBACK is received.
     ///
-    /// # Arguments
+    /// # Parameters
     ///
     /// * `id` - The packet identifier (must be non-zero)
     ///
@@ -739,8 +741,13 @@ where
         self.size()
     }
 
+    #[cfg(feature = "std")]
     fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         self.to_buffers()
+    }
+
+    fn to_continuous_buffer(&self) -> Vec<u8> {
+        self.to_continuous_buffer()
     }
 }
 
@@ -753,11 +760,11 @@ impl<PacketIdType> GenericPacketDisplay for GenericSubscribe<PacketIdType>
 where
     PacketIdType: IsPacketId + Serialize,
 {
-    fn fmt_debug(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Debug::fmt(self, f)
+    fn fmt_debug(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Debug::fmt(self, f)
     }
 
-    fn fmt_display(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Display::fmt(self, f)
+    fn fmt_display(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Display::fmt(self, f)
     }
 }

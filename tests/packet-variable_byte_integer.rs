@@ -75,6 +75,7 @@ fn test_decode_incomplete_sequence() {
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn test_to_buffers() {
     let vbi = VariableByteInteger::from_u32(128).unwrap(); // [0x80, 0x01]
     let buffers = vbi.to_buffers();

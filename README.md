@@ -38,7 +38,44 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-mqtt-protocol-core = "0.2.0"
+mqtt-protocol-core = "0.3.0"
+```
+
+### No-std Support
+
+For `no_std` environments (embedded systems), disable the default `std` feature:
+
+```toml
+[dependencies]
+mqtt-protocol-core = { version = "0.3.0", default-features = false }
+```
+
+**No-std Usage Example:**
+```rust
+#![no_std]
+extern crate alloc;
+
+use alloc::{vec::Vec, string::String};
+use mqtt_protocol_core::mqtt::{
+    Connection, Version,
+    connection::role::Client,
+    packet::v5_0::Connect,
+    common::Cursor,
+};
+
+fn main() {
+    let mut client = Connection::<Client>::new(Version::V5_0);
+
+    let connect = Connect::builder()
+        .client_id("embedded-client")
+        .unwrap()
+        .clean_start(true)
+        .build()
+        .unwrap();
+
+    let events = client.send(connect.into());
+    // Handle events in your embedded application
+}
 ```
 
 ## Quick Start

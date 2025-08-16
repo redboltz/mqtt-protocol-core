@@ -22,7 +22,6 @@
  * SOFTWARE.
  */
 use mqtt_protocol_core::mqtt;
-use std::io::Cursor;
 use std::sync::Arc;
 
 #[test]
@@ -54,7 +53,7 @@ fn test_raw_packet_methods() {
         0x05, 0x00, 0x00, 0x3C, // Version, flags, Keep Alive
     ];
 
-    let mut cursor = Cursor::new(&connect_bytes[..]);
+    let mut cursor = mqtt::common::Cursor::new(&connect_bytes[..]);
     let mut builder = mqtt::connection::PacketBuilder::new();
 
     let connect_packet = match builder.feed(&mut cursor) {
@@ -74,7 +73,7 @@ fn test_raw_packet_methods() {
         b'p', b'a', b'y', b'l', b'o', b'a', b'd', // Payload
     ];
 
-    let mut cursor = Cursor::new(&publish_bytes[..]);
+    let mut cursor = mqtt::common::Cursor::new(&publish_bytes[..]);
     builder.reset(); // Reset previous state
 
     let publish_packet = match builder.feed(&mut cursor) {
@@ -98,7 +97,7 @@ fn test_raw_packet_methods() {
 fn test_build_empty_payload_packet() {
     // PINGREQ packet (type = 12, no payload)
     let pingreq_bytes = [0xC0, 0x00]; // Fixed header = 0xC0, Remaining Length = 0
-    let mut cursor = Cursor::new(&pingreq_bytes[..]);
+    let mut cursor = mqtt::common::Cursor::new(&pingreq_bytes[..]);
     let mut builder = mqtt::connection::PacketBuilder::new();
 
     match builder.feed(&mut cursor) {
@@ -123,7 +122,7 @@ fn test_build_normal_packet() {
         0x00, 0x3C, // Keep Alive (60 seconds)
     ];
 
-    let mut cursor = Cursor::new(&connect_bytes[..]);
+    let mut cursor = mqtt::common::Cursor::new(&connect_bytes[..]);
     let mut builder = mqtt::connection::PacketBuilder::new();
 
     match builder.feed(&mut cursor) {
@@ -154,7 +153,7 @@ fn test_build_publish_packet() {
         b'p', b'a', b'y', b'l', b'o', b'a', b'd', // Payload
     ];
 
-    let mut cursor = Cursor::new(&publish_bytes[..]);
+    let mut cursor = mqtt::common::Cursor::new(&publish_bytes[..]);
     let mut builder = mqtt::connection::PacketBuilder::new();
 
     match builder.feed(&mut cursor) {
@@ -190,7 +189,7 @@ fn test_multi_byte_remaining_length() {
     full_packet.extend_from_slice(&payload);
 
     // Fix: Convert vector to slice reference
-    let mut cursor = Cursor::new(&full_packet[..]); // Convert &Vec<u8> → &[u8]
+    let mut cursor = mqtt::common::Cursor::new(&full_packet[..]); // Convert &Vec<u8> → &[u8]
     let mut builder = mqtt::connection::PacketBuilder::new();
 
     match builder.feed(&mut cursor) {
@@ -207,7 +206,7 @@ fn test_incomplete_packet() {
     // Packet that ends with just the header (no remaining bytes)
     let incomplete_bytes = [0x10, 0x0A]; // CONNECT, needs 10 bytes of payload but missing
 
-    let mut cursor = Cursor::new(&incomplete_bytes[..]);
+    let mut cursor = mqtt::common::Cursor::new(&incomplete_bytes[..]);
     let mut builder = mqtt::connection::PacketBuilder::new();
 
     match builder.feed(&mut cursor) {
@@ -221,7 +220,7 @@ fn test_malformed_remaining_length() {
     // Invalid Remaining Length (5 bytes or more)
     let malformed_bytes = [0x10, 0x80, 0x80, 0x80, 0x80];
 
-    let mut cursor = Cursor::new(&malformed_bytes[..]);
+    let mut cursor = mqtt::common::Cursor::new(&malformed_bytes[..]);
     let mut builder = mqtt::connection::PacketBuilder::new();
 
     match builder.feed(&mut cursor) {
@@ -246,28 +245,28 @@ fn test_fragmented_packet_feed() {
     let mut builder = mqtt::connection::PacketBuilder::new();
 
     // Part 1: Fixed header only
-    let mut cursor1 = Cursor::new(&connect_bytes[0..1]);
+    let mut cursor1 = mqtt::common::Cursor::new(&connect_bytes[0..1]);
     match builder.feed(&mut cursor1) {
         mqtt::connection::PacketBuildResult::Incomplete => (),
         _ => panic!("Expected Incomplete result after first feed"),
     }
 
     // Part 2: Remaining Length
-    let mut cursor2 = Cursor::new(&connect_bytes[1..2]);
+    let mut cursor2 = mqtt::common::Cursor::new(&connect_bytes[1..2]);
     match builder.feed(&mut cursor2) {
         mqtt::connection::PacketBuildResult::Incomplete => (),
         _ => panic!("Expected Incomplete result after second feed"),
     }
 
     // Part 3: Part of payload
-    let mut cursor3 = Cursor::new(&connect_bytes[2..8]);
+    let mut cursor3 = mqtt::common::Cursor::new(&connect_bytes[2..8]);
     match builder.feed(&mut cursor3) {
         mqtt::connection::PacketBuildResult::Incomplete => (),
         _ => panic!("Expected Incomplete result after third feed"),
     }
 
     // Part 4: Remaining payload
-    let mut cursor4 = Cursor::new(&connect_bytes[8..]);
+    let mut cursor4 = mqtt::common::Cursor::new(&connect_bytes[8..]);
     match builder.feed(&mut cursor4) {
         mqtt::connection::PacketBuildResult::Complete(packet) => {
             assert_eq!(packet.packet_type(), 1);
@@ -283,7 +282,7 @@ fn test_reset_builder() {
 
     // Process partial packet
     let partial_bytes = [0x10, 0x0A]; // CONNECT header only
-    let mut cursor = Cursor::new(&partial_bytes[..]);
+    let mut cursor = mqtt::common::Cursor::new(&partial_bytes[..]);
     assert!(matches!(
         builder.feed(&mut cursor),
         mqtt::connection::PacketBuildResult::Incomplete
@@ -302,7 +301,7 @@ fn test_reset_builder() {
 
     // Instead, verify functionally: should be able to process new packets after reset
     let complete_bytes = [0xC0, 0x00]; // PINGREQ
-    let mut cursor2 = Cursor::new(&complete_bytes[..]);
+    let mut cursor2 = mqtt::common::Cursor::new(&complete_bytes[..]);
     match builder.feed(&mut cursor2) {
         mqtt::connection::PacketBuildResult::Complete(packet) => {
             assert_eq!(packet.packet_type(), 12); // PINGREQ
@@ -317,7 +316,7 @@ fn test_reset_builder() {
 fn test_empty_data_access() {
     // Empty DISCONNECT packet
     let disconnect_bytes = [0xE0, 0x00]; // DISCONNECT, Remaining Length = 0
-    let mut cursor = Cursor::new(&disconnect_bytes[..]);
+    let mut cursor = mqtt::common::Cursor::new(&disconnect_bytes[..]);
     let mut builder = mqtt::connection::PacketBuilder::new();
 
     let packet = match builder.feed(&mut cursor) {
@@ -334,7 +333,7 @@ fn test_empty_data_access() {
 fn test_empty_publish_packet() {
     // Empty PUBLISH packet
     let empty_publish_bytes = [0x30, 0x00]; // PUBLISH, Remaining Length = 0
-    let mut cursor = Cursor::new(&empty_publish_bytes[..]);
+    let mut cursor = mqtt::common::Cursor::new(&empty_publish_bytes[..]);
     let mut builder = mqtt::connection::PacketBuilder::new();
 
     match builder.feed(&mut cursor) {
@@ -361,7 +360,7 @@ fn test_empty_publish_packet() {
 fn test_feed_with_empty_data() {
     // Test with empty buffer
     let empty_bytes: [u8; 0] = [];
-    let mut cursor = Cursor::new(&empty_bytes[..]);
+    let mut cursor = mqtt::common::Cursor::new(&empty_bytes[..]);
     let mut builder = mqtt::connection::PacketBuilder::new();
 
     // Passing empty data returns Incomplete (line 162)
@@ -383,14 +382,14 @@ fn test_two_phase_packet_building() {
     let mut builder = mqtt::connection::PacketBuilder::new();
 
     // First send only header and length field
-    let mut cursor1 = Cursor::new(&connect_bytes[0..2]);
+    let mut cursor1 = mqtt::common::Cursor::new(&connect_bytes[0..2]);
     match builder.feed(&mut cursor1) {
         mqtt::connection::PacketBuildResult::Incomplete => (),
         _ => panic!("Expected Incomplete result after partial feed"),
     }
 
     // Send remaining data
-    let mut cursor2 = Cursor::new(&connect_bytes[2..]);
+    let mut cursor2 = mqtt::common::Cursor::new(&connect_bytes[2..]);
     match builder.feed(&mut cursor2) {
         mqtt::connection::PacketBuildResult::Complete(packet) => {
             assert_eq!(packet.packet_type(), 1);
@@ -410,7 +409,7 @@ fn test_incomplete_remaining_length() {
 
     let mut builder = mqtt::connection::PacketBuilder::new();
 
-    let mut cursor = Cursor::new(&partial_bytes[..]);
+    let mut cursor = mqtt::common::Cursor::new(&partial_bytes[..]);
     match builder.feed(&mut cursor) {
         mqtt::connection::PacketBuildResult::Incomplete => (),
         _ => panic!("Expected Incomplete result for partial remaining length"),
@@ -418,7 +417,7 @@ fn test_incomplete_remaining_length() {
 
     // Next part (final byte without continuation bit)
     let remaining_bytes = [0x01]; // Final byte (total 128*128 + 1 bytes)
-    let mut cursor2 = Cursor::new(&remaining_bytes[..]);
+    let mut cursor2 = mqtt::common::Cursor::new(&remaining_bytes[..]);
     match builder.feed(&mut cursor2) {
         mqtt::connection::PacketBuildResult::Incomplete => (),
         _ => panic!("Expected Incomplete result after setting full remaining length"),
@@ -436,14 +435,14 @@ fn test_payload_zero_available_bytes() {
     let mut builder = mqtt::connection::PacketBuilder::new();
 
     // First header and length field
-    let mut cursor1 = Cursor::new(&connect_bytes[0..2]);
+    let mut cursor1 = mqtt::common::Cursor::new(&connect_bytes[0..2]);
     match builder.feed(&mut cursor1) {
         mqtt::connection::PacketBuildResult::Incomplete => (),
         _ => panic!("Expected Incomplete result after header"),
     }
 
     // Next part of payload
-    let mut cursor2 = Cursor::new(&connect_bytes[2..]);
+    let mut cursor2 = mqtt::common::Cursor::new(&connect_bytes[2..]);
     match builder.feed(&mut cursor2) {
         mqtt::connection::PacketBuildResult::Incomplete => (),
         _ => panic!("Expected Incomplete result after partial payload"),
@@ -451,7 +450,7 @@ fn test_payload_zero_available_bytes() {
 
     // Send empty feed (available = 0 case)
     let empty_bytes: [u8; 0] = [];
-    let mut cursor3 = Cursor::new(&empty_bytes[..]);
+    let mut cursor3 = mqtt::common::Cursor::new(&empty_bytes[..]);
     match builder.feed(&mut cursor3) {
         mqtt::connection::PacketBuildResult::Incomplete => (),
         _ => panic!("Expected Incomplete result with zero available bytes"),
@@ -468,7 +467,7 @@ fn test_multi_packet_in_one_feed() {
     ];
 
     let mut builder = mqtt::connection::PacketBuilder::new();
-    let mut cursor = Cursor::new(&two_packets[..]);
+    let mut cursor = mqtt::common::Cursor::new(&two_packets[..]);
 
     // Read first packet
     match builder.feed(&mut cursor) {

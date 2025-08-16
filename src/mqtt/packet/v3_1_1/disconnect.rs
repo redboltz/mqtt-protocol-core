@@ -1,3 +1,4 @@
+use alloc::vec::Vec;
 /**
  * MIT License
  *
@@ -22,12 +23,12 @@
  * SOFTWARE.
  */
 use core::fmt;
+use derive_builder::Builder;
+#[cfg(feature = "std")]
 use std::io::IoSlice;
 
 use serde::ser::{SerializeStruct, Serializer};
 use serde::Serialize;
-
-use derive_builder::Builder;
 
 use crate::mqtt::packet::packet_type::{FixedHeader, PacketType};
 use crate::mqtt::packet::variable_byte_integer::VariableByteInteger;
@@ -102,7 +103,7 @@ use crate::mqtt::result_code::MqttError;
 /// assert_eq!(consumed, 0); // No bytes consumed from variable header/payload
 /// ```
 #[derive(PartialEq, Eq, Builder, Clone)]
-#[builder(derive(Debug), pattern = "owned", build_fn(skip))]
+#[builder(no_std, derive(Debug), pattern = "owned", build_fn(skip))]
 pub struct Disconnect {
     #[builder(private)]
     fixed_header: [u8; 1],
@@ -222,15 +223,6 @@ impl Disconnect {
     /// let disconnect = mqtt::packet::v3_1_1::Disconnect::new();
     /// let buffers = disconnect.to_buffers();
     /// assert_eq!(buffers.len(), 2); // Fixed header + remaining length
-    /// // buffer contains all packet bytes
-    /// ```
-    pub fn to_continuous_buffer(&self) -> Vec<u8> {
-        let mut buf = Vec::new();
-        buf.extend_from_slice(&self.fixed_header);
-        buf.extend_from_slice(self.remaining_length.as_bytes());
-        buf
-    }
-
     /// // Can be used with vectored I/O operations like write_vectored
     /// ```
     #[cfg(feature = "std")]
@@ -239,6 +231,38 @@ impl Disconnect {
             IoSlice::new(&self.fixed_header),
             IoSlice::new(self.remaining_length.as_bytes()),
         ]
+    }
+
+    /// Create a continuous buffer containing the complete packet data
+    ///
+    /// Returns a vector containing all packet bytes in a single continuous buffer.
+    /// This method is compatible with no-std environments and provides an alternative
+    /// to [`to_buffers()`] when vectored I/O is not needed.
+    ///
+    /// For MQTT v3.1.1 DISCONNECT packets, the buffer contains:
+    /// 1. Fixed header (1 byte) - packet type and flags
+    /// 2. Remaining length (1 byte) - always 0x00
+    ///
+    /// # Returns
+    ///
+    /// A vector containing the complete packet data
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// use mqtt_protocol_core::mqtt;
+    ///
+    /// let disconnect = mqtt::packet::v3_1_1::Disconnect::new();
+    /// let buffer = disconnect.to_continuous_buffer();
+    /// assert_eq!(buffer.len(), 2); // Fixed header + remaining length
+    /// ```
+    ///
+    /// [`to_buffers()`]: #method.to_buffers
+    pub fn to_continuous_buffer(&self) -> Vec<u8> {
+        let mut buf = Vec::new();
+        buf.extend_from_slice(&self.fixed_header);
+        buf.extend_from_slice(self.remaining_length.as_bytes());
+        buf
     }
 
     /// Parses a DISCONNECT packet from byte data
@@ -453,8 +477,13 @@ impl GenericPacketTrait for Disconnect {
         self.size()
     }
 
+    #[cfg(feature = "std")]
     fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         self.to_buffers()
+    }
+
+    fn to_continuous_buffer(&self) -> Vec<u8> {
+        self.to_continuous_buffer()
     }
 }
 
@@ -477,11 +506,11 @@ impl GenericPacketTrait for Disconnect {
 /// println!("{:?}", disconnect); // Uses fmt_debug
 /// ```
 impl GenericPacketDisplay for Disconnect {
-    fn fmt_debug(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Debug::fmt(self, f)
+    fn fmt_debug(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Debug::fmt(self, f)
     }
 
-    fn fmt_display(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Display::fmt(self, f)
+    fn fmt_display(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Display::fmt(self, f)
     }
 }

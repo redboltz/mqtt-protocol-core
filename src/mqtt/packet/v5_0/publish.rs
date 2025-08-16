@@ -1,4 +1,6 @@
+use alloc::string::String;
 use alloc::sync::Arc;
+use alloc::vec::Vec;
 /**
  * MIT License
  *
@@ -24,26 +26,28 @@ use alloc::sync::Arc;
  */
 use core::fmt;
 use core::mem;
+use derive_builder::Builder;
+#[cfg(feature = "std")]
 use std::io::IoSlice;
 
 use serde::ser::{SerializeStruct, Serializer};
 use serde::Serialize;
 
-use derive_builder::Builder;
 use getset::{CopyGetters, Getters};
 
 use crate::mqtt::packet::json_bin_encode::escape_binary_json_string;
 use crate::mqtt::packet::mqtt_string::MqttString;
 use crate::mqtt::packet::packet_type::{FixedHeader, PacketType};
+use crate::mqtt::packet::property::PropertiesToContinuousBuffer;
 use crate::mqtt::packet::qos::Qos;
 use crate::mqtt::packet::topic_alias_send::TopicAliasType;
 use crate::mqtt::packet::variable_byte_integer::VariableByteInteger;
 use crate::mqtt::packet::GenericPacketDisplay;
 use crate::mqtt::packet::GenericPacketTrait;
 use crate::mqtt::packet::IsPacketId;
-use crate::mqtt::packet::{
-    Properties, PropertiesParse, PropertiesSize, PropertiesToBuffers, Property,
-};
+#[cfg(feature = "std")]
+use crate::mqtt::packet::PropertiesToBuffers;
+use crate::mqtt::packet::{Properties, PropertiesParse, PropertiesSize, Property};
 use crate::mqtt::result_code::MqttError;
 use crate::mqtt::{ArcPayload, IntoPayload};
 
@@ -138,7 +142,7 @@ use crate::mqtt::{ArcPayload, IntoPayload};
 /// let total_size = publish.size();
 /// ```
 #[derive(PartialEq, Eq, Builder, Clone, Getters, CopyGetters)]
-#[builder(derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
+#[builder(no_std, derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
 pub struct GenericPublish<PacketIdType>
 where
     PacketIdType: IsPacketId,
@@ -737,7 +741,7 @@ where
             remaining_size += self
                 .packet_id_buf
                 .as_ref()
-                .map_or(0, |_| std::mem::size_of::<PacketIdType>());
+                .map_or(0, |_| core::mem::size_of::<PacketIdType>());
         }
 
         // Add property length size
@@ -816,6 +820,7 @@ where
     /// let buffers = publish.to_buffers();
     /// // Use with vectored I/O: stream.write_vectored(&buffers)
     /// ```
+    #[cfg(feature = "std")]
     pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         let mut bufs = Vec::new();
         bufs.push(IoSlice::new(&self.fixed_header));
@@ -836,6 +841,60 @@ where
             bufs.push(IoSlice::new(self.payload_buf.as_slice()));
         }
         bufs
+    }
+
+    /// Create a continuous buffer containing the complete packet data
+    ///
+    /// Returns a vector containing all packet bytes in a single continuous buffer.
+    /// This method is compatible with no-std environments and provides an alternative
+    /// to [`to_buffers()`] when vectored I/O is not needed.
+    ///
+    /// The returned buffer contains the complete PUBLISH packet serialized according
+    /// to the MQTT v5.0 protocol specification, including fixed header, remaining
+    /// length, topic name, packet identifier, properties, and payload.
+    ///
+    /// # Returns
+    ///
+    /// A vector containing the complete packet data
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// use mqtt_protocol_core::mqtt;
+    ///
+    /// let publish = mqtt::packet::v5_0::Publish::builder()
+    ///     .topic_name("sensors/temperature")
+    ///     .qos(mqtt::qos::QualityOfService::AtLeastOnce)
+    ///     .packet_id(1u16)
+    ///     .payload(b"23.5")
+    ///     .build()
+    ///     .unwrap();
+    ///
+    /// let buffer = publish.to_continuous_buffer();
+    /// // buffer contains all packet bytes
+    /// ```
+    ///
+    /// [`to_buffers()`]: #method.to_buffers
+    pub fn to_continuous_buffer(&self) -> Vec<u8> {
+        let mut buf = Vec::new();
+        buf.extend_from_slice(&self.fixed_header);
+        buf.extend_from_slice(self.remaining_length.as_bytes());
+        buf.append(&mut self.topic_name_buf.to_continuous_buffer());
+        if let Some(packet_id_buf) = &self.packet_id_buf {
+            buf.extend_from_slice(packet_id_buf.as_ref());
+        }
+        if let Some(pl) = &self.property_length {
+            buf.extend_from_slice(pl.as_bytes());
+        } else {
+            buf.push(0);
+        }
+        if let Some(ref props) = self.props {
+            buf.append(&mut props.to_continuous_buffer());
+        }
+        if self.payload_buf.len() > 0 {
+            buf.extend_from_slice(self.payload_buf.as_slice());
+        }
+        buf
     }
 
     /// Parses a PUBLISH packet from raw bytes
@@ -905,7 +964,7 @@ where
         };
 
         let packet_id_buf = if qos != Qos::AtMostOnce {
-            let buffer_size = std::mem::size_of::<<PacketIdType as IsPacketId>::Buffer>();
+            let buffer_size = core::mem::size_of::<<PacketIdType as IsPacketId>::Buffer>();
             if data_arc.len() < cursor + buffer_size {
                 return Err(MqttError::MalformedPacket);
             }
@@ -1436,8 +1495,13 @@ where
     /// # Returns
     ///
     /// Vector of I/O slices representing the complete packet
+    #[cfg(feature = "std")]
     fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         self.to_buffers()
+    }
+
+    fn to_continuous_buffer(&self) -> Vec<u8> {
+        self.to_continuous_buffer()
     }
 }
 
@@ -1457,8 +1521,8 @@ where
     /// # Returns
     ///
     /// Formatting result
-    fn fmt_debug(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Debug::fmt(self, f)
+    fn fmt_debug(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Debug::fmt(self, f)
     }
 
     /// Formats the packet for display
@@ -1470,8 +1534,8 @@ where
     /// # Returns
     ///
     /// Formatting result
-    fn fmt_display(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Display::fmt(self, f)
+    fn fmt_display(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Display::fmt(self, f)
     }
 }
 

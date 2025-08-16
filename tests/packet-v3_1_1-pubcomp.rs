@@ -103,17 +103,27 @@ fn to_buffers_minimal() {
         .build()
         .unwrap();
 
-    let buffers = packet.to_buffers();
-    assert!(!buffers.is_empty());
-
-    // Collect all bytes
-    let mut all_bytes = Vec::new();
-    for buf in buffers {
-        all_bytes.extend_from_slice(&buf);
-    }
+    // Test with to_continuous_buffer (works in no-std)
+    let all_bytes = packet.to_continuous_buffer();
 
     // Check fixed header
     assert_eq!(all_bytes[0], 0x70); // PUBCOMP packet type
+
+    // In std environment, verify to_buffers() produces same result
+    #[cfg(feature = "std")]
+    {
+        let buffers = packet.to_buffers();
+        assert!(!buffers.is_empty());
+
+        // Collect all bytes from to_buffers()
+        let mut buffers_bytes = Vec::new();
+        for buf in buffers {
+            buffers_bytes.extend_from_slice(&buf);
+        }
+
+        // Verify to_buffers() and to_continuous_buffer() produce same result
+        assert_eq!(all_bytes, buffers_bytes);
+    }
 }
 
 // Parse tests
@@ -124,12 +134,20 @@ fn parse_minimal() {
         .build()
         .unwrap();
 
-    let buffers = original.to_buffers();
-    let mut data = Vec::new();
-    for buf in buffers.iter().skip(2) {
-        data.extend_from_slice(buf);
+    let continuous = original.to_continuous_buffer();
+
+    #[cfg(feature = "std")]
+    {
+        // Verify consistency with to_buffers()
+        let buffers = original.to_buffers();
+        let mut buffers_data = Vec::new();
+        for buf in buffers.iter() {
+            buffers_data.extend_from_slice(buf);
+        }
+        assert_eq!(continuous, buffers_data.as_slice());
     }
 
+    let data = &continuous[2..];
     let (parsed, consumed) = mqtt::packet::v3_1_1::Pubcomp::parse(&data).unwrap();
     assert_eq!(consumed, data.len());
     assert_eq!(parsed.packet_id(), 1u16);
@@ -151,9 +169,15 @@ fn size_minimal() {
         .unwrap();
 
     let size = packet.size();
-    let buffers = packet.to_buffers();
-    let actual_size: usize = buffers.iter().map(|buf| buf.len()).sum();
+    let actual_size = packet.to_continuous_buffer().len();
     assert_eq!(size, actual_size);
+
+    #[cfg(feature = "std")]
+    {
+        let buffers = packet.to_buffers();
+        let actual_size: usize = buffers.iter().map(|buf| buf.len()).sum();
+        assert_eq!(size, actual_size);
+    }
 }
 
 // Parse/serialize roundtrip tests
@@ -164,12 +188,20 @@ fn roundtrip_minimal() {
         .build()
         .unwrap();
 
-    let buffers = original.to_buffers();
-    let mut data = Vec::new();
-    for buf in buffers.iter().skip(2) {
-        data.extend_from_slice(buf);
+    let continuous = original.to_continuous_buffer();
+
+    #[cfg(feature = "std")]
+    {
+        // Verify consistency with to_buffers()
+        let buffers = original.to_buffers();
+        let mut buffers_data = Vec::new();
+        for buf in buffers.iter() {
+            buffers_data.extend_from_slice(buf);
+        }
+        assert_eq!(continuous, buffers_data.as_slice());
     }
 
+    let data = &continuous[2..];
     let (parsed, _) = mqtt::packet::v3_1_1::Pubcomp::parse(&data).unwrap();
     assert_eq!(original.packet_id(), parsed.packet_id());
 }

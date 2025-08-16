@@ -26,3 +26,39 @@ pub use arc_payload::{ArcPayload, IntoPayload};
 
 mod value_allocator;
 pub use value_allocator::ValueAllocator;
+
+mod cursor;
+pub use cursor::Cursor;
+pub use cursor::CursorError;
+
+/// Type alias for HashSet to provide a stable API abstraction over the underlying hash set implementation.
+///
+/// This alias allows the library to use a high-performance hash set implementation
+/// (currently hashbrown::HashSet) while providing API stability to users. It also
+/// ensures consistent usage across the entire codebase.
+///
+/// # Examples
+///
+/// ```ignore
+/// use mqtt_protocol_core::mqtt::common::HashSet;
+///
+/// let mut set = HashSet::new();
+/// set.insert("key");
+/// ```
+pub type HashSet<T> = hashbrown::HashSet<T>;
+
+/// Type alias for HashMap to provide a stable API abstraction over the underlying hash map implementation.
+///
+/// This alias allows the library to use a high-performance hash map implementation
+/// (currently hashbrown::HashMap) while providing API stability to users. It also
+/// ensures consistent usage across the entire codebase.
+///
+/// # Examples
+///
+/// ```ignore
+/// use mqtt_protocol_core::mqtt::common::HashMap;
+///
+/// let mut map = HashMap::new();
+/// map.insert("key", "value");
+/// ```
+pub type HashMap<K, V> = hashbrown::HashMap<K, V>;

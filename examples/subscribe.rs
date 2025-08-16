@@ -24,7 +24,7 @@
 use mqtt_protocol_core::mqtt;
 use mqtt_protocol_core::mqtt::prelude::*;
 use std::env;
-use std::io::{Cursor, Read, Write};
+use std::io::{Read, Write};
 use std::net::TcpStream;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -62,7 +62,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = [0u8; 1024];
     let n = stream.read(&mut buffer)?;
     if n > 0 {
-        let mut cursor = Cursor::new(&buffer[..n]);
+        let mut cursor = mqtt::common::Cursor::new(&buffer[..n]);
         let events = connection.recv(&mut cursor);
         handle_events(&mut stream, &mut connection, events)?;
     }
@@ -85,7 +85,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = [0u8; 1024];
     let n = stream.read(&mut buffer)?;
     if n > 0 {
-        let mut cursor = Cursor::new(&buffer[..n]);
+        let mut cursor = mqtt::common::Cursor::new(&buffer[..n]);
         let events = connection.recv(&mut cursor);
         handle_events(&mut stream, &mut connection, events)?;
     }
@@ -100,7 +100,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             break;
         }
 
-        let mut cursor = Cursor::new(&buffer[..n]);
+        let mut cursor = mqtt::common::Cursor::new(&buffer[..n]);
         let events = connection.recv(&mut cursor);
         handle_events(&mut stream, &mut connection, events)?;
     }
@@ -116,13 +116,10 @@ fn handle_events(
     for event in events {
         match event {
             mqtt::connection::Event::RequestSendPacket { packet, .. } => {
-                let buffers = packet.to_buffers();
-                let bytes_written = stream.write_vectored(&buffers)?;
-                if bytes_written == 0 {
-                    return Err("Failed to write packet data".into());
-                }
+                let buffer = packet.to_continuous_buffer();
+                stream.write_all(&buffer)?;
                 let packet_type = packet.packet_type();
-                println!("Sent packet: {packet_type} ({bytes_written} bytes)");
+                println!("Sent packet: {packet_type}");
             }
             mqtt::connection::Event::NotifyPacketReceived(packet) => match packet {
                 mqtt::packet::Packet::V5_0Connack(connack) => {

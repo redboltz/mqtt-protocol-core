@@ -181,6 +181,7 @@ fn getter_entries() {
 
 // to_buffers() tests
 #[test]
+#[cfg(feature = "std")]
 fn to_buffers_minimal() {
     let entry =
         mqtt::packet::SubEntry::new("test/topic", mqtt::packet::SubOpts::default()).unwrap();
@@ -195,15 +196,20 @@ fn to_buffers_minimal() {
 
     // Collect all bytes
     let mut all_bytes = Vec::new();
-    for buf in buffers {
+    for buf in &buffers {
         all_bytes.extend_from_slice(&buf);
     }
 
     // Check fixed header
     assert_eq!(all_bytes[0], 0x82); // SUBSCRIBE packet type
+
+    // Verify to_buffers() and to_continuous_buffer() produce same result
+    let continuous = packet.to_continuous_buffer();
+    assert_eq!(all_bytes, continuous);
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn to_buffers_multiple_entries() {
     let qos1_opts = mqtt::packet::SubOpts::new().set_qos(mqtt::packet::Qos::AtLeastOnce);
 
@@ -219,13 +225,17 @@ fn to_buffers_multiple_entries() {
 
     let buffers = packet.to_buffers();
     let mut all_bytes = Vec::new();
-    for buf in buffers {
+    for buf in &buffers {
         all_bytes.extend_from_slice(&buf);
     }
 
     assert_eq!(all_bytes[0], 0x82);
     // Should be larger due to multiple entries
     assert!(all_bytes.len() > 10);
+
+    // Verify to_buffers() and to_continuous_buffer() produce same result
+    let continuous = packet.to_continuous_buffer();
+    assert_eq!(all_bytes, continuous);
 }
 
 // Parse tests
@@ -239,13 +249,21 @@ fn parse_minimal() {
         .build()
         .unwrap();
 
-    let buffers = original.to_buffers();
-    let mut data = Vec::new();
-    for buf in buffers.iter().skip(2) {
-        // Skip fixed header and remaining length
-        data.extend_from_slice(buf);
+    let continuous = original.to_continuous_buffer();
+
+    #[cfg(feature = "std")]
+    {
+        // Verify consistency with to_buffers()
+        let buffers = original.to_buffers();
+        let mut buffers_data = Vec::new();
+        for buf in buffers.iter() {
+            // Skip fixed header and remaining length
+            buffers_data.extend_from_slice(buf);
+        }
+        assert_eq!(continuous, buffers_data.as_slice());
     }
 
+    let data = &continuous[2..];
     let (parsed, consumed) = mqtt::packet::v3_1_1::Subscribe::parse(&data).unwrap();
     assert_eq!(consumed, data.len());
     assert_eq!(parsed.packet_id(), 1u16);
@@ -270,12 +288,20 @@ fn parse_multiple_entries() {
         .build()
         .unwrap();
 
-    let buffers = original.to_buffers();
-    let mut data = Vec::new();
-    for buf in buffers.iter().skip(2) {
-        data.extend_from_slice(buf);
+    let continuous = original.to_continuous_buffer();
+
+    #[cfg(feature = "std")]
+    {
+        // Verify consistency with to_buffers()
+        let buffers = original.to_buffers();
+        let mut buffers_data = Vec::new();
+        for buf in buffers.iter() {
+            buffers_data.extend_from_slice(buf);
+        }
+        assert_eq!(continuous, buffers_data.as_slice());
     }
 
+    let data = &continuous[2..];
     let (parsed, consumed) = mqtt::packet::v3_1_1::Subscribe::parse(&data).unwrap();
     assert_eq!(consumed, data.len());
     assert_eq!(parsed.packet_id(), 200u16);
@@ -314,11 +340,16 @@ fn size_minimal() {
 
     let size = packet.size();
     assert!(size > 0);
-
-    // Verify size matches actual buffer size
-    let buffers = packet.to_buffers();
-    let actual_size: usize = buffers.iter().map(|buf| buf.len()).sum();
+    let actual_size = packet.to_continuous_buffer().len();
     assert_eq!(size, actual_size);
+
+    #[cfg(feature = "std")]
+    {
+        // Verify size matches actual buffer size
+        let buffers = packet.to_buffers();
+        let actual_size: usize = buffers.iter().map(|buf| buf.len()).sum();
+        assert_eq!(size, actual_size);
+    }
 }
 
 #[test]
@@ -339,9 +370,15 @@ fn size_multiple_entries() {
         .unwrap();
 
     let size = packet.size();
-    let buffers = packet.to_buffers();
-    let actual_size: usize = buffers.iter().map(|buf| buf.len()).sum();
+    let actual_size = packet.to_continuous_buffer().len();
     assert_eq!(size, actual_size);
+
+    #[cfg(feature = "std")]
+    {
+        let buffers = packet.to_buffers();
+        let actual_size: usize = buffers.iter().map(|buf| buf.len()).sum();
+        assert_eq!(size, actual_size);
+    }
 }
 
 // Parse/serialize roundtrip tests
@@ -355,12 +392,20 @@ fn roundtrip_minimal() {
         .build()
         .unwrap();
 
-    let buffers = original.to_buffers();
-    let mut data = Vec::new();
-    for buf in buffers.iter().skip(2) {
-        data.extend_from_slice(buf);
+    let continuous = original.to_continuous_buffer();
+
+    #[cfg(feature = "std")]
+    {
+        // Verify consistency with to_buffers()
+        let buffers = original.to_buffers();
+        let mut buffers_data = Vec::new();
+        for buf in buffers.iter() {
+            buffers_data.extend_from_slice(buf);
+        }
+        assert_eq!(continuous, buffers_data.as_slice());
     }
 
+    let data = &continuous[2..];
     let (parsed, _) = mqtt::packet::v3_1_1::Subscribe::parse(&data).unwrap();
     assert_eq!(original.packet_id(), parsed.packet_id());
     assert_eq!(original.entries().len(), parsed.entries().len());
@@ -387,12 +432,20 @@ fn roundtrip_multiple_entries_with_qos() {
         .build()
         .unwrap();
 
-    let buffers = original.to_buffers();
-    let mut data = Vec::new();
-    for buf in buffers.iter().skip(2) {
-        data.extend_from_slice(buf);
+    let continuous = original.to_continuous_buffer();
+
+    #[cfg(feature = "std")]
+    {
+        // Verify consistency with to_buffers()
+        let buffers = original.to_buffers();
+        let mut buffers_data = Vec::new();
+        for buf in buffers.iter() {
+            buffers_data.extend_from_slice(buf);
+        }
+        assert_eq!(continuous, buffers_data.as_slice());
     }
 
+    let data = &continuous[2..];
     let (parsed, _) = mqtt::packet::v3_1_1::Subscribe::parse(&data).unwrap();
     assert_eq!(original.packet_id(), parsed.packet_id());
     assert_eq!(original.entries().len(), parsed.entries().len());

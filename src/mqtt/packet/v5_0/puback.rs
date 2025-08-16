@@ -1,3 +1,4 @@
+use alloc::vec::Vec;
 /**
  * MIT License
  *
@@ -23,12 +24,13 @@
  */
 use core::fmt;
 use core::mem;
+use derive_builder::Builder;
+#[cfg(feature = "std")]
 use std::io::IoSlice;
 
 use serde::ser::{SerializeStruct, Serializer};
 use serde::Serialize;
 
-use derive_builder::Builder;
 use getset::{CopyGetters, Getters};
 
 use crate::mqtt::packet::packet_type::{FixedHeader, PacketType};
@@ -37,9 +39,9 @@ use crate::mqtt::packet::variable_byte_integer::VariableByteInteger;
 use crate::mqtt::packet::GenericPacketDisplay;
 use crate::mqtt::packet::GenericPacketTrait;
 use crate::mqtt::packet::IsPacketId;
-use crate::mqtt::packet::{
-    Properties, PropertiesParse, PropertiesSize, PropertiesToBuffers, Property,
-};
+#[cfg(feature = "std")]
+use crate::mqtt::packet::PropertiesToBuffers;
+use crate::mqtt::packet::{Properties, PropertiesParse, PropertiesSize, Property};
 use crate::mqtt::result_code::MqttError;
 use crate::mqtt::result_code::PubackReasonCode;
 
@@ -96,7 +98,7 @@ use crate::mqtt::result_code::PubackReasonCode;
 /// assert_eq!(puback.reason_code(), Some(mqtt::result_code::PubackReasonCode::Success));
 /// ```
 #[derive(PartialEq, Eq, Builder, Clone, Getters, CopyGetters)]
-#[builder(derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
+#[builder(no_std, derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
 pub struct GenericPuback<PacketIdType>
 where
     PacketIdType: IsPacketId,
@@ -298,26 +300,6 @@ where
     ///     .build()
     ///     .unwrap();
     ///
-    /// let buffer = puback.to_continuous_buffer();
-    /// assert!(!buffer.is_empty());
-    /// ```
-    pub fn to_continuous_buffer(&self) -> Vec<u8> {
-        let mut buf = Vec::new();
-        buf.extend_from_slice(&self.fixed_header);
-        buf.extend_from_slice(self.remaining_length.as_bytes());
-        buf.extend_from_slice(self.packet_id_buf.as_ref());
-        if let Some(rc_buf) = &self.reason_code_buf {
-            buf.extend_from_slice(rc_buf);
-        }
-        if let Some(pl) = &self.property_length {
-            buf.extend_from_slice(pl.as_bytes());
-        }
-        if let Some(ref props) = self.props {
-            buf.append(&mut props.to_continuous_buffer());
-        }
-        buf
-    }
-
     /// let buffers = puback.to_buffers();
     /// assert!(!buffers.is_empty());
     /// ```
@@ -338,6 +320,52 @@ where
         }
 
         bufs
+    }
+
+    /// Create a continuous buffer containing the complete packet data
+    ///
+    /// Returns a vector containing all packet bytes in a single continuous buffer.
+    /// This method provides an alternative to `to_buffers()` for no-std environments
+    /// where vectored I/O is not available.
+    ///
+    /// The returned buffer contains the complete PUBACK packet serialized according
+    /// to the MQTT v5.0 protocol specification, including fixed header, remaining
+    /// length, packet identifier, optional reason code, and optional properties.
+    ///
+    /// # Returns
+    ///
+    /// A vector containing the complete packet data
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// use mqtt_protocol_core::mqtt;
+    ///
+    /// let puback = mqtt::packet::v5_0::Puback::builder()
+    ///     .packet_id(1u16)
+    ///     .build()
+    ///     .unwrap();
+    ///
+    /// let buffer = puback.to_continuous_buffer();
+    /// assert!(!buffer.is_empty());
+    /// ```
+    ///
+    /// [`to_buffers()`]: #method.to_buffers
+    pub fn to_continuous_buffer(&self) -> Vec<u8> {
+        let mut buf = Vec::new();
+        buf.extend_from_slice(&self.fixed_header);
+        buf.extend_from_slice(self.remaining_length.as_bytes());
+        buf.extend_from_slice(self.packet_id_buf.as_ref());
+        if let Some(rc_buf) = &self.reason_code_buf {
+            buf.extend_from_slice(rc_buf);
+        }
+        if let Some(pl) = &self.property_length {
+            buf.extend_from_slice(pl.as_bytes());
+        }
+        if let Some(ref props) = self.props {
+            buf.append(&mut props.to_continuous_buffer());
+        }
+        buf
     }
 
     /// Parses a PUBACK packet from raw bytes.
@@ -384,7 +412,7 @@ where
         let mut cursor = 0;
 
         // packet_id
-        let buffer_size = std::mem::size_of::<<PacketIdType as IsPacketId>::Buffer>();
+        let buffer_size = core::mem::size_of::<<PacketIdType as IsPacketId>::Buffer>();
         if data.len() < buffer_size {
             return Err(MqttError::MalformedPacket);
         }
@@ -773,8 +801,13 @@ where
         self.size()
     }
 
+    #[cfg(feature = "std")]
     fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         self.to_buffers()
+    }
+
+    fn to_continuous_buffer(&self) -> Vec<u8> {
+        self.to_continuous_buffer()
     }
 }
 
@@ -792,12 +825,12 @@ impl<PacketIdType> GenericPacketDisplay for GenericPuback<PacketIdType>
 where
     PacketIdType: IsPacketId + Serialize,
 {
-    fn fmt_debug(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Debug::fmt(self, f)
+    fn fmt_debug(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Debug::fmt(self, f)
     }
 
-    fn fmt_display(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Display::fmt(self, f)
+    fn fmt_display(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Display::fmt(self, f)
     }
 }
 
