@@ -367,3 +367,114 @@ fn test_unicode_topics() {
     assert_eq!(tas.find_by_topic("тема4"), Some(4));
     assert_eq!(tas.find_by_topic("🎉emoji🎊"), Some(5));
 }
+
+#[test]
+fn test_same_topic_different_alias_update() {
+    // Test: topic1 1 -> topic1 2 (same topic, different alias)
+    let mut tas = mqtt::packet::TopicAliasSend::new(5);
+
+    // Initial mapping
+    tas.insert_or_update("topic1", 1);
+    assert_eq!(tas.find_by_topic("topic1"), Some(1));
+    assert_eq!(tas.get(1), Some("topic1"));
+
+    // Update same topic to different alias
+    tas.insert_or_update("topic1", 2);
+
+    // Verify new mapping exists
+    assert_eq!(tas.find_by_topic("topic1"), Some(2));
+    assert_eq!(tas.get(2), Some("topic1"));
+
+    // Verify old mapping is removed
+    assert_eq!(tas.get(1), None); // old alias should be empty
+
+    // Verify alias 1 is now available for reuse
+    assert_eq!(tas.get_lru_alias(), 1); // should return first vacant alias
+}
+
+#[test]
+fn test_same_alias_different_topic_update() {
+    // Test: topic1 1 -> topic2 1 (same alias, different topic)
+    let mut tas = mqtt::packet::TopicAliasSend::new(5);
+
+    // Initial mapping
+    tas.insert_or_update("topic1", 1);
+    assert_eq!(tas.find_by_topic("topic1"), Some(1));
+    assert_eq!(tas.get(1), Some("topic1"));
+
+    // Update same alias to different topic
+    tas.insert_or_update("topic2", 1);
+
+    // Verify new mapping exists
+    assert_eq!(tas.find_by_topic("topic2"), Some(1));
+    assert_eq!(tas.get(1), Some("topic2"));
+
+    // Verify old mapping is removed
+    assert_eq!(tas.find_by_topic("topic1"), None); // old topic should not be found
+}
+
+#[test]
+fn test_overwrite_verification_comprehensive() {
+    // Comprehensive test for overwrite scenarios with detailed verification
+    let mut tas = mqtt::packet::TopicAliasSend::new(10);
+
+    // Setup initial mappings
+    tas.insert_or_update("topicA", 1);
+    tas.insert_or_update("topicB", 2);
+    tas.insert_or_update("topicC", 3);
+
+    // Verify initial state
+    assert_eq!(tas.find_by_topic("topicA"), Some(1));
+    assert_eq!(tas.find_by_topic("topicB"), Some(2));
+    assert_eq!(tas.find_by_topic("topicC"), Some(3));
+    assert_eq!(tas.get(1), Some("topicA"));
+    assert_eq!(tas.get(2), Some("topicB"));
+    assert_eq!(tas.get(3), Some("topicC"));
+
+    // Case 1: Same topic, different alias (topicA 1 -> topicA 5)
+    tas.insert_or_update("topicA", 5);
+
+    // Verify topicA moved to alias 5
+    assert_eq!(tas.find_by_topic("topicA"), Some(5));
+    assert_eq!(tas.get(5), Some("topicA"));
+
+    // Verify old alias 1 is empty and other mappings unchanged
+    assert_eq!(tas.get(1), None);
+    assert_eq!(tas.find_by_topic("topicB"), Some(2));
+    assert_eq!(tas.find_by_topic("topicC"), Some(3));
+
+    // Case 2: Same alias, different topic (topicD -> alias 2, overwriting topicB)
+    tas.insert_or_update("topicD", 2);
+
+    // Verify topicD took over alias 2
+    assert_eq!(tas.find_by_topic("topicD"), Some(2));
+    assert_eq!(tas.get(2), Some("topicD"));
+
+    // Verify topicB is no longer accessible
+    assert_eq!(tas.find_by_topic("topicB"), None);
+
+    // Verify other mappings unchanged
+    assert_eq!(tas.find_by_topic("topicA"), Some(5));
+    assert_eq!(tas.find_by_topic("topicC"), Some(3));
+
+    // Case 3: Cross update (topicC to alias that was freed)
+    tas.insert_or_update("topicC", 1); // Use the freed alias 1
+
+    // Verify topicC moved to alias 1
+    assert_eq!(tas.find_by_topic("topicC"), Some(1));
+    assert_eq!(tas.get(1), Some("topicC"));
+
+    // Verify old alias 3 is now empty
+    assert_eq!(tas.get(3), None);
+
+    // Final state verification
+    assert_eq!(tas.find_by_topic("topicA"), Some(5));
+    assert_eq!(tas.find_by_topic("topicD"), Some(2));
+    assert_eq!(tas.find_by_topic("topicC"), Some(1));
+    assert_eq!(tas.find_by_topic("topicB"), None); // Should be gone
+
+    assert_eq!(tas.get(1), Some("topicC"));
+    assert_eq!(tas.get(2), Some("topicD"));
+    assert_eq!(tas.get(3), None); // Should be empty
+    assert_eq!(tas.get(5), Some("topicA"));
+}
