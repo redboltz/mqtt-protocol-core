@@ -22,9 +22,9 @@
  * SOFTWARE.
  */
 use arrayvec::ArrayVec;
+use core::convert::{From, TryFrom};
+use core::fmt;
 use serde::{Serialize, Serializer};
-use std::convert::{From, TryFrom};
-use std::fmt;
 use std::io::IoSlice;
 
 /// MQTT Variable Byte Integer representation with pre-encoded byte buffer.
@@ -78,7 +78,16 @@ impl VariableByteInteger {
         &self.encoded
     }
 
+    /// Create a continuous buffer containing the complete packet data
+    ///
+    /// Returns a vector containing all packet bytes in a single continuous buffer.
+    /// This method is compatible with no-std environments.
+    pub fn to_continuous_buffer(&self) -> Vec<u8> {
+        self.encoded.to_vec()
+    }
+
     /// For scatter-gather I/O.
+    #[cfg(feature = "std")]
     pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         vec![IoSlice::new(&self.encoded)]
     }

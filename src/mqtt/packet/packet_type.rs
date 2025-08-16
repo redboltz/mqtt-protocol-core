@@ -1,6 +1,3 @@
-use num_enum::TryFromPrimitive;
-use serde::ser::Serializer;
-use serde::{Deserialize, Serialize};
 /**
  * MIT License
  *
@@ -24,7 +21,10 @@ use serde::{Deserialize, Serialize};
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-use std::fmt;
+use core::fmt;
+use num_enum::TryFromPrimitive;
+use serde::ser::Serializer;
+use serde::{Deserialize, Serialize};
 
 /// MQTT Control Packet Type enumeration
 ///

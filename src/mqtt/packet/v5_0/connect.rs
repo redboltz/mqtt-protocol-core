@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-use std::fmt;
+use core::fmt;
 use std::io::IoSlice;
 
 use serde::ser::{SerializeStruct, Serializer};
@@ -1233,7 +1233,7 @@ impl GenericPacketTrait for Connect {
 /// ```ignore
 /// use mqtt_protocol_core::mqtt;
 /// use mqtt_protocol_core::mqtt::packet::GenericPacketDisplay;
-/// use std::fmt::Write;
+/// use core::fmt::Write;
 ///
 /// let connect = mqtt::packet::v5_0::Connect::builder()
 ///     .client_id("display-generic")

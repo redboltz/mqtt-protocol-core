@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-use std::fmt;
+use core::fmt;
 
 use serde::ser::{SerializeStruct, Serializer};
 use serde::Serialize;

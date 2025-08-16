@@ -1,3 +1,4 @@
+use core::marker::PhantomData;
 /**
  * MIT License
  *
@@ -21,9 +22,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-use std::collections::HashSet;
+use hashbrown::HashSet;
 use std::io::Cursor;
-use std::marker::PhantomData;
 
 use crate::mqtt::connection::event::{GenericEvent, TimerKind};
 use crate::mqtt::connection::GenericStore;
@@ -378,7 +378,7 @@ where
     /// }
     /// ```
     pub fn send(&mut self, packet: GenericPacket<PacketIdType>) -> Vec<GenericEvent<PacketIdType>> {
-        use std::any::TypeId;
+        use core::any::TypeId;
 
         let role_id = TypeId::of::<Role>();
         let client_id = TypeId::of::<role::Client>();

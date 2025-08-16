@@ -1,3 +1,4 @@
+use alloc::sync::Arc;
 /**
  * MIT License
  *
@@ -22,7 +23,6 @@
  * SOFTWARE.
  */
 use serde::{Serialize, Serializer};
-use std::sync::Arc;
 
 /// A reference-counted byte payload with slice semantics
 ///
@@ -73,7 +73,7 @@ impl ArcPayload {
     /// # Examples
     ///
     /// ```ignore
-    /// use std::sync::Arc;
+    /// use alloc::sync::Arc;
     /// use mqtt_protocol_core::mqtt::ArcPayload;
     ///
     /// let data = Arc::from(&b"hello world"[..]);

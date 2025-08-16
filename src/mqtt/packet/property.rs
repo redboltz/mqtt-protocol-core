@@ -4,11 +4,7 @@ use crate::mqtt::packet::mqtt_string::MqttString;
 use crate::mqtt::packet::DecodeResult;
 use crate::mqtt::packet::VariableByteInteger;
 use crate::mqtt::result_code::MqttError;
-use num_enum::TryFromPrimitive;
-use serde::ser::SerializeStruct;
-use serde::ser::Serializer;
-use serde::{Deserialize, Serialize};
-use std::convert::TryFrom;
+use core::convert::TryFrom;
 /**
  * MIT License
  *
@@ -32,7 +28,11 @@ use std::convert::TryFrom;
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-use std::fmt;
+use core::fmt;
+use num_enum::TryFromPrimitive;
+use serde::ser::SerializeStruct;
+use serde::ser::Serializer;
+use serde::{Deserialize, Serialize};
 use std::io::IoSlice;
 
 /// MQTT v5.0 Property Identifiers
@@ -362,6 +362,14 @@ macro_rules! mqtt_property_binary {
                 ))
             }
 
+            pub fn to_continuous_buffer(&self) -> Vec<u8> {
+                let mut buf = Vec::new();
+                buf.extend_from_slice(&self.id_bytes);
+                buf.append(&mut self.value.to_continuous_buffer());
+                buf
+            }
+
+            #[cfg(feature = "std")]
             pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
                 let mut result = vec![IoSlice::new(&self.id_bytes)];
                 let mut binary_bufs = self.value.to_buffers();
@@ -439,6 +447,14 @@ macro_rules! mqtt_property_string {
                 ))
             }
 
+            pub fn to_continuous_buffer(&self) -> Vec<u8> {
+                let mut buf = Vec::new();
+                buf.extend_from_slice(&self.id_bytes);
+                buf.append(&mut self.value.to_continuous_buffer());
+                buf
+            }
+
+            #[cfg(feature = "std")]
             pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
                 let mut result = vec![IoSlice::new(&self.id_bytes)];
                 let mut string_bufs = self.value.to_buffers();
@@ -513,6 +529,15 @@ macro_rules! mqtt_property_string_pair {
                 ))
             }
 
+            pub fn to_continuous_buffer(&self) -> Vec<u8> {
+                let mut buf = Vec::new();
+                buf.extend_from_slice(&self.id_bytes);
+                buf.append(&mut self.value.0.to_continuous_buffer());
+                buf.append(&mut self.value.1.to_continuous_buffer());
+                buf
+            }
+
+            #[cfg(feature = "std")]
             pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
                 let mut result = vec![IoSlice::new(&self.id_bytes)];
                 let mut key_bufs = self.value.0.to_buffers();
@@ -583,6 +608,14 @@ macro_rules! mqtt_property_u8_custom_new {
                 ))
             }
 
+            pub fn to_continuous_buffer(&self) -> Vec<u8> {
+                let mut buf = Vec::new();
+                buf.extend_from_slice(&self.id_bytes);
+                buf.extend_from_slice(&self.value);
+                buf
+            }
+
+            #[cfg(feature = "std")]
             pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
                 vec![IoSlice::new(&self.id_bytes), IoSlice::new(&self.value)]
             }
@@ -671,6 +704,14 @@ macro_rules! mqtt_property_u16 {
                 ))
             }
 
+            pub fn to_continuous_buffer(&self) -> Vec<u8> {
+                let mut buf = Vec::new();
+                buf.extend_from_slice(&self.id_bytes);
+                buf.extend_from_slice(&self.value);
+                buf
+            }
+
+            #[cfg(feature = "std")]
             pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
                 vec![IoSlice::new(&self.id_bytes), IoSlice::new(&self.value)]
             }
@@ -741,6 +782,14 @@ macro_rules! mqtt_property_u32 {
                 ))
             }
 
+            pub fn to_continuous_buffer(&self) -> Vec<u8> {
+                let mut buf = Vec::new();
+                buf.extend_from_slice(&self.id_bytes);
+                buf.extend_from_slice(&self.value);
+                buf
+            }
+
+            #[cfg(feature = "std")]
             pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
                 vec![IoSlice::new(&self.id_bytes), IoSlice::new(&self.value)]
             }
@@ -814,6 +863,14 @@ macro_rules! mqtt_property_variable_integer {
                 }
             }
 
+            pub fn to_continuous_buffer(&self) -> Vec<u8> {
+                let mut buf = Vec::new();
+                buf.extend_from_slice(&self.id_bytes);
+                buf.append(&mut self.value.to_continuous_buffer());
+                buf
+            }
+
+            #[cfg(feature = "std")]
             pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
                 vec![
                     IoSlice::new(&self.id_bytes),
@@ -1343,6 +1400,56 @@ impl Property {
         }
     }
 
+    /// Create a continuous buffer containing the complete property data
+    ///
+    /// Returns a vector containing all property bytes in a single continuous buffer.
+    /// This method is compatible with no-std environments.
+    ///
+    /// The returned buffer includes the property identifier and the encoded property value.
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// use mqtt_protocol_core::mqtt;
+    ///
+    /// let prop = mqtt::packet::Property::ContentType(
+    ///     mqtt::packet::ContentType::new("application/json").unwrap()
+    /// );
+    /// let buffer = prop.to_continuous_buffer();
+    /// // buffer contains all property bytes
+    /// ```
+    pub fn to_continuous_buffer(&self) -> Vec<u8> {
+        match self {
+            Property::PayloadFormatIndicator(p) => p.to_continuous_buffer(),
+            Property::MessageExpiryInterval(p) => p.to_continuous_buffer(),
+            Property::ContentType(p) => p.to_continuous_buffer(),
+            Property::ResponseTopic(p) => p.to_continuous_buffer(),
+            Property::CorrelationData(p) => p.to_continuous_buffer(),
+            Property::SubscriptionIdentifier(p) => p.to_continuous_buffer(),
+            Property::SessionExpiryInterval(p) => p.to_continuous_buffer(),
+            Property::AssignedClientIdentifier(p) => p.to_continuous_buffer(),
+            Property::ServerKeepAlive(p) => p.to_continuous_buffer(),
+            Property::AuthenticationMethod(p) => p.to_continuous_buffer(),
+            Property::AuthenticationData(p) => p.to_continuous_buffer(),
+            Property::RequestProblemInformation(p) => p.to_continuous_buffer(),
+            Property::WillDelayInterval(p) => p.to_continuous_buffer(),
+            Property::RequestResponseInformation(p) => p.to_continuous_buffer(),
+            Property::ResponseInformation(p) => p.to_continuous_buffer(),
+            Property::ServerReference(p) => p.to_continuous_buffer(),
+            Property::ReasonString(p) => p.to_continuous_buffer(),
+            Property::ReceiveMaximum(p) => p.to_continuous_buffer(),
+            Property::TopicAliasMaximum(p) => p.to_continuous_buffer(),
+            Property::TopicAlias(p) => p.to_continuous_buffer(),
+            Property::MaximumQos(p) => p.to_continuous_buffer(),
+            Property::RetainAvailable(p) => p.to_continuous_buffer(),
+            Property::UserProperty(p) => p.to_continuous_buffer(),
+            Property::MaximumPacketSize(p) => p.to_continuous_buffer(),
+            Property::WildcardSubscriptionAvailable(p) => p.to_continuous_buffer(),
+            Property::SubscriptionIdentifierAvailable(p) => p.to_continuous_buffer(),
+            Property::SharedSubscriptionAvailable(p) => p.to_continuous_buffer(),
+        }
+    }
+
     /// Create IoSlice buffers for efficient network I/O
     ///
     /// Returns a vector of `IoSlice` objects that can be used for vectored I/O
@@ -1361,6 +1468,7 @@ impl Property {
     /// // Can be used with vectored write operations
     /// // socket.write_vectored(&buffers)?;
     /// ```
+    #[cfg(feature = "std")]
     pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         match self {
             Property::PayloadFormatIndicator(p) => p.to_buffers(),
@@ -1570,6 +1678,17 @@ impl Property {
 /// ```
 pub type Properties = Vec<Property>;
 
+/// Trait for converting properties collection to continuous buffer
+///
+/// This trait provides functionality to convert a collection of properties
+/// into a single continuous buffer compatible with no-std environments.
+pub trait PropertiesToContinuousBuffer {
+    /// Convert properties to continuous buffer
+    ///
+    /// Returns a vector containing all property bytes in a single continuous buffer.
+    fn to_continuous_buffer(&self) -> Vec<u8>;
+}
+
 /// Trait for converting properties collection to I/O buffers
 ///
 /// This trait provides functionality to convert a collection of properties
@@ -1582,9 +1701,25 @@ pub trait PropertiesToBuffers {
     fn to_buffers(&self) -> Vec<IoSlice<'_>>;
 }
 
+/// Implementation of PropertiesToContinuousBuffer for Properties
+///
+/// Concatenates continuous buffers from all properties in the collection.
+impl PropertiesToContinuousBuffer for Properties {
+    fn to_continuous_buffer(&self) -> Vec<u8> {
+        let mut result = Vec::new();
+
+        for prop in self {
+            result.append(&mut prop.to_continuous_buffer());
+        }
+
+        result
+    }
+}
+
 /// Implementation of PropertiesToBuffers for Properties
 ///
 /// Concatenates IoSlice buffers from all properties in the collection.
+#[cfg(feature = "std")]
 impl PropertiesToBuffers for Properties {
     fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         let mut result = Vec::new();

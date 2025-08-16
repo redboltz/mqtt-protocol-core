@@ -21,9 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-use std::fmt;
+use core::fmt;
+use core::mem;
 use std::io::IoSlice;
-use std::mem;
 
 use serde::ser::{SerializeStruct, Serializer};
 use serde::Serialize;
@@ -307,8 +307,22 @@ where
     ///     .unwrap();
     ///
     /// let buffers = puback.to_buffers();
+    /// assert!(!buffer.is_empty());
+    /// ```
+    pub fn to_continuous_buffer(&self) -> Vec<u8> {
+        let mut buf = Vec::new();
+        buf.extend_from_slice(&self.fixed_header);
+        buf.extend_from_slice(self.remaining_length.as_bytes());
+        buf.extend_from_slice(self.packet_id_buf.as_ref());
+        if let Some(rc_buf) = &self.reason_code_buf {
+            buf.extend_from_slice(rc_buf);
+        }
+        buf
+    }
+
     /// assert!(!buffers.is_empty());
     /// ```
+    #[cfg(feature = "std")]
     pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         let mut bufs = Vec::new();
         bufs.push(IoSlice::new(&self.fixed_header));

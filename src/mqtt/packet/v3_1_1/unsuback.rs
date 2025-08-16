@@ -21,9 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-use std::fmt;
+use core::fmt;
+use core::mem;
 use std::io::IoSlice;
-use std::mem;
 
 use serde::ser::{SerializeStruct, Serializer};
 use serde::Serialize;
@@ -263,6 +263,7 @@ where
     /// // Use buffers for vectored I/O operations
     /// // let bytes_written = socket.write_vectored(&buffers)?;
     /// ```
+    #[cfg(feature = "std")]
     pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         let mut bufs = Vec::new();
         bufs.push(IoSlice::new(&self.fixed_header));
@@ -270,6 +271,14 @@ where
         bufs.push(IoSlice::new(self.packet_id_buf.as_ref()));
 
         bufs
+    }
+
+    pub fn to_continuous_buffer(&self) -> Vec<u8> {
+        let mut buf = Vec::new();
+        buf.extend_from_slice(&self.fixed_header);
+        buf.extend_from_slice(self.remaining_length.as_bytes());
+        buf.extend_from_slice(self.packet_id_buf.as_ref());
+        buf
     }
 
     /// Parse an UNSUBACK packet from raw bytes

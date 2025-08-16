@@ -247,6 +247,28 @@ impl MqttString {
         self.encoded.len()
     }
 
+    /// Create a continuous buffer containing the complete packet data
+    ///
+    /// Returns a vector containing all packet bytes in a single continuous buffer.
+    /// This method is compatible with no-std environments.
+    ///
+    /// # Returns
+    ///
+    /// A vector containing the complete encoded buffer
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// use mqtt_protocol_core::mqtt;
+    ///
+    /// let mqtt_str = mqtt::packet::MqttString::new("data").unwrap();
+    /// let buffer = mqtt_str.to_continuous_buffer();
+    /// // buffer contains all packet bytes
+    /// ```
+    pub fn to_continuous_buffer(&self) -> Vec<u8> {
+        self.encoded.clone()
+    }
+
     /// Create IoSlice buffers for efficient network I/O
     ///
     /// Returns a vector of `IoSlice` objects that can be used for vectored I/O
@@ -267,6 +289,7 @@ impl MqttString {
     /// // Can be used with vectored write operations
     /// // socket.write_vectored(&buffers)?;
     /// ```
+    #[cfg(feature = "std")]
     pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         vec![IoSlice::new(&self.encoded)]
     }

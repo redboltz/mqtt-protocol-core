@@ -457,3 +457,33 @@ fn test_packet_type() {
     let packet_type = mqtt::packet::v3_1_1::Connack::packet_type();
     assert_eq!(packet_type, mqtt::packet::PacketType::Connack);
 }
+
+#[test]
+fn test_connack_buffers_equivalence() {
+    let connack = mqtt::packet::v3_1_1::Connack::builder()
+        .session_present(true)
+        .return_code(mqtt::result_code::ConnectReturnCode::Accepted)
+        .build()
+        .unwrap();
+
+    // Get buffers from both methods
+    let continuous_buffer = connack.to_continuous_buffer();
+
+    #[cfg(feature = "std")]
+    {
+        let io_slices = connack.to_buffers();
+
+        // Concatenate IoSlice buffers
+        let mut concatenated = Vec::new();
+        for slice in io_slices {
+            concatenated.extend_from_slice(&slice);
+        }
+
+        // Verify they produce identical results
+        assert_eq!(continuous_buffer, concatenated);
+    }
+
+    // Verify the continuous buffer is not empty and has correct size
+    assert!(!continuous_buffer.is_empty());
+    assert_eq!(continuous_buffer.len(), connack.size());
+}

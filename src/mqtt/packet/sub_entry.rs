@@ -25,9 +25,9 @@ use crate::mqtt::packet::MqttString;
 use crate::mqtt::packet::Qos;
 use crate::mqtt::packet::RetainHandling;
 use crate::mqtt::result_code::MqttError;
+use core::fmt;
 use serde::ser::{SerializeStruct, Serializer};
 use serde::Serialize;
-use std::fmt;
 use std::io::IoSlice;
 
 /// MQTT Subscription Options
@@ -687,10 +687,20 @@ impl SubEntry {
     ///
     /// let entry = mqtt::packet::SubEntry::new("test/topic",
     ///                                        mqtt::packet::SubOpts::new()).unwrap();
+    /// let buffer = entry.to_continuous_buffer();
+    /// // buffer contains all subscription entry bytes
+    /// ```
+    pub fn to_continuous_buffer(&self) -> Vec<u8> {
+        let mut buf = self.topic_filter.to_continuous_buffer();
+        buf.extend_from_slice(self.sub_opts.to_buffer());
+        buf
+    }
+
     /// let buffers = entry.to_buffers();
     /// // Can be used with vectored write operations
     /// // socket.write_vectored(&buffers)?;
     /// ```
+    #[cfg(feature = "std")]
     pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         let mut buffers = self.topic_filter.to_buffers();
         buffers.push(IoSlice::new(self.sub_opts.to_buffer()));

@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-use std::fmt;
+use core::fmt;
 use std::io::IoSlice;
 
 use serde::ser::{SerializeStruct, Serializer};
@@ -232,8 +232,18 @@ impl Pingresp {
     /// assert_eq!(buffers.len(), 2);
     ///
     /// // Can be used with vectored write operations
+    /// // buffer contains all packet bytes
+    /// ```
+    pub fn to_continuous_buffer(&self) -> Vec<u8> {
+        let mut buf = Vec::new();
+        buf.extend_from_slice(&self.fixed_header);
+        buf.extend_from_slice(self.remaining_length.as_bytes());
+        buf
+    }
+
     /// // stream.write_vectored(&buffers).await?;
     /// ```
+    #[cfg(feature = "std")]
     pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         vec![
             IoSlice::new(&self.fixed_header),

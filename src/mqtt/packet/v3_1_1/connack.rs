@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-use std::fmt;
+use core::fmt;
 use std::io::IoSlice;
 
 use serde::ser::{SerializeStruct, Serializer};
@@ -254,6 +254,45 @@ impl Connack {
         1 + self.remaining_length.size() + self.remaining_length.to_u32() as usize
     }
 
+    /// Create a continuous buffer containing the complete packet data
+    ///
+    /// Returns a vector containing all packet bytes in a single continuous buffer.
+    /// This method is compatible with no-std environments.
+    ///
+    /// The returned buffer contains:
+    /// 1. Fixed header (packet type and flags) - 1 byte
+    /// 2. Remaining length field - 1 byte (always 0x02)
+    /// 3. Acknowledgment flags - 1 byte
+    /// 4. Return code - 1 byte
+    ///
+    /// # Returns
+    ///
+    /// A vector containing the complete packet data
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// use mqtt_protocol_core::mqtt;
+    /// use mqtt_protocol_core::mqtt::result_code::ConnectReturnCode;
+    ///
+    /// let connack = mqtt::packet::v3_1_1::Connack::builder()
+    ///     .session_present(false)
+    ///     .return_code(ConnectReturnCode::Accepted)
+    ///     .build()
+    ///     .unwrap();
+    ///
+    /// let buffer = connack.to_continuous_buffer();
+    /// // buffer contains all packet bytes
+    /// ```
+    pub fn to_continuous_buffer(&self) -> Vec<u8> {
+        let mut buf = Vec::new();
+        buf.extend_from_slice(&self.fixed_header);
+        buf.extend_from_slice(self.remaining_length.as_bytes());
+        buf.extend_from_slice(&self.ack_flags);
+        buf.extend_from_slice(&self.return_code_buf);
+        buf
+    }
+
     /// Create IoSlice buffers for efficient network I/O
     ///
     /// Returns a vector of `IoSlice` objects that can be used for vectored I/O
@@ -285,6 +324,7 @@ impl Connack {
     /// let buffers = connack.to_buffers();
     /// // Use with vectored write: socket.write_vectored(&buffers)?;
     /// ```
+    #[cfg(feature = "std")]
     pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         vec![
             IoSlice::new(&self.fixed_header),

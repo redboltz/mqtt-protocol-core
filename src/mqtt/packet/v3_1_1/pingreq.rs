@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-use std::fmt;
+use core::fmt;
 use std::io::IoSlice;
 
 use serde::ser::{SerializeStruct, Serializer};
@@ -219,12 +219,24 @@ impl Pingreq {
     /// use mqtt_protocol_core::mqtt;
     ///
     /// let pingreq = mqtt::packet::v3_1_1::Pingreq::new();
+    /// let buffer = pingreq.to_continuous_buffer();
+    /// assert_eq!(buffer.len(), 2);
+    /// ```
+    pub fn to_continuous_buffer(&self) -> Vec<u8> {
+        let mut buf = Vec::new();
+        buf.extend_from_slice(&self.fixed_header);
+        buf.extend_from_slice(self.remaining_length.as_bytes());
+        buf
+    }
+
+    /// let pingreq = mqtt::packet::v3_1_1::Pingreq::new();
     /// let buffers = pingreq.to_buffers();
     /// assert_eq!(buffers.len(), 2);
     ///
     /// // Can be used with vectored write operations
     /// // stream.write_vectored(&buffers).await?;
     /// ```
+    #[cfg(feature = "std")]
     pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         vec![
             IoSlice::new(&self.fixed_header),

@@ -21,8 +21,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-use std::collections::BTreeSet;
-use std::fmt::Debug;
+use alloc::collections::BTreeSet;
+use core::fmt::Debug;
 
 use num_traits::{One, PrimInt};
 
@@ -64,13 +64,13 @@ impl<T: PrimInt> PartialOrd for ValueInterval<T> {
 }
 
 impl<T: PrimInt> Ord for ValueInterval<T> {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+    fn cmp(&self, other: &Self) -> core::cmp::Ordering {
         if self.high < other.low {
-            std::cmp::Ordering::Less
+            core::cmp::Ordering::Less
         } else if other.high < self.low {
-            std::cmp::Ordering::Greater
+            core::cmp::Ordering::Greater
         } else {
-            std::cmp::Ordering::Equal
+            core::cmp::Ordering::Equal
         }
     }
 }

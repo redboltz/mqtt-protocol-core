@@ -21,9 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-use std::fmt;
+use core::fmt;
+use core::mem;
 use std::io::IoSlice;
-use std::mem;
 
 use serde::ser::{SerializeStruct, Serializer};
 use serde::Serialize;
@@ -317,6 +317,7 @@ where
     /// let buffers = pubcomp.to_buffers();
     /// assert_eq!(buffers.len(), 3); // Fixed header, remaining length, packet ID
     /// ```
+    #[cfg(feature = "std")]
     pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         let mut bufs = Vec::new();
         bufs.push(IoSlice::new(&self.fixed_header));
@@ -327,6 +328,39 @@ where
         }
 
         bufs
+    }
+
+    /// Converts the PUBCOMP packet into a continuous buffer for no-std environments.
+    ///
+    /// This method serializes the entire packet into a single contiguous byte vector,
+    /// which is suitable for no-std environments where IoSlice is not available.
+    ///
+    /// # Returns
+    ///
+    /// A `Vec<u8>` containing the complete packet data.
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// use mqtt_protocol_core::mqtt;
+    ///
+    /// let pubcomp = mqtt::packet::v3_1_1::Pubcomp::builder()
+    ///     .packet_id(1u16)
+    ///     .build()
+    ///     .unwrap();
+    ///
+    /// let buffer = pubcomp.to_continuous_buffer();
+    /// // Use buffer for writing to network streams
+    /// ```
+    pub fn to_continuous_buffer(&self) -> Vec<u8> {
+        let mut buf = Vec::new();
+        buf.extend_from_slice(&self.fixed_header);
+        buf.extend_from_slice(self.remaining_length.as_bytes());
+        buf.extend_from_slice(self.packet_id_buf.as_ref());
+        if let Some(rc_buf) = &self.reason_code_buf {
+            buf.extend_from_slice(rc_buf);
+        }
+        buf
     }
 
     /// Parses a PUBCOMP packet from raw bytes.

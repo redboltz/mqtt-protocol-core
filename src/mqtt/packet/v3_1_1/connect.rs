@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-use std::fmt;
+use core::fmt;
 use std::io::IoSlice;
 
 use serde::ser::{SerializeStruct, Serializer};
@@ -407,6 +407,7 @@ impl Connect {
     /// let buffers = connect.to_buffers();
     /// // Use buffers for vectored I/O
     /// ```
+    #[cfg(feature = "std")]
     pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         let mut bufs = Vec::new();
         bufs.push(IoSlice::new(&self.fixed_header));
@@ -432,6 +433,55 @@ impl Connect {
         }
 
         bufs
+    }
+
+    /// Converts the CONNECT packet into a continuous buffer for no-std environments.
+    ///
+    /// This method serializes the entire packet into a single contiguous byte vector,
+    /// which is suitable for no-std environments where IoSlice is not available.
+    ///
+    /// # Returns
+    ///
+    /// A `Vec<u8>` containing the complete packet data.
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// use mqtt_protocol_core::mqtt;
+    ///
+    /// let connect = mqtt::packet::v3_1_1::Connect::builder()
+    ///     .client_id("client")
+    ///     .build()
+    ///     .unwrap();
+    ///
+    /// let buffer = connect.to_continuous_buffer();
+    /// // Use buffer for writing to network streams
+    /// ```
+    pub fn to_continuous_buffer(&self) -> Vec<u8> {
+        let mut buf = Vec::new();
+        buf.extend_from_slice(&self.fixed_header);
+        buf.extend_from_slice(self.remaining_length.as_bytes());
+        buf.extend_from_slice(&self.protocol_name);
+        buf.extend_from_slice(&self.protocol_version_buf);
+        buf.extend_from_slice(&self.connect_flags_buf);
+        buf.extend_from_slice(&self.keep_alive_buf);
+
+        buf.append(&mut self.client_id_buf.to_continuous_buffer());
+
+        if self.will_flag() {
+            buf.append(&mut self.will_topic_buf.to_continuous_buffer());
+            buf.append(&mut self.will_payload_buf.to_continuous_buffer());
+        }
+
+        if self.user_name_flag() {
+            buf.append(&mut self.user_name_buf.to_continuous_buffer());
+        }
+
+        if self.password_flag() {
+            buf.append(&mut self.password_buf.to_continuous_buffer());
+        }
+
+        buf
     }
 
     /// Parses a CONNECT packet from raw bytes

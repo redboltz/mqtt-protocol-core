@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-use std::fmt;
+use core::fmt;
 use std::io::IoSlice;
 
 use serde::ser::{SerializeStruct, Serializer};
@@ -210,11 +210,51 @@ impl Pingreq {
     /// // Can be used with vectored write operations
     /// // stream.write_vectored(&buffers).await?;
     /// ```
+    #[cfg(feature = "std")]
     pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         vec![
             IoSlice::new(&self.fixed_header),
             IoSlice::new(self.remaining_length.as_bytes()),
         ]
+    }
+
+    /// Converts the PINGREQ packet into a continuous buffer for no-std environments.
+    ///
+    /// This method serializes the entire packet into a single contiguous byte vector,
+    /// which is suitable for no-std environments where `IoSlice` is not available.
+    /// The resulting buffer contains the complete MQTT v5.0 PINGREQ packet ready
+    /// for transmission over a network connection.
+    ///
+    /// # Returns
+    ///
+    /// A `Vec<u8>` containing the complete packet data in MQTT wire format:
+    /// - Fixed header (1 byte): Packet type and flags
+    /// - Remaining length (1 byte): Always 0x00 for PINGREQ
+    ///
+    /// # Performance
+    ///
+    /// This method allocates a new vector and copies packet data into it. For
+    /// zero-copy operations in std environments, use [`to_buffers()`] instead.
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// use mqtt_protocol_core::mqtt;
+    ///
+    /// let pingreq = mqtt::packet::v5_0::Pingreq::new();
+    /// let buffer = pingreq.to_continuous_buffer();
+    /// assert_eq!(buffer.len(), 2); // Fixed header + remaining length
+    ///
+    /// // Use buffer for writing to network streams
+    /// // stream.write_all(&buffer).await?;
+    /// ```
+    ///
+    /// [`to_buffers()`]: #method.to_buffers
+    pub fn to_continuous_buffer(&self) -> Vec<u8> {
+        let mut buf = Vec::new();
+        buf.extend_from_slice(&self.fixed_header);
+        buf.extend_from_slice(self.remaining_length.as_bytes());
+        buf
     }
 
     /// Parses a PINGREQ packet from raw bytes

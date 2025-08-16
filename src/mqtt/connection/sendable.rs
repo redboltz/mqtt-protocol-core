@@ -31,7 +31,7 @@ use crate::mqtt::packet::kind::PacketKind;
 use crate::mqtt::packet::GenericPacket;
 use crate::mqtt::packet::IsPacketId;
 use crate::mqtt::result_code::MqttError;
-use std::fmt::Debug;
+use core::fmt::Debug;
 use tracing::trace;
 
 /// Core trait for sendable packets

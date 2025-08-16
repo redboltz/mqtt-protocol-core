@@ -1,3 +1,4 @@
+use alloc::sync::Arc;
 /**
  * MIT License
  *
@@ -21,10 +22,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-use std::fmt;
+use core::fmt;
+use core::mem;
 use std::io::IoSlice;
-use std::mem;
-use std::sync::Arc;
 
 use serde::ser::{SerializeStruct, Serializer};
 use serde::Serialize;
@@ -871,7 +871,7 @@ where
     ///
     /// ```ignore
     /// use mqtt_protocol_core::mqtt;
-    /// use std::sync::Arc;
+    /// use alloc::sync::Arc;
     ///
     /// let packet_data: Arc<[u8]> = // ... raw packet bytes
     /// let flags = 0x00; // QoS 0, no DUP, no RETAIN

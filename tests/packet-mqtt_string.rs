@@ -226,3 +226,28 @@ fn test_mqttstring_deref() {
     assert_eq!(s.chars().count(), 4);
     assert_eq!(s.to_uppercase(), "TEST");
 }
+
+#[test]
+fn test_mqttstring_buffers_equivalence() {
+    let s = mqtt::packet::MqttString::new("test_data").unwrap();
+
+    // Get buffers from both methods
+    let continuous_buffer = s.to_continuous_buffer();
+
+    #[cfg(feature = "std")]
+    {
+        let io_slices = s.to_buffers();
+
+        // Concatenate IoSlice buffers
+        let mut concatenated = Vec::new();
+        for slice in io_slices {
+            concatenated.extend_from_slice(&slice);
+        }
+
+        // Verify they produce identical results
+        assert_eq!(continuous_buffer, concatenated);
+    }
+
+    // Verify the continuous buffer is not empty
+    assert!(!continuous_buffer.is_empty());
+}

@@ -1,3 +1,4 @@
+use core::fmt;
 /**
  * MIT License
  *
@@ -23,7 +24,6 @@
  */
 use num_enum::TryFromPrimitive;
 use serde::{Deserialize, Serialize};
-use std::fmt;
 
 /// Retain Handling Option for MQTT Subscriptions
 ///

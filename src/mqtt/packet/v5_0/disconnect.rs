@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-use std::fmt;
+use core::fmt;
 use std::io::IoSlice;
 
 use serde::ser::{SerializeStruct, Serializer};
@@ -31,6 +31,7 @@ use derive_builder::Builder;
 use getset::{CopyGetters, Getters};
 
 use crate::mqtt::packet::packet_type::{FixedHeader, PacketType};
+use crate::mqtt::packet::property::PropertiesToContinuousBuffer;
 use crate::mqtt::packet::variable_byte_integer::VariableByteInteger;
 use crate::mqtt::packet::GenericPacketDisplay;
 use crate::mqtt::packet::GenericPacketTrait;
@@ -301,6 +302,7 @@ impl Disconnect {
     /// let buffers = disconnect.to_buffers();
     /// // Can be used with vectored I/O operations like write_vectored
     /// ```
+    #[cfg(feature = "std")]
     pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         let mut bufs = Vec::new();
         bufs.push(IoSlice::new(&self.fixed_header));
@@ -316,6 +318,55 @@ impl Disconnect {
         }
 
         bufs
+    }
+
+    /// Converts the DISCONNECT packet into a continuous buffer for no-std environments.
+    ///
+    /// This method serializes the entire packet into a single contiguous byte vector,
+    /// which is suitable for no-std environments where `IoSlice` is not available.
+    /// The resulting buffer contains the complete MQTT v5.0 DISCONNECT packet ready
+    /// for transmission over a network connection.
+    ///
+    /// # Returns
+    ///
+    /// A `Vec<u8>` containing the complete packet data in MQTT wire format:
+    /// - Fixed header (1 byte): Packet type and flags
+    /// - Remaining length (1-4 bytes): Variable length encoding  
+    /// - Reason code (1 byte): Optional disconnect reason
+    /// - Property length (1-4 bytes): Optional, if properties present
+    /// - Properties: Optional MQTT v5.0 properties
+    ///
+    /// # Performance
+    ///
+    /// This method allocates a new vector and copies packet data into it. For
+    /// zero-copy operations in std environments, use [`to_buffers()`] instead.
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// use mqtt_protocol_core::mqtt;
+    ///
+    /// let disconnect = mqtt::packet::v5_0::Disconnect::new();
+    /// let buffer = disconnect.to_continuous_buffer();
+    /// // Use buffer for writing to network streams
+    /// // stream.write_all(&buffer).await?;
+    /// ```
+    ///
+    /// [`to_buffers()`]: #method.to_buffers
+    pub fn to_continuous_buffer(&self) -> Vec<u8> {
+        let mut buf = Vec::new();
+        buf.extend_from_slice(&self.fixed_header);
+        buf.extend_from_slice(self.remaining_length.as_bytes());
+        if let Some(rc_buf) = &self.reason_code_buf {
+            buf.extend_from_slice(rc_buf);
+        }
+        if let Some(pl) = &self.property_length {
+            buf.extend_from_slice(pl.as_bytes());
+        }
+        if let Some(ref props) = self.props {
+            buf.append(&mut props.to_continuous_buffer());
+        }
+        buf
     }
 
     /// Parses a DISCONNECT packet from byte data

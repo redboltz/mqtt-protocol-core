@@ -1,3 +1,4 @@
+use core::fmt;
 /**
  * MIT License
  *
@@ -24,7 +25,6 @@
 use derive_builder::UninitializedFieldError;
 use num_enum::TryFromPrimitive;
 use serde::{Serialize, Serializer};
-use std::fmt;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(u16)]

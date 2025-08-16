@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 use crate::mqtt::result_code::MqttError;
+use alloc::sync::Arc;
 use std::io::{Cursor, Read};
-use std::sync::Arc;
 
 #[derive(Debug, Clone)]
 pub enum PacketData {
