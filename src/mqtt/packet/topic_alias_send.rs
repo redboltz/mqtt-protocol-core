@@ -35,12 +35,14 @@ pub type TopicAliasType = u16;
 ///
 /// This manages the mapping between topic names and numeric aliases for outgoing
 /// MQTT PUBLISH packets to reduce packet size for frequently used topics.
+///
+/// According to MQTT v5.0 specification, one topic can have multiple aliases.
 pub struct TopicAliasSend {
     max_alias: TopicAliasType,
     // alias -> topic mapping with insertion order preserved
     alias_to_topic: IndexMap<TopicAliasType, String>,
-    // topic -> alias mapping for fast topic lookups
-    topic_to_alias: HashMap<String, TopicAliasType>,
+    // topic -> aliases mapping for fast topic lookups (supports multiple aliases per topic)
+    topic_to_aliases: HashMap<String, Vec<TopicAliasType>>,
     value_allocator: ValueAllocator<TopicAliasType>,
 }
 
@@ -54,7 +56,7 @@ impl TopicAliasSend {
         Self {
             max_alias,
             alias_to_topic: IndexMap::new(),
-            topic_to_alias: HashMap::new(),
+            topic_to_aliases: HashMap::new(),
             value_allocator: ValueAllocator::new(Self::MIN_ALIAS, max_alias),
         }
     }
@@ -80,33 +82,24 @@ impl TopicAliasSend {
         if !is_new_alias {
             // Alias already in use: need to remove old alias->topic mapping
             if let Some(old_topic) = self.alias_to_topic.shift_remove(&alias) {
-                let removed = self.topic_to_alias.remove(&old_topic);
-                debug_assert!(
-                    removed.is_some(),
-                    "topic_to_alias should contain entry for topic: {}",
-                    old_topic
-                );
+                // Remove this alias from the old topic's aliases list
+                if let Some(aliases) = self.topic_to_aliases.get_mut(&old_topic) {
+                    aliases.retain(|&a| a != alias);
+                    if aliases.is_empty() {
+                        self.topic_to_aliases.remove(&old_topic);
+                    }
+                }
             }
         }
 
-        // Remove existing topic mapping (regardless of new/existing alias)
-        if let Some(old_alias) = self.topic_to_alias.remove(&topic_string) {
-            if old_alias != alias {
-                // Avoid double removal
-                let removed = self.alias_to_topic.shift_remove(&old_alias);
-                debug_assert!(
-                    removed.is_some(),
-                    "alias_to_topic should contain entry for alias: {}",
-                    old_alias
-                );
-                // Return old alias to allocator
-                self.value_allocator.deallocate(old_alias);
-            }
-        }
-
-        // Insert new entry
+        // Insert new alias -> topic mapping
         self.alias_to_topic.insert(alias, topic_string.clone());
-        self.topic_to_alias.insert(topic_string, alias);
+
+        // Add alias to topic's aliases list (or create new list)
+        self.topic_to_aliases
+            .entry(topic_string)
+            .or_insert_with(Vec::new)
+            .push(alias);
     }
 
     /// Get topic by alias and update access timestamp (affects LRU)
@@ -154,23 +147,20 @@ impl TopicAliasSend {
     /// * `topic` - The topic name to look up
     ///
     /// # Returns
-    /// The alias if found, None otherwise
+    /// The first alias if found, None otherwise
     pub fn find_by_topic(&self, topic: &str) -> Option<TopicAliasType> {
         trace!("Finding alias by topic: '{}'", topic);
 
-        self.topic_to_alias.get(topic).copied()
+        self.topic_to_aliases
+            .get(topic)
+            .and_then(|aliases| aliases.first().copied())
     }
 
     /// Clear all topic-alias mappings
     pub fn clear(&mut self) {
         trace!("Clearing all topic aliases");
-        debug_assert_eq!(
-            self.alias_to_topic.len(),
-            self.topic_to_alias.len(),
-            "alias_to_topic and topic_to_alias should have same length"
-        );
         self.alias_to_topic.clear();
-        self.topic_to_alias.clear();
+        self.topic_to_aliases.clear();
         self.value_allocator.clear();
     }
 

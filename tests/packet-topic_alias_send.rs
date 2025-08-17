@@ -139,14 +139,15 @@ fn test_alias_update_behavior() {
     assert_eq!(tas.find_by_topic("topic1"), Some(1));
     assert_eq!(tas.find_by_topic("topic2"), Some(2));
 
-    // Update topic1 to use alias 2 (should remove old mapping)
+    // Update topic1 to use alias 2 (should add new mapping, topic2 replaced)
     tas.insert_or_update("topic1", 2);
 
-    // topic1 should now be at alias 2, and old alias 1 should be free
-    assert_eq!(tas.find_by_topic("topic1"), Some(2));
+    // topic1 should now have both aliases 1 and 2, topic2 should be removed
+    let found_alias = tas.find_by_topic("topic1");
+    assert!(found_alias == Some(1) || found_alias == Some(2)); // either is valid as first
     assert_eq!(tas.find_by_topic("topic2"), None); // topic2 should be removed
-    assert_eq!(tas.get(1), None); // alias 1 should be empty
-    assert_eq!(tas.get(2), Some("topic1")); // alias 2 should have topic1
+    assert_eq!(tas.get(1), Some("topic1")); // alias 1 should still have topic1
+    assert_eq!(tas.get(2), Some("topic1")); // alias 2 should now have topic1
 }
 
 #[test]
@@ -156,13 +157,14 @@ fn test_topic_update_behavior() {
     tas.insert_or_update("topic1", 1);
     tas.insert_or_update("topic2", 2);
 
-    // Update alias 1 to point to topic2 (should remove old topic2 mapping)
+    // Update alias 1 to point to topic2 (topic2 takes over alias 1, topic1 removed from alias 1)
     tas.insert_or_update("topic2", 1);
 
-    // alias 1 should now have topic2, and alias 2 should be free
+    // alias 1 should now have topic2, topic2 should have both aliases 1 and 2
     assert_eq!(tas.get(1), Some("topic2"));
-    assert_eq!(tas.get(2), None); // alias 2 should be empty
-    assert_eq!(tas.find_by_topic("topic2"), Some(1));
+    assert_eq!(tas.get(2), Some("topic2")); // alias 2 should still have topic2
+    let found_alias = tas.find_by_topic("topic2");
+    assert!(found_alias == Some(1) || found_alias == Some(2)); // either is valid
     assert_eq!(tas.find_by_topic("topic1"), None); // topic1 should be removed
 }
 
@@ -378,18 +380,17 @@ fn test_same_topic_different_alias_update() {
     assert_eq!(tas.find_by_topic("topic1"), Some(1));
     assert_eq!(tas.get(1), Some("topic1"));
 
-    // Update same topic to different alias
+    // Update same topic to different alias (should add new mapping)
     tas.insert_or_update("topic1", 2);
 
-    // Verify new mapping exists
-    assert_eq!(tas.find_by_topic("topic1"), Some(2));
-    assert_eq!(tas.get(2), Some("topic1"));
+    // Verify topic1 now has both aliases
+    let found_alias = tas.find_by_topic("topic1");
+    assert!(found_alias == Some(1) || found_alias == Some(2)); // either is valid
+    assert_eq!(tas.get(1), Some("topic1")); // original alias should still exist
+    assert_eq!(tas.get(2), Some("topic1")); // new alias should also exist
 
-    // Verify old mapping is removed
-    assert_eq!(tas.get(1), None); // old alias should be empty
-
-    // Verify alias 1 is now available for reuse
-    assert_eq!(tas.get_lru_alias(), 1); // should return first vacant alias
+    // Verify next alias for reuse
+    assert_eq!(tas.get_lru_alias(), 3); // should return first vacant alias
 }
 
 #[test]
@@ -434,12 +435,13 @@ fn test_overwrite_verification_comprehensive() {
     // Case 1: Same topic, different alias (topicA 1 -> topicA 5)
     tas.insert_or_update("topicA", 5);
 
-    // Verify topicA moved to alias 5
-    assert_eq!(tas.find_by_topic("topicA"), Some(5));
-    assert_eq!(tas.get(5), Some("topicA"));
+    // Verify topicA now has both aliases 1 and 5
+    let found_alias = tas.find_by_topic("topicA");
+    assert!(found_alias == Some(1) || found_alias == Some(5)); // either is valid
+    assert_eq!(tas.get(1), Some("topicA")); // original alias should still exist
+    assert_eq!(tas.get(5), Some("topicA")); // new alias should also exist
 
-    // Verify old alias 1 is empty and other mappings unchanged
-    assert_eq!(tas.get(1), None);
+    // Verify other mappings unchanged
     assert_eq!(tas.find_by_topic("topicB"), Some(2));
     assert_eq!(tas.find_by_topic("topicC"), Some(3));
 
@@ -454,27 +456,70 @@ fn test_overwrite_verification_comprehensive() {
     assert_eq!(tas.find_by_topic("topicB"), None);
 
     // Verify other mappings unchanged
-    assert_eq!(tas.find_by_topic("topicA"), Some(5));
+    let found_alias_a = tas.find_by_topic("topicA");
+    assert!(found_alias_a == Some(1) || found_alias_a == Some(5)); // either is valid
     assert_eq!(tas.find_by_topic("topicC"), Some(3));
 
-    // Case 3: Cross update (topicC to alias that was freed)
-    tas.insert_or_update("topicC", 1); // Use the freed alias 1
+    // Case 3: Cross update (topicC to alias that was used by topicA)
+    tas.insert_or_update("topicC", 1); // Use alias 1 (shared with topicA)
 
-    // Verify topicC moved to alias 1
-    assert_eq!(tas.find_by_topic("topicC"), Some(1));
-    assert_eq!(tas.get(1), Some("topicC"));
+    // Verify topicC now also has alias 1
+    let found_alias_c = tas.find_by_topic("topicC");
+    assert!(found_alias_c == Some(1) || found_alias_c == Some(3)); // either is valid
+    assert_eq!(tas.get(1), Some("topicC")); // alias 1 should now have topicC
 
-    // Verify old alias 3 is now empty
-    assert_eq!(tas.get(3), None);
+    // Verify old alias 3 still exists with topicC
+    assert_eq!(tas.get(3), Some("topicC"));
 
-    // Final state verification
-    assert_eq!(tas.find_by_topic("topicA"), Some(5));
+    // Final state verification - adjust expectations for multiple aliases
+    let found_alias_a_final = tas.find_by_topic("topicA");
+    assert!(found_alias_a_final == Some(5)); // topicA should still be findable
     assert_eq!(tas.find_by_topic("topicD"), Some(2));
-    assert_eq!(tas.find_by_topic("topicC"), Some(1));
+    let found_alias_c_final = tas.find_by_topic("topicC");
+    assert!(found_alias_c_final == Some(1) || found_alias_c_final == Some(3));
     assert_eq!(tas.find_by_topic("topicB"), None); // Should be gone
 
     assert_eq!(tas.get(1), Some("topicC"));
     assert_eq!(tas.get(2), Some("topicD"));
-    assert_eq!(tas.get(3), None); // Should be empty
+    assert_eq!(tas.get(3), Some("topicC")); // Should have topicC
     assert_eq!(tas.get(5), Some("topicA"));
+}
+
+#[test]
+fn test_mqtt_v5_spec_multiple_aliases_same_topic() {
+    // Test MQTT v5.0 spec: same topic can be mapped to multiple aliases
+    let mut tas = mqtt::packet::TopicAliasSend::new(10);
+
+    // Map alias 1 to "topic1"
+    tas.insert_or_update("topic1", 1);
+    assert_eq!(tas.find_by_topic("topic1"), Some(1));
+    assert_eq!(tas.get(1), Some("topic1"));
+
+    // Map alias 2 to "topic1" - both should be maintained
+    tas.insert_or_update("topic1", 2);
+    assert_eq!(tas.get(1), Some("topic1"));
+    assert_eq!(tas.get(2), Some("topic1"));
+
+    // find_by_topic should return the first alias found
+    let found_alias = tas.find_by_topic("topic1");
+    assert!(found_alias == Some(1) || found_alias == Some(2));
+
+    // Map alias 3 to "topic1" - all three should be maintained
+    tas.insert_or_update("topic1", 3);
+    assert_eq!(tas.get(1), Some("topic1"));
+    assert_eq!(tas.get(2), Some("topic1"));
+    assert_eq!(tas.get(3), Some("topic1"));
+
+    // Update alias 1 to different topic - only alias 1 mapping should change
+    tas.insert_or_update("topic2", 1);
+    assert_eq!(tas.get(1), Some("topic2"));
+    assert_eq!(tas.get(2), Some("topic1"));
+    assert_eq!(tas.get(3), Some("topic1"));
+
+    // topic1 should still be findable via remaining aliases
+    let found_alias = tas.find_by_topic("topic1");
+    assert!(found_alias == Some(2) || found_alias == Some(3));
+
+    // topic2 should be findable
+    assert_eq!(tas.find_by_topic("topic2"), Some(1));
 }
