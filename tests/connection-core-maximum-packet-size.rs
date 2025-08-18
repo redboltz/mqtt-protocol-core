@@ -26,6 +26,7 @@ mod common;
 
 #[test]
 fn v5_0_any_maximum_packet_size_test() {
+    common::init_tracing();
     // Create MQTT v5.0 Any connection
     let mut con = mqtt::Connection::<mqtt::role::Any>::new(mqtt::Version::V5_0);
 

@@ -22,9 +22,11 @@
  * SOFTWARE.
  */
 use mqtt_protocol_core::mqtt;
+mod common;
 
 #[test]
 fn test_auto_map_topic_alias_send_v5_0() {
+    common::init_tracing();
     let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
 
     // Enable automatic topic alias mapping for send
@@ -135,6 +137,7 @@ fn test_auto_map_topic_alias_send_v5_0() {
 
 #[test]
 fn test_auto_replace_topic_alias_send_v5_0() {
+    common::init_tracing();
     let mut connection = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
 
     // Enable automatic topic alias replacement for send
@@ -258,6 +261,7 @@ fn test_auto_replace_topic_alias_send_v5_0() {
 
 #[test]
 fn test_regulate_for_store_topic_alias_v5_0() {
+    common::init_tracing();
     let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
 
     let connect = mqtt::packet::v5_0::Connect::builder()

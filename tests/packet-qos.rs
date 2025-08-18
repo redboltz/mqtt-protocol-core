@@ -22,9 +22,11 @@
  * SOFTWARE.
  */
 use mqtt_protocol_core::mqtt;
+mod common;
 
 #[test]
 fn test_qos_values() {
+    common::init_tracing();
     assert_eq!(mqtt::packet::Qos::AtMostOnce as u8, 0);
     assert_eq!(mqtt::packet::Qos::AtLeastOnce as u8, 1);
     assert_eq!(mqtt::packet::Qos::ExactlyOnce as u8, 2);
@@ -32,6 +34,7 @@ fn test_qos_values() {
 
 #[test]
 fn test_qos_try_from() {
+    common::init_tracing();
     assert_eq!(
         mqtt::packet::Qos::try_from(0u8).unwrap(),
         mqtt::packet::Qos::AtMostOnce
@@ -51,6 +54,7 @@ fn test_qos_try_from() {
 
 #[test]
 fn test_qos_display() {
+    common::init_tracing();
     assert_eq!(format!("{}", mqtt::packet::Qos::AtMostOnce), "AtMostOnce");
     assert_eq!(format!("{}", mqtt::packet::Qos::AtLeastOnce), "AtLeastOnce");
     assert_eq!(format!("{}", mqtt::packet::Qos::ExactlyOnce), "ExactlyOnce");
@@ -58,6 +62,7 @@ fn test_qos_display() {
 
 #[test]
 fn test_qos_ordering() {
+    common::init_tracing();
     assert!(mqtt::packet::Qos::AtMostOnce < mqtt::packet::Qos::AtLeastOnce);
     assert!(mqtt::packet::Qos::AtLeastOnce < mqtt::packet::Qos::ExactlyOnce);
     assert!(mqtt::packet::Qos::AtMostOnce < mqtt::packet::Qos::ExactlyOnce);
@@ -65,6 +70,7 @@ fn test_qos_ordering() {
 
 #[test]
 fn test_qos_equality() {
+    common::init_tracing();
     assert_eq!(mqtt::packet::Qos::AtMostOnce, mqtt::packet::Qos::AtMostOnce);
     assert_eq!(
         mqtt::packet::Qos::AtLeastOnce,
@@ -87,6 +93,7 @@ fn test_qos_equality() {
 
 #[test]
 fn test_qos_debug() {
+    common::init_tracing();
     let qos = mqtt::packet::Qos::AtLeastOnce;
     let debug_str = format!("{qos:?}");
     assert!(debug_str.contains("AtLeastOnce"));

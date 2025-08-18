@@ -22,10 +22,13 @@
  * SOFTWARE.
  */
 use mqtt_protocol_core::mqtt;
+
+mod common;
 use mqtt_protocol_core::mqtt::prelude::*;
 
 #[test]
 fn test_all_properties() {
+    common::init_tracing();
     let test_cases: Vec<(mqtt::packet::PropertyId, mqtt::packet::Property)> = vec![
         (
             mqtt::packet::PropertyId::PayloadFormatIndicator,
@@ -314,6 +317,7 @@ fn test_all_properties() {
 // Test PropertyId as_str method
 #[test]
 fn test_property_id_as_str() {
+    common::init_tracing();
     assert_eq!(
         mqtt::packet::PropertyId::PayloadFormatIndicator.as_str(),
         "payload_format_indicator"
@@ -421,6 +425,7 @@ fn test_property_id_as_str() {
 // Test PropertyId serialization, display, and debug
 #[test]
 fn test_property_id_traits() {
+    common::init_tracing();
     let prop_id = mqtt::packet::PropertyId::ContentType;
 
     // Test Serialize trait
@@ -439,6 +444,7 @@ fn test_property_id_traits() {
 // Test PayloadFormat Display trait
 #[test]
 fn test_payload_format_display() {
+    common::init_tracing();
     let binary_format = mqtt::packet::PayloadFormat::Binary;
     let string_format = mqtt::packet::PayloadFormat::String;
 
@@ -449,6 +455,7 @@ fn test_payload_format_display() {
 // Test new trait methods
 #[test]
 fn test_property_type_access() {
+    common::init_tracing();
     // Test u8 values
     let max_qos =
         mqtt::packet::Property::MaximumQos(mqtt::packet::MaximumQos::new(1).expect("valid value"));
@@ -494,6 +501,7 @@ fn test_property_type_access() {
 // Test PropertySize trait implementations
 #[test]
 fn test_property_size_trait() {
+    common::init_tracing();
     use mqtt_protocol_core::mqtt::packet::VariableByteInteger;
     use mqtt_protocol_core::mqtt::prelude::PropertySize;
 
@@ -540,6 +548,7 @@ fn test_property_size_trait() {
 // Test Property Display trait implementation (lines 1088-1116)
 #[test]
 fn test_property_display() {
+    common::init_tracing();
     // Test PayloadFormatIndicator display (line 1090)
     let payload_format = mqtt::packet::Property::PayloadFormatIndicator(
         mqtt::packet::PayloadFormatIndicator::new(mqtt::packet::PayloadFormat::String).unwrap(),
@@ -726,6 +735,7 @@ fn test_property_display() {
 // Test property error handling and validation (lines 812, 813, 835, 854, etc.)
 #[test]
 fn test_property_error_handling() {
+    common::init_tracing();
     // Test invalid MaximumQos value (should fail validation)
     let invalid_max_qos = mqtt::packet::MaximumQos::new(3);
     assert!(invalid_max_qos.is_err());
@@ -767,6 +777,7 @@ fn test_property_error_handling() {
 // Test property vbi parsing and validation (lines 812, 813)
 #[test]
 fn test_subscription_identifier_vbi_handling() {
+    common::init_tracing();
     // Test valid SubscriptionIdentifier
     let valid_sub_id = mqtt::packet::SubscriptionIdentifier::new(123);
     assert!(valid_sub_id.is_ok());
@@ -789,6 +800,7 @@ fn test_subscription_identifier_vbi_handling() {
 // Test property string validation and edge cases
 #[test]
 fn test_property_string_validation() {
+    common::init_tracing();
     // Test empty string properties (should be valid)
     let empty_content_type = mqtt::packet::ContentType::new("");
     assert!(empty_content_type.is_ok());
@@ -815,6 +827,7 @@ fn test_property_string_validation() {
 // Test property binary data validation
 #[test]
 fn test_property_binary_validation() {
+    common::init_tracing();
     // Test empty binary data (should be valid)
     let empty_correlation_data = mqtt::packet::CorrelationData::new(&[]);
     assert!(empty_correlation_data.is_ok());
@@ -839,6 +852,7 @@ fn test_property_binary_validation() {
 // Test property size calculations for all types
 #[test]
 fn test_property_sizes() {
+    common::init_tracing();
     // Test u8 properties
     let payload_format =
         mqtt::packet::PayloadFormatIndicator::new(mqtt::packet::PayloadFormat::String).unwrap();
@@ -876,6 +890,7 @@ fn test_property_sizes() {
 // Test VariableByteInteger size calculation edge cases (lines 293-296)
 #[test]
 fn test_vbi_size_edge_cases() {
+    common::init_tracing();
     use mqtt_protocol_core::mqtt::packet::VariableByteInteger;
 
     // Test boundary values for each size category
@@ -906,6 +921,7 @@ fn test_vbi_size_edge_cases() {
 // Test property parsing error handling (lines 659, 729, 812, 813)
 #[test]
 fn test_property_parsing_errors() {
+    common::init_tracing();
     // Test u16 property parsing with insufficient data (line 659)
     let insufficient_u16_data = [0x21]; // Only 1 byte for ReceiveMaximum property
     let result = mqtt::packet::ReceiveMaximum::parse(&insufficient_u16_data);
@@ -947,6 +963,7 @@ fn test_property_parsing_errors() {
 // Test property size methods (lines 909, 925, 977, 1000, 1011, 1022, 1324, 1330, 1340, 1341, 1342, 1430)
 #[test]
 fn test_property_enum_size_methods() {
+    common::init_tracing();
     // Test Property enum size() method calls individual property size() methods
 
     // Line 1324: ServerKeepAlive size
@@ -995,6 +1012,7 @@ fn test_property_enum_size_methods() {
 // Test specific property parsing and validation error cases (lines 909, 925, 977, 1000, 1011, 1022)
 #[test]
 fn test_property_parsing_validation_errors() {
+    common::init_tracing();
     // These lines are in property parsing where validators are called
 
     // Test ReceiveMaximum parsing with invalid value (0) - should trigger validator error
@@ -1046,6 +1064,7 @@ fn test_property_parsing_validation_errors() {
 // Test Property enum parse method for specific property types (lines 1651, 1656)
 #[test]
 fn test_property_enum_parsing() {
+    common::init_tracing();
     // Test Property::parse for properties that may not be covered by other tests
 
     // Test parsing WildcardSubscriptionAvailable (line 1651)

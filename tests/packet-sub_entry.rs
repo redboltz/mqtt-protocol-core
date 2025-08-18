@@ -22,9 +22,11 @@
  * SOFTWARE.
  */
 use mqtt_protocol_core::mqtt;
+mod common;
 
 #[test]
 fn test_sub_opts_new() {
+    common::init_tracing();
     let opts = mqtt::packet::SubOpts::new();
     assert_eq!(opts.qos(), mqtt::packet::Qos::AtMostOnce);
     assert_eq!(opts.nl(), false);
@@ -34,6 +36,7 @@ fn test_sub_opts_new() {
 
 #[test]
 fn test_sub_opts_default() {
+    common::init_tracing();
     let opts = mqtt::packet::SubOpts::default();
     assert_eq!(opts.qos(), mqtt::packet::Qos::AtMostOnce);
     assert_eq!(opts.nl(), false);
@@ -43,6 +46,7 @@ fn test_sub_opts_default() {
 
 #[test]
 fn test_sub_opts_from_u8() {
+    common::init_tracing();
     let opts = mqtt::packet::SubOpts::from_u8(0x00).unwrap();
     assert_eq!(opts.qos(), mqtt::packet::Qos::AtMostOnce);
     assert_eq!(opts.nl(), false);
@@ -78,6 +82,7 @@ fn test_sub_opts_from_u8() {
 
 #[test]
 fn test_sub_opts_set_qos() {
+    common::init_tracing();
     let opts = mqtt::packet::SubOpts::new().set_qos(mqtt::packet::Qos::AtLeastOnce);
     assert_eq!(opts.qos(), mqtt::packet::Qos::AtLeastOnce);
 
@@ -87,6 +92,7 @@ fn test_sub_opts_set_qos() {
 
 #[test]
 fn test_sub_opts_set_nl() {
+    common::init_tracing();
     let opts = mqtt::packet::SubOpts::new().set_nl(true);
     assert_eq!(opts.nl(), true);
 
@@ -96,6 +102,7 @@ fn test_sub_opts_set_nl() {
 
 #[test]
 fn test_sub_opts_set_rap() {
+    common::init_tracing();
     let opts = mqtt::packet::SubOpts::new().set_rap(true);
     assert_eq!(opts.rap(), true);
 
@@ -105,6 +112,7 @@ fn test_sub_opts_set_rap() {
 
 #[test]
 fn test_sub_opts_set_rh() {
+    common::init_tracing();
     let opts =
         mqtt::packet::SubOpts::new().set_rh(mqtt::packet::RetainHandling::SendRetainedIfNotExists);
     assert_eq!(
@@ -118,6 +126,7 @@ fn test_sub_opts_set_rh() {
 
 #[test]
 fn test_sub_opts_chaining() {
+    common::init_tracing();
     let opts = mqtt::packet::SubOpts::new()
         .set_qos(mqtt::packet::Qos::AtLeastOnce)
         .set_nl(true)
@@ -132,6 +141,7 @@ fn test_sub_opts_chaining() {
 
 #[test]
 fn test_sub_opts_to_buffer() {
+    common::init_tracing();
     let opts = mqtt::packet::SubOpts::new()
         .set_qos(mqtt::packet::Qos::AtLeastOnce)
         .set_nl(true)
@@ -144,6 +154,7 @@ fn test_sub_opts_to_buffer() {
 
 #[test]
 fn test_sub_opts_display() {
+    common::init_tracing();
     let opts = mqtt::packet::SubOpts::new().set_qos(mqtt::packet::Qos::AtLeastOnce);
     let display_str = format!("{opts}");
     assert!(display_str.contains("qos"));
@@ -152,6 +163,7 @@ fn test_sub_opts_display() {
 
 #[test]
 fn test_sub_entry_new() {
+    common::init_tracing();
     let opts = mqtt::packet::SubOpts::new();
     let entry = mqtt::packet::SubEntry::new("test/topic", opts).unwrap();
 
@@ -161,6 +173,7 @@ fn test_sub_entry_new() {
 
 #[test]
 fn test_sub_entry_default() {
+    common::init_tracing();
     let entry = mqtt::packet::SubEntry::default();
     assert_eq!(entry.topic_filter(), "");
     assert_eq!(entry.sub_opts().qos(), mqtt::packet::Qos::AtMostOnce);
@@ -168,6 +181,7 @@ fn test_sub_entry_default() {
 
 #[test]
 fn test_sub_entry_with_wildcards() {
+    common::init_tracing();
     let opts = mqtt::packet::SubOpts::new().set_qos(mqtt::packet::Qos::AtLeastOnce);
     let entry = mqtt::packet::SubEntry::new("sensors/+/temperature", opts).unwrap();
 
@@ -180,6 +194,7 @@ fn test_sub_entry_with_wildcards() {
 
 #[test]
 fn test_sub_entry_set_topic_filter() {
+    common::init_tracing();
     let opts = mqtt::packet::SubOpts::new();
     let mut entry = mqtt::packet::SubEntry::new("old/topic", opts).unwrap();
 
@@ -189,6 +204,7 @@ fn test_sub_entry_set_topic_filter() {
 
 #[test]
 fn test_sub_entry_set_sub_opts() {
+    common::init_tracing();
     let opts = mqtt::packet::SubOpts::new();
     let mut entry = mqtt::packet::SubEntry::new("test/topic", opts).unwrap();
 
@@ -199,6 +215,7 @@ fn test_sub_entry_set_sub_opts() {
 
 #[test]
 fn test_sub_entry_size() {
+    common::init_tracing();
     let opts = mqtt::packet::SubOpts::new();
     let entry = mqtt::packet::SubEntry::new("test", opts).unwrap();
     assert_eq!(entry.size(), 7);
@@ -210,6 +227,7 @@ fn test_sub_entry_size() {
 #[test]
 #[cfg(feature = "std")]
 fn test_sub_entry_to_buffers() {
+    common::init_tracing();
     let opts = mqtt::packet::SubOpts::new();
     let entry = mqtt::packet::SubEntry::new("test/topic", opts).unwrap();
     let buffers = entry.to_buffers();
@@ -219,6 +237,7 @@ fn test_sub_entry_to_buffers() {
 
 #[test]
 fn test_sub_entry_parse() {
+    common::init_tracing();
     let data = [0x00, 0x04, b't', b'e', b's', b't', 0x01];
     let (entry, consumed) = mqtt::packet::SubEntry::parse(&data).unwrap();
 
@@ -229,6 +248,7 @@ fn test_sub_entry_parse() {
 
 #[test]
 fn test_sub_entry_parse_insufficient_data() {
+    common::init_tracing();
     let data = [0x00, 0x04, b't', b'e', b's', b't'];
     let result = mqtt::packet::SubEntry::parse(&data);
     assert!(result.is_err());
@@ -240,6 +260,7 @@ fn test_sub_entry_parse_insufficient_data() {
 
 #[test]
 fn test_sub_entry_parse_invalid_sub_opts() {
+    common::init_tracing();
     let data = [0x00, 0x04, b't', b'e', b's', b't', 0x03];
     let result = mqtt::packet::SubEntry::parse(&data);
     assert!(result.is_err());
@@ -247,6 +268,7 @@ fn test_sub_entry_parse_invalid_sub_opts() {
 
 #[test]
 fn test_sub_entry_display() {
+    common::init_tracing();
     let opts = mqtt::packet::SubOpts::new().set_qos(mqtt::packet::Qos::AtLeastOnce);
     let entry = mqtt::packet::SubEntry::new("test/topic", opts).unwrap();
     let display_str = format!("{entry}");
@@ -256,6 +278,7 @@ fn test_sub_entry_display() {
 
 #[test]
 fn test_sub_entry_equality() {
+    common::init_tracing();
     let opts1 = mqtt::packet::SubOpts::new().set_qos(mqtt::packet::Qos::AtLeastOnce);
     let opts2 = mqtt::packet::SubOpts::new().set_qos(mqtt::packet::Qos::AtLeastOnce);
     let opts3 = mqtt::packet::SubOpts::new().set_qos(mqtt::packet::Qos::ExactlyOnce);
@@ -272,6 +295,7 @@ fn test_sub_entry_equality() {
 
 #[test]
 fn test_sub_entry_ordering() {
+    common::init_tracing();
     let opts = mqtt::packet::SubOpts::new();
     let entry1 = mqtt::packet::SubEntry::new("a/topic", opts).unwrap();
     let entry2 = mqtt::packet::SubEntry::new("b/topic", opts).unwrap();
@@ -281,6 +305,7 @@ fn test_sub_entry_ordering() {
 
 #[test]
 fn test_sub_entry_clone() {
+    common::init_tracing();
     let opts = mqtt::packet::SubOpts::new().set_qos(mqtt::packet::Qos::AtLeastOnce);
     let entry1 = mqtt::packet::SubEntry::new("test/topic", opts).unwrap();
     let entry2 = entry1.clone();

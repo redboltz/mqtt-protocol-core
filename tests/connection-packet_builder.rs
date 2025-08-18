@@ -22,10 +22,13 @@
  * SOFTWARE.
  */
 use mqtt_protocol_core::mqtt;
+
+mod common;
 use std::sync::Arc;
 
 #[test]
 fn test_packet_data_methods() {
+    common::init_tracing();
     // Test Normal PacketData
     let normal_data = mqtt::connection::PacketData::Normal(vec![1, 2, 3, 4]);
     assert_eq!(normal_data.as_slice(), &[1, 2, 3, 4]);
@@ -46,6 +49,7 @@ fn test_packet_data_methods() {
 
 #[test]
 fn test_raw_packet_methods() {
+    common::init_tracing();
     // CONNECT packet (packet type = 1)
     let connect_bytes = [
         0x10, 0x0A, // Fixed header + Remaining Length
@@ -95,6 +99,7 @@ fn test_raw_packet_methods() {
 
 #[test]
 fn test_build_empty_payload_packet() {
+    common::init_tracing();
     // PINGREQ packet (type = 12, no payload)
     let pingreq_bytes = [0xC0, 0x00]; // Fixed header = 0xC0, Remaining Length = 0
     let mut cursor = mqtt::common::Cursor::new(&pingreq_bytes[..]);
@@ -113,6 +118,7 @@ fn test_build_empty_payload_packet() {
 
 #[test]
 fn test_build_normal_packet() {
+    common::init_tracing();
     // CONNECT packet
     let connect_bytes = [
         0x10, 0x0A, // Fixed header + Remaining Length
@@ -146,6 +152,7 @@ fn test_build_normal_packet() {
 
 #[test]
 fn test_build_publish_packet() {
+    common::init_tracing();
     // PUBLISH packet
     let publish_bytes = [
         0x30, 0x0D, // Fixed header + Remaining Length
@@ -180,6 +187,7 @@ fn test_build_publish_packet() {
 
 #[test]
 fn test_multi_byte_remaining_length() {
+    common::init_tracing();
     // 2-byte Remaining Length (example: 321 = 0xC1, 0x02)
     let packet_bytes = vec![
         0x20, 0xC1, 0x02, // CONNACK packet, Remaining Length = 321
@@ -203,6 +211,7 @@ fn test_multi_byte_remaining_length() {
 
 #[test]
 fn test_incomplete_packet() {
+    common::init_tracing();
     // Packet that ends with just the header (no remaining bytes)
     let incomplete_bytes = [0x10, 0x0A]; // CONNECT, needs 10 bytes of payload but missing
 
@@ -217,6 +226,7 @@ fn test_incomplete_packet() {
 
 #[test]
 fn test_malformed_remaining_length() {
+    common::init_tracing();
     // Invalid Remaining Length (5 bytes or more)
     let malformed_bytes = [0x10, 0x80, 0x80, 0x80, 0x80];
 
@@ -233,6 +243,7 @@ fn test_malformed_remaining_length() {
 
 #[test]
 fn test_fragmented_packet_feed() {
+    common::init_tracing();
     // Feed CONNECT packet in multiple parts
     let connect_bytes = [
         0x10, 0x0A, // Fixed header + Remaining Length
@@ -278,6 +289,7 @@ fn test_fragmented_packet_feed() {
 
 #[test]
 fn test_reset_builder() {
+    common::init_tracing();
     let mut builder = mqtt::connection::PacketBuilder::new();
 
     // Process partial packet
@@ -314,6 +326,7 @@ fn test_reset_builder() {
 
 #[test]
 fn test_empty_data_access() {
+    common::init_tracing();
     // Empty DISCONNECT packet
     let disconnect_bytes = [0xE0, 0x00]; // DISCONNECT, Remaining Length = 0
     let mut cursor = mqtt::common::Cursor::new(&disconnect_bytes[..]);
@@ -331,6 +344,7 @@ fn test_empty_data_access() {
 
 #[test]
 fn test_empty_publish_packet() {
+    common::init_tracing();
     // Empty PUBLISH packet
     let empty_publish_bytes = [0x30, 0x00]; // PUBLISH, Remaining Length = 0
     let mut cursor = mqtt::common::Cursor::new(&empty_publish_bytes[..]);
@@ -358,6 +372,7 @@ fn test_empty_publish_packet() {
 
 #[test]
 fn test_feed_with_empty_data() {
+    common::init_tracing();
     // Test with empty buffer
     let empty_bytes: [u8; 0] = [];
     let mut cursor = mqtt::common::Cursor::new(&empty_bytes[..]);
@@ -372,6 +387,7 @@ fn test_feed_with_empty_data() {
 
 #[test]
 fn test_two_phase_packet_building() {
+    common::init_tracing();
     // CONNECT packet (packet type = 1)
     let connect_bytes = [
         0x10, 0x0A, // Fixed header + Remaining Length
@@ -401,6 +417,7 @@ fn test_two_phase_packet_building() {
 
 #[test]
 fn test_incomplete_remaining_length() {
+    common::init_tracing();
     // Packet with 3-byte Remaining Length
     // Interrupted with incomplete length field
     let partial_bytes = [
@@ -426,6 +443,7 @@ fn test_incomplete_remaining_length() {
 
 #[test]
 fn test_payload_zero_available_bytes() {
+    common::init_tracing();
     // Send only part of packet to enter Payload state
     let connect_bytes = [
         0x10, 0x0A, // Fixed header + Remaining Length
@@ -459,6 +477,7 @@ fn test_payload_zero_available_bytes() {
 
 #[test]
 fn test_multi_packet_in_one_feed() {
+    common::init_tracing();
     // Test case with two consecutive packets
     let two_packets = [
         // 1st: PINGREQ

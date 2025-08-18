@@ -22,9 +22,11 @@
  * SOFTWARE.
  */
 use mqtt_protocol_core::mqtt;
+mod common;
 
 #[test]
 fn test_mqttstring_creation() {
+    common::init_tracing();
     let s = mqtt::packet::MqttString::new("test").unwrap();
     assert_eq!(s.as_str(), "test");
     assert_eq!(s.len(), 4);
@@ -33,6 +35,7 @@ fn test_mqttstring_creation() {
 
 #[test]
 fn test_mqttstring_as_bytes() {
+    common::init_tracing();
     let s = mqtt::packet::MqttString::new("hi").unwrap();
     let bytes = s.as_bytes();
     assert_eq!(bytes, &[0x00, 0x02, b'h', b'i']);
@@ -44,6 +47,7 @@ fn test_mqttstring_as_bytes() {
 
 #[test]
 fn test_mqttstring_empty() {
+    common::init_tracing();
     let s = mqtt::packet::MqttString::new("").unwrap();
     assert_eq!(s.as_str(), "");
     assert_eq!(s.len(), 0);
@@ -53,6 +57,7 @@ fn test_mqttstring_empty() {
 
 #[test]
 fn test_mqttstring_decode() {
+    common::init_tracing();
     let data = [0, 4, b't', b'e', b's', b't'];
     let (s, consumed) = mqtt::packet::MqttString::decode(&data).unwrap();
     assert_eq!(s.as_str(), "test");
@@ -61,6 +66,7 @@ fn test_mqttstring_decode() {
 
 #[test]
 fn test_mqttstring_decode_insufficient_length() {
+    common::init_tracing();
     // Test case where buffer is too short for declared string length
     let data = [0, 10, b't', b'e']; // Claims 10 bytes but only has 2
     let result = mqtt::packet::MqttString::decode(&data);
@@ -82,6 +88,7 @@ fn test_mqttstring_decode_insufficient_length() {
 
 #[test]
 fn test_mqttstring_decode_invalid_utf8() {
+    common::init_tracing();
     // Test case with invalid UTF-8 sequence
     let data = [0, 4, 0xFF, 0xFE, 0xFD, 0xFC]; // Invalid UTF-8 bytes
     let result = mqtt::packet::MqttString::decode(&data);
@@ -94,6 +101,7 @@ fn test_mqttstring_decode_invalid_utf8() {
 
 #[test]
 fn test_mqttstring_utf8() {
+    common::init_tracing();
     let s = mqtt::packet::MqttString::new("こんにちは").unwrap();
     assert_eq!(s.as_str(), "こんにちは");
 
@@ -104,6 +112,7 @@ fn test_mqttstring_utf8() {
 
 #[test]
 fn test_mqttstring_operations() {
+    common::init_tracing();
     let s = mqtt::packet::MqttString::new("hello world").unwrap();
     assert!(s.contains('o'));
     assert!(s.starts_with("hello"));
@@ -113,6 +122,7 @@ fn test_mqttstring_operations() {
 
 #[test]
 fn test_mqttstring_comparison() {
+    common::init_tracing();
     let s1 = mqtt::packet::MqttString::new("hello").unwrap();
 
     // Comparison with string literal (usually PartialEq<&str>)
@@ -132,6 +142,7 @@ fn test_mqttstring_comparison() {
 
 #[test]
 fn test_mqttstring_partial_eq_str() {
+    common::init_tracing();
     let s = mqtt::packet::MqttString::new("test").unwrap();
 
     // Test PartialEq<str> - this requires dereferencing a &str to get str
@@ -150,6 +161,7 @@ fn test_mqttstring_partial_eq_str() {
 
 #[test]
 fn test_mqttstring_as_ref_str() {
+    common::init_tracing();
     let s = mqtt::packet::MqttString::new("test_string").unwrap();
 
     // Test AsRef<str> trait
@@ -165,6 +177,7 @@ fn test_mqttstring_as_ref_str() {
 
 #[test]
 fn test_mqttstring_display() {
+    common::init_tracing();
     let s = mqtt::packet::MqttString::new("display_test").unwrap();
 
     // Test Display trait
@@ -177,6 +190,7 @@ fn test_mqttstring_display() {
 
 #[test]
 fn test_mqttstring_try_from_string() {
+    common::init_tracing();
     // Test TryFrom<String> trait
     let owned_string = "test_convert".to_string();
     let s: Result<mqtt::packet::MqttString, _> = owned_string.try_into();
@@ -191,6 +205,7 @@ fn test_mqttstring_try_from_string() {
 
 #[test]
 fn test_mqttstring_hash() {
+    common::init_tracing();
     use std::collections::HashMap;
 
     let mut map = HashMap::new();
@@ -210,6 +225,7 @@ fn test_mqttstring_hash() {
 
 #[test]
 fn test_mqttstring_serde() {
+    common::init_tracing();
     let s = mqtt::packet::MqttString::new("test_string").unwrap();
 
     // Serialize
@@ -219,6 +235,7 @@ fn test_mqttstring_serde() {
 
 #[test]
 fn test_mqttstring_deref() {
+    common::init_tracing();
     let s = mqtt::packet::MqttString::new("test").unwrap();
 
     // Call standard string methods through Deref
@@ -229,6 +246,7 @@ fn test_mqttstring_deref() {
 
 #[test]
 fn test_mqttstring_buffers_equivalence() {
+    common::init_tracing();
     let s = mqtt::packet::MqttString::new("test_data").unwrap();
 
     // Get buffers from both methods

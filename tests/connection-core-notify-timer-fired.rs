@@ -33,6 +33,7 @@ use common::*;
 
 #[test]
 fn notify_timer_fired_pingreq_send_v3_1_1_connected() {
+    common::init_tracing();
     // Test PingreqSend timer when connected with v3.1.1
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
 
@@ -54,6 +55,7 @@ fn notify_timer_fired_pingreq_send_v3_1_1_connected() {
 
 #[test]
 fn notify_timer_fired_pingreq_send_v5_0_connected() {
+    common::init_tracing();
     // Test PingreqSend timer when connected with v5.0
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
 
@@ -75,6 +77,7 @@ fn notify_timer_fired_pingreq_send_v5_0_connected() {
 
 #[test]
 fn notify_timer_fired_pingreq_send_disconnected() {
+    common::init_tracing();
     // Test PingreqSend timer when not connected
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
 
@@ -93,6 +96,7 @@ fn notify_timer_fired_pingreq_send_disconnected() {
 
 #[test]
 fn notify_timer_fired_pingreq_recv_v3_1_1() {
+    common::init_tracing();
     // Test PingreqRecv timer with v3.1.1 (should close connection)
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V3_1_1);
 
@@ -109,6 +113,7 @@ fn notify_timer_fired_pingreq_recv_v3_1_1() {
 
 #[test]
 fn notify_timer_fired_pingreq_recv_v5_0_connected() {
+    common::init_tracing();
     // Test PingreqRecv timer with v5.0 when connected (should send DISCONNECT)
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
 
@@ -130,6 +135,7 @@ fn notify_timer_fired_pingreq_recv_v5_0_connected() {
 
 #[test]
 fn notify_timer_fired_pingreq_recv_v5_0_disconnected() {
+    common::init_tracing();
     // Test PingreqRecv timer with v5.0 when not connected
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
 
@@ -148,6 +154,7 @@ fn notify_timer_fired_pingreq_recv_v5_0_disconnected() {
 
 #[test]
 fn notify_timer_fired_pingresp_recv_v3_1_1() {
+    common::init_tracing();
     // Test PingrespRecv timer with v3.1.1 (should close connection)
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
 
@@ -164,6 +171,7 @@ fn notify_timer_fired_pingresp_recv_v3_1_1() {
 
 #[test]
 fn notify_timer_fired_pingresp_recv_v5_0_connected() {
+    common::init_tracing();
     // Test PingrespRecv timer with v5.0 when connected (should send DISCONNECT)
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
 
@@ -185,6 +193,7 @@ fn notify_timer_fired_pingresp_recv_v5_0_connected() {
 
 #[test]
 fn notify_timer_fired_pingresp_recv_v5_0_disconnected() {
+    common::init_tracing();
     // Test PingrespRecv timer with v5.0 when not connected
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
 

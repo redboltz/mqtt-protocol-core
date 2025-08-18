@@ -22,6 +22,7 @@
  * SOFTWARE.
  */
 use mqtt_protocol_core::mqtt;
+mod common;
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -29,6 +30,7 @@ use mqtt_protocol_core::mqtt;
 
 #[test]
 fn recv_incomplete_partial_fixed_header() {
+    common::init_tracing();
     // Test with partial fixed header data
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
 
@@ -44,6 +46,7 @@ fn recv_incomplete_partial_fixed_header() {
 
 #[test]
 fn recv_incomplete_partial_remaining_length() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
 
     // Provide fixed header with incomplete remaining length
@@ -58,6 +61,7 @@ fn recv_incomplete_partial_remaining_length() {
 
 #[test]
 fn recv_incomplete_partial_variable_header() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
 
     // Provide fixed header with complete remaining length but incomplete variable header
@@ -76,6 +80,7 @@ fn recv_incomplete_partial_variable_header() {
 
 #[test]
 fn recv_error_malformed_packet_invalid_remaining_length() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
 
     // Create malformed packet with invalid remaining length encoding

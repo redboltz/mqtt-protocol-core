@@ -22,9 +22,11 @@
  * SOFTWARE.
  */
 use mqtt_protocol_core::mqtt;
+mod common;
 
 #[test]
 fn test_retain_handling_values() {
+    common::init_tracing();
     assert_eq!(mqtt::packet::RetainHandling::SendRetained as u8, 0);
     assert_eq!(
         mqtt::packet::RetainHandling::SendRetainedIfNotExists as u8,
@@ -35,6 +37,7 @@ fn test_retain_handling_values() {
 
 #[test]
 fn test_retain_handling_try_from() {
+    common::init_tracing();
     assert_eq!(
         mqtt::packet::RetainHandling::try_from(0u8).unwrap(),
         mqtt::packet::RetainHandling::SendRetained
@@ -54,6 +57,7 @@ fn test_retain_handling_try_from() {
 
 #[test]
 fn test_retain_handling_display() {
+    common::init_tracing();
     assert_eq!(
         format!("{}", mqtt::packet::RetainHandling::SendRetained),
         "SendRetained"
@@ -70,6 +74,7 @@ fn test_retain_handling_display() {
 
 #[test]
 fn test_retain_handling_default() {
+    common::init_tracing();
     assert_eq!(
         mqtt::packet::RetainHandling::default(),
         mqtt::packet::RetainHandling::SendRetained
@@ -78,6 +83,7 @@ fn test_retain_handling_default() {
 
 #[test]
 fn test_retain_handling_ordering() {
+    common::init_tracing();
     assert!(
         mqtt::packet::RetainHandling::SendRetained
             < mqtt::packet::RetainHandling::SendRetainedIfNotExists
@@ -94,6 +100,7 @@ fn test_retain_handling_ordering() {
 
 #[test]
 fn test_retain_handling_equality() {
+    common::init_tracing();
     assert_eq!(
         mqtt::packet::RetainHandling::SendRetained,
         mqtt::packet::RetainHandling::SendRetained
@@ -119,6 +126,7 @@ fn test_retain_handling_equality() {
 
 #[test]
 fn test_retain_handling_debug() {
+    common::init_tracing();
     let rh = mqtt::packet::RetainHandling::DoNotSendRetained;
     let debug_str = format!("{rh:?}");
     assert!(debug_str.contains("DoNotSendRetained"));

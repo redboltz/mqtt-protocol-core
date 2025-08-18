@@ -22,11 +22,14 @@
  * SOFTWARE.
  */
 use mqtt_protocol_core::mqtt;
+
+mod common;
 use mqtt_protocol_core::mqtt::packet::GenericPacketTrait;
 
 // ResponsePacket enum tests
 #[test]
 fn response_packet_debug() {
+    common::init_tracing();
     let response_packets = [
         mqtt::packet::ResponsePacket::V3_1_1Puback,
         mqtt::packet::ResponsePacket::V3_1_1Pubrec,
@@ -44,6 +47,7 @@ fn response_packet_debug() {
 
 #[test]
 fn response_packet_clone_copy_eq() {
+    common::init_tracing();
     let packet = mqtt::packet::ResponsePacket::V3_1_1Puback;
     let copied = packet;
 
@@ -52,6 +56,7 @@ fn response_packet_clone_copy_eq() {
 
 #[test]
 fn response_packet_hash() {
+    common::init_tracing();
     use std::collections::HashMap;
     let mut map = HashMap::new();
 
@@ -69,6 +74,7 @@ fn response_packet_hash() {
 // V3.1.1 Publish tests
 #[test]
 fn v3_1_1_publish_qos1_store_packet() {
+    common::init_tracing();
     let publish = mqtt::packet::v3_1_1::Publish::builder()
         .topic_name("test/topic")
         .unwrap()
@@ -91,6 +97,7 @@ fn v3_1_1_publish_qos1_store_packet() {
 
 #[test]
 fn v3_1_1_publish_qos2_store_packet() {
+    common::init_tracing();
     let publish = mqtt::packet::v3_1_1::Publish::builder()
         .topic_name("test/topic")
         .unwrap()
@@ -113,6 +120,7 @@ fn v3_1_1_publish_qos2_store_packet() {
 
 #[test]
 fn v3_1_1_publish_qos0_store_packet_fail() {
+    common::init_tracing();
     let publish = mqtt::packet::v3_1_1::Publish::builder()
         .topic_name("test/topic")
         .unwrap()
@@ -131,6 +139,7 @@ fn v3_1_1_publish_qos0_store_packet_fail() {
 // V5.0 Publish tests
 #[test]
 fn v5_0_publish_qos1_store_packet() {
+    common::init_tracing();
     let publish = mqtt::packet::v5_0::Publish::builder()
         .topic_name("test/topic")
         .unwrap()
@@ -153,6 +162,7 @@ fn v5_0_publish_qos1_store_packet() {
 
 #[test]
 fn v5_0_publish_qos2_store_packet() {
+    common::init_tracing();
     let publish = mqtt::packet::v5_0::Publish::builder()
         .topic_name("test/topic")
         .unwrap()
@@ -175,6 +185,7 @@ fn v5_0_publish_qos2_store_packet() {
 
 #[test]
 fn v5_0_publish_qos0_store_packet_fail() {
+    common::init_tracing();
     let publish = mqtt::packet::v5_0::Publish::builder()
         .topic_name("test/topic")
         .unwrap()
@@ -193,6 +204,7 @@ fn v5_0_publish_qos0_store_packet_fail() {
 // V3.1.1 Pubrel tests
 #[test]
 fn v3_1_1_pubrel_store_packet() {
+    common::init_tracing();
     let pubrel = mqtt::packet::v3_1_1::Pubrel::builder()
         .packet_id(111u16)
         .build()
@@ -211,6 +223,7 @@ fn v3_1_1_pubrel_store_packet() {
 // V5.0 Pubrel tests
 #[test]
 fn v5_0_pubrel_store_packet() {
+    common::init_tracing();
     let pubrel = mqtt::packet::v5_0::Pubrel::builder()
         .packet_id(222u16)
         .build()
@@ -229,6 +242,7 @@ fn v5_0_pubrel_store_packet() {
 // packet_type() tests
 #[test]
 fn packet_type_v3_1_1_publish() {
+    common::init_tracing();
     let publish = mqtt::packet::v3_1_1::Publish::builder()
         .topic_name("test/topic")
         .unwrap()
@@ -246,6 +260,7 @@ fn packet_type_v3_1_1_publish() {
 
 #[test]
 fn packet_type_v3_1_1_pubrel() {
+    common::init_tracing();
     let pubrel = mqtt::packet::v3_1_1::Pubrel::builder()
         .packet_id(1u16)
         .build()
@@ -257,6 +272,7 @@ fn packet_type_v3_1_1_pubrel() {
 
 #[test]
 fn packet_type_v5_0_publish() {
+    common::init_tracing();
     let publish = mqtt::packet::v5_0::Publish::builder()
         .topic_name("test/topic")
         .unwrap()
@@ -274,6 +290,7 @@ fn packet_type_v5_0_publish() {
 
 #[test]
 fn packet_type_v5_0_pubrel() {
+    common::init_tracing();
     let pubrel = mqtt::packet::v5_0::Pubrel::builder()
         .packet_id(1u16)
         .build()
@@ -286,6 +303,7 @@ fn packet_type_v5_0_pubrel() {
 // packet_id() tests
 #[test]
 fn packet_id_v3_1_1_publish() {
+    common::init_tracing();
     let publish = mqtt::packet::v3_1_1::Publish::builder()
         .topic_name("test/topic")
         .unwrap()
@@ -300,6 +318,7 @@ fn packet_id_v3_1_1_publish() {
 
 #[test]
 fn packet_id_v3_1_1_pubrel() {
+    common::init_tracing();
     let pubrel = mqtt::packet::v3_1_1::Pubrel::builder()
         .packet_id(444u16)
         .build()
@@ -311,6 +330,7 @@ fn packet_id_v3_1_1_pubrel() {
 
 #[test]
 fn packet_id_v5_0_publish() {
+    common::init_tracing();
     let publish = mqtt::packet::v5_0::Publish::builder()
         .topic_name("test/topic")
         .unwrap()
@@ -325,6 +345,7 @@ fn packet_id_v5_0_publish() {
 
 #[test]
 fn packet_id_v5_0_pubrel() {
+    common::init_tracing();
     let pubrel = mqtt::packet::v5_0::Pubrel::builder()
         .packet_id(666u16)
         .build()
@@ -337,6 +358,7 @@ fn packet_id_v5_0_pubrel() {
 // response_packet() tests
 #[test]
 fn response_packet_v3_1_1_publish_qos1() {
+    common::init_tracing();
     let publish = mqtt::packet::v3_1_1::Publish::builder()
         .topic_name("test/topic")
         .unwrap()
@@ -354,6 +376,7 @@ fn response_packet_v3_1_1_publish_qos1() {
 
 #[test]
 fn response_packet_v3_1_1_publish_qos2() {
+    common::init_tracing();
     let publish = mqtt::packet::v3_1_1::Publish::builder()
         .topic_name("test/topic")
         .unwrap()
@@ -371,6 +394,7 @@ fn response_packet_v3_1_1_publish_qos2() {
 
 #[test]
 fn response_packet_v3_1_1_pubrel() {
+    common::init_tracing();
     let pubrel = mqtt::packet::v3_1_1::Pubrel::builder()
         .packet_id(1u16)
         .build()
@@ -385,6 +409,7 @@ fn response_packet_v3_1_1_pubrel() {
 
 #[test]
 fn response_packet_v5_0_publish_qos1() {
+    common::init_tracing();
     let publish = mqtt::packet::v5_0::Publish::builder()
         .topic_name("test/topic")
         .unwrap()
@@ -402,6 +427,7 @@ fn response_packet_v5_0_publish_qos1() {
 
 #[test]
 fn response_packet_v5_0_publish_qos2() {
+    common::init_tracing();
     let publish = mqtt::packet::v5_0::Publish::builder()
         .topic_name("test/topic")
         .unwrap()
@@ -419,6 +445,7 @@ fn response_packet_v5_0_publish_qos2() {
 
 #[test]
 fn response_packet_v5_0_pubrel() {
+    common::init_tracing();
     let pubrel = mqtt::packet::v5_0::Pubrel::builder()
         .packet_id(1u16)
         .build()
@@ -434,6 +461,7 @@ fn response_packet_v5_0_pubrel() {
 // size() tests (GenericPacketTrait)
 #[test]
 fn size_v3_1_1_publish() {
+    common::init_tracing();
     let publish = mqtt::packet::v3_1_1::Publish::builder()
         .topic_name("test/topic")
         .unwrap()
@@ -457,6 +485,7 @@ fn size_v3_1_1_publish() {
 
 #[test]
 fn size_v3_1_1_pubrel() {
+    common::init_tracing();
     let pubrel = mqtt::packet::v3_1_1::Pubrel::builder()
         .packet_id(1u16)
         .build()
@@ -476,6 +505,7 @@ fn size_v3_1_1_pubrel() {
 
 #[test]
 fn size_v5_0_publish() {
+    common::init_tracing();
     let publish = mqtt::packet::v5_0::Publish::builder()
         .topic_name("test/topic")
         .unwrap()
@@ -499,6 +529,7 @@ fn size_v5_0_publish() {
 
 #[test]
 fn size_v5_0_pubrel() {
+    common::init_tracing();
     let pubrel = mqtt::packet::v5_0::Pubrel::builder()
         .packet_id(1u16)
         .build()
@@ -520,6 +551,7 @@ fn size_v5_0_pubrel() {
 #[cfg(feature = "std")]
 #[test]
 fn to_buffers_v3_1_1_publish() {
+    common::init_tracing();
     let publish = mqtt::packet::v3_1_1::Publish::builder()
         .topic_name("test/topic")
         .unwrap()
@@ -544,6 +576,7 @@ fn to_buffers_v3_1_1_publish() {
 #[cfg(feature = "std")]
 #[test]
 fn to_buffers_v3_1_1_pubrel() {
+    common::init_tracing();
     let pubrel = mqtt::packet::v3_1_1::Pubrel::builder()
         .packet_id(1u16)
         .build()
@@ -564,6 +597,7 @@ fn to_buffers_v3_1_1_pubrel() {
 #[cfg(feature = "std")]
 #[test]
 fn to_buffers_v5_0_publish() {
+    common::init_tracing();
     let publish = mqtt::packet::v5_0::Publish::builder()
         .topic_name("test/topic")
         .unwrap()
@@ -588,6 +622,7 @@ fn to_buffers_v5_0_publish() {
 #[cfg(feature = "std")]
 #[test]
 fn to_buffers_v5_0_pubrel() {
+    common::init_tracing();
     let pubrel = mqtt::packet::v5_0::Pubrel::builder()
         .packet_id(1u16)
         .build()
@@ -608,6 +643,7 @@ fn to_buffers_v5_0_pubrel() {
 // Debug and Display tests
 #[test]
 fn debug_v3_1_1_publish() {
+    common::init_tracing();
     let publish = mqtt::packet::v3_1_1::Publish::builder()
         .topic_name("test/topic")
         .unwrap()
@@ -625,6 +661,7 @@ fn debug_v3_1_1_publish() {
 
 #[test]
 fn display_v3_1_1_publish() {
+    common::init_tracing();
     let publish = mqtt::packet::v3_1_1::Publish::builder()
         .topic_name("test/topic")
         .unwrap()
@@ -642,6 +679,7 @@ fn display_v3_1_1_publish() {
 
 #[test]
 fn debug_v3_1_1_pubrel() {
+    common::init_tracing();
     let pubrel = mqtt::packet::v3_1_1::Pubrel::builder()
         .packet_id(1u16)
         .build()
@@ -655,6 +693,7 @@ fn debug_v3_1_1_pubrel() {
 
 #[test]
 fn debug_v5_0_publish() {
+    common::init_tracing();
     let publish = mqtt::packet::v5_0::Publish::builder()
         .topic_name("test/topic")
         .unwrap()
@@ -672,6 +711,7 @@ fn debug_v5_0_publish() {
 
 #[test]
 fn debug_v5_0_pubrel() {
+    common::init_tracing();
     let pubrel = mqtt::packet::v5_0::Pubrel::builder()
         .packet_id(1u16)
         .build()
@@ -685,6 +725,7 @@ fn debug_v5_0_pubrel() {
 
 #[test]
 fn display_v3_1_1_pubrel() {
+    common::init_tracing();
     let pubrel = mqtt::packet::v3_1_1::Pubrel::builder()
         .packet_id(1u16)
         .build()
@@ -698,6 +739,7 @@ fn display_v3_1_1_pubrel() {
 
 #[test]
 fn display_v5_0_publish() {
+    common::init_tracing();
     let publish = mqtt::packet::v5_0::Publish::builder()
         .topic_name("test/topic")
         .unwrap()
@@ -715,6 +757,7 @@ fn display_v5_0_publish() {
 
 #[test]
 fn display_v5_0_pubrel() {
+    common::init_tracing();
     let pubrel = mqtt::packet::v5_0::Pubrel::builder()
         .packet_id(1u16)
         .build()
@@ -729,6 +772,7 @@ fn display_v5_0_pubrel() {
 // Clone and PartialEq tests
 #[test]
 fn clone_v3_1_1_publish() {
+    common::init_tracing();
     let publish = mqtt::packet::v3_1_1::Publish::builder()
         .topic_name("test/topic")
         .unwrap()
@@ -745,6 +789,7 @@ fn clone_v3_1_1_publish() {
 
 #[test]
 fn clone_v5_0_pubrel() {
+    common::init_tracing();
     let pubrel = mqtt::packet::v5_0::Pubrel::builder()
         .packet_id(123u16)
         .build()
@@ -758,6 +803,7 @@ fn clone_v5_0_pubrel() {
 // From GenericStorePacket to GenericPacket conversion tests
 #[test]
 fn convert_to_generic_packet_v3_1_1_publish() {
+    common::init_tracing();
     let publish = mqtt::packet::v3_1_1::Publish::builder()
         .topic_name("test/topic")
         .unwrap()
@@ -780,6 +826,7 @@ fn convert_to_generic_packet_v3_1_1_publish() {
 
 #[test]
 fn convert_to_generic_packet_v3_1_1_pubrel() {
+    common::init_tracing();
     let pubrel = mqtt::packet::v3_1_1::Pubrel::builder()
         .packet_id(456u16)
         .build()
@@ -798,6 +845,7 @@ fn convert_to_generic_packet_v3_1_1_pubrel() {
 
 #[test]
 fn convert_to_generic_packet_v5_0_publish() {
+    common::init_tracing();
     let publish = mqtt::packet::v5_0::Publish::builder()
         .topic_name("test/topic")
         .unwrap()
@@ -821,6 +869,7 @@ fn convert_to_generic_packet_v5_0_publish() {
 
 #[test]
 fn convert_to_generic_packet_v5_0_pubrel() {
+    common::init_tracing();
     let pubrel = mqtt::packet::v5_0::Pubrel::builder()
         .packet_id(789u16)
         .build()
@@ -840,6 +889,7 @@ fn convert_to_generic_packet_v5_0_pubrel() {
 // Type alias test
 #[test]
 fn store_packet_type_alias() {
+    common::init_tracing();
     let pubrel = mqtt::packet::v3_1_1::Pubrel::builder()
         .packet_id(42u16)
         .build()
@@ -852,6 +902,7 @@ fn store_packet_type_alias() {
 // Generic PacketIdType test (u32)
 #[test]
 fn generic_packet_id_type_u32() {
+    common::init_tracing();
     let pubrel = mqtt::packet::v3_1_1::GenericPubrel::<u32>::builder()
         .packet_id(0x12345678u32)
         .build()

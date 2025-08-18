@@ -226,6 +226,4 @@ pub mod prelude {
     pub use std::io::IoSlice;
 }
 
-#[cfg(feature = "std")]
-pub mod logger;
 pub mod mqtt;

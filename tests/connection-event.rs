@@ -22,9 +22,11 @@
  * SOFTWARE.
  */
 use mqtt_protocol_core::mqtt;
+mod common;
 
 #[test]
 fn test_timer_kind_values() {
+    common::init_tracing();
     use mqtt::connection::TimerKind;
 
     // Test all timer kind variants exist
@@ -35,6 +37,7 @@ fn test_timer_kind_values() {
 
 #[test]
 fn test_timer_kind_equality() {
+    common::init_tracing();
     use mqtt::connection::TimerKind;
 
     assert_eq!(TimerKind::PingreqSend, TimerKind::PingreqSend);
@@ -48,6 +51,7 @@ fn test_timer_kind_equality() {
 
 #[test]
 fn test_timer_kind_debug() {
+    common::init_tracing();
     use mqtt::connection::TimerKind;
 
     let kind1 = TimerKind::PingreqSend;
@@ -60,6 +64,7 @@ fn test_timer_kind_debug() {
 
 #[test]
 fn test_timer_kind_serialize() {
+    common::init_tracing();
     use mqtt::connection::TimerKind;
 
     let json1 = serde_json::to_string(&TimerKind::PingreqSend).unwrap();
@@ -74,6 +79,7 @@ fn test_timer_kind_serialize() {
 
 #[test]
 fn test_event_notify_packet_received() {
+    common::init_tracing();
     use mqtt::connection::Event;
     use mqtt::packet;
 
@@ -91,6 +97,7 @@ fn test_event_notify_packet_received() {
 
 #[test]
 fn test_event_request_send_packet() {
+    common::init_tracing();
     use mqtt::connection::Event;
     use mqtt::packet;
 
@@ -115,6 +122,7 @@ fn test_event_request_send_packet() {
 
 #[test]
 fn test_event_request_send_packet_no_release_id() {
+    common::init_tracing();
     use mqtt::connection::Event;
     use mqtt::packet;
 
@@ -139,6 +147,7 @@ fn test_event_request_send_packet_no_release_id() {
 
 #[test]
 fn test_event_notify_packet_id_released() {
+    common::init_tracing();
     use mqtt::connection::Event;
 
     let event = Event::NotifyPacketIdReleased(456);
@@ -153,6 +162,7 @@ fn test_event_notify_packet_id_released() {
 
 #[test]
 fn test_event_request_timer_reset() {
+    common::init_tracing();
     use mqtt::connection::{Event, TimerKind};
 
     let event = Event::RequestTimerReset {
@@ -171,6 +181,7 @@ fn test_event_request_timer_reset() {
 
 #[test]
 fn test_event_request_timer_cancel() {
+    common::init_tracing();
     use mqtt::connection::{Event, TimerKind};
 
     let event = Event::RequestTimerCancel(TimerKind::PingrespRecv);
@@ -185,6 +196,7 @@ fn test_event_request_timer_cancel() {
 
 #[test]
 fn test_event_notify_error() {
+    common::init_tracing();
     use mqtt::connection::Event;
     use mqtt::result_code::MqttError;
 
@@ -201,6 +213,7 @@ fn test_event_notify_error() {
 
 #[test]
 fn test_event_request_close() {
+    common::init_tracing();
     use mqtt::connection::Event;
 
     let event = Event::RequestClose;
@@ -215,6 +228,7 @@ fn test_event_request_close() {
 
 #[test]
 fn test_event_clone() {
+    common::init_tracing();
     use mqtt::connection::{Event, TimerKind};
 
     let event1 = Event::RequestTimerReset {
@@ -243,6 +257,7 @@ fn test_event_clone() {
 
 #[test]
 fn test_event_serialize_notify_packet_received() {
+    common::init_tracing();
     use mqtt::connection::Event;
     use mqtt::packet;
 
@@ -257,6 +272,7 @@ fn test_event_serialize_notify_packet_received() {
 
 #[test]
 fn test_event_serialize_request_send_packet() {
+    common::init_tracing();
     use mqtt::connection::Event;
     use mqtt::packet;
 
@@ -275,6 +291,7 @@ fn test_event_serialize_request_send_packet() {
 
 #[test]
 fn test_event_serialize_request_send_packet_no_release_id() {
+    common::init_tracing();
     use mqtt::connection::Event;
     use mqtt::packet;
 
@@ -293,6 +310,7 @@ fn test_event_serialize_request_send_packet_no_release_id() {
 
 #[test]
 fn test_event_serialize_notify_packet_id_released() {
+    common::init_tracing();
     use mqtt::connection::Event;
 
     let event = Event::NotifyPacketIdReleased(101);
@@ -304,6 +322,7 @@ fn test_event_serialize_notify_packet_id_released() {
 
 #[test]
 fn test_event_serialize_request_timer_reset() {
+    common::init_tracing();
     use mqtt::connection::{Event, TimerKind};
 
     let event = Event::RequestTimerReset {
@@ -319,6 +338,7 @@ fn test_event_serialize_request_timer_reset() {
 
 #[test]
 fn test_event_serialize_request_timer_cancel() {
+    common::init_tracing();
     use mqtt::connection::{Event, TimerKind};
 
     let event = Event::RequestTimerCancel(TimerKind::PingrespRecv);
@@ -330,6 +350,7 @@ fn test_event_serialize_request_timer_cancel() {
 
 #[test]
 fn test_event_serialize_notify_error() {
+    common::init_tracing();
     use mqtt::connection::Event;
     use mqtt::result_code::MqttError;
 
@@ -343,6 +364,7 @@ fn test_event_serialize_notify_error() {
 
 #[test]
 fn test_event_serialize_request_close() {
+    common::init_tracing();
     use mqtt::connection::Event;
 
     let event = Event::RequestClose;
@@ -353,6 +375,7 @@ fn test_event_serialize_request_close() {
 
 #[test]
 fn test_event_display() {
+    common::init_tracing();
     use mqtt::connection::{Event, TimerKind};
 
     let event = Event::RequestTimerReset {
@@ -368,6 +391,7 @@ fn test_event_display() {
 
 #[test]
 fn test_event_debug() {
+    common::init_tracing();
     use mqtt::connection::{Event, TimerKind};
 
     let event = Event::RequestTimerCancel(TimerKind::PingrespRecv);
@@ -379,6 +403,7 @@ fn test_event_debug() {
 
 #[test]
 fn test_generic_event_with_u32() {
+    common::init_tracing();
     use mqtt::connection::GenericEvent;
 
     let event: GenericEvent<u32> = GenericEvent::NotifyPacketIdReleased(0x12345678);
@@ -393,6 +418,7 @@ fn test_generic_event_with_u32() {
 
 #[test]
 fn test_generic_event_serialize_with_u32() {
+    common::init_tracing();
     use mqtt::connection::GenericEvent;
 
     let event: GenericEvent<u32> = GenericEvent::NotifyPacketIdReleased(0x87654321);
@@ -404,6 +430,7 @@ fn test_generic_event_serialize_with_u32() {
 
 #[test]
 fn test_event_type_alias() {
+    common::init_tracing();
     use mqtt::connection::Event;
     use mqtt::result_code::MqttError;
 
@@ -414,6 +441,7 @@ fn test_event_type_alias() {
 
 #[test]
 fn test_all_timer_kinds() {
+    common::init_tracing();
     use mqtt::connection::{Event, TimerKind};
 
     // Test all timer kinds can be used in events
@@ -443,6 +471,7 @@ fn test_all_timer_kinds() {
 
 #[test]
 fn test_all_mqtt_errors_in_event() {
+    common::init_tracing();
     use mqtt::connection::Event;
     use mqtt::result_code::MqttError;
 

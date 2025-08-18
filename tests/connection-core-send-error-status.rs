@@ -36,6 +36,7 @@ use common::*;
 
 #[test]
 fn v3_1_1_client_not_allowed_to_send_invalid_pid_subscribe() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
     v3_1_1_client_establish_connection(&mut con, true, false);
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Subscribe::builder()
@@ -67,6 +68,7 @@ fn v3_1_1_client_not_allowed_to_send_invalid_pid_subscribe() {
 
 #[test]
 fn v3_1_1_client_not_allowed_to_send_invalid_pid_unsubscribe() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
     v3_1_1_client_establish_connection(&mut con, true, false);
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Unsubscribe::builder()
@@ -95,6 +97,7 @@ fn v3_1_1_client_not_allowed_to_send_invalid_pid_unsubscribe() {
 
 #[test]
 fn v3_1_1_client_not_allowed_to_send_invalid_pid_publish_qos1() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
     v3_1_1_client_establish_connection(&mut con, true, false);
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Publish::builder()
@@ -124,6 +127,7 @@ fn v3_1_1_client_not_allowed_to_send_invalid_pid_publish_qos1() {
 
 #[test]
 fn v3_1_1_client_not_allowed_to_send_invalid_pid_publish_qos2() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
     v3_1_1_client_establish_connection(&mut con, true, false);
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Publish::builder()
@@ -153,6 +157,7 @@ fn v3_1_1_client_not_allowed_to_send_invalid_pid_publish_qos2() {
 
 #[test]
 fn v3_1_1_client_not_allowed_to_send_invalid_pid_pubrel() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
     v3_1_1_client_establish_connection(&mut con, true, false);
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Pubrel::builder()
@@ -181,6 +186,7 @@ fn v3_1_1_client_not_allowed_to_send_invalid_pid_pubrel() {
 
 #[test]
 fn v3_1_1_client_not_allowed_to_send_on_status_connected_connect() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
     v3_1_1_client_establish_connection(&mut con, true, false);
     let send_packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Connect::builder()
@@ -208,6 +214,7 @@ fn v3_1_1_client_not_allowed_to_send_on_status_connected_connect() {
 
 #[test]
 fn v3_1_1_client_not_allowed_to_send_on_status_connecting_connect() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
     v3_1_1_client_connecting(&mut con, true);
     let send_packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Connect::builder()
@@ -233,6 +240,7 @@ fn v3_1_1_client_not_allowed_to_send_on_status_connecting_connect() {
 
 #[test]
 fn v3_1_1_client_not_allowed_to_send_on_status_connecting_publish_qos0() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
     v3_1_1_client_connecting(&mut con, true);
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Publish::builder()
@@ -257,6 +265,7 @@ fn v3_1_1_client_not_allowed_to_send_on_status_connecting_publish_qos0() {
 
 #[test]
 fn v3_1_1_client_not_allowed_to_send_on_status_connecting_publish_qos1() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
     v3_1_1_client_connecting(&mut con, true);
     let packet_id = con.acquire_packet_id().unwrap();
@@ -292,6 +301,7 @@ fn v3_1_1_client_not_allowed_to_send_on_status_connecting_publish_qos1() {
 
 #[test]
 fn v3_1_1_client_not_allowed_to_send_on_status_connecting_publish_qos2() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
     v3_1_1_client_connecting(&mut con, true);
     let packet_id = con.acquire_packet_id().unwrap();
@@ -327,6 +337,7 @@ fn v3_1_1_client_not_allowed_to_send_on_status_connecting_publish_qos2() {
 
 #[test]
 fn v3_1_1_client_not_allowed_to_send_on_status_connecting_subscribe() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
     v3_1_1_client_connecting(&mut con, true);
     let packet_id = con.acquire_packet_id().unwrap();
@@ -364,6 +375,7 @@ fn v3_1_1_client_not_allowed_to_send_on_status_connecting_subscribe() {
 
 #[test]
 fn v3_1_1_client_not_allowed_to_send_on_status_connecting_unsubscribe() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
     v3_1_1_client_connecting(&mut con, true);
     let packet_id = con.acquire_packet_id().unwrap();
@@ -398,6 +410,7 @@ fn v3_1_1_client_not_allowed_to_send_on_status_connecting_unsubscribe() {
 
 #[test]
 fn v3_1_1_client_not_allowed_to_send_on_status_connecting_pingreq() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
     v3_1_1_client_connecting(&mut con, true);
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Pingreq::new().into();
@@ -416,6 +429,7 @@ fn v3_1_1_client_not_allowed_to_send_on_status_connecting_pingreq() {
 
 #[test]
 fn v3_1_1_client_not_allowed_to_send_on_status_connecting_disconnect() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
     v3_1_1_client_connecting(&mut con, true);
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Disconnect::new().into();
@@ -436,6 +450,7 @@ fn v3_1_1_client_not_allowed_to_send_on_status_connecting_disconnect() {
 
 #[test]
 fn v3_1_1_client_not_allowed_to_send_on_status_disconnected_publish_qos0() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Publish::builder()
         .topic_name("topic")
@@ -459,6 +474,7 @@ fn v3_1_1_client_not_allowed_to_send_on_status_disconnected_publish_qos0() {
 
 #[test]
 fn v3_1_1_client_not_allowed_to_send_on_status_disconnected_publish_qos1() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
     let packet_id = con.acquire_packet_id().unwrap();
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Publish::builder()
@@ -493,6 +509,7 @@ fn v3_1_1_client_not_allowed_to_send_on_status_disconnected_publish_qos1() {
 
 #[test]
 fn v3_1_1_client_not_allowed_to_send_on_status_disconnected_publish_qos2() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
     let packet_id = con.acquire_packet_id().unwrap();
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Publish::builder()
@@ -527,6 +544,7 @@ fn v3_1_1_client_not_allowed_to_send_on_status_disconnected_publish_qos2() {
 
 #[test]
 fn v3_1_1_client_not_allowed_to_send_on_status_disconnected_subscribe() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
     let packet_id = con.acquire_packet_id().unwrap();
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Subscribe::builder()
@@ -563,6 +581,7 @@ fn v3_1_1_client_not_allowed_to_send_on_status_disconnected_subscribe() {
 
 #[test]
 fn v3_1_1_client_not_allowed_to_send_on_status_disconnected_unsubscribe() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
     let packet_id = con.acquire_packet_id().unwrap();
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Unsubscribe::builder()
@@ -596,6 +615,7 @@ fn v3_1_1_client_not_allowed_to_send_on_status_disconnected_unsubscribe() {
 
 #[test]
 fn v3_1_1_client_not_allowed_to_send_on_status_disconnected_pingreq() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Pingreq::new().into();
     let events = con.send(packet);
@@ -613,6 +633,7 @@ fn v3_1_1_client_not_allowed_to_send_on_status_disconnected_pingreq() {
 
 #[test]
 fn v3_1_1_client_not_allowed_to_send_on_status_disconnected_disconnect() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Disconnect::new().into();
     let events = con.send(packet);
@@ -637,6 +658,7 @@ fn v3_1_1_client_not_allowed_to_send_on_status_disconnected_disconnect() {
 
 #[test]
 fn v3_1_1_server_not_allowed_to_send_invalid_pid_publish_qos1() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V3_1_1);
     v3_1_1_server_establish_connection(&mut con, true, false);
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Publish::builder()
@@ -666,6 +688,7 @@ fn v3_1_1_server_not_allowed_to_send_invalid_pid_publish_qos1() {
 
 #[test]
 fn v3_1_1_server_not_allowed_to_send_invalid_pid_publish_qos2() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V3_1_1);
     v3_1_1_server_establish_connection(&mut con, true, false);
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Publish::builder()
@@ -695,6 +718,7 @@ fn v3_1_1_server_not_allowed_to_send_invalid_pid_publish_qos2() {
 
 #[test]
 fn v3_1_1_server_not_allowed_to_send_invalid_pid_pubrel() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V3_1_1);
     v3_1_1_server_establish_connection(&mut con, true, false);
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Pubrel::builder()
@@ -723,6 +747,7 @@ fn v3_1_1_server_not_allowed_to_send_invalid_pid_pubrel() {
 
 #[test]
 fn v3_1_1_server_not_allowed_to_send_on_status_connected_connack() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V3_1_1);
     v3_1_1_server_establish_connection(&mut con, true, false);
     let send_packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Connack::builder()
@@ -749,6 +774,7 @@ fn v3_1_1_server_not_allowed_to_send_on_status_connected_connack() {
 
 #[test]
 fn v3_1_1_server_not_allowed_to_send_on_status_connecting_publish_qos0() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V3_1_1);
     v3_1_1_server_connecting(&mut con, true);
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Publish::builder()
@@ -773,6 +799,7 @@ fn v3_1_1_server_not_allowed_to_send_on_status_connecting_publish_qos0() {
 
 #[test]
 fn v3_1_1_server_not_allowed_to_send_on_status_connecting_publish_qos1() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V3_1_1);
     v3_1_1_server_connecting(&mut con, true);
     let packet_id = con.acquire_packet_id().unwrap();
@@ -808,6 +835,7 @@ fn v3_1_1_server_not_allowed_to_send_on_status_connecting_publish_qos1() {
 
 #[test]
 fn v3_1_1_server_not_allowed_to_send_on_status_connecting_publish_qos2() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V3_1_1);
     v3_1_1_server_connecting(&mut con, true);
     let packet_id = con.acquire_packet_id().unwrap();
@@ -843,6 +871,7 @@ fn v3_1_1_server_not_allowed_to_send_on_status_connecting_publish_qos2() {
 
 #[test]
 fn v3_1_1_server_not_allowed_to_send_on_status_connecting_suback() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V3_1_1);
     v3_1_1_server_connecting(&mut con, true);
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Suback::builder()
@@ -868,6 +897,7 @@ fn v3_1_1_server_not_allowed_to_send_on_status_connecting_suback() {
 
 #[test]
 fn v3_1_1_server_not_allowed_to_send_on_status_connecting_unsuback() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V3_1_1);
     v3_1_1_server_connecting(&mut con, true);
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Unsuback::builder()
@@ -890,6 +920,7 @@ fn v3_1_1_server_not_allowed_to_send_on_status_connecting_unsuback() {
 
 #[test]
 fn v3_1_1_server_not_allowed_to_send_on_status_connecting_pingresp() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V3_1_1);
     v3_1_1_server_connecting(&mut con, true);
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Pingresp::new().into();
@@ -910,6 +941,7 @@ fn v3_1_1_server_not_allowed_to_send_on_status_connecting_pingresp() {
 
 #[test]
 fn v3_1_1_server_not_allowed_to_send_on_status_disconnected_connack() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V3_1_1);
     let send_packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Connack::builder()
         .return_code(mqtt::result_code::ConnectReturnCode::Accepted)
@@ -933,6 +965,7 @@ fn v3_1_1_server_not_allowed_to_send_on_status_disconnected_connack() {
 
 #[test]
 fn v3_1_1_server_not_allowed_to_send_on_status_disconnected_publish_qos0() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V3_1_1);
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Publish::builder()
         .topic_name("topic")
@@ -956,6 +989,7 @@ fn v3_1_1_server_not_allowed_to_send_on_status_disconnected_publish_qos0() {
 
 #[test]
 fn v3_1_1_server_not_allowed_to_send_on_status_disconnected_publish_qos1() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V3_1_1);
     let packet_id = con.acquire_packet_id().unwrap();
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Publish::builder()
@@ -990,6 +1024,7 @@ fn v3_1_1_server_not_allowed_to_send_on_status_disconnected_publish_qos1() {
 
 #[test]
 fn v3_1_1_server_not_allowed_to_send_on_status_disconnected_publish_qos2() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V3_1_1);
     let packet_id = con.acquire_packet_id().unwrap();
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Publish::builder()
@@ -1024,6 +1059,7 @@ fn v3_1_1_server_not_allowed_to_send_on_status_disconnected_publish_qos2() {
 
 #[test]
 fn v3_1_1_server_not_allowed_to_send_on_status_disconnected_suback() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V3_1_1);
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Suback::builder()
         .packet_id(1)
@@ -1048,6 +1084,7 @@ fn v3_1_1_server_not_allowed_to_send_on_status_disconnected_suback() {
 
 #[test]
 fn v3_1_1_server_not_allowed_to_send_on_status_disconnected_unsuback() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V3_1_1);
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Unsuback::builder()
         .packet_id(1)
@@ -1069,6 +1106,7 @@ fn v3_1_1_server_not_allowed_to_send_on_status_disconnected_unsuback() {
 
 #[test]
 fn v3_1_1_server_not_allowed_to_send_on_status_disconnected_pingresp() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V3_1_1);
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Pingresp::new().into();
     let events = con.send(packet);
@@ -1093,6 +1131,7 @@ fn v3_1_1_server_not_allowed_to_send_on_status_disconnected_pingresp() {
 
 #[test]
 fn v5_0_client_not_allowed_to_send_invalid_pid_subscribe() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
     v5_0_client_establish_connection(&mut con);
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Subscribe::builder()
@@ -1124,6 +1163,7 @@ fn v5_0_client_not_allowed_to_send_invalid_pid_subscribe() {
 
 #[test]
 fn v5_0_client_not_allowed_to_send_invalid_pid_unsubscribe() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
     v5_0_client_establish_connection(&mut con);
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Unsubscribe::builder()
@@ -1152,6 +1192,7 @@ fn v5_0_client_not_allowed_to_send_invalid_pid_unsubscribe() {
 
 #[test]
 fn v5_0_client_not_allowed_to_send_invalid_pid_publish_qos1() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
     v5_0_client_establish_connection(&mut con);
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Publish::builder()
@@ -1181,6 +1222,7 @@ fn v5_0_client_not_allowed_to_send_invalid_pid_publish_qos1() {
 
 #[test]
 fn v5_0_client_not_allowed_to_send_invalid_pid_publish_qos2() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
     v5_0_client_establish_connection(&mut con);
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Publish::builder()
@@ -1210,6 +1252,7 @@ fn v5_0_client_not_allowed_to_send_invalid_pid_publish_qos2() {
 
 #[test]
 fn v5_0_client_not_allowed_to_send_invalid_pid_pubrel() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
     v5_0_client_establish_connection(&mut con);
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Pubrel::builder()
@@ -1238,6 +1281,7 @@ fn v5_0_client_not_allowed_to_send_invalid_pid_pubrel() {
 
 #[test]
 fn v5_0_client_not_allowed_to_send_on_status_connected_connect() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
     v5_0_client_establish_connection(&mut con);
     let send_packet: mqtt::packet::Packet = mqtt::packet::v5_0::Connect::builder()
@@ -1273,6 +1317,7 @@ fn v5_0_client_connecting(con: &mut mqtt::Connection<mqtt::role::Client>) {
 
 #[test]
 fn v5_0_client_not_allowed_to_send_on_status_connecting_connect() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
     v5_0_client_connecting(&mut con);
     let send_packet: mqtt::packet::Packet = mqtt::packet::v5_0::Connect::builder()
@@ -1297,6 +1342,7 @@ fn v5_0_client_not_allowed_to_send_on_status_connecting_connect() {
 
 #[test]
 fn v5_0_client_not_allowed_to_send_on_status_connecting_publish_qos0() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
     v5_0_client_connecting(&mut con);
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Publish::builder()
@@ -1321,6 +1367,7 @@ fn v5_0_client_not_allowed_to_send_on_status_connecting_publish_qos0() {
 
 #[test]
 fn v5_0_client_not_allowed_to_send_on_status_connecting_publish_qos1() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
     v5_0_client_connecting(&mut con);
     let packet_id = con.acquire_packet_id().unwrap();
@@ -1356,6 +1403,7 @@ fn v5_0_client_not_allowed_to_send_on_status_connecting_publish_qos1() {
 
 #[test]
 fn v5_0_client_not_allowed_to_send_on_status_connecting_publish_qos2() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
     v5_0_client_connecting(&mut con);
     let packet_id = con.acquire_packet_id().unwrap();
@@ -1391,6 +1439,7 @@ fn v5_0_client_not_allowed_to_send_on_status_connecting_publish_qos2() {
 
 #[test]
 fn v5_0_client_not_allowed_to_send_on_status_connecting_subscribe() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
     v5_0_client_connecting(&mut con);
     let packet_id = con.acquire_packet_id().unwrap();
@@ -1428,6 +1477,7 @@ fn v5_0_client_not_allowed_to_send_on_status_connecting_subscribe() {
 
 #[test]
 fn v5_0_client_not_allowed_to_send_on_status_connecting_unsubscribe() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
     v5_0_client_connecting(&mut con);
     let packet_id = con.acquire_packet_id().unwrap();
@@ -1462,6 +1512,7 @@ fn v5_0_client_not_allowed_to_send_on_status_connecting_unsubscribe() {
 
 #[test]
 fn v5_0_client_not_allowed_to_send_on_status_connecting_pingreq() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
     v5_0_client_connecting(&mut con);
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Pingreq::new().into();
@@ -1480,6 +1531,7 @@ fn v5_0_client_not_allowed_to_send_on_status_connecting_pingreq() {
 
 #[test]
 fn v5_0_client_not_allowed_to_send_on_status_connecting_disconnect() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
     v5_0_client_connecting(&mut con);
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Disconnect::builder()
@@ -1504,6 +1556,7 @@ fn v5_0_client_not_allowed_to_send_on_status_connecting_disconnect() {
 
 #[test]
 fn v5_0_client_not_allowed_to_send_on_status_disconnected_publish_qos0() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Publish::builder()
         .topic_name("topic")
@@ -1527,6 +1580,7 @@ fn v5_0_client_not_allowed_to_send_on_status_disconnected_publish_qos0() {
 
 #[test]
 fn v5_0_client_not_allowed_to_send_on_status_disconnected_publish_qos1() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
     let packet_id = con.acquire_packet_id().unwrap();
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Publish::builder()
@@ -1561,6 +1615,7 @@ fn v5_0_client_not_allowed_to_send_on_status_disconnected_publish_qos1() {
 
 #[test]
 fn v5_0_client_not_allowed_to_send_on_status_disconnected_publish_qos2() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
     let packet_id = con.acquire_packet_id().unwrap();
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Publish::builder()
@@ -1595,6 +1650,7 @@ fn v5_0_client_not_allowed_to_send_on_status_disconnected_publish_qos2() {
 
 #[test]
 fn v5_0_client_not_allowed_to_send_on_status_disconnected_subscribe() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
     let packet_id = con.acquire_packet_id().unwrap();
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Subscribe::builder()
@@ -1631,6 +1687,7 @@ fn v5_0_client_not_allowed_to_send_on_status_disconnected_subscribe() {
 
 #[test]
 fn v5_0_client_not_allowed_to_send_on_status_disconnected_unsubscribe() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
     let packet_id = con.acquire_packet_id().unwrap();
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Unsubscribe::builder()
@@ -1664,6 +1721,7 @@ fn v5_0_client_not_allowed_to_send_on_status_disconnected_unsubscribe() {
 
 #[test]
 fn v5_0_client_not_allowed_to_send_on_status_disconnected_pingreq() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Pingreq::new().into();
     let events = con.send(packet);
@@ -1681,6 +1739,7 @@ fn v5_0_client_not_allowed_to_send_on_status_disconnected_pingreq() {
 
 #[test]
 fn v5_0_client_not_allowed_to_send_on_status_disconnected_disconnect() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Disconnect::builder()
         .reason_code(mqtt::result_code::DisconnectReasonCode::NormalDisconnection)
@@ -1702,6 +1761,7 @@ fn v5_0_client_not_allowed_to_send_on_status_disconnected_disconnect() {
 
 #[test]
 fn v5_0_client_not_allowed_to_send_on_status_disconnected_auth() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Auth::builder()
         .reason_code(mqtt::result_code::AuthReasonCode::Success)
@@ -1730,6 +1790,7 @@ fn v5_0_client_not_allowed_to_send_on_status_disconnected_auth() {
 
 #[test]
 fn v5_0_server_not_allowed_to_send_invalid_pid_publish_qos1() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
     v5_0_server_establish_connection(&mut con);
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Publish::builder()
@@ -1759,6 +1820,7 @@ fn v5_0_server_not_allowed_to_send_invalid_pid_publish_qos1() {
 
 #[test]
 fn v5_0_server_not_allowed_to_send_invalid_pid_publish_qos2() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
     v5_0_server_establish_connection(&mut con);
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Publish::builder()
@@ -1788,6 +1850,7 @@ fn v5_0_server_not_allowed_to_send_invalid_pid_publish_qos2() {
 
 #[test]
 fn v5_0_server_not_allowed_to_send_invalid_pid_pubrel() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
     v5_0_server_establish_connection(&mut con);
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Pubrel::builder()
@@ -1816,6 +1879,7 @@ fn v5_0_server_not_allowed_to_send_invalid_pid_pubrel() {
 
 #[test]
 fn v5_0_server_not_allowed_to_send_on_status_connected_connack() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
     v5_0_server_establish_connection(&mut con);
     let send_packet: mqtt::packet::Packet = mqtt::packet::v5_0::Connack::builder()
@@ -1842,6 +1906,7 @@ fn v5_0_server_not_allowed_to_send_on_status_connected_connack() {
 
 #[test]
 fn v5_0_server_not_allowed_to_send_on_status_connecting_publish_qos0() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
     v5_0_server_connecting(&mut con);
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Publish::builder()
@@ -1866,6 +1931,7 @@ fn v5_0_server_not_allowed_to_send_on_status_connecting_publish_qos0() {
 
 #[test]
 fn v5_0_server_not_allowed_to_send_on_status_connecting_publish_qos1() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
     v5_0_server_connecting(&mut con);
     let packet_id = con.acquire_packet_id().unwrap();
@@ -1901,6 +1967,7 @@ fn v5_0_server_not_allowed_to_send_on_status_connecting_publish_qos1() {
 
 #[test]
 fn v5_0_server_not_allowed_to_send_on_status_connecting_publish_qos2() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
     v5_0_server_connecting(&mut con);
     let packet_id = con.acquire_packet_id().unwrap();
@@ -1936,6 +2003,7 @@ fn v5_0_server_not_allowed_to_send_on_status_connecting_publish_qos2() {
 
 #[test]
 fn v5_0_server_not_allowed_to_send_on_status_connecting_suback() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
     v5_0_server_connecting(&mut con);
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Suback::builder()
@@ -1959,6 +2027,7 @@ fn v5_0_server_not_allowed_to_send_on_status_connecting_suback() {
 
 #[test]
 fn v5_0_server_not_allowed_to_send_on_status_connecting_unsuback() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
     v5_0_server_connecting(&mut con);
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Unsuback::builder()
@@ -1982,6 +2051,7 @@ fn v5_0_server_not_allowed_to_send_on_status_connecting_unsuback() {
 
 #[test]
 fn v5_0_server_not_allowed_to_send_on_status_connecting_pingresp() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
     v5_0_server_connecting(&mut con);
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Pingresp::new().into();
@@ -2000,6 +2070,7 @@ fn v5_0_server_not_allowed_to_send_on_status_connecting_pingresp() {
 
 #[test]
 fn v5_0_server_not_allowed_to_send_on_status_connecting_disconnect() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
     v5_0_server_connecting(&mut con);
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Disconnect::builder()
@@ -2024,6 +2095,7 @@ fn v5_0_server_not_allowed_to_send_on_status_connecting_disconnect() {
 
 #[test]
 fn v5_0_server_not_allowed_to_send_on_status_disconnected_connack() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
     let send_packet: mqtt::packet::Packet = mqtt::packet::v5_0::Connack::builder()
         .reason_code(mqtt::result_code::ConnectReasonCode::Success)
@@ -2047,6 +2119,7 @@ fn v5_0_server_not_allowed_to_send_on_status_disconnected_connack() {
 
 #[test]
 fn v5_0_server_not_allowed_to_send_on_status_disconnected_publish_qos0() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Publish::builder()
         .topic_name("topic")
@@ -2070,6 +2143,7 @@ fn v5_0_server_not_allowed_to_send_on_status_disconnected_publish_qos0() {
 
 #[test]
 fn v5_0_server_not_allowed_to_send_on_status_disconnected_publish_qos1() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
     let packet_id = con.acquire_packet_id().unwrap();
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Publish::builder()
@@ -2104,6 +2178,7 @@ fn v5_0_server_not_allowed_to_send_on_status_disconnected_publish_qos1() {
 
 #[test]
 fn v5_0_server_not_allowed_to_send_on_status_disconnected_publish_qos2() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
     let packet_id = con.acquire_packet_id().unwrap();
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Publish::builder()
@@ -2138,6 +2213,7 @@ fn v5_0_server_not_allowed_to_send_on_status_disconnected_publish_qos2() {
 
 #[test]
 fn v5_0_server_not_allowed_to_send_on_status_disconnected_suback() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Suback::builder()
         .packet_id(1)
@@ -2160,6 +2236,7 @@ fn v5_0_server_not_allowed_to_send_on_status_disconnected_suback() {
 
 #[test]
 fn v5_0_server_not_allowed_to_send_on_status_disconnected_unsuback() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Unsuback::builder()
         .packet_id(1)
@@ -2182,6 +2259,7 @@ fn v5_0_server_not_allowed_to_send_on_status_disconnected_unsuback() {
 
 #[test]
 fn v5_0_server_not_allowed_to_send_on_status_disconnected_pingresp() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Pingresp::new().into();
     let events = con.send(packet);
@@ -2199,6 +2277,7 @@ fn v5_0_server_not_allowed_to_send_on_status_disconnected_pingresp() {
 
 #[test]
 fn v5_0_server_not_allowed_to_send_on_status_disconnected_disconnect() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Disconnect::builder()
         .reason_code(mqtt::result_code::DisconnectReasonCode::NormalDisconnection)
@@ -2220,6 +2299,7 @@ fn v5_0_server_not_allowed_to_send_on_status_disconnected_disconnect() {
 
 #[test]
 fn v5_0_server_not_allowed_to_send_on_status_disconnected_auth() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Auth::builder()
         .reason_code(mqtt::result_code::AuthReasonCode::Success)

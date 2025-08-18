@@ -22,10 +22,12 @@
  * SOFTWARE.
  */
 use mqtt_protocol_core::mqtt;
+mod common;
 
 // Build fail tests
 #[test]
 fn build_fail_empty_reason_codes() {
+    common::init_tracing();
     let err = mqtt::packet::v5_0::Suback::builder()
         .packet_id(1u16)
         .build()
@@ -35,6 +37,7 @@ fn build_fail_empty_reason_codes() {
 
 #[test]
 fn build_fail_no_packet_id() {
+    common::init_tracing();
     let err = mqtt::packet::v5_0::Suback::builder()
         .reason_codes(vec![mqtt::result_code::SubackReasonCode::GrantedQos0])
         .build()
@@ -44,6 +47,7 @@ fn build_fail_no_packet_id() {
 
 #[test]
 fn build_fail_invalid_property() {
+    common::init_tracing();
     let mut props = mqtt::packet::Properties::new();
     props.push(mqtt::packet::Property::PayloadFormatIndicator(
         mqtt::packet::PayloadFormatIndicator::new(mqtt::packet::PayloadFormat::Binary).unwrap(),
@@ -60,6 +64,7 @@ fn build_fail_invalid_property() {
 
 #[test]
 fn build_fail_multiple_reason_strings() {
+    common::init_tracing();
     let mut props = mqtt::packet::Properties::new();
     props.push(mqtt::packet::Property::ReasonString(
         mqtt::packet::ReasonString::new("First reason").unwrap(),
@@ -80,6 +85,7 @@ fn build_fail_multiple_reason_strings() {
 // Build success tests
 #[test]
 fn build_success_minimal() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Suback::builder()
         .packet_id(1u16)
         .reason_codes(vec![mqtt::result_code::SubackReasonCode::GrantedQos0])
@@ -92,6 +98,7 @@ fn build_success_minimal() {
 
 #[test]
 fn build_success_with_properties() {
+    common::init_tracing();
     let mut props = mqtt::packet::Properties::new();
     props.push(mqtt::packet::Property::ReasonString(
         mqtt::packet::ReasonString::new("Success").unwrap(),
@@ -114,6 +121,7 @@ fn build_success_with_properties() {
 
 #[test]
 fn build_success_multiple_reason_codes() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Suback::builder()
         .packet_id(100u16)
         .reason_codes(vec![
@@ -143,6 +151,7 @@ fn build_success_multiple_reason_codes() {
 // Display tests
 #[test]
 fn display_minimal() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Suback::builder()
         .packet_id(1u16)
         .reason_codes(vec![mqtt::result_code::SubackReasonCode::GrantedQos0])
@@ -156,6 +165,7 @@ fn display_minimal() {
 
 #[test]
 fn display_with_properties() {
+    common::init_tracing();
     let mut props = mqtt::packet::Properties::new();
     props.push(mqtt::packet::Property::ReasonString(
         mqtt::packet::ReasonString::new("Success").unwrap(),
@@ -177,6 +187,7 @@ fn display_with_properties() {
 // Debug tests
 #[test]
 fn debug_minimal() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Suback::builder()
         .packet_id(1u16)
         .reason_codes(vec![mqtt::result_code::SubackReasonCode::GrantedQos0])
@@ -189,6 +200,7 @@ fn debug_minimal() {
 
 #[test]
 fn debug_with_properties() {
+    common::init_tracing();
     let mut props = mqtt::packet::Properties::new();
     props.push(mqtt::packet::Property::UserProperty(
         mqtt::packet::UserProperty::new("test", "value").unwrap(),
@@ -208,6 +220,7 @@ fn debug_with_properties() {
 // Getter tests
 #[test]
 fn getter_packet_id() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Suback::builder()
         .packet_id(12345u16)
         .reason_codes(vec![mqtt::result_code::SubackReasonCode::GrantedQos0])
@@ -219,6 +232,7 @@ fn getter_packet_id() {
 
 #[test]
 fn getter_reason_codes() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Suback::builder()
         .packet_id(1u16)
         .reason_codes(vec![
@@ -241,6 +255,7 @@ fn getter_reason_codes() {
 
 #[test]
 fn getter_props_empty() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Suback::builder()
         .packet_id(1u16)
         .reason_codes(vec![mqtt::result_code::SubackReasonCode::GrantedQos0])
@@ -252,6 +267,7 @@ fn getter_props_empty() {
 
 #[test]
 fn getter_props_with_values() {
+    common::init_tracing();
     let mut props = mqtt::packet::Properties::new();
     props.push(mqtt::packet::Property::ReasonString(
         mqtt::packet::ReasonString::new("Success").unwrap(),
@@ -274,6 +290,7 @@ fn getter_props_with_values() {
 #[cfg(feature = "std")]
 #[test]
 fn to_buffers_minimal() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Suback::builder()
         .packet_id(1u16)
         .reason_codes(vec![mqtt::result_code::SubackReasonCode::GrantedQos0])
@@ -299,6 +316,7 @@ fn to_buffers_minimal() {
 #[cfg(feature = "std")]
 #[test]
 fn to_buffers_with_properties() {
+    common::init_tracing();
     let mut props = mqtt::packet::Properties::new();
     props.push(mqtt::packet::Property::ReasonString(
         mqtt::packet::ReasonString::new("Success").unwrap(),
@@ -325,6 +343,7 @@ fn to_buffers_with_properties() {
 #[cfg(feature = "std")]
 #[test]
 fn to_buffers_multiple_reason_codes() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Suback::builder()
         .packet_id(100u16)
         .reason_codes(vec![
@@ -348,6 +367,7 @@ fn to_buffers_multiple_reason_codes() {
 // Parse tests
 #[test]
 fn parse_minimal() {
+    common::init_tracing();
     let original = mqtt::packet::v5_0::Suback::builder()
         .packet_id(1u16)
         .reason_codes(vec![mqtt::result_code::SubackReasonCode::GrantedQos0])
@@ -381,6 +401,7 @@ fn parse_minimal() {
 
 #[test]
 fn parse_with_properties() {
+    common::init_tracing();
     let mut props = mqtt::packet::Properties::new();
     props.push(mqtt::packet::Property::ReasonString(
         mqtt::packet::ReasonString::new("Success").unwrap(),
@@ -420,6 +441,7 @@ fn parse_with_properties() {
 
 #[test]
 fn parse_multiple_reason_codes() {
+    common::init_tracing();
     let original = mqtt::packet::v5_0::Suback::builder()
         .packet_id(200u16)
         .reason_codes(vec![
@@ -464,6 +486,7 @@ fn parse_multiple_reason_codes() {
 
 #[test]
 fn parse_invalid_too_short() {
+    common::init_tracing();
     let data = [0x00]; // Too short for packet ID
     let err = mqtt::packet::v5_0::Suback::parse(&data).unwrap_err();
     assert_eq!(err, mqtt::result_code::MqttError::MalformedPacket);
@@ -471,6 +494,7 @@ fn parse_invalid_too_short() {
 
 #[test]
 fn parse_invalid_no_reason_codes() {
+    common::init_tracing();
     let mut data = Vec::new();
     data.extend_from_slice(&(1u16).to_be_bytes()); // packet ID
     data.push(0x00); // property length = 0
@@ -481,6 +505,7 @@ fn parse_invalid_no_reason_codes() {
 
 #[test]
 fn parse_invalid_property() {
+    common::init_tracing();
     let mut data = Vec::new();
     data.extend_from_slice(&(1u16).to_be_bytes()); // packet ID
     data.push(0x02); // property length = 2
@@ -494,6 +519,7 @@ fn parse_invalid_property() {
 // Size tests
 #[test]
 fn size_minimal() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Suback::builder()
         .packet_id(1u16)
         .reason_codes(vec![mqtt::result_code::SubackReasonCode::GrantedQos0])
@@ -517,6 +543,7 @@ fn size_minimal() {
 
 #[test]
 fn size_with_properties() {
+    common::init_tracing();
     let mut props = mqtt::packet::Properties::new();
     props.push(mqtt::packet::Property::ReasonString(
         mqtt::packet::ReasonString::new("Success").unwrap(),
@@ -546,6 +573,7 @@ fn size_with_properties() {
 
 #[test]
 fn size_multiple_reason_codes() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Suback::builder()
         .packet_id(100u16)
         .reason_codes(vec![
@@ -571,6 +599,7 @@ fn size_multiple_reason_codes() {
 // Parse/serialize roundtrip tests
 #[test]
 fn roundtrip_minimal() {
+    common::init_tracing();
     let original = mqtt::packet::v5_0::Suback::builder()
         .packet_id(1u16)
         .reason_codes(vec![mqtt::result_code::SubackReasonCode::GrantedQos0])
@@ -599,6 +628,7 @@ fn roundtrip_minimal() {
 
 #[test]
 fn roundtrip_with_all_valid_properties() {
+    common::init_tracing();
     let mut props = mqtt::packet::Properties::new();
     props.push(mqtt::packet::Property::ReasonString(
         mqtt::packet::ReasonString::new("Operation successful").unwrap(),
@@ -657,6 +687,7 @@ fn roundtrip_with_all_valid_properties() {
 
 #[test]
 fn test_packet_type() {
+    common::init_tracing();
     let packet_type = mqtt::packet::v5_0::Suback::packet_type();
     assert_eq!(packet_type, mqtt::packet::PacketType::Suback);
 }

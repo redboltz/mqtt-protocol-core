@@ -22,10 +22,12 @@
  * SOFTWARE.
  */
 use mqtt_protocol_core::mqtt;
+mod common;
 
 // Build success tests
 #[test]
 fn build_success() {
+    common::init_tracing();
     let _packet = mqtt::packet::v3_1_1::Disconnect::builder().build().unwrap();
 
     // Disconnect packet has no fields to check
@@ -35,6 +37,7 @@ fn build_success() {
 // Display tests
 #[test]
 fn display_minimal() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Disconnect::builder().build().unwrap();
 
     let display_str = format!("{packet}");
@@ -44,6 +47,7 @@ fn display_minimal() {
 // Debug tests
 #[test]
 fn debug_minimal() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Disconnect::builder().build().unwrap();
 
     let debug_str = format!("{packet:?}");
@@ -54,6 +58,7 @@ fn debug_minimal() {
 #[test]
 #[cfg(feature = "std")]
 fn to_buffers_minimal() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Disconnect::builder().build().unwrap();
 
     let buffers = packet.to_buffers();
@@ -75,6 +80,7 @@ fn to_buffers_minimal() {
 #[test]
 #[cfg(not(feature = "std"))]
 fn to_continuous_buffer_minimal() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Disconnect::builder().build().unwrap();
 
     let all_bytes = packet.to_continuous_buffer();
@@ -90,6 +96,7 @@ fn to_continuous_buffer_minimal() {
 // Parse tests
 #[test]
 fn parse_minimal() {
+    common::init_tracing();
     let original = mqtt::packet::v3_1_1::Disconnect::builder().build().unwrap();
 
     // Use to_continuous_buffer for no-std compatibility
@@ -104,6 +111,7 @@ fn parse_minimal() {
 // Size tests
 #[test]
 fn size_minimal() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Disconnect::builder().build().unwrap();
 
     let size = packet.size();
@@ -132,6 +140,7 @@ fn size_minimal() {
 // Parse/serialize roundtrip tests
 #[test]
 fn roundtrip_minimal() {
+    common::init_tracing();
     let original = mqtt::packet::v3_1_1::Disconnect::builder().build().unwrap();
 
     // Use to_continuous_buffer for no-std compatibility
@@ -145,6 +154,7 @@ fn roundtrip_minimal() {
 
 #[test]
 fn test_packet_type() {
+    common::init_tracing();
     let packet_type = mqtt::packet::v3_1_1::Disconnect::packet_type();
     assert_eq!(packet_type, mqtt::packet::PacketType::Disconnect);
 }

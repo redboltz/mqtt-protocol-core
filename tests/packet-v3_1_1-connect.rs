@@ -22,10 +22,12 @@
  * SOFTWARE.
  */
 use mqtt_protocol_core::mqtt;
+mod common;
 
 // Build fail tests
 #[test]
 fn build_success_no_client_id() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Connect::builder()
         .clean_start(true)
         .build()
@@ -40,6 +42,7 @@ fn build_success_no_client_id() {
 
 #[test]
 fn build_fail_password_without_username() {
+    common::init_tracing();
     let err = mqtt::packet::v3_1_1::Connect::builder()
         .client_id("test")
         .unwrap()
@@ -52,6 +55,7 @@ fn build_fail_password_without_username() {
 
 #[test]
 fn build_success_will_topic_with_empty_payload() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Connect::builder()
         .client_id("test")
         .unwrap()
@@ -68,6 +72,7 @@ fn build_success_will_topic_with_empty_payload() {
 // Build success tests
 #[test]
 fn build_success_minimal() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Connect::builder()
         .client_id("test_client")
         .unwrap()
@@ -84,6 +89,7 @@ fn build_success_minimal() {
 
 #[test]
 fn build_success_with_credentials() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Connect::builder()
         .client_id("test_client")
         .unwrap()
@@ -103,6 +109,7 @@ fn build_success_with_credentials() {
 
 #[test]
 fn build_success_with_will() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Connect::builder()
         .client_id("test_client")
         .unwrap()
@@ -126,6 +133,7 @@ fn build_success_with_will() {
 
 #[test]
 fn build_success_clean_start_false() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Connect::builder()
         .client_id("test_client")
         .unwrap()
@@ -141,6 +149,7 @@ fn build_success_clean_start_false() {
 
 #[test]
 fn build_success_all_features() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Connect::builder()
         .client_id("comprehensive_test")
         .unwrap()
@@ -177,6 +186,7 @@ fn build_success_all_features() {
 // Display tests
 #[test]
 fn display_minimal() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Connect::builder()
         .client_id("test")
         .unwrap()
@@ -192,6 +202,7 @@ fn display_minimal() {
 
 #[test]
 fn display_with_will() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Connect::builder()
         .client_id("test")
         .unwrap()
@@ -209,6 +220,7 @@ fn display_with_will() {
 
 #[test]
 fn display_with_password_masked() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Connect::builder()
         .client_id("test")
         .unwrap()
@@ -226,6 +238,7 @@ fn display_with_password_masked() {
 
 #[test]
 fn display_with_binary_will_payload() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Connect::builder()
         .client_id("test")
         .unwrap()
@@ -246,6 +259,7 @@ fn display_with_binary_will_payload() {
 // Debug tests
 #[test]
 fn debug_output() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Connect::builder()
         .client_id("debug_test")
         .unwrap()
@@ -260,6 +274,7 @@ fn debug_output() {
 // Getter tests
 #[test]
 fn getter_protocol_info() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Connect::builder()
         .client_id("test")
         .unwrap()
@@ -272,6 +287,7 @@ fn getter_protocol_info() {
 
 #[test]
 fn getter_flags() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Connect::builder()
         .client_id("test")
         .unwrap()
@@ -295,6 +311,7 @@ fn getter_flags() {
 
 #[test]
 fn getter_optional_fields() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Connect::builder()
         .client_id("test")
         .unwrap()
@@ -311,6 +328,7 @@ fn getter_optional_fields() {
 #[test]
 #[cfg(feature = "std")]
 fn to_buffers_minimal() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Connect::builder()
         .client_id("test")
         .unwrap()
@@ -337,6 +355,7 @@ fn to_buffers_minimal() {
 #[test]
 #[cfg(feature = "std")]
 fn to_buffers_with_will() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Connect::builder()
         .client_id("test")
         .unwrap()
@@ -361,6 +380,7 @@ fn to_buffers_with_will() {
 #[test]
 #[cfg(feature = "std")]
 fn to_buffers_with_credentials() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Connect::builder()
         .client_id("test")
         .unwrap()
@@ -387,6 +407,7 @@ fn to_buffers_with_credentials() {
 // Parse tests
 #[test]
 fn parse_minimal() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Connect::builder()
         .client_id("test")
         .unwrap()
@@ -417,6 +438,7 @@ fn parse_minimal() {
 
 #[test]
 fn parse_with_credentials() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Connect::builder()
         .client_id("test_client")
         .unwrap()
@@ -452,6 +474,7 @@ fn parse_with_credentials() {
 
 #[test]
 fn parse_with_will() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Connect::builder()
         .client_id("test")
         .unwrap()
@@ -491,6 +514,7 @@ fn parse_with_will() {
 
 #[test]
 fn parse_with_all_features() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Connect::builder()
         .client_id("full_test")
         .unwrap()
@@ -542,6 +566,7 @@ fn parse_with_all_features() {
 
 #[test]
 fn parse_invalid_too_short() {
+    common::init_tracing();
     let data = vec![0x00]; // Too short
     let err = mqtt::packet::v3_1_1::Connect::parse(&data).unwrap_err();
     assert_eq!(err, mqtt::result_code::MqttError::MalformedPacket);
@@ -549,6 +574,7 @@ fn parse_invalid_too_short() {
 
 #[test]
 fn parse_invalid_protocol_name() {
+    common::init_tracing();
     let mut data = Vec::new();
     data.extend_from_slice(&[0x00, 0x04, b'M', b'Q', b'T', b'X']); // Wrong protocol name
     data.push(0x04); // version
@@ -563,6 +589,7 @@ fn parse_invalid_protocol_name() {
 
 #[test]
 fn parse_invalid_protocol_version() {
+    common::init_tracing();
     let mut data = Vec::new();
     data.extend_from_slice(&[0x00, 0x04, b'M', b'Q', b'T', b'T']); // protocol name
     data.push(0x05); // Wrong version (should be 0x04 for v3.1.1)
@@ -580,6 +607,7 @@ fn parse_invalid_protocol_version() {
 
 #[test]
 fn parse_invalid_password_without_username() {
+    common::init_tracing();
     let mut data = Vec::new();
     data.extend_from_slice(&[0x00, 0x04, b'M', b'Q', b'T', b'T']); // protocol name
     data.push(0x04); // version
@@ -596,6 +624,7 @@ fn parse_invalid_password_without_username() {
 
 #[test]
 fn parse_invalid_short_data() {
+    common::init_tracing();
     // Test various incomplete packet scenarios
     let mut data = Vec::new();
     data.extend_from_slice(&[0x00, 0x04, b'M', b'Q', b'T', b'T']); // protocol name
@@ -610,6 +639,7 @@ fn parse_invalid_short_data() {
 // Size tests
 #[test]
 fn size_minimal() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Connect::builder()
         .client_id("test")
         .unwrap()
@@ -624,6 +654,7 @@ fn size_minimal() {
 
 #[test]
 fn size_with_features() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Connect::builder()
         .client_id("test")
         .unwrap()
@@ -648,6 +679,7 @@ fn size_with_features() {
 
 #[test]
 fn test_packet_type() {
+    common::init_tracing();
     let packet_type = mqtt::packet::v3_1_1::Connect::packet_type();
     assert_eq!(packet_type, mqtt::packet::PacketType::Connect);
 }

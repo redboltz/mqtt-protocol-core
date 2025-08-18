@@ -27,7 +27,7 @@ use alloc::{
 };
 use core::marker::PhantomData;
 
-use crate::mqtt::common::tracing::trace;
+use crate::mqtt::common::tracing::{error, info, trace, warn};
 use crate::mqtt::common::Cursor;
 use crate::mqtt::common::HashSet;
 use crate::mqtt::connection::event::{GenericEvent, TimerKind};
@@ -1003,18 +1003,18 @@ where
                         }
                         _ => {
                             // QoS 0 shouldn't be in store, but handle gracefully
-                            tracing::warn!("QoS 0 packet found in store, skipping");
+                            warn!("QoS 0 packet found in store, skipping");
                             continue;
                         }
                     }
                     // Register packet ID and add to store
                     let packet_id = p.packet_id().unwrap();
                     if self.pid_man.register_id(packet_id).is_ok() {
-                        if let Err(e) = self.store.add(packet) {
-                            tracing::error!("Failed to add packet to store: {:?}", e);
+                        if let Err(_e) = self.store.add(packet) {
+                            error!("Failed to add packet to store: {:?}", _e);
                         }
                     } else {
-                        tracing::error!("Packet ID {} has already been used. Skip it", packet_id);
+                        error!("Packet ID {} has already been used. Skip it", packet_id);
                     }
                 }
                 GenericStorePacket::V5_0Publish(p) => {
@@ -1028,18 +1028,18 @@ where
                         }
                         _ => {
                             // QoS 0 shouldn't be in store, but handle gracefully
-                            tracing::warn!("QoS 0 packet found in store, skipping");
+                            warn!("QoS 0 packet found in store, skipping");
                             continue;
                         }
                     }
                     // Register packet ID and add to store
                     let packet_id = p.packet_id().unwrap();
                     if self.pid_man.register_id(packet_id).is_ok() {
-                        if let Err(e) = self.store.add(packet) {
-                            tracing::error!("Failed to add packet to store: {:?}", e);
+                        if let Err(_e) = self.store.add(packet) {
+                            error!("Failed to add packet to store: {:?}", _e);
                         }
                     } else {
-                        tracing::error!("Packet ID {} has already been used. Skip it", packet_id);
+                        error!("Packet ID {} has already been used. Skip it", packet_id);
                     }
                 }
                 GenericStorePacket::V3_1_1Pubrel(p) => {
@@ -1048,11 +1048,11 @@ where
                     // Register packet ID and add to store
                     let packet_id = p.packet_id();
                     if self.pid_man.register_id(packet_id).is_ok() {
-                        if let Err(e) = self.store.add(packet) {
-                            tracing::error!("Failed to add packet to store: {:?}", e);
+                        if let Err(_e) = self.store.add(packet) {
+                            error!("Failed to add packet to store: {:?}", _e);
                         }
                     } else {
-                        tracing::error!("Packet ID {} has already been used. Skip it", packet_id);
+                        error!("Packet ID {} has already been used. Skip it", packet_id);
                     }
                 }
                 GenericStorePacket::V5_0Pubrel(p) => {
@@ -1061,11 +1061,11 @@ where
                     // Register packet ID and add to store
                     let packet_id = p.packet_id();
                     if self.pid_man.register_id(packet_id).is_ok() {
-                        if let Err(e) = self.store.add(packet) {
-                            tracing::error!("Failed to add packet to store: {:?}", e);
+                        if let Err(_e) = self.store.add(packet) {
+                            error!("Failed to add packet to store: {:?}", _e);
                         }
                     } else {
-                        tracing::error!("Packet ID {} has already been used. Skip it", packet_id);
+                        error!("Packet ID {} has already been used. Skip it", packet_id);
                     }
                 }
             }
@@ -1237,13 +1237,13 @@ where
         let topic_alias_send = match &self.topic_alias_send {
             Some(tas) => tas,
             None => {
-                tracing::error!("topic_alias is set but topic_alias_maximum is 0");
+                error!("topic_alias is set but topic_alias_maximum is 0");
                 return false;
             }
         };
 
         if topic_alias == 0 || topic_alias > topic_alias_send.max() {
-            tracing::error!("topic_alias is set but out of range");
+            error!("topic_alias is set but out of range");
             return false;
         }
 
@@ -1255,6 +1255,8 @@ where
         &mut self,
         packet: v3_1_1::Connect,
     ) -> Vec<GenericEvent<PacketIdType>> {
+        info!("send connect v3.1.1: {packet}");
+
         if self.status != ConnectionStatus::Disconnected {
             return vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)];
         }
@@ -1296,6 +1298,7 @@ where
         &mut self,
         packet: v5_0::Connect,
     ) -> Vec<GenericEvent<PacketIdType>> {
+        info!("send connect v5.0: {packet}");
         if !self.validate_maximum_packet_size_send(packet.size()) {
             return vec![GenericEvent::NotifyError(MqttError::PacketTooLarge)];
         }
@@ -1358,6 +1361,7 @@ where
         &mut self,
         packet: v3_1_1::Connack,
     ) -> Vec<GenericEvent<PacketIdType>> {
+        info!("send connack v3.1.1: {packet}");
         if self.status != ConnectionStatus::Connecting {
             return vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)];
         }
@@ -1382,6 +1386,7 @@ where
         &mut self,
         packet: v5_0::Connack,
     ) -> Vec<GenericEvent<PacketIdType>> {
+        info!("send connack v5.0: {packet}");
         if !self.validate_maximum_packet_size_send(packet.size()) {
             return vec![GenericEvent::NotifyError(MqttError::PacketTooLarge)];
         }
@@ -1452,7 +1457,7 @@ where
                 return events;
             }
             if !self.pid_man.is_used_id(packet_id) {
-                tracing::error!("packet_id {packet_id} must be acquired or registered");
+                error!("packet_id {packet_id} must be acquired or registered");
                 events.push(GenericEvent::NotifyError(
                     MqttError::PacketIdentifierInvalid,
                 ));
@@ -1515,7 +1520,7 @@ where
 
             // Extract topic_name from TopicAlias and remove TopicAlias property, then store it
             if !self.pid_man.is_used_id(packet_id) {
-                tracing::error!("packet_id {packet_id} must be acquired or registered");
+                error!("packet_id {packet_id} must be acquired or registered");
                 events.push(GenericEvent::NotifyError(
                     MqttError::PacketIdentifierInvalid,
                 ));
@@ -1604,8 +1609,7 @@ where
             if self.auto_map_topic_alias_send {
                 if let Some(ref mut topic_alias_send) = self.topic_alias_send {
                     if let Some(found_ta) = topic_alias_send.find_by_topic(packet.topic_name()) {
-                        #[cfg(feature = "tracing")]
-                        tracing::trace!(
+                        trace!(
                             "topic alias: {} - {} is found.",
                             packet.topic_name(),
                             found_ta
@@ -1620,8 +1624,7 @@ where
             } else if self.auto_replace_topic_alias_send {
                 if let Some(ref topic_alias_send) = self.topic_alias_send {
                     if let Some(found_ta) = topic_alias_send.find_by_topic(packet.topic_name()) {
-                        #[cfg(feature = "tracing")]
-                        tracing::trace!(
+                        trace!(
                             "topic alias: {} - {} is found.",
                             packet.topic_name(),
                             found_ta
@@ -1759,7 +1762,7 @@ where
         let mut events = Vec::new();
         let packet_id = packet.packet_id();
         if !self.pid_man.is_used_id(packet_id) {
-            tracing::error!("packet_id {packet_id} must be acquired or registered");
+            error!("packet_id {packet_id} must be acquired or registered");
             events.push(GenericEvent::NotifyError(
                 MqttError::PacketIdentifierInvalid,
             ));
@@ -1795,7 +1798,7 @@ where
         let mut events = Vec::new();
         let packet_id = packet.packet_id();
         if !self.pid_man.is_used_id(packet_id) {
-            tracing::error!("packet_id {packet_id} must be acquired or registered");
+            error!("packet_id {packet_id} must be acquired or registered");
             events.push(GenericEvent::NotifyError(
                 MqttError::PacketIdentifierInvalid,
             ));
@@ -1873,7 +1876,7 @@ where
             return events;
         }
         if !self.pid_man.is_used_id(packet_id) {
-            tracing::error!("packet_id {packet_id} must be acquired or registered");
+            error!("packet_id {packet_id} must be acquired or registered");
             events.push(GenericEvent::NotifyError(
                 MqttError::PacketIdentifierInvalid,
             ));
@@ -1909,7 +1912,7 @@ where
             return events;
         }
         if !self.pid_man.is_used_id(packet_id) {
-            tracing::error!("packet_id {packet_id} must be acquired or registered");
+            error!("packet_id {packet_id} must be acquired or registered");
             events.push(GenericEvent::NotifyError(
                 MqttError::PacketIdentifierInvalid,
             ));
@@ -1979,7 +1982,7 @@ where
             return events;
         }
         if !self.pid_man.is_used_id(packet_id) {
-            tracing::error!("packet_id {packet_id} must be acquired or registered");
+            error!("packet_id {packet_id} must be acquired or registered");
             events.push(GenericEvent::NotifyError(
                 MqttError::PacketIdentifierInvalid,
             ));
@@ -2015,7 +2018,7 @@ where
             return events;
         }
         if !self.pid_man.is_used_id(packet_id) {
-            tracing::error!("packet_id {packet_id} must be acquired or registered");
+            error!("packet_id {packet_id} must be acquired or registered");
             events.push(GenericEvent::NotifyError(
                 MqttError::PacketIdentifierInvalid,
             ));
@@ -2237,7 +2240,7 @@ where
 
     fn validate_maximum_packet_size_send(&self, size: usize) -> bool {
         if size > self.maximum_packet_size_send as usize {
-            tracing::error!("packet size over maximum_packet_size for sending");
+            error!("packet size over maximum_packet_size for sending");
             return false;
         }
         true

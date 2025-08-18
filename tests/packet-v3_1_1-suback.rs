@@ -22,10 +22,12 @@
  * SOFTWARE.
  */
 use mqtt_protocol_core::mqtt;
+mod common;
 
 // Build fail tests
 #[test]
 fn build_fail_empty_return_codes() {
+    common::init_tracing();
     let err = mqtt::packet::v3_1_1::Suback::builder()
         .packet_id(1u16)
         .build()
@@ -35,6 +37,7 @@ fn build_fail_empty_return_codes() {
 
 #[test]
 fn build_fail_no_packet_id() {
+    common::init_tracing();
     let err = mqtt::packet::v3_1_1::Suback::builder()
         .return_codes(vec![
             mqtt::result_code::SubackReturnCode::SuccessMaximumQos0,
@@ -46,6 +49,7 @@ fn build_fail_no_packet_id() {
 
 #[test]
 fn build_fail_zero_packet_id() {
+    common::init_tracing();
     let err = mqtt::packet::v3_1_1::Suback::builder()
         .packet_id(0u16)
         .return_codes(vec![
@@ -59,6 +63,7 @@ fn build_fail_zero_packet_id() {
 // Build success tests
 #[test]
 fn build_success_minimal() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Suback::builder()
         .packet_id(1u16)
         .return_codes(vec![
@@ -72,6 +77,7 @@ fn build_success_minimal() {
 
 #[test]
 fn build_success_multiple_return_codes() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Suback::builder()
         .packet_id(100u16)
         .return_codes(vec![
@@ -106,6 +112,7 @@ fn build_success_multiple_return_codes() {
 // Display tests
 #[test]
 fn display_minimal() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Suback::builder()
         .packet_id(1u16)
         .return_codes(vec![
@@ -121,6 +128,7 @@ fn display_minimal() {
 
 #[test]
 fn display_multiple_return_codes() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Suback::builder()
         .packet_id(42u16)
         .return_codes(vec![
@@ -138,6 +146,7 @@ fn display_multiple_return_codes() {
 // Debug tests
 #[test]
 fn debug_minimal() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Suback::builder()
         .packet_id(1u16)
         .return_codes(vec![
@@ -152,6 +161,7 @@ fn debug_minimal() {
 
 #[test]
 fn debug_multiple_return_codes() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Suback::builder()
         .packet_id(99u16)
         .return_codes(vec![
@@ -168,6 +178,7 @@ fn debug_multiple_return_codes() {
 // Getter tests
 #[test]
 fn getter_packet_id() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Suback::builder()
         .packet_id(12345u16)
         .return_codes(vec![
@@ -181,6 +192,7 @@ fn getter_packet_id() {
 
 #[test]
 fn getter_return_codes() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Suback::builder()
         .packet_id(1u16)
         .return_codes(vec![
@@ -205,6 +217,7 @@ fn getter_return_codes() {
 #[test]
 #[cfg(feature = "std")]
 fn to_buffers_minimal() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Suback::builder()
         .packet_id(1u16)
         .return_codes(vec![
@@ -232,6 +245,7 @@ fn to_buffers_minimal() {
 #[test]
 #[cfg(feature = "std")]
 fn to_buffers_multiple_return_codes() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Suback::builder()
         .packet_id(100u16)
         .return_codes(vec![
@@ -256,6 +270,7 @@ fn to_buffers_multiple_return_codes() {
 // Parse tests
 #[test]
 fn parse_minimal() {
+    common::init_tracing();
     let original = mqtt::packet::v3_1_1::Suback::builder()
         .packet_id(1u16)
         .return_codes(vec![
@@ -290,6 +305,7 @@ fn parse_minimal() {
 
 #[test]
 fn parse_multiple_return_codes() {
+    common::init_tracing();
     let original = mqtt::packet::v3_1_1::Suback::builder()
         .packet_id(200u16)
         .return_codes(vec![
@@ -338,6 +354,7 @@ fn parse_multiple_return_codes() {
 
 #[test]
 fn parse_invalid_too_short() {
+    common::init_tracing();
     let data = [0x00]; // Too short for packet ID
     let err = mqtt::packet::v3_1_1::Suback::parse(&data).unwrap_err();
     assert_eq!(err, mqtt::result_code::MqttError::MalformedPacket);
@@ -345,6 +362,7 @@ fn parse_invalid_too_short() {
 
 #[test]
 fn parse_invalid_no_return_codes() {
+    common::init_tracing();
     let mut data = Vec::new();
     data.extend_from_slice(&(1u16).to_be_bytes()); // packet ID
 
@@ -354,6 +372,7 @@ fn parse_invalid_no_return_codes() {
 
 #[test]
 fn parse_invalid_return_code() {
+    common::init_tracing();
     let mut data = Vec::new();
     data.extend_from_slice(&(1u16).to_be_bytes()); // packet ID
     data.push(0xFF); // Invalid return code
@@ -365,6 +384,7 @@ fn parse_invalid_return_code() {
 // Size tests
 #[test]
 fn size_minimal() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Suback::builder()
         .packet_id(1u16)
         .return_codes(vec![
@@ -389,6 +409,7 @@ fn size_minimal() {
 
 #[test]
 fn size_multiple_return_codes() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Suback::builder()
         .packet_id(100u16)
         .return_codes(vec![
@@ -416,6 +437,7 @@ fn size_multiple_return_codes() {
 // Parse/serialize roundtrip tests
 #[test]
 fn roundtrip_minimal() {
+    common::init_tracing();
     let original = mqtt::packet::v3_1_1::Suback::builder()
         .packet_id(1u16)
         .return_codes(vec![
@@ -444,6 +466,7 @@ fn roundtrip_minimal() {
 
 #[test]
 fn roundtrip_all_return_codes() {
+    common::init_tracing();
     let original = mqtt::packet::v3_1_1::Suback::builder()
         .packet_id(65535u16)
         .return_codes(vec![
@@ -494,6 +517,7 @@ fn roundtrip_all_return_codes() {
 // Edge case tests
 #[test]
 fn test_large_packet_id() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Suback::builder()
         .packet_id(65534u16) // Maximum valid packet ID
         .return_codes(vec![
@@ -507,6 +531,7 @@ fn test_large_packet_id() {
 
 #[test]
 fn test_many_return_codes() {
+    common::init_tracing();
     let return_codes = vec![mqtt::result_code::SubackReturnCode::SuccessMaximumQos0; 100];
     let packet = mqtt::packet::v3_1_1::Suback::builder()
         .packet_id(1000u16)
@@ -525,6 +550,7 @@ fn test_many_return_codes() {
 
 #[test]
 fn test_packet_type() {
+    common::init_tracing();
     let packet_type = mqtt::packet::v3_1_1::Suback::packet_type();
     assert_eq!(packet_type, mqtt::packet::PacketType::Suback);
 }

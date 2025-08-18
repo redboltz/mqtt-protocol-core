@@ -22,9 +22,11 @@
  * SOFTWARE.
  */
 use mqtt_protocol_core::mqtt;
+mod common;
 
 #[test]
 fn test_escape_ascii() {
+    common::init_tracing();
     assert_eq!(
         mqtt::packet::escape_binary_json_string(b"abc").unwrap(),
         "abc"
@@ -33,6 +35,7 @@ fn test_escape_ascii() {
 
 #[test]
 fn test_escape_specials() {
+    common::init_tracing();
     // Valid UTF-8 special characters are preserved as-is (not pre-escaped)
     assert_eq!(
         mqtt::packet::escape_binary_json_string(b"\n\r\t\"\\").unwrap(),
@@ -42,6 +45,7 @@ fn test_escape_specials() {
 
 #[test]
 fn test_escape_non_ascii() {
+    common::init_tracing();
     // Use bytes that definitely cannot form valid UTF-8 (continuation bytes without start)
     let result = mqtt::packet::escape_binary_json_string(b"\x80\x81\x82\x83");
     assert_eq!(result, None);
@@ -49,6 +53,7 @@ fn test_escape_non_ascii() {
 
 #[test]
 fn test_escape_valid_utf8() {
+    common::init_tracing();
     // Valid UTF-8 string should be preserved as-is
     assert_eq!(
         mqtt::packet::escape_binary_json_string("Hello world".as_bytes()).unwrap(),

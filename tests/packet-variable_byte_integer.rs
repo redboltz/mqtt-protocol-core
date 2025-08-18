@@ -1,30 +1,33 @@
 /**
- * MIT License
- *
- * Copyright (c) 2025 Takatoshi Kondo
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
+
+* MIT License
+*
+* Copyright (c) 2025 Takatoshi Kondo
+*
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+*
+* The above copyright notice and this permission notice shall be included in all
+* copies or substantial portions of the Software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+* SOFTWARE.
+*/
 use mqtt_protocol_core::mqtt::packet::{DecodeResult, VariableByteInteger};
+mod common;
 
 #[test]
 fn test_encode_decode_normal_values() {
+    common::init_tracing();
     let test_cases = [
         (0, vec![0x00]),
         (127, vec![0x7F]),
@@ -52,12 +55,14 @@ fn test_encode_decode_normal_values() {
 
 #[test]
 fn test_encode_too_large_value() {
+    common::init_tracing();
     let result = VariableByteInteger::from_u32(268435456); // 1 over the max
     assert!(result.is_none());
 }
 
 #[test]
 fn test_decode_invalid_length() {
+    common::init_tracing();
     let bytes = vec![0x80, 0x80, 0x80, 0x80, 0x01]; // 5 bytes: invalid
     match VariableByteInteger::decode_stream(&bytes) {
         DecodeResult::Err(_) => {} // expected
@@ -67,6 +72,7 @@ fn test_decode_invalid_length() {
 
 #[test]
 fn test_decode_incomplete_sequence() {
+    common::init_tracing();
     let bytes = vec![0x80, 0x80]; // not enough for termination
     match VariableByteInteger::decode_stream(&bytes) {
         DecodeResult::Incomplete => {} // expected
@@ -77,6 +83,7 @@ fn test_decode_incomplete_sequence() {
 #[test]
 #[cfg(feature = "std")]
 fn test_to_buffers() {
+    common::init_tracing();
     let vbi = VariableByteInteger::from_u32(128).unwrap(); // [0x80, 0x01]
     let buffers = vbi.to_buffers();
     assert_eq!(buffers.len(), 1);
@@ -87,6 +94,7 @@ fn test_to_buffers() {
 
 #[test]
 fn test_decode_stream_value_too_large() {
+    common::init_tracing();
     // Create a sequence that would decode to a value > MAX
     let bytes = vec![0x80, 0x80, 0x80, 0x80]; // This creates a value that's too large
     match VariableByteInteger::decode_stream(&bytes) {
@@ -99,6 +107,7 @@ fn test_decode_stream_value_too_large() {
 
 #[test]
 fn test_serialize() {
+    common::init_tracing();
     let vbi = VariableByteInteger::from_u32(12345).unwrap();
     let serialized = serde_json::to_string(&vbi).unwrap();
     assert_eq!(serialized, "12345");
@@ -106,6 +115,7 @@ fn test_serialize() {
 
 #[test]
 fn test_display() {
+    common::init_tracing();
     let vbi = VariableByteInteger::from_u32(42).unwrap();
     assert_eq!(format!("{vbi}"), "42");
 
@@ -115,6 +125,7 @@ fn test_display() {
 
 #[test]
 fn test_from_conversion() {
+    common::init_tracing();
     let vbi = VariableByteInteger::from_u32(1000).unwrap();
     let value: u32 = vbi.into();
     assert_eq!(value, 1000);
@@ -122,6 +133,7 @@ fn test_from_conversion() {
 
 #[test]
 fn test_try_from_conversion() {
+    common::init_tracing();
     // Test successful conversion
     let vbi = VariableByteInteger::try_from(500u32).unwrap();
     assert_eq!(vbi.to_u32(), 500);
@@ -134,6 +146,7 @@ fn test_try_from_conversion() {
 
 #[test]
 fn test_size_method() {
+    common::init_tracing();
     let vbi1 = VariableByteInteger::from_u32(0).unwrap();
     assert_eq!(vbi1.size(), 1);
 
@@ -149,6 +162,7 @@ fn test_size_method() {
 
 #[test]
 fn test_as_bytes_method() {
+    common::init_tracing();
     let vbi = VariableByteInteger::from_u32(16383).unwrap(); // [0xFF, 0x7F]
     let bytes = vbi.as_bytes();
     assert_eq!(bytes, &[0xFF, 0x7F]);
@@ -156,6 +170,7 @@ fn test_as_bytes_method() {
 
 #[test]
 fn test_decode_result_variants() {
+    common::init_tracing();
     // Test Incomplete case with short buffer
     let short_bytes = vec![0x80]; // Continuation bit set but no more data
     match VariableByteInteger::decode_stream(&short_bytes) {
@@ -176,6 +191,7 @@ fn test_decode_result_variants() {
 
 #[test]
 fn test_max_constant() {
+    common::init_tracing();
     assert_eq!(VariableByteInteger::MAX, 0x0FFF_FFFF);
 
     // Test that MAX value can be encoded

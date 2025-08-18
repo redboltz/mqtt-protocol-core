@@ -25,9 +25,11 @@ use std::thread;
 use std::time::Duration;
 
 use mqtt_protocol_core::mqtt;
+mod common;
 
 #[test]
 fn test_send_basic_functionality() {
+    common::init_tracing();
     let mut tas = mqtt::packet::TopicAliasSend::new(5);
 
     // Test max() method
@@ -86,6 +88,7 @@ fn test_send_basic_functionality() {
 
 #[test]
 fn test_recv_functionality() {
+    common::init_tracing();
     let mut tar = mqtt::packet::TopicAliasSend::new(5);
 
     tar.insert_or_update("topic1", 1);
@@ -110,6 +113,7 @@ fn test_recv_functionality() {
 
 #[test]
 fn test_peek() {
+    common::init_tracing();
     let mut tas = mqtt::packet::TopicAliasSend::new(3);
 
     tas.insert_or_update("topic1", 1);
@@ -130,6 +134,7 @@ fn test_peek() {
 
 #[test]
 fn test_alias_update_behavior() {
+    common::init_tracing();
     let mut tas = mqtt::packet::TopicAliasSend::new(3);
 
     tas.insert_or_update("topic1", 1);
@@ -152,6 +157,7 @@ fn test_alias_update_behavior() {
 
 #[test]
 fn test_topic_update_behavior() {
+    common::init_tracing();
     let mut tas = mqtt::packet::TopicAliasSend::new(3);
 
     tas.insert_or_update("topic1", 1);
@@ -170,6 +176,7 @@ fn test_topic_update_behavior() {
 
 #[test]
 fn test_lru_ordering_with_timestamps() {
+    common::init_tracing();
     let mut tas = mqtt::packet::TopicAliasSend::new(3);
 
     // Insert topics with small delays to ensure different timestamps
@@ -193,6 +200,7 @@ fn test_lru_ordering_with_timestamps() {
 
 #[test]
 fn test_edge_cases() {
+    common::init_tracing();
     let mut tas = mqtt::packet::TopicAliasSend::new(1);
 
     // Test with max_alias = 1
@@ -212,6 +220,7 @@ fn test_edge_cases() {
 
 #[test]
 fn test_boundary_conditions() {
+    common::init_tracing();
     let mut tas = mqtt::packet::TopicAliasSend::new(2);
 
     // Test MIN_ALIAS boundary (should be 1)
@@ -231,6 +240,7 @@ fn test_boundary_conditions() {
 
 #[test]
 fn test_empty_container() {
+    common::init_tracing();
     let mut tas = mqtt::packet::TopicAliasSend::new(5);
 
     // Test operations on empty container
@@ -246,6 +256,7 @@ fn test_empty_container() {
 
 #[test]
 fn test_duplicate_operations() {
+    common::init_tracing();
     let mut tas = mqtt::packet::TopicAliasSend::new(3);
 
     // Insert same topic-alias pair multiple times
@@ -262,6 +273,7 @@ fn test_duplicate_operations() {
 
 #[test]
 fn test_large_max_alias() {
+    common::init_tracing();
     let mut tas = mqtt::packet::TopicAliasSend::new(1000);
 
     assert_eq!(tas.max(), 1000);
@@ -282,6 +294,7 @@ fn test_large_max_alias() {
 #[test]
 #[should_panic(expected = "assertion failed")]
 fn test_insert_empty_topic_panic() {
+    common::init_tracing();
     let mut tas = mqtt::packet::TopicAliasSend::new(10);
     tas.insert_or_update("", 1); // Should panic
 }
@@ -289,6 +302,7 @@ fn test_insert_empty_topic_panic() {
 #[test]
 #[should_panic(expected = "assertion failed")]
 fn test_insert_invalid_alias_zero_panic() {
+    common::init_tracing();
     let mut tas = mqtt::packet::TopicAliasSend::new(10);
     tas.insert_or_update("test", 0); // Should panic
 }
@@ -296,6 +310,7 @@ fn test_insert_invalid_alias_zero_panic() {
 #[test]
 #[should_panic(expected = "assertion failed")]
 fn test_insert_invalid_alias_too_high_panic() {
+    common::init_tracing();
     let mut tas = mqtt::packet::TopicAliasSend::new(10);
     tas.insert_or_update("test", 11); // Should panic
 }
@@ -303,12 +318,14 @@ fn test_insert_invalid_alias_too_high_panic() {
 #[test]
 #[should_panic(expected = "assertion failed")]
 fn test_get_lru_alias_zero_max_panic() {
+    common::init_tracing();
     let tas = mqtt::packet::TopicAliasSend::new(0);
     tas.get_lru_alias(); // Should panic
 }
 
 #[test]
 fn test_special_characters_in_topics() {
+    common::init_tracing();
     let mut tas = mqtt::packet::TopicAliasSend::new(5);
 
     // Test topics with special characters
@@ -333,6 +350,7 @@ fn test_special_characters_in_topics() {
 
 #[test]
 fn test_long_topic_names() {
+    common::init_tracing();
     let mut tas = mqtt::packet::TopicAliasSend::new(3);
 
     let long_topic = "a".repeat(1000);
@@ -349,6 +367,7 @@ fn test_long_topic_names() {
 
 #[test]
 fn test_unicode_topics() {
+    common::init_tracing();
     let mut tas = mqtt::packet::TopicAliasSend::new(5);
 
     tas.insert_or_update("トピック1", 1);
@@ -372,6 +391,7 @@ fn test_unicode_topics() {
 
 #[test]
 fn test_same_topic_different_alias_update() {
+    common::init_tracing();
     // Test: topic1 1 -> topic1 2 (same topic, different alias)
     let mut tas = mqtt::packet::TopicAliasSend::new(5);
 
@@ -395,6 +415,7 @@ fn test_same_topic_different_alias_update() {
 
 #[test]
 fn test_same_alias_different_topic_update() {
+    common::init_tracing();
     // Test: topic1 1 -> topic2 1 (same alias, different topic)
     let mut tas = mqtt::packet::TopicAliasSend::new(5);
 
@@ -416,6 +437,7 @@ fn test_same_alias_different_topic_update() {
 
 #[test]
 fn test_overwrite_verification_comprehensive() {
+    common::init_tracing();
     // Comprehensive test for overwrite scenarios with detailed verification
     let mut tas = mqtt::packet::TopicAliasSend::new(10);
 
@@ -487,6 +509,7 @@ fn test_overwrite_verification_comprehensive() {
 
 #[test]
 fn test_mqtt_v5_spec_multiple_aliases_same_topic() {
+    common::init_tracing();
     // Test MQTT v5.0 spec: same topic can be mapped to multiple aliases
     let mut tas = mqtt::packet::TopicAliasSend::new(10);
 

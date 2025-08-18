@@ -22,10 +22,12 @@
  * SOFTWARE.
  */
 use mqtt_protocol_core::mqtt;
+mod common;
 
 // Build fail tests
 #[test]
 fn build_fail_empty_entries() {
+    common::init_tracing();
     let err = mqtt::packet::v5_0::Subscribe::builder()
         .packet_id(1u16)
         .build()
@@ -35,6 +37,7 @@ fn build_fail_empty_entries() {
 
 #[test]
 fn build_fail_no_packet_id() {
+    common::init_tracing();
     let entry =
         mqtt::packet::SubEntry::new("test/topic", mqtt::packet::SubOpts::default()).unwrap();
     let err = mqtt::packet::v5_0::Subscribe::builder()
@@ -46,6 +49,7 @@ fn build_fail_no_packet_id() {
 
 #[test]
 fn build_fail_invalid_property() {
+    common::init_tracing();
     let mut props = mqtt::packet::Properties::new();
     props.push(mqtt::packet::Property::PayloadFormatIndicator(
         mqtt::packet::PayloadFormatIndicator::new(mqtt::packet::PayloadFormat::Binary).unwrap(),
@@ -65,6 +69,7 @@ fn build_fail_invalid_property() {
 // Build success tests
 #[test]
 fn build_success_minimal() {
+    common::init_tracing();
     let entry =
         mqtt::packet::SubEntry::new("test/topic", mqtt::packet::SubOpts::default()).unwrap();
     let packet = mqtt::packet::v5_0::Subscribe::builder()
@@ -79,6 +84,7 @@ fn build_success_minimal() {
 
 #[test]
 fn build_success_with_properties() {
+    common::init_tracing();
     let mut props = mqtt::packet::Properties::new();
     props.push(mqtt::packet::Property::SubscriptionIdentifier(
         mqtt::packet::SubscriptionIdentifier::new(123).unwrap(),
@@ -103,6 +109,7 @@ fn build_success_with_properties() {
 
 #[test]
 fn build_success_multiple_entries() {
+    common::init_tracing();
     let entry1 = mqtt::packet::SubEntry::new("topic1", mqtt::packet::SubOpts::default()).unwrap();
     let entry2 = mqtt::packet::SubEntry::new("topic2", mqtt::packet::SubOpts::default()).unwrap();
     let entry3 = mqtt::packet::SubEntry::new("topic3", mqtt::packet::SubOpts::default()).unwrap();
@@ -123,6 +130,7 @@ fn build_success_multiple_entries() {
 // Display tests
 #[test]
 fn display_minimal() {
+    common::init_tracing();
     let entry =
         mqtt::packet::SubEntry::new("test/topic", mqtt::packet::SubOpts::default()).unwrap();
     let packet = mqtt::packet::v5_0::Subscribe::builder()
@@ -139,6 +147,7 @@ fn display_minimal() {
 
 #[test]
 fn display_with_properties() {
+    common::init_tracing();
     let mut props = mqtt::packet::Properties::new();
     props.push(mqtt::packet::Property::SubscriptionIdentifier(
         mqtt::packet::SubscriptionIdentifier::new(123).unwrap(),
@@ -163,6 +172,7 @@ fn display_with_properties() {
 // Debug tests
 #[test]
 fn debug_minimal() {
+    common::init_tracing();
     let entry = mqtt::packet::SubEntry::new("test", mqtt::packet::SubOpts::default()).unwrap();
     let packet = mqtt::packet::v5_0::Subscribe::builder()
         .packet_id(1u16)
@@ -177,6 +187,7 @@ fn debug_minimal() {
 
 #[test]
 fn debug_with_properties() {
+    common::init_tracing();
     let mut props = mqtt::packet::Properties::new();
     props.push(mqtt::packet::Property::UserProperty(
         mqtt::packet::UserProperty::new("test", "value").unwrap(),
@@ -197,6 +208,7 @@ fn debug_with_properties() {
 // Getter tests
 #[test]
 fn getter_packet_id() {
+    common::init_tracing();
     let entry = mqtt::packet::SubEntry::new("test", mqtt::packet::SubOpts::default()).unwrap();
     let packet = mqtt::packet::v5_0::Subscribe::builder()
         .packet_id(12345u16)
@@ -209,6 +221,7 @@ fn getter_packet_id() {
 
 #[test]
 fn getter_entries() {
+    common::init_tracing();
     let entry1 = mqtt::packet::SubEntry::new("topic1", mqtt::packet::SubOpts::default()).unwrap();
     let entry2 = mqtt::packet::SubEntry::new("topic2", mqtt::packet::SubOpts::default()).unwrap();
 
@@ -225,6 +238,7 @@ fn getter_entries() {
 
 #[test]
 fn getter_props_empty() {
+    common::init_tracing();
     let entry = mqtt::packet::SubEntry::new("test", mqtt::packet::SubOpts::default()).unwrap();
     let packet = mqtt::packet::v5_0::Subscribe::builder()
         .packet_id(1u16)
@@ -237,6 +251,7 @@ fn getter_props_empty() {
 
 #[test]
 fn getter_props_with_values() {
+    common::init_tracing();
     let mut props = mqtt::packet::Properties::new();
     props.push(mqtt::packet::Property::SubscriptionIdentifier(
         mqtt::packet::SubscriptionIdentifier::new(456).unwrap(),
@@ -259,6 +274,7 @@ fn getter_props_with_values() {
 // to_buffers() tests
 #[test]
 fn to_buffers_minimal() {
+    common::init_tracing();
     let entry = mqtt::packet::SubEntry::new("test", mqtt::packet::SubOpts::default()).unwrap();
     let packet = mqtt::packet::v5_0::Subscribe::builder()
         .packet_id(1u16)
@@ -286,6 +302,7 @@ fn to_buffers_minimal() {
 
 #[test]
 fn to_buffers_with_properties() {
+    common::init_tracing();
     let mut props = mqtt::packet::Properties::new();
     props.push(mqtt::packet::Property::SubscriptionIdentifier(
         mqtt::packet::SubscriptionIdentifier::new(123).unwrap(),
@@ -320,6 +337,7 @@ fn to_buffers_with_properties() {
 
 #[test]
 fn to_buffers_multiple_entries() {
+    common::init_tracing();
     let entry1 = mqtt::packet::SubEntry::new("topic1", mqtt::packet::SubOpts::default()).unwrap();
     let entry2 = mqtt::packet::SubEntry::new("topic2", mqtt::packet::SubOpts::default()).unwrap();
     let entry3 = mqtt::packet::SubEntry::new("topic3", mqtt::packet::SubOpts::default()).unwrap();
@@ -351,6 +369,7 @@ fn to_buffers_multiple_entries() {
 // Parse tests
 #[test]
 fn parse_minimal() {
+    common::init_tracing();
     let entry = mqtt::packet::SubEntry::new("test", mqtt::packet::SubOpts::default()).unwrap();
     let original = mqtt::packet::v5_0::Subscribe::builder()
         .packet_id(1u16)
@@ -382,6 +401,7 @@ fn parse_minimal() {
 
 #[test]
 fn parse_with_properties() {
+    common::init_tracing();
     let mut props = mqtt::packet::Properties::new();
     props.push(mqtt::packet::Property::SubscriptionIdentifier(
         mqtt::packet::SubscriptionIdentifier::new(789).unwrap(),
@@ -420,6 +440,7 @@ fn parse_with_properties() {
 
 #[test]
 fn parse_multiple_entries() {
+    common::init_tracing();
     let entry1 = mqtt::packet::SubEntry::new("topic1", mqtt::packet::SubOpts::default()).unwrap();
     let entry2 = mqtt::packet::SubEntry::new("topic2", mqtt::packet::SubOpts::default()).unwrap();
     let entry3 = mqtt::packet::SubEntry::new("topic3", mqtt::packet::SubOpts::default()).unwrap();
@@ -455,6 +476,7 @@ fn parse_multiple_entries() {
 
 #[test]
 fn parse_invalid_too_short() {
+    common::init_tracing();
     let data = [0x00]; // Too short for packet ID
     let err = mqtt::packet::v5_0::Subscribe::parse(&data).unwrap_err();
     assert_eq!(err, mqtt::result_code::MqttError::MalformedPacket);
@@ -462,6 +484,7 @@ fn parse_invalid_too_short() {
 
 #[test]
 fn parse_invalid_no_entries() {
+    common::init_tracing();
     let mut data = Vec::new();
     data.extend_from_slice(&(1u16).to_be_bytes()); // packet ID
     data.push(0x00); // property length = 0
@@ -472,6 +495,7 @@ fn parse_invalid_no_entries() {
 
 #[test]
 fn parse_invalid_property() {
+    common::init_tracing();
     let mut data = Vec::new();
     data.extend_from_slice(&(1u16).to_be_bytes()); // packet ID
     data.push(0x02); // property length = 2
@@ -485,6 +509,7 @@ fn parse_invalid_property() {
 // Size tests
 #[test]
 fn size_minimal() {
+    common::init_tracing();
     let entry = mqtt::packet::SubEntry::new("test", mqtt::packet::SubOpts::default()).unwrap();
     let packet = mqtt::packet::v5_0::Subscribe::builder()
         .packet_id(1u16)
@@ -509,6 +534,7 @@ fn size_minimal() {
 
 #[test]
 fn size_with_properties() {
+    common::init_tracing();
     let mut props = mqtt::packet::Properties::new();
     props.push(mqtt::packet::Property::SubscriptionIdentifier(
         mqtt::packet::SubscriptionIdentifier::new(123).unwrap(),
@@ -540,6 +566,7 @@ fn size_with_properties() {
 
 #[test]
 fn size_multiple_entries() {
+    common::init_tracing();
     let entry1 = mqtt::packet::SubEntry::new("topic1", mqtt::packet::SubOpts::default()).unwrap();
     let entry2 = mqtt::packet::SubEntry::new("topic2", mqtt::packet::SubOpts::default()).unwrap();
     let entry3 = mqtt::packet::SubEntry::new("topic3", mqtt::packet::SubOpts::default()).unwrap();
@@ -565,6 +592,7 @@ fn size_multiple_entries() {
 // Parse/serialize roundtrip tests
 #[test]
 fn roundtrip_minimal() {
+    common::init_tracing();
     let entry = mqtt::packet::SubEntry::new("test", mqtt::packet::SubOpts::default()).unwrap();
     let original = mqtt::packet::v5_0::Subscribe::builder()
         .packet_id(1u16)
@@ -594,6 +622,7 @@ fn roundtrip_minimal() {
 
 #[test]
 fn roundtrip_with_all_valid_properties() {
+    common::init_tracing();
     let mut props = mqtt::packet::Properties::new();
     props.push(mqtt::packet::Property::SubscriptionIdentifier(
         mqtt::packet::SubscriptionIdentifier::new(12345).unwrap(),
@@ -644,6 +673,7 @@ fn roundtrip_with_all_valid_properties() {
 
 #[test]
 fn test_packet_type() {
+    common::init_tracing();
     let packet_type = mqtt::packet::v5_0::Subscribe::packet_type();
     assert_eq!(packet_type, mqtt::packet::PacketType::Subscribe);
 }

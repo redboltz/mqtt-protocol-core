@@ -15,7 +15,7 @@ categories = ["network-programming", "embedded", "api-bindings"]
 [features]
 default = ["std"]
 std = []
-tracing = ["tracing-subscriber", "tracing-appender"]
+tracing = ["dep:tracing"]
 
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }  # MQTT packet serialize/deserialize
@@ -35,12 +35,12 @@ getset = "0.1.5"
 enum_dispatch = "0.3"
 
 # logging
-tracing = { version = "0.1", default-features = false }
-tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt", "ansi"], optional = true }
-tracing-appender = { version = "0.2", optional = true }
+tracing = { version = "0.1", default-features = false, optional = true }
 
 [dev-dependencies]
 static_assertions = "1.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt", "ansi"] }
+tracing-appender = "0.2"
 
 # Release optimization settings
 [profile.release]

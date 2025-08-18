@@ -33,6 +33,7 @@ use common::*;
 
 #[test]
 fn notify_closed_basic_disconnection() {
+    common::init_tracing();
     // Test basic disconnection without any pending packets
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
 
@@ -54,6 +55,7 @@ fn notify_closed_basic_disconnection() {
 
 #[test]
 fn notify_closed_with_session_storage_disabled() {
+    common::init_tracing();
     // Test disconnection when session storage is disabled (need_store = false)
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
 
@@ -83,6 +85,7 @@ fn notify_closed_with_session_storage_disabled() {
 
 #[test]
 fn notify_closed_with_session_storage_enabled() {
+    common::init_tracing();
     // Test disconnection when session storage is enabled (need_store = true)
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
 
@@ -106,6 +109,7 @@ fn notify_closed_with_session_storage_enabled() {
 
 #[test]
 fn notify_closed_v5_0_client() {
+    common::init_tracing();
     // Test disconnection with v5.0 client
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
 
@@ -129,6 +133,7 @@ fn notify_closed_v5_0_client() {
 
 #[test]
 fn notify_closed_server_role() {
+    common::init_tracing();
     // Test disconnection with server role
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V3_1_1);
 
@@ -152,6 +157,7 @@ fn notify_closed_server_role() {
 
 #[test]
 fn notify_closed_v5_0_server() {
+    common::init_tracing();
     // Test disconnection with v5.0 server
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
 
@@ -175,6 +181,7 @@ fn notify_closed_v5_0_server() {
 
 #[test]
 fn notify_closed_multiple_calls() {
+    common::init_tracing();
     // Test calling notify_closed multiple times
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
 
@@ -195,6 +202,7 @@ fn notify_closed_multiple_calls() {
 
 #[test]
 fn notify_closed_without_connection() {
+    common::init_tracing();
     // Test calling notify_closed without establishing connection first
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
 
@@ -220,6 +228,7 @@ fn notify_closed_without_connection() {
 
 #[test]
 fn notify_closed_with_acquired_packet_ids() {
+    common::init_tracing();
     // Test disconnection when various packet IDs are acquired and packets are sent
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
 
@@ -338,6 +347,7 @@ fn notify_closed_with_acquired_packet_ids() {
 
 #[test]
 fn notify_closed_with_acquired_packet_ids_session_storage() {
+    common::init_tracing();
     // Test disconnection with session storage enabled (need_store = true)
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
 
@@ -452,6 +462,7 @@ fn notify_closed_with_acquired_packet_ids_session_storage() {
 
 #[test]
 fn notify_closed_v5_0_with_acquired_packet_ids() {
+    common::init_tracing();
     // Test disconnection with v5.0 and acquired packet IDs
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
 

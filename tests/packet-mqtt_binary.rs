@@ -22,12 +22,15 @@
  * SOFTWARE.
  */
 use mqtt_protocol_core::mqtt;
+
+mod common;
 use std::convert::TryInto;
 
 // Basic functionality tests
 
 #[test]
 fn test_mqttbinary_creation() {
+    common::init_tracing();
     let data = b"test data";
     let binary = mqtt::packet::MqttBinary::new(data).unwrap();
     assert_eq!(binary.as_slice(), b"test data");
@@ -37,6 +40,7 @@ fn test_mqttbinary_creation() {
 
 #[test]
 fn test_mqttbinary_empty() {
+    common::init_tracing();
     let binary = mqtt::packet::MqttBinary::new(b"").unwrap();
     assert_eq!(binary.as_slice(), b"");
     assert_eq!(binary.len(), 0);
@@ -46,6 +50,7 @@ fn test_mqttbinary_empty() {
 
 #[test]
 fn test_mqttbinary_as_bytes() {
+    common::init_tracing();
     let binary = mqtt::packet::MqttBinary::new(b"hi").unwrap();
     let bytes = binary.as_bytes();
     assert_eq!(bytes, &[0x00, 0x02, b'h', b'i']);
@@ -57,6 +62,7 @@ fn test_mqttbinary_as_bytes() {
 
 #[test]
 fn test_mqttbinary_as_slice() {
+    common::init_tracing();
     let binary = mqtt::packet::MqttBinary::new(b"hello").unwrap();
     assert_eq!(binary.as_slice(), b"hello");
 
@@ -66,6 +72,7 @@ fn test_mqttbinary_as_slice() {
 
 #[test]
 fn test_mqttbinary_len_and_size() {
+    common::init_tracing();
     let binary = mqtt::packet::MqttBinary::new(b"hello world").unwrap();
     assert_eq!(binary.len(), 11); // Data length only
     assert_eq!(binary.size(), 13); // 2 bytes prefix + 11 bytes data
@@ -81,6 +88,7 @@ fn test_mqttbinary_len_and_size() {
 
 #[test]
 fn test_mqttbinary_decode() {
+    common::init_tracing();
     let data = [0, 4, b't', b'e', b's', b't'];
     let (binary, consumed) = mqtt::packet::MqttBinary::decode(&data).unwrap();
     assert_eq!(binary.as_slice(), b"test");
@@ -89,6 +97,7 @@ fn test_mqttbinary_decode() {
 
 #[test]
 fn test_mqttbinary_decode_empty() {
+    common::init_tracing();
     let data = [0, 0];
     let (binary, consumed) = mqtt::packet::MqttBinary::decode(&data).unwrap();
     assert_eq!(binary.as_slice(), b"");
@@ -98,6 +107,7 @@ fn test_mqttbinary_decode_empty() {
 
 #[test]
 fn test_mqttbinary_decode_large_data() {
+    common::init_tracing();
     // Create data with 1000 bytes
     let mut data = vec![0x03, 0xE8]; // 1000 in big-endian
     data.extend(vec![0xAB; 1000]); // 1000 bytes of 0xAB
@@ -112,6 +122,7 @@ fn test_mqttbinary_decode_large_data() {
 
 #[test]
 fn test_mqttbinary_new_size_limit() {
+    common::init_tracing();
     // Test maximum allowed size
     let max_data = vec![0u8; 65535];
     let binary = mqtt::packet::MqttBinary::new(&max_data);
@@ -130,6 +141,7 @@ fn test_mqttbinary_new_size_limit() {
 
 #[test]
 fn test_mqttbinary_decode_insufficient_length() {
+    common::init_tracing();
     // Test case where buffer is too short for length header
     let partial_header = [0];
     let result = mqtt::packet::MqttBinary::decode(&partial_header);
@@ -151,6 +163,7 @@ fn test_mqttbinary_decode_insufficient_length() {
 
 #[test]
 fn test_mqttbinary_decode_empty_buffer() {
+    common::init_tracing();
     let empty_buffer = [];
     let result = mqtt::packet::MqttBinary::decode(&empty_buffer);
     assert!(result.is_err());
@@ -164,6 +177,7 @@ fn test_mqttbinary_decode_empty_buffer() {
 
 #[test]
 fn test_mqttbinary_to_buffers() {
+    common::init_tracing();
     let binary = mqtt::packet::MqttBinary::new(b"data").unwrap();
 
     // Test with to_continuous_buffer (works in no-std)
@@ -187,6 +201,7 @@ fn test_mqttbinary_to_buffers() {
 
 #[test]
 fn test_mqttbinary_to_buffers_empty() {
+    common::init_tracing();
     let empty_binary = mqtt::packet::MqttBinary::new(b"").unwrap();
 
     // Test with to_continuous_buffer (works in no-std)
@@ -211,6 +226,7 @@ fn test_mqttbinary_to_buffers_empty() {
 
 #[test]
 fn test_mqttbinary_as_ref() {
+    common::init_tracing();
     let binary = mqtt::packet::MqttBinary::new(b"test_binary").unwrap();
 
     // Test AsRef<[u8]> trait
@@ -226,6 +242,7 @@ fn test_mqttbinary_as_ref() {
 
 #[test]
 fn test_mqttbinary_deref() {
+    common::init_tracing();
     let binary = mqtt::packet::MqttBinary::new(b"deref_test").unwrap();
 
     // Test Deref trait - can call slice methods directly
@@ -237,6 +254,7 @@ fn test_mqttbinary_deref() {
 
 #[test]
 fn test_mqttbinary_serialize() {
+    common::init_tracing();
     let binary = mqtt::packet::MqttBinary::new(b"serialize_test").unwrap();
 
     // Test serde serialization - should serialize as bytes
@@ -247,6 +265,7 @@ fn test_mqttbinary_serialize() {
 
 #[test]
 fn test_mqttbinary_try_from_str() {
+    common::init_tracing();
     // Test TryFrom<&str> trait
     let str_data = "convert_test";
     let binary: Result<mqtt::packet::MqttBinary, _> = str_data.try_into();
@@ -261,6 +280,7 @@ fn test_mqttbinary_try_from_str() {
 
 #[test]
 fn test_mqttbinary_try_from_str_size_limit() {
+    common::init_tracing();
     // Test TryFrom<&str> with oversized string
     let large_str = "x".repeat(65536);
     let result: Result<mqtt::packet::MqttBinary, _> = large_str.as_str().try_into();
@@ -273,6 +293,7 @@ fn test_mqttbinary_try_from_str_size_limit() {
 
 #[test]
 fn test_mqttbinary_default() {
+    common::init_tracing();
     let default_binary = mqtt::packet::MqttBinary::default();
     assert!(default_binary.is_empty());
     assert_eq!(default_binary.len(), 0);
@@ -285,6 +306,7 @@ fn test_mqttbinary_default() {
 
 #[test]
 fn test_mqttbinary_partial_eq() {
+    common::init_tracing();
     let binary1 = mqtt::packet::MqttBinary::new(b"hello").unwrap();
     let binary2 = mqtt::packet::MqttBinary::new(b"hello").unwrap();
     let binary3 = mqtt::packet::MqttBinary::new(b"world").unwrap();
@@ -296,6 +318,7 @@ fn test_mqttbinary_partial_eq() {
 
 #[test]
 fn test_mqttbinary_partial_ord() {
+    common::init_tracing();
     let binary_a = mqtt::packet::MqttBinary::new(b"a").unwrap();
     let binary_b = mqtt::packet::MqttBinary::new(b"b").unwrap();
     let binary_aa = mqtt::packet::MqttBinary::new(b"aa").unwrap();
@@ -312,6 +335,7 @@ fn test_mqttbinary_partial_ord() {
 
 #[test]
 fn test_mqttbinary_clone() {
+    common::init_tracing();
     let original = mqtt::packet::MqttBinary::new(b"clone_test").unwrap();
     let cloned = original.clone();
 
@@ -322,6 +346,7 @@ fn test_mqttbinary_clone() {
 
 #[test]
 fn test_mqttbinary_debug() {
+    common::init_tracing();
     let binary = mqtt::packet::MqttBinary::new(b"debug").unwrap();
     let debug_str = format!("{binary:?}");
     assert!(!debug_str.is_empty());
@@ -333,6 +358,7 @@ fn test_mqttbinary_debug() {
 
 #[test]
 fn test_mqttbinary_binary_data() {
+    common::init_tracing();
     // Test with actual binary data (not text)
     let binary_data = vec![0x00, 0x01, 0xFF, 0xFE, 0x80, 0x7F];
     let binary = mqtt::packet::MqttBinary::new(&binary_data).unwrap();
@@ -347,6 +373,7 @@ fn test_mqttbinary_binary_data() {
 
 #[test]
 fn test_mqttbinary_roundtrip() {
+    common::init_tracing();
     // Test encode -> decode roundtrip
     let original_data = b"roundtrip_test_data";
     let binary = mqtt::packet::MqttBinary::new(original_data).unwrap();
@@ -360,6 +387,7 @@ fn test_mqttbinary_roundtrip() {
 
 #[test]
 fn test_mqttbinary_various_sizes() {
+    common::init_tracing();
     // Test different data sizes
     let sizes = [0, 1, 2, 255, 256, 1000, 32767, 65535];
 
@@ -382,6 +410,7 @@ fn test_mqttbinary_various_sizes() {
 
 #[test]
 fn test_mqttbinary_new_from_different_types() {
+    common::init_tracing();
     // Test creating from different AsRef<[u8]> types
 
     // From &[u8]
@@ -401,6 +430,7 @@ fn test_mqttbinary_new_from_different_types() {
 
 #[test]
 fn test_mqttbinary_buffers_equivalence() {
+    common::init_tracing();
     let binary = mqtt::packet::MqttBinary::new(b"test_binary_data").unwrap();
 
     // Get buffers from both methods
