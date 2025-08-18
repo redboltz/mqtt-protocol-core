@@ -22,7 +22,6 @@
  * SOFTWARE.
  */
 use mqtt_protocol_core::mqtt;
-use std::io::Cursor;
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -35,7 +34,7 @@ fn recv_incomplete_partial_fixed_header() {
 
     // Only provide first byte of fixed header (incomplete)
     let data = [0x10]; // CONNECT packet type but no remaining length
-    let mut cursor = Cursor::new(data.as_slice());
+    let mut cursor = mqtt::common::Cursor::new(data.as_slice());
 
     let events = con.recv(&mut cursor);
 
@@ -49,7 +48,7 @@ fn recv_incomplete_partial_remaining_length() {
 
     // Provide fixed header with incomplete remaining length
     let data = [0x10, 0x80]; // CONNECT packet with incomplete multi-byte remaining length
-    let mut cursor = Cursor::new(data.as_slice());
+    let mut cursor = mqtt::common::Cursor::new(data.as_slice());
 
     let events = con.recv(&mut cursor);
 
@@ -63,7 +62,7 @@ fn recv_incomplete_partial_variable_header() {
 
     // Provide fixed header with complete remaining length but incomplete variable header
     let data = [0x10, 0x10, 0x00]; // CONNECT packet with remaining length 16 but only partial variable header
-    let mut cursor = Cursor::new(data.as_slice());
+    let mut cursor = mqtt::common::Cursor::new(data.as_slice());
 
     let events = con.recv(&mut cursor);
 
@@ -81,7 +80,7 @@ fn recv_error_malformed_packet_invalid_remaining_length() {
 
     // Create malformed packet with invalid remaining length encoding
     let data = [0x10, 0xFF, 0xFF, 0xFF, 0xFF]; // Invalid remaining length (too many continuation bytes)
-    let mut cursor = Cursor::new(data.as_slice());
+    let mut cursor = mqtt::common::Cursor::new(data.as_slice());
 
     let events = con.recv(&mut cursor);
 

@@ -22,8 +22,10 @@
  * SOFTWARE.
  */
 use crate::mqtt::result_code::MqttError;
+use alloc::{vec, vec::Vec};
+use core::convert::TryFrom;
 use serde::{Serialize, Serializer};
-use std::convert::TryFrom;
+#[cfg(feature = "std")]
 use std::io::IoSlice;
 
 /// MQTT Binary Data representation with pre-encoded byte buffer
@@ -250,8 +252,34 @@ impl MqttBinary {
     /// // Can be used with vectored write operations
     /// // socket.write_vectored(&buffers)?;
     /// ```
+    #[cfg(feature = "std")]
     pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         vec![IoSlice::new(&self.encoded)]
+    }
+
+    /// Create a continuous buffer containing the complete packet data
+    ///
+    /// Returns a vector containing all packet bytes in a single continuous buffer.
+    /// This method is compatible with no-std environments and provides an alternative
+    /// to [`to_buffers()`] when vectored I/O is not needed.
+    ///
+    /// # Returns
+    ///
+    /// A vector containing the complete encoded buffer
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// use mqtt_protocol_core::mqtt;
+    ///
+    /// let binary = mqtt::packet::MqttBinary::new(b"data").unwrap();
+    /// let buffer = binary.to_continuous_buffer();
+    /// // buffer contains all packet bytes
+    /// ```
+    ///
+    /// [`to_buffers()`]: #method.to_buffers
+    pub fn to_continuous_buffer(&self) -> Vec<u8> {
+        self.encoded.clone()
     }
 
     /// Parse binary data from a byte sequence
@@ -313,7 +341,7 @@ impl AsRef<[u8]> for MqttBinary {
 /// Allows `MqttBinary` to be used directly as a byte slice in many contexts
 /// through automatic dereferencing. The dereferenced value is the binary data
 /// without the length prefix.
-impl std::ops::Deref for MqttBinary {
+impl core::ops::Deref for MqttBinary {
     type Target = [u8];
 
     fn deref(&self) -> &Self::Target {

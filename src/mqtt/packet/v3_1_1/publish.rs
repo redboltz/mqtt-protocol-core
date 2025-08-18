@@ -1,3 +1,5 @@
+use alloc::sync::Arc;
+use alloc::vec::Vec;
 /**
  * MIT License
  *
@@ -21,15 +23,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-use std::fmt;
+use core::fmt;
+use core::mem;
+use derive_builder::Builder;
+#[cfg(feature = "std")]
 use std::io::IoSlice;
-use std::mem;
-use std::sync::Arc;
 
 use serde::ser::{SerializeStruct, Serializer};
 use serde::Serialize;
 
-use derive_builder::Builder;
 use getset::{CopyGetters, Getters};
 
 use crate::mqtt::packet::json_bin_encode::escape_binary_json_string;
@@ -133,7 +135,7 @@ use crate::mqtt::{ArcPayload, IntoPayload};
 /// let total_size = publish.size();
 /// ```
 #[derive(PartialEq, Eq, Builder, Clone, Getters, CopyGetters)]
-#[builder(derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
+#[builder(no_std, derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
 pub struct GenericPublish<PacketIdType>
 where
     PacketIdType: IsPacketId,
@@ -489,15 +491,15 @@ where
         1 + self.remaining_length.size() + self.remaining_length.to_u32() as usize
     }
 
-    /// Converts the packet to a vector of I/O slices for efficient network transmission
+    /// Create IoSlice buffers for efficient network I/O
     ///
-    /// This method provides zero-copy serialization by returning references to the
-    /// internal buffers. The returned slices can be used with vectored I/O operations
-    /// for efficient network transmission.
+    /// Returns a vector of `IoSlice` objects that can be used for vectored I/O
+    /// operations, allowing zero-copy writes to network sockets. The buffers
+    /// represent the complete PUBLISH packet in wire format.
     ///
     /// # Returns
     ///
-    /// A vector of `IoSlice` instances representing the packet data
+    /// A vector of `IoSlice` objects for vectored I/O operations
     ///
     /// # Examples
     ///
@@ -512,8 +514,9 @@ where
     ///     .unwrap();
     ///
     /// let buffers = publish.to_buffers();
-    /// // Use buffers for vectored I/O operations
+    /// // Use with vectored write: socket.write_vectored(&buffers)?;
     /// ```
+    #[cfg(feature = "std")]
     pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         let mut bufs = Vec::new();
         bufs.push(IoSlice::new(&self.fixed_header));
@@ -526,6 +529,51 @@ where
             bufs.push(IoSlice::new(self.payload_buf.as_slice()));
         }
         bufs
+    }
+
+    /// Create a continuous buffer containing the complete packet data
+    ///
+    /// Returns a vector containing all packet bytes in a single continuous buffer.
+    /// This method is an alternative to [`to_buffers()`] and is compatible with
+    /// no-std environments where vectored I/O may not be available.
+    ///
+    /// The returned buffer contains the complete PUBLISH packet serialized according
+    /// to the MQTT v3.1.1 protocol specification, including fixed header, variable
+    /// header, and payload.
+    ///
+    /// # Returns
+    ///
+    /// A vector containing the complete packet data
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// use mqtt_protocol_core::mqtt;
+    ///
+    /// let publish = mqtt::packet::v3_1_1::Publish::builder()
+    ///     .topic_name("test/topic")
+    ///     .unwrap()
+    ///     .payload(b"test data")
+    ///     .build()
+    ///     .unwrap();
+    ///
+    /// let buffer = publish.to_continuous_buffer();
+    /// // buffer contains all packet bytes
+    /// ```
+    ///
+    /// [`to_buffers()`]: #method.to_buffers
+    pub fn to_continuous_buffer(&self) -> Vec<u8> {
+        let mut buf = Vec::new();
+        buf.extend_from_slice(&self.fixed_header);
+        buf.extend_from_slice(self.remaining_length.as_bytes());
+        buf.append(&mut self.topic_name_buf.to_continuous_buffer());
+        if let Some(packet_id_buf) = &self.packet_id_buf {
+            buf.extend_from_slice(packet_id_buf.as_ref());
+        }
+        if self.payload_buf.len() > 0 {
+            buf.extend_from_slice(self.payload_buf.as_slice());
+        }
+        buf
     }
 
     /// Parses a PUBLISH packet from raw bytes
@@ -556,7 +604,7 @@ where
     ///
     /// ```ignore
     /// use mqtt_protocol_core::mqtt;
-    /// use std::sync::Arc;
+    /// use alloc::sync::Arc;
     ///
     /// // Raw packet data (example - actual format would be binary)
     /// let packet_data = Arc::new([/* packet bytes */]);
@@ -591,7 +639,7 @@ where
         };
 
         let packet_id_buf = if qos != Qos::AtMostOnce {
-            let buffer_size = std::mem::size_of::<<PacketIdType as IsPacketId>::Buffer>();
+            let buffer_size = core::mem::size_of::<<PacketIdType as IsPacketId>::Buffer>();
             if data_arc.len() < cursor + buffer_size {
                 return Err(MqttError::MalformedPacket);
             }
@@ -1101,8 +1149,14 @@ where
     }
 
     /// Converts the packet to I/O slices for efficient transmission
+    #[cfg(feature = "std")]
     fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         self.to_buffers()
+    }
+
+    /// Create a continuous buffer containing the complete packet data
+    fn to_continuous_buffer(&self) -> Vec<u8> {
+        self.to_continuous_buffer()
     }
 }
 
@@ -1116,12 +1170,12 @@ where
     PacketIdType: IsPacketId + Serialize,
 {
     /// Formats the packet for debug output
-    fn fmt_debug(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Debug::fmt(self, f)
+    fn fmt_debug(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Debug::fmt(self, f)
     }
 
     /// Formats the packet for display output
-    fn fmt_display(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Display::fmt(self, f)
+    fn fmt_display(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Display::fmt(self, f)
     }
 }

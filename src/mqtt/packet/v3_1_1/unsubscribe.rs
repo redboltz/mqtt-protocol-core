@@ -1,3 +1,4 @@
+use alloc::vec::Vec;
 /**
  * MIT License
  *
@@ -21,14 +22,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-use std::fmt;
+use core::fmt;
+use core::mem;
+use derive_builder::Builder;
+#[cfg(feature = "std")]
 use std::io::IoSlice;
-use std::mem;
 
 use serde::ser::{SerializeStruct, Serializer};
 use serde::Serialize;
 
-use derive_builder::Builder;
 use getset::{CopyGetters, Getters};
 
 use crate::mqtt::packet::mqtt_string::MqttString;
@@ -128,7 +130,7 @@ use crate::mqtt::result_code::MqttError;
 /// let total_size = unsubscribe.size();
 /// ```
 #[derive(PartialEq, Eq, Builder, Clone, Getters, CopyGetters)]
-#[builder(derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
+#[builder(no_std, derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
 pub struct GenericUnsubscribe<PacketIdType>
 where
     PacketIdType: IsPacketId,
@@ -285,7 +287,7 @@ where
     /// to the MQTT 3.1.1 specification. The input should contain the variable header
     /// and payload data (excluding the fixed header).
     ///
-    /// # Arguments
+    /// # Parameters
     ///
     /// * `data` - Byte slice containing the packet data (variable header + payload)
     ///
@@ -411,6 +413,7 @@ where
     /// let buffers: Vec<IoSlice> = unsubscribe.to_buffers();
     /// // Use buffers for vectored I/O operations
     /// ```
+    #[cfg(feature = "std")]
     pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         let mut bufs = Vec::new();
         bufs.push(IoSlice::new(&self.fixed_header));
@@ -422,6 +425,19 @@ where
         }
 
         bufs
+    }
+
+    pub fn to_continuous_buffer(&self) -> Vec<u8> {
+        let mut buf = Vec::new();
+        buf.extend_from_slice(&self.fixed_header);
+        buf.extend_from_slice(self.remaining_length.as_bytes());
+        buf.extend_from_slice(self.packet_id_buf.as_ref());
+
+        for entry in &self.entry_bufs {
+            buf.append(&mut entry.to_continuous_buffer());
+        }
+
+        buf
     }
 }
 
@@ -439,7 +455,7 @@ where
     /// The packet identifier must be non-zero and is used to match the UNSUBSCRIBE
     /// packet with its corresponding UNSUBACK response.
     ///
-    /// # Arguments
+    /// # Parameters
     ///
     /// * `id` - The packet identifier (must be non-zero)
     ///
@@ -466,7 +482,7 @@ where
     /// Each topic filter must be a valid UTF-8 string and can contain wildcards.
     /// The topic filters should exactly match those used in previous SUBSCRIBE packets.
     ///
-    /// # Arguments
+    /// # Parameters
     ///
     /// * `entries` - An iterable of topic filter strings
     ///
@@ -689,8 +705,13 @@ where
         self.size()
     }
 
+    #[cfg(feature = "std")]
     fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         self.to_buffers()
+    }
+
+    fn to_continuous_buffer(&self) -> Vec<u8> {
+        self.to_continuous_buffer()
     }
 }
 
@@ -702,11 +723,11 @@ impl<PacketIdType> GenericPacketDisplay for GenericUnsubscribe<PacketIdType>
 where
     PacketIdType: IsPacketId + Serialize,
 {
-    fn fmt_debug(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Debug::fmt(self, f)
+    fn fmt_debug(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Debug::fmt(self, f)
     }
 
-    fn fmt_display(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Display::fmt(self, f)
+    fn fmt_display(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Display::fmt(self, f)
     }
 }

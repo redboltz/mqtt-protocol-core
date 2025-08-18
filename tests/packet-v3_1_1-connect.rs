@@ -309,6 +309,7 @@ fn getter_optional_fields() {
 
 // to_buffers() tests
 #[test]
+#[cfg(feature = "std")]
 fn to_buffers_minimal() {
     let packet = mqtt::packet::v3_1_1::Connect::builder()
         .client_id("test")
@@ -323,9 +324,18 @@ fn to_buffers_minimal() {
     assert_eq!(buffers[2].as_ref(), &[0x00, 0x04, b'M', b'Q', b'T', b'T']);
     // Check protocol version
     assert_eq!(buffers[3].as_ref(), &[0x04]);
+
+    // Verify to_buffers() and to_continuous_buffer() produce same result
+    let continuous = packet.to_continuous_buffer();
+    let mut from_buffers = Vec::new();
+    for buf in buffers {
+        from_buffers.extend_from_slice(&buf);
+    }
+    assert_eq!(continuous, from_buffers);
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn to_buffers_with_will() {
     let packet = mqtt::packet::v3_1_1::Connect::builder()
         .client_id("test")
@@ -338,9 +348,18 @@ fn to_buffers_with_will() {
     let buffers = packet.to_buffers();
     // Should have additional buffers for will topic and will payload
     assert!(buffers.len() > 7);
+
+    // Verify to_buffers() and to_continuous_buffer() produce same result
+    let continuous = packet.to_continuous_buffer();
+    let mut from_buffers = Vec::new();
+    for buf in buffers {
+        from_buffers.extend_from_slice(&buf);
+    }
+    assert_eq!(continuous, from_buffers);
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn to_buffers_with_credentials() {
     let packet = mqtt::packet::v3_1_1::Connect::builder()
         .client_id("test")
@@ -355,6 +374,14 @@ fn to_buffers_with_credentials() {
     let buffers = packet.to_buffers();
     // Should have additional buffers for username and password
     assert!(buffers.len() > 7);
+
+    // Verify to_buffers() and to_continuous_buffer() produce same result
+    let continuous = packet.to_continuous_buffer();
+    let mut from_buffers = Vec::new();
+    for buf in buffers {
+        from_buffers.extend_from_slice(&buf);
+    }
+    assert_eq!(continuous, from_buffers);
 }
 
 // Parse tests
@@ -366,13 +393,21 @@ fn parse_minimal() {
         .build()
         .unwrap();
 
-    let buffers = packet.to_buffers();
-    let mut data = Vec::new();
-    for buf in buffers.iter().skip(2) {
-        // Skip fixed header and remaining length
-        data.extend_from_slice(buf);
+    let continuous = packet.to_continuous_buffer();
+
+    #[cfg(feature = "std")]
+    {
+        // Verify consistency with to_buffers()
+        let buffers = packet.to_buffers();
+        let mut buffers_data = Vec::new();
+        for buf in buffers.iter() {
+            // Skip fixed header and remaining length
+            buffers_data.extend_from_slice(buf);
+        }
+        assert_eq!(continuous, buffers_data.as_slice());
     }
 
+    let data = &continuous[2..];
     let (parsed, consumed) = mqtt::packet::v3_1_1::Connect::parse(&data).unwrap();
     assert_eq!(consumed, data.len());
     assert_eq!(parsed.client_id(), "test");
@@ -392,12 +427,20 @@ fn parse_with_credentials() {
         .build()
         .unwrap();
 
-    let buffers = packet.to_buffers();
-    let mut data = Vec::new();
-    for buf in buffers.iter().skip(2) {
-        data.extend_from_slice(buf);
+    let continuous = packet.to_continuous_buffer();
+
+    #[cfg(feature = "std")]
+    {
+        // Verify consistency with to_buffers()
+        let buffers = packet.to_buffers();
+        let mut buffers_data = Vec::new();
+        for buf in buffers.iter() {
+            buffers_data.extend_from_slice(buf);
+        }
+        assert_eq!(continuous, buffers_data.as_slice());
     }
 
+    let data = &continuous[2..];
     let (parsed, consumed) = mqtt::packet::v3_1_1::Connect::parse(&data).unwrap();
     assert_eq!(consumed, data.len());
     assert_eq!(parsed.client_id(), "test_client");
@@ -422,12 +465,20 @@ fn parse_with_will() {
         .build()
         .unwrap();
 
-    let buffers = packet.to_buffers();
-    let mut data = Vec::new();
-    for buf in buffers.iter().skip(2) {
-        data.extend_from_slice(buf);
+    let continuous = packet.to_continuous_buffer();
+
+    #[cfg(feature = "std")]
+    {
+        // Verify consistency with to_buffers()
+        let buffers = packet.to_buffers();
+        let mut buffers_data = Vec::new();
+        for buf in buffers.iter() {
+            buffers_data.extend_from_slice(buf);
+        }
+        assert_eq!(continuous, buffers_data.as_slice());
     }
 
+    let data = &continuous[2..];
     let (parsed, consumed) = mqtt::packet::v3_1_1::Connect::parse(&data).unwrap();
     assert_eq!(consumed, data.len());
     assert_eq!(parsed.client_id(), "test");
@@ -459,12 +510,20 @@ fn parse_with_all_features() {
         .build()
         .unwrap();
 
-    let buffers = packet.to_buffers();
-    let mut data = Vec::new();
-    for buf in buffers.iter().skip(2) {
-        data.extend_from_slice(buf);
+    let continuous = packet.to_continuous_buffer();
+
+    #[cfg(feature = "std")]
+    {
+        // Verify consistency with to_buffers()
+        let buffers = packet.to_buffers();
+        let mut buffers_data = Vec::new();
+        for buf in buffers.iter() {
+            buffers_data.extend_from_slice(buf);
+        }
+        assert_eq!(continuous, buffers_data.as_slice());
     }
 
+    let data = &continuous[2..];
     let (parsed, consumed) = mqtt::packet::v3_1_1::Connect::parse(&data).unwrap();
     assert_eq!(consumed, data.len());
     assert_eq!(parsed.client_id(), "full_test");

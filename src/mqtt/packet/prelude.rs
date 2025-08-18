@@ -23,6 +23,7 @@
  */
 pub use crate::mqtt::packet::enum_packet::GenericPacketTrait;
 pub use crate::mqtt::packet::property::PropertiesSize;
+#[cfg(feature = "std")]
 pub use crate::mqtt::packet::property::PropertiesToBuffers;
 pub use crate::mqtt::packet::property::PropertySize;
 pub use crate::mqtt::packet::property::PropertyValueAccess;

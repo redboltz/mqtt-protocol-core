@@ -266,20 +266,22 @@ fn to_buffers_minimal() {
         .build()
         .unwrap();
 
-    let buffers = packet.to_buffers();
-    assert!(!buffers.is_empty());
+    let continuous = packet.to_continuous_buffer();
+    assert_eq!(continuous[0], 0x82); // SUBSCRIBE packet type
 
-    // Collect all bytes
-    let mut all_bytes = Vec::new();
-    for buf in buffers {
-        all_bytes.extend_from_slice(&buf);
+    #[cfg(feature = "std")]
+    {
+        let buffers = packet.to_buffers();
+        let mut buffers_data = Vec::new();
+        for buf in buffers.iter() {
+            buffers_data.extend_from_slice(buf);
+        }
+        assert_eq!(continuous, buffers_data.as_slice());
     }
 
-    // Check fixed header
-    assert_eq!(all_bytes[0], 0x82); // SUBSCRIBE packet type
-
     // Should contain packet ID, property length, and topic filter
-    assert!(all_bytes.len() > 5);
+    assert!(continuous.len() > 5);
+    assert_eq!(packet.size(), continuous.len());
 }
 
 #[test]
@@ -298,15 +300,22 @@ fn to_buffers_with_properties() {
         .build()
         .unwrap();
 
-    let buffers = packet.to_buffers();
-    let mut all_bytes = Vec::new();
-    for buf in buffers {
-        all_bytes.extend_from_slice(&buf);
+    let continuous = packet.to_continuous_buffer();
+    assert_eq!(continuous[0], 0x82);
+
+    #[cfg(feature = "std")]
+    {
+        let buffers = packet.to_buffers();
+        let mut buffers_data = Vec::new();
+        for buf in buffers.iter() {
+            buffers_data.extend_from_slice(buf);
+        }
+        assert_eq!(continuous, buffers_data.as_slice());
     }
 
     // Should be larger than minimal case due to properties
-    assert!(all_bytes.len() > 10);
-    assert_eq!(all_bytes[0], 0x82);
+    assert!(continuous.len() > 10);
+    assert_eq!(packet.size(), continuous.len());
 }
 
 #[test]
@@ -321,14 +330,22 @@ fn to_buffers_multiple_entries() {
         .build()
         .unwrap();
 
-    let buffers = packet.to_buffers();
-    let mut all_bytes = Vec::new();
-    for buf in buffers {
-        all_bytes.extend_from_slice(&buf);
+    let continuous = packet.to_continuous_buffer();
+    assert_eq!(continuous[0], 0x82);
+
+    #[cfg(feature = "std")]
+    {
+        let buffers = packet.to_buffers();
+        let mut buffers_data = Vec::new();
+        for buf in buffers.iter() {
+            buffers_data.extend_from_slice(buf);
+        }
+        assert_eq!(continuous, buffers_data.as_slice());
     }
 
     // Should contain all three topic filters
-    assert!(all_bytes.len() > 20);
+    assert!(continuous.len() > 20);
+    assert_eq!(packet.size(), continuous.len());
 }
 
 // Parse tests
@@ -341,13 +358,20 @@ fn parse_minimal() {
         .build()
         .unwrap();
 
-    let buffers = original.to_buffers();
-    let mut data = Vec::new();
-    for buf in buffers.iter().skip(2) {
-        // Skip fixed header and remaining length
-        data.extend_from_slice(buf);
+    let continuous = original.to_continuous_buffer();
+
+    #[cfg(feature = "std")]
+    {
+        // Verify consistency with to_buffers()
+        let buffers = original.to_buffers();
+        let mut buffers_data = Vec::new();
+        for buf in buffers.iter() {
+            buffers_data.extend_from_slice(buf);
+        }
+        assert_eq!(continuous, buffers_data.as_slice());
     }
 
+    let data = &continuous[2..]; // Skip fixed header and remaining length
     let (parsed, consumed) = mqtt::packet::v5_0::Subscribe::parse(&data).unwrap();
     assert_eq!(consumed, data.len());
     assert_eq!(parsed.packet_id(), 1u16);
@@ -372,12 +396,20 @@ fn parse_with_properties() {
         .build()
         .unwrap();
 
-    let buffers = original.to_buffers();
-    let mut data = Vec::new();
-    for buf in buffers.iter().skip(2) {
-        data.extend_from_slice(buf);
+    let continuous = original.to_continuous_buffer();
+
+    #[cfg(feature = "std")]
+    {
+        // Verify consistency with to_buffers()
+        let buffers = original.to_buffers();
+        let mut buffers_data = Vec::new();
+        for buf in buffers.iter() {
+            buffers_data.extend_from_slice(buf);
+        }
+        assert_eq!(continuous, buffers_data.as_slice());
     }
 
+    let data = &continuous[2..]; // Skip fixed header and remaining length
     let (parsed, consumed) = mqtt::packet::v5_0::Subscribe::parse(&data).unwrap();
     assert_eq!(consumed, data.len());
     assert_eq!(parsed.packet_id(), 42u16);
@@ -398,12 +430,20 @@ fn parse_multiple_entries() {
         .build()
         .unwrap();
 
-    let buffers = original.to_buffers();
-    let mut data = Vec::new();
-    for buf in buffers.iter().skip(2) {
-        data.extend_from_slice(buf);
+    let continuous = original.to_continuous_buffer();
+
+    #[cfg(feature = "std")]
+    {
+        // Verify consistency with to_buffers()
+        let buffers = original.to_buffers();
+        let mut buffers_data = Vec::new();
+        for buf in buffers.iter() {
+            buffers_data.extend_from_slice(buf);
+        }
+        assert_eq!(continuous, buffers_data.as_slice());
     }
 
+    let data = &continuous[2..]; // Skip fixed header and remaining length
     let (parsed, consumed) = mqtt::packet::v5_0::Subscribe::parse(&data).unwrap();
     assert_eq!(consumed, data.len());
     assert_eq!(parsed.packet_id(), 200u16);
@@ -456,9 +496,15 @@ fn size_minimal() {
     assert!(size > 0);
 
     // Verify size matches actual buffer size
-    let buffers = packet.to_buffers();
-    let actual_size: usize = buffers.iter().map(|buf| buf.len()).sum();
+    let actual_size = packet.to_continuous_buffer().len();
     assert_eq!(size, actual_size);
+
+    #[cfg(feature = "std")]
+    {
+        let buffers = packet.to_buffers();
+        let buffers_size: usize = buffers.iter().map(|buf| buf.len()).sum();
+        assert_eq!(size, buffers_size);
+    }
 }
 
 #[test]
@@ -481,9 +527,15 @@ fn size_with_properties() {
         .unwrap();
 
     let size = packet.size();
-    let buffers = packet.to_buffers();
-    let actual_size: usize = buffers.iter().map(|buf| buf.len()).sum();
+    let actual_size = packet.to_continuous_buffer().len();
     assert_eq!(size, actual_size);
+
+    #[cfg(feature = "std")]
+    {
+        let buffers = packet.to_buffers();
+        let buffers_size: usize = buffers.iter().map(|buf| buf.len()).sum();
+        assert_eq!(size, buffers_size);
+    }
 }
 
 #[test]
@@ -499,9 +551,15 @@ fn size_multiple_entries() {
         .unwrap();
 
     let size = packet.size();
-    let buffers = packet.to_buffers();
-    let actual_size: usize = buffers.iter().map(|buf| buf.len()).sum();
+    let actual_size = packet.to_continuous_buffer().len();
     assert_eq!(size, actual_size);
+
+    #[cfg(feature = "std")]
+    {
+        let buffers = packet.to_buffers();
+        let buffers_size: usize = buffers.iter().map(|buf| buf.len()).sum();
+        assert_eq!(size, buffers_size);
+    }
 }
 
 // Parse/serialize roundtrip tests
@@ -514,12 +572,20 @@ fn roundtrip_minimal() {
         .build()
         .unwrap();
 
-    let buffers = original.to_buffers();
-    let mut data = Vec::new();
-    for buf in buffers.iter().skip(2) {
-        data.extend_from_slice(buf);
+    let continuous = original.to_continuous_buffer();
+
+    #[cfg(feature = "std")]
+    {
+        // Verify consistency with to_buffers()
+        let buffers = original.to_buffers();
+        let mut buffers_data = Vec::new();
+        for buf in buffers.iter() {
+            buffers_data.extend_from_slice(buf);
+        }
+        assert_eq!(continuous, buffers_data.as_slice());
     }
 
+    let data = &continuous[2..]; // Skip fixed header and remaining length
     let (parsed, _) = mqtt::packet::v5_0::Subscribe::parse(&data).unwrap();
     assert_eq!(original.packet_id(), parsed.packet_id());
     assert_eq!(original.entries().len(), parsed.entries().len());
@@ -552,12 +618,20 @@ fn roundtrip_with_all_valid_properties() {
         .build()
         .unwrap();
 
-    let buffers = original.to_buffers();
-    let mut data = Vec::new();
-    for buf in buffers.iter().skip(2) {
-        data.extend_from_slice(buf);
+    let continuous = original.to_continuous_buffer();
+
+    #[cfg(feature = "std")]
+    {
+        // Verify consistency with to_buffers()
+        let buffers = original.to_buffers();
+        let mut buffers_data = Vec::new();
+        for buf in buffers.iter() {
+            buffers_data.extend_from_slice(buf);
+        }
+        assert_eq!(continuous, buffers_data.as_slice());
     }
 
+    let data = &continuous[2..]; // Skip fixed header and remaining length
     let (parsed, _) = mqtt::packet::v5_0::Subscribe::parse(&data).unwrap();
     assert_eq!(original.packet_id(), parsed.packet_id());
     assert_eq!(original.entries().len(), parsed.entries().len());

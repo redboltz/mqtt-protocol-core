@@ -22,6 +22,8 @@
  * SOFTWARE.
  */
 use mqtt_protocol_core::mqtt;
+
+#[cfg(feature = "std")]
 use std::fmt::Write;
 
 // Build tests
@@ -37,6 +39,7 @@ fn build_success() {
 // Display tests
 
 #[test]
+#[cfg(feature = "std")]
 fn display() {
     let packet = mqtt::packet::v5_0::Pingresp::builder().build().unwrap();
 
@@ -48,6 +51,7 @@ fn display() {
 // Debug tests
 
 #[test]
+#[cfg(feature = "std")]
 fn debug() {
     let packet = mqtt::packet::v5_0::Pingresp::builder().build().unwrap();
 
@@ -56,16 +60,38 @@ fn debug() {
     assert_eq!(output, r#"{"type":"pingresp"}"#);
 }
 
-// to_buffers() tests
+// Serialization tests
 
 #[test]
+#[cfg(feature = "std")]
 fn to_buffers() {
     let packet = mqtt::packet::v5_0::Pingresp::builder().build().unwrap();
 
+    // Test to_continuous_buffer (no-std compatible)
+    let continuous = packet.to_continuous_buffer();
+    assert_eq!(continuous, &[0xd0, 0x00]); // fixed header + remaining length
+    assert_eq!(packet.size(), 2); // 1 + 1
+
+    // Also verify to_buffers() produces same result when std is available
     let buffers = packet.to_buffers();
     assert_eq!(buffers.len(), 2);
     assert_eq!(buffers[0].as_ref(), &[0xd0]); // fixed header (PINGRESP packet type)
     assert_eq!(buffers[1].as_ref(), &[0x00]); // remaining length (0)
+
+    let mut from_buffers = Vec::new();
+    for buf in buffers {
+        from_buffers.extend_from_slice(&buf);
+    }
+    assert_eq!(continuous, from_buffers);
+}
+
+#[test]
+#[cfg(not(feature = "std"))]
+fn to_continuous_buffer() {
+    let packet = mqtt::packet::v5_0::Pingresp::builder().build().unwrap();
+
+    let continuous = packet.to_continuous_buffer();
+    assert_eq!(continuous, &[0xd0, 0x00]); // fixed header + remaining length
     assert_eq!(packet.size(), 2); // 1 + 1
 }
 

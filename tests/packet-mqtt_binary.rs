@@ -165,22 +165,46 @@ fn test_mqttbinary_decode_empty_buffer() {
 #[test]
 fn test_mqttbinary_to_buffers() {
     let binary = mqtt::packet::MqttBinary::new(b"data").unwrap();
-    let buffers = binary.to_buffers();
-    assert_eq!(buffers.len(), 1);
 
-    // Extract data from IoSlice for comparison
-    let buffer_data: &[u8] = &buffers[0];
-    assert_eq!(buffer_data, &[0x00, 0x04, b'd', b'a', b't', b'a']);
+    // Test with to_continuous_buffer (works in no-std)
+    let all_bytes = binary.to_continuous_buffer();
+    assert_eq!(all_bytes, &[0x00, 0x04, b'd', b'a', b't', b'a']);
+
+    // In std environment, verify to_buffers() produces same result
+    #[cfg(feature = "std")]
+    {
+        let buffers = binary.to_buffers();
+        assert_eq!(buffers.len(), 1);
+
+        // Extract data from IoSlice for comparison
+        let buffer_data: &[u8] = &buffers[0];
+        assert_eq!(buffer_data, &[0x00, 0x04, b'd', b'a', b't', b'a']);
+
+        // Verify to_buffers() and to_continuous_buffer() produce same result
+        assert_eq!(all_bytes, buffer_data);
+    }
 }
 
 #[test]
 fn test_mqttbinary_to_buffers_empty() {
     let empty_binary = mqtt::packet::MqttBinary::new(b"").unwrap();
-    let buffers = empty_binary.to_buffers();
-    assert_eq!(buffers.len(), 1);
 
-    let buffer_data: &[u8] = &buffers[0];
-    assert_eq!(buffer_data, &[0x00, 0x00]);
+    // Test with to_continuous_buffer (works in no-std)
+    let all_bytes = empty_binary.to_continuous_buffer();
+    assert_eq!(all_bytes, &[0x00, 0x00]);
+
+    // In std environment, verify to_buffers() produces same result
+    #[cfg(feature = "std")]
+    {
+        let buffers = empty_binary.to_buffers();
+        assert_eq!(buffers.len(), 1);
+
+        let buffer_data: &[u8] = &buffers[0];
+        assert_eq!(buffer_data, &[0x00, 0x00]);
+
+        // Verify to_buffers() and to_continuous_buffer() produce same result
+        assert_eq!(all_bytes, buffer_data);
+    }
 }
 
 // Trait implementation tests
@@ -373,4 +397,29 @@ fn test_mqttbinary_new_from_different_types() {
     let array_data = [10, 20, 30];
     let array_binary = mqtt::packet::MqttBinary::new(array_data).unwrap();
     assert_eq!(array_binary.as_slice(), &[10, 20, 30]);
+}
+
+#[test]
+fn test_mqttbinary_buffers_equivalence() {
+    let binary = mqtt::packet::MqttBinary::new(b"test_binary_data").unwrap();
+
+    // Get buffers from both methods
+    let continuous_buffer = binary.to_continuous_buffer();
+
+    #[cfg(feature = "std")]
+    {
+        let io_slices = binary.to_buffers();
+
+        // Concatenate IoSlice buffers
+        let mut concatenated = Vec::new();
+        for slice in io_slices {
+            concatenated.extend_from_slice(&slice);
+        }
+
+        // Verify they produce identical results
+        assert_eq!(continuous_buffer, concatenated);
+    }
+
+    // Verify the continuous buffer is not empty
+    assert!(!continuous_buffer.is_empty());
 }

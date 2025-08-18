@@ -24,7 +24,7 @@
 // tests/connection-pingreq-interval.rs
 // Tests for set_pingreq_send_interval functionality
 use mqtt_protocol_core::mqtt;
-use mqtt_protocol_core::mqtt::prelude::*;
+use mqtt_protocol_core::mqtt::connection::event::{GenericEvent, TimerKind};
 
 #[test]
 fn test_set_pingreq_send_interval_enable() {

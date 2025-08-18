@@ -321,12 +321,22 @@ fn to_buffers_qos0() {
         .build()
         .unwrap();
 
-    let buffers = packet.to_buffers();
-    assert_eq!(buffers[0].as_ref(), &[0x30]); // fixed header (QoS 0)
-    assert_eq!(buffers[1].as_ref(), &[0x0B]); // remaining length (11)
+    let continuous = packet.to_continuous_buffer();
+    assert_eq!(continuous[0], 0x30); // fixed header (QoS 0)
+    assert_eq!(continuous[1], 0x0B); // remaining length (11)
 
+    #[cfg(feature = "std")]
+    {
+        let buffers = packet.to_buffers();
+        let mut buffers_data = Vec::new();
+        for buf in buffers.iter() {
+            buffers_data.extend_from_slice(buf);
+        }
+        assert_eq!(continuous, buffers_data.as_slice());
+    }
     // topic length (2) + topic (4) + payload (5) = 11
     assert_eq!(packet.size(), 1 + 1 + 11); // fixed header + remaining length + payload
+    assert_eq!(packet.size(), continuous.len());
 }
 
 #[test]
@@ -340,12 +350,23 @@ fn to_buffers_qos1() {
         .build()
         .unwrap();
 
-    let buffers = packet.to_buffers();
-    assert_eq!(buffers[0].as_ref(), &[0x32]); // fixed header (QoS 1)
-    assert_eq!(buffers[1].as_ref(), &[0x0D]); // remaining length (13)
+    let continuous = packet.to_continuous_buffer();
+    assert_eq!(continuous[0], 0x32); // fixed header (QoS 1)
+    assert_eq!(continuous[1], 0x0D); // remaining length (13)
+
+    #[cfg(feature = "std")]
+    {
+        let buffers = packet.to_buffers();
+        let mut buffers_data = Vec::new();
+        for buf in buffers.iter() {
+            buffers_data.extend_from_slice(buf);
+        }
+        assert_eq!(continuous, buffers_data.as_slice());
+    }
 
     // topic length (2) + topic (4) + packet_id (2) + payload (5) = 13
     assert_eq!(packet.size(), 1 + 1 + 13); // fixed header + remaining length + payload
+    assert_eq!(packet.size(), continuous.len());
 }
 
 #[test]
@@ -359,8 +380,20 @@ fn to_buffers_with_flags() {
         .build()
         .unwrap();
 
-    let buffers = packet.to_buffers();
-    assert_eq!(buffers[0].as_ref(), &[0x39]); // fixed header with DUP and RETAIN flags
+    let continuous = packet.to_continuous_buffer();
+    assert_eq!(continuous[0], 0x39); // fixed header with DUP and RETAIN flags
+
+    #[cfg(feature = "std")]
+    {
+        let buffers = packet.to_buffers();
+        let mut buffers_data = Vec::new();
+        for buf in buffers.iter() {
+            buffers_data.extend_from_slice(buf);
+        }
+        assert_eq!(continuous, buffers_data.as_slice());
+    }
+
+    assert_eq!(packet.size(), continuous.len());
 }
 
 // Parse tests

@@ -28,7 +28,9 @@ use crate::mqtt::packet::v5_0;
 use crate::mqtt::packet::IsPacketId;
 use crate::mqtt::packet::PacketType;
 use crate::mqtt::result_code::MqttError;
+use alloc::vec::Vec;
 use serde::Serialize;
+#[cfg(feature = "std")]
 use std::io::IoSlice;
 
 /// ResponsePacket denotes the type of the response matching a stored packet.
@@ -56,20 +58,20 @@ where
 // Type alias for commonly used u16 PacketIdType
 pub type StorePacket = GenericStorePacket<u16>;
 
-impl<PacketIdType> std::fmt::Debug for GenericStorePacket<PacketIdType>
+impl<PacketIdType> core::fmt::Debug for GenericStorePacket<PacketIdType>
 where
     PacketIdType: IsPacketId + Serialize,
 {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         self.fmt_debug(f)
     }
 }
 
-impl<PacketIdType> std::fmt::Display for GenericStorePacket<PacketIdType>
+impl<PacketIdType> core::fmt::Display for GenericStorePacket<PacketIdType>
 where
     PacketIdType: IsPacketId + Serialize,
 {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         self.fmt_display(f)
     }
 }
@@ -87,6 +89,16 @@ where
         }
     }
 
+    fn to_continuous_buffer(&self) -> Vec<u8> {
+        match self {
+            GenericStorePacket::V3_1_1Publish(p) => p.to_continuous_buffer(),
+            GenericStorePacket::V3_1_1Pubrel(p) => p.to_continuous_buffer(),
+            GenericStorePacket::V5_0Publish(p) => p.to_continuous_buffer(),
+            GenericStorePacket::V5_0Pubrel(p) => p.to_continuous_buffer(),
+        }
+    }
+
+    #[cfg(feature = "std")]
     fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         match self {
             GenericStorePacket::V3_1_1Publish(p) => p.to_buffers(),
@@ -101,7 +113,7 @@ impl<PacketIdType> GenericPacketDisplay for GenericStorePacket<PacketIdType>
 where
     PacketIdType: IsPacketId + Serialize,
 {
-    fn fmt_debug(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt_debug(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             GenericStorePacket::V3_1_1Publish(p) => p.fmt_debug(f),
             GenericStorePacket::V3_1_1Pubrel(p) => p.fmt_debug(f),
@@ -110,7 +122,7 @@ where
         }
     }
 
-    fn fmt_display(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt_display(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             GenericStorePacket::V3_1_1Publish(p) => p.fmt_display(f),
             GenericStorePacket::V3_1_1Pubrel(p) => p.fmt_display(f),

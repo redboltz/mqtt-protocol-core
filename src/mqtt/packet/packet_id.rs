@@ -1,3 +1,5 @@
+use core::fmt::{Debug, Display};
+use core::hash::Hash;
 /**
  * MIT License
  *
@@ -23,8 +25,6 @@
  */
 use num_traits::{Bounded, One, PrimInt};
 use serde::Serialize;
-use std::fmt::{Debug, Display};
-use std::hash::Hash;
 
 /// Packet ID types with associated buffer operations
 pub trait IsPacketId:

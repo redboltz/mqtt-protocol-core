@@ -1,3 +1,4 @@
+use alloc::vec::Vec;
 /**
  * MIT License
  *
@@ -21,13 +22,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-use std::fmt;
+use core::fmt;
+use derive_builder::Builder;
+#[cfg(feature = "std")]
 use std::io::IoSlice;
 
 use serde::ser::{SerializeStruct, Serializer};
 use serde::Serialize;
-
-use derive_builder::Builder;
 
 use crate::mqtt::packet::packet_type::{FixedHeader, PacketType};
 use crate::mqtt::packet::variable_byte_integer::VariableByteInteger;
@@ -105,7 +106,7 @@ use crate::mqtt::result_code::MqttError;
 /// assert_eq!(buffers.len(), 2); // Fixed header + remaining length
 /// ```
 #[derive(PartialEq, Eq, Builder, Clone)]
-#[builder(derive(Debug), pattern = "owned", build_fn(skip))]
+#[builder(no_std, derive(Debug), pattern = "owned", build_fn(skip))]
 pub struct Pingresp {
     #[builder(private)]
     fixed_header: [u8; 1],
@@ -234,11 +235,44 @@ impl Pingresp {
     /// // Can be used with vectored write operations
     /// // stream.write_vectored(&buffers).await?;
     /// ```
+    #[cfg(feature = "std")]
     pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         vec![
             IoSlice::new(&self.fixed_header),
             IoSlice::new(self.remaining_length.as_bytes()),
         ]
+    }
+
+    /// Create a continuous buffer containing the complete packet data
+    ///
+    /// Returns a vector containing all packet bytes in a single continuous buffer.
+    /// This method is compatible with no-std environments and provides an alternative
+    /// to [`to_buffers()`] when vectored I/O is not needed.
+    ///
+    /// The returned buffer contains:
+    /// - Fixed header (1 byte containing 0xD0)
+    /// - Remaining length (1 byte containing 0x00)
+    ///
+    /// # Returns
+    ///
+    /// A vector containing the complete packet data
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// use mqtt_protocol_core::mqtt;
+    ///
+    /// let pingresp = mqtt::packet::v3_1_1::Pingresp::new();
+    /// let buffer = pingresp.to_continuous_buffer();
+    /// assert_eq!(buffer.len(), 2);
+    /// ```
+    ///
+    /// [`to_buffers()`]: #method.to_buffers
+    pub fn to_continuous_buffer(&self) -> Vec<u8> {
+        let mut buf = Vec::new();
+        buf.extend_from_slice(&self.fixed_header);
+        buf.extend_from_slice(self.remaining_length.as_bytes());
+        buf
     }
 
     /// Parses a PINGRESP packet from raw bytes
@@ -428,8 +462,13 @@ impl GenericPacketTrait for Pingresp {
         self.size()
     }
 
+    #[cfg(feature = "std")]
     fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         self.to_buffers()
+    }
+
+    fn to_continuous_buffer(&self) -> Vec<u8> {
+        self.to_continuous_buffer()
     }
 }
 
@@ -455,11 +494,11 @@ impl GenericPacketTrait for Pingresp {
 /// println!("{}", format!("{generic_display:?}"));
 /// ```
 impl GenericPacketDisplay for Pingresp {
-    fn fmt_debug(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Debug::fmt(self, f)
+    fn fmt_debug(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Debug::fmt(self, f)
     }
 
-    fn fmt_display(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Display::fmt(self, f)
+    fn fmt_display(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Display::fmt(self, f)
     }
 }

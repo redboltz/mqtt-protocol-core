@@ -208,6 +208,7 @@ fn test_sub_entry_size() {
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn test_sub_entry_to_buffers() {
     let opts = mqtt::packet::SubOpts::new();
     let entry = mqtt::packet::SubEntry::new("test/topic", opts).unwrap();

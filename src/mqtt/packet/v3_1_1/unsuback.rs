@@ -1,3 +1,4 @@
+use alloc::vec::Vec;
 /**
  * MIT License
  *
@@ -21,14 +22,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-use std::fmt;
+use core::fmt;
+use core::mem;
+use derive_builder::Builder;
+#[cfg(feature = "std")]
 use std::io::IoSlice;
-use std::mem;
 
 use serde::ser::{SerializeStruct, Serializer};
 use serde::Serialize;
 
-use derive_builder::Builder;
 use getset::{CopyGetters, Getters};
 
 use crate::mqtt::packet::packet_type::{FixedHeader, PacketType};
@@ -98,7 +100,7 @@ use crate::mqtt::result_code::MqttError;
 /// let buffers = unsuback.to_buffers();
 /// ```
 #[derive(PartialEq, Eq, Builder, Clone, Getters, CopyGetters)]
-#[builder(derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
+#[builder(no_std, derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
 pub struct GenericUnsuback<PacketIdType>
 where
     PacketIdType: IsPacketId,
@@ -235,19 +237,15 @@ where
         1 + self.remaining_length.size() + self.remaining_length.to_u32() as usize
     }
 
-    /// Convert the UNSUBACK packet to I/O buffers for efficient network transmission
+    /// Create IoSlice buffers for efficient network I/O
     ///
-    /// Returns a vector of `IoSlice` references that can be used with vectored I/O
-    /// operations for efficient network transmission without copying data. The buffers
+    /// Returns a vector of `IoSlice` objects that can be used for vectored I/O
+    /// operations, allowing zero-copy writes to network sockets. The buffers
     /// represent the complete UNSUBACK packet in wire format.
-    ///
-    /// The returned buffers contain the packet in the following order:
-    /// 1. Fixed header (packet type and remaining length)
-    /// 2. Packet identifier
     ///
     /// # Returns
     ///
-    /// A `Vec<IoSlice<'_>>` containing references to the packet data
+    /// A vector of `IoSlice` objects for vectored I/O operations
     ///
     /// # Examples
     ///
@@ -260,9 +258,9 @@ where
     ///     .unwrap();
     ///
     /// let buffers = unsuback.to_buffers();
-    /// // Use buffers for vectored I/O operations
-    /// // let bytes_written = socket.write_vectored(&buffers)?;
+    /// // Use with vectored write: socket.write_vectored(&buffers)?;
     /// ```
+    #[cfg(feature = "std")]
     pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         let mut bufs = Vec::new();
         bufs.push(IoSlice::new(&self.fixed_header));
@@ -272,13 +270,50 @@ where
         bufs
     }
 
+    /// Create a continuous buffer containing the complete packet data
+    ///
+    /// Returns a vector containing all packet bytes in a single continuous buffer.
+    /// This method is an alternative to [`to_buffers()`] and is compatible with
+    /// no-std environments where vectored I/O may not be available.
+    ///
+    /// The returned buffer contains the complete UNSUBACK packet serialized according
+    /// to the MQTT v3.1.1 protocol specification, including fixed header, remaining
+    /// length, and packet identifier.
+    ///
+    /// # Returns
+    ///
+    /// A vector containing the complete packet data
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// use mqtt_protocol_core::mqtt;
+    ///
+    /// let unsuback = mqtt::packet::v3_1_1::Unsuback::builder()
+    ///     .packet_id(42u16)
+    ///     .build()
+    ///     .unwrap();
+    ///
+    /// let buffer = unsuback.to_continuous_buffer();
+    /// // buffer contains all packet bytes
+    /// ```
+    ///
+    /// [`to_buffers()`]: #method.to_buffers
+    pub fn to_continuous_buffer(&self) -> Vec<u8> {
+        let mut buf = Vec::new();
+        buf.extend_from_slice(&self.fixed_header);
+        buf.extend_from_slice(self.remaining_length.as_bytes());
+        buf.extend_from_slice(self.packet_id_buf.as_ref());
+        buf
+    }
+
     /// Parse an UNSUBACK packet from raw bytes
     ///
     /// Parses the variable header of an UNSUBACK packet from the provided byte buffer.
     /// The fixed header should already be parsed before calling this method.
     /// In MQTT v3.1.1, the UNSUBACK packet only contains a packet identifier in the variable header.
     ///
-    /// # Arguments
+    /// # Parameters
     ///
     /// * `data` - The raw bytes containing the UNSUBACK packet variable header
     ///
@@ -346,7 +381,7 @@ where
     /// UNSUBSCRIBE packet that this UNSUBACK is responding to. The packet identifier
     /// cannot be zero according to MQTT v3.1.1 specification.
     ///
-    /// # Arguments
+    /// # Parameters
     ///
     /// * `id` - The packet identifier of type `PacketIdType`
     ///
@@ -568,8 +603,13 @@ where
         self.size()
     }
 
+    #[cfg(feature = "std")]
     fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         self.to_buffers()
+    }
+
+    fn to_continuous_buffer(&self) -> Vec<u8> {
+        self.to_continuous_buffer()
     }
 }
 
@@ -597,11 +637,11 @@ impl<PacketIdType> GenericPacketDisplay for GenericUnsuback<PacketIdType>
 where
     PacketIdType: IsPacketId + Serialize,
 {
-    fn fmt_debug(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Debug::fmt(self, f)
+    fn fmt_debug(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Debug::fmt(self, f)
     }
 
-    fn fmt_display(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Display::fmt(self, f)
+    fn fmt_display(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Display::fmt(self, f)
     }
 }

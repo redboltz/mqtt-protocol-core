@@ -38,9 +38,8 @@ fn test_get_receive_maximum_vacancy_for_send() {
         .build()
         .unwrap();
 
-    let buffers = connack.to_buffers();
-    let bytes: Vec<u8> = buffers.iter().flat_map(|buf| buf.iter()).copied().collect();
-    let _events = connection.recv(&mut std::io::Cursor::new(&bytes));
+    let bytes = connack.to_continuous_buffer();
+    let _events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
 
     // Should now return the initial value of 5
     assert_eq!(connection.get_receive_maximum_vacancy_for_send(), Some(5));
@@ -94,9 +93,8 @@ fn test_get_receive_maximum_vacancy_for_send() {
         .build()
         .unwrap();
 
-    let buffers = puback_a.to_buffers();
-    let bytes: Vec<u8> = buffers.iter().flat_map(|buf| buf.iter()).copied().collect();
-    let _events = connection.recv(&mut std::io::Cursor::new(&bytes));
+    let bytes = puback_a.to_continuous_buffer();
+    let _events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
     assert_eq!(connection.get_receive_maximum_vacancy_for_send(), Some(3));
 
     // Receive PUBREC B success - vacancy should remain same (3)
@@ -106,9 +104,8 @@ fn test_get_receive_maximum_vacancy_for_send() {
         .build()
         .unwrap();
 
-    let buffers = pubrec_b.to_buffers();
-    let bytes: Vec<u8> = buffers.iter().flat_map(|buf| buf.iter()).copied().collect();
-    let _events = connection.recv(&mut std::io::Cursor::new(&bytes));
+    let bytes = pubrec_b.to_continuous_buffer();
+    let _events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
     assert_eq!(connection.get_receive_maximum_vacancy_for_send(), Some(3));
 
     // Send PUBREL B and receive PUBCOMP B - should reduce vacancy by 1 to 2
@@ -126,9 +123,8 @@ fn test_get_receive_maximum_vacancy_for_send() {
         .build()
         .unwrap();
 
-    let buffers = pubcomp_b.to_buffers();
-    let bytes: Vec<u8> = buffers.iter().flat_map(|buf| buf.iter()).copied().collect();
-    let _events = connection.recv(&mut std::io::Cursor::new(&bytes));
+    let bytes = pubcomp_b.to_continuous_buffer();
+    let _events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
     assert_eq!(connection.get_receive_maximum_vacancy_for_send(), Some(4));
 
     // Receive PUBREC C error - should increase vacancy by 1 to 5 (error releases packet ID)
@@ -138,9 +134,8 @@ fn test_get_receive_maximum_vacancy_for_send() {
         .build()
         .unwrap();
 
-    let buffers = pubrec_c.to_buffers();
-    let bytes: Vec<u8> = buffers.iter().flat_map(|buf| buf.iter()).copied().collect();
-    let _events = connection.recv(&mut std::io::Cursor::new(&bytes));
+    let bytes = pubrec_c.to_continuous_buffer();
+    let _events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
     assert_eq!(connection.get_receive_maximum_vacancy_for_send(), Some(5));
 }
 
@@ -194,9 +189,8 @@ fn test_offline_publish_v3_1_1() {
         .build()
         .unwrap();
 
-    let buffers = connack.to_buffers();
-    let bytes: Vec<u8> = buffers.iter().flat_map(|buf| buf.iter()).copied().collect();
-    let events = connection.recv(&mut std::io::Cursor::new(&bytes));
+    let bytes = connack.to_continuous_buffer();
+    let events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
 
     // Find RequestSendPacket events for PUBLISH A and B
     let mut publish_a_found = false;
@@ -279,9 +273,8 @@ fn test_offline_publish_v5_0() {
         .build()
         .unwrap();
 
-    let buffers = connack.to_buffers();
-    let bytes: Vec<u8> = buffers.iter().flat_map(|buf| buf.iter()).copied().collect();
-    let events = connection.recv(&mut std::io::Cursor::new(&bytes));
+    let bytes = connack.to_continuous_buffer();
+    let events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
 
     // Find RequestSendPacket events for PUBLISH A and B
     let mut publish_a_found = false;
@@ -337,9 +330,8 @@ fn test_auto_pub_response_v3_1_1() {
         .build()
         .unwrap();
 
-    let buffers = connack.to_buffers();
-    let bytes: Vec<u8> = buffers.iter().flat_map(|buf| buf.iter()).copied().collect();
-    let _events = connection.recv(&mut std::io::Cursor::new(&bytes));
+    let bytes = connack.to_continuous_buffer();
+    let _events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
 
     // Create and receive QoS1 PUBLISH A
     let packet_id_a = 1u16;
@@ -352,9 +344,8 @@ fn test_auto_pub_response_v3_1_1() {
         .build()
         .unwrap();
 
-    let buffers = publish_a.to_buffers();
-    let bytes: Vec<u8> = buffers.iter().flat_map(|buf| buf.iter()).copied().collect();
-    let events = connection.recv(&mut std::io::Cursor::new(&bytes));
+    let bytes = publish_a.to_continuous_buffer();
+    let events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
 
     // Find PUBACK send request event with same packet_id
     let mut puback_found = false;
@@ -387,9 +378,8 @@ fn test_auto_pub_response_v3_1_1() {
         .build()
         .unwrap();
 
-    let buffers = publish_b.to_buffers();
-    let bytes: Vec<u8> = buffers.iter().flat_map(|buf| buf.iter()).copied().collect();
-    let events = connection.recv(&mut std::io::Cursor::new(&bytes));
+    let bytes = publish_b.to_continuous_buffer();
+    let events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
 
     // Find PUBREC send request event with same packet_id
     let mut pubrec_found = false;
@@ -425,9 +415,8 @@ fn test_auto_pub_response_v3_1_1() {
         .build()
         .unwrap();
 
-    let buffers = pubrel_b.to_buffers();
-    let bytes: Vec<u8> = buffers.iter().flat_map(|buf| buf.iter()).copied().collect();
-    let events = connection.recv(&mut std::io::Cursor::new(&bytes));
+    let bytes = pubrel_b.to_continuous_buffer();
+    let events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
 
     // Find PUBCOMP send request event with same packet_id
     let mut pubcomp_found = false;
@@ -473,9 +462,8 @@ fn test_auto_pub_response_v5_0() {
         .build()
         .unwrap();
 
-    let buffers = connack.to_buffers();
-    let bytes: Vec<u8> = buffers.iter().flat_map(|buf| buf.iter()).copied().collect();
-    let _events = connection.recv(&mut std::io::Cursor::new(&bytes));
+    let bytes = connack.to_continuous_buffer();
+    let _events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
 
     // Create and receive QoS1 PUBLISH A
     let packet_id_a = 1u16;
@@ -488,9 +476,8 @@ fn test_auto_pub_response_v5_0() {
         .build()
         .unwrap();
 
-    let buffers = publish_a.to_buffers();
-    let bytes: Vec<u8> = buffers.iter().flat_map(|buf| buf.iter()).copied().collect();
-    let events = connection.recv(&mut std::io::Cursor::new(&bytes));
+    let bytes = publish_a.to_continuous_buffer();
+    let events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
 
     // Find PUBACK send request event with same packet_id
     let mut puback_found = false;
@@ -523,9 +510,8 @@ fn test_auto_pub_response_v5_0() {
         .build()
         .unwrap();
 
-    let buffers = publish_b.to_buffers();
-    let bytes: Vec<u8> = buffers.iter().flat_map(|buf| buf.iter()).copied().collect();
-    let events = connection.recv(&mut std::io::Cursor::new(&bytes));
+    let bytes = publish_b.to_continuous_buffer();
+    let events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
 
     // Find PUBREC send request event with same packet_id
     let mut pubrec_found = false;
@@ -563,9 +549,8 @@ fn test_auto_pub_response_v5_0() {
         .build()
         .unwrap();
 
-    let buffers = pubrel_b.to_buffers();
-    let bytes: Vec<u8> = buffers.iter().flat_map(|buf| buf.iter()).copied().collect();
-    let events = connection.recv(&mut std::io::Cursor::new(&bytes));
+    let bytes = pubrel_b.to_continuous_buffer();
+    let events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
 
     // Find PUBCOMP send request event with same packet_id
     let mut pubcomp_found = false;
@@ -611,9 +596,8 @@ fn test_qos2_pubrel_send_request_v3_1_1() {
         .build()
         .unwrap();
 
-    let buffers = connack.to_buffers();
-    let bytes: Vec<u8> = buffers.iter().flat_map(|buf| buf.iter()).copied().collect();
-    let _events = connection.recv(&mut std::io::Cursor::new(&bytes));
+    let bytes = connack.to_continuous_buffer();
+    let _events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
 
     // Acquire packet ID and send QoS2 PUBLISH
     let packet_id = connection.acquire_packet_id().unwrap();
@@ -634,9 +618,8 @@ fn test_qos2_pubrel_send_request_v3_1_1() {
         .build()
         .unwrap();
 
-    let buffers = pubrec.to_buffers();
-    let bytes: Vec<u8> = buffers.iter().flat_map(|buf| buf.iter()).copied().collect();
-    let events = connection.recv(&mut std::io::Cursor::new(&bytes));
+    let bytes = pubrec.to_continuous_buffer();
+    let events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
 
     // Find PUBREL send request event with same packet_id
     let mut pubrel_found = false;
@@ -682,9 +665,8 @@ fn test_qos2_pubrel_send_request_v5_0() {
         .build()
         .unwrap();
 
-    let buffers = connack.to_buffers();
-    let bytes: Vec<u8> = buffers.iter().flat_map(|buf| buf.iter()).copied().collect();
-    let _events = connection.recv(&mut std::io::Cursor::new(&bytes));
+    let bytes = connack.to_continuous_buffer();
+    let _events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
 
     // Acquire packet ID and send QoS2 PUBLISH
     let packet_id = connection.acquire_packet_id().unwrap();
@@ -706,9 +688,8 @@ fn test_qos2_pubrel_send_request_v5_0() {
         .build()
         .unwrap();
 
-    let buffers = pubrec.to_buffers();
-    let bytes: Vec<u8> = buffers.iter().flat_map(|buf| buf.iter()).copied().collect();
-    let events = connection.recv(&mut std::io::Cursor::new(&bytes));
+    let bytes = pubrec.to_continuous_buffer();
+    let events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
 
     // Find PUBREL send request event with same packet_id
     let mut pubrel_found = false;
@@ -745,9 +726,8 @@ fn test_auto_ping_response_server_v3_1_1() {
         .build()
         .unwrap();
 
-    let buffers = connect.to_buffers();
-    let bytes: Vec<u8> = buffers.iter().flat_map(|buf| buf.iter()).copied().collect();
-    let _events = connection.recv(&mut std::io::Cursor::new(&bytes));
+    let bytes = connect.to_continuous_buffer();
+    let _events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
 
     // Send CONNACK
     let connack = mqtt::packet::v3_1_1::Connack::builder()
@@ -761,9 +741,8 @@ fn test_auto_ping_response_server_v3_1_1() {
     // Receive PINGREQ
     let pingreq = mqtt::packet::v3_1_1::Pingreq::new();
 
-    let buffers = pingreq.to_buffers();
-    let bytes: Vec<u8> = buffers.iter().flat_map(|buf| buf.iter()).copied().collect();
-    let events = connection.recv(&mut std::io::Cursor::new(&bytes));
+    let bytes = pingreq.to_continuous_buffer();
+    let events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
 
     // Find PINGRESP send request event
     let mut pingresp_found = false;
@@ -794,9 +773,8 @@ fn test_auto_ping_response_server_v5_0() {
         .build()
         .unwrap();
 
-    let buffers = connect.to_buffers();
-    let bytes: Vec<u8> = buffers.iter().flat_map(|buf| buf.iter()).copied().collect();
-    let _events = connection.recv(&mut std::io::Cursor::new(&bytes));
+    let bytes = connect.to_continuous_buffer();
+    let _events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
 
     // Send CONNACK
     let connack = mqtt::packet::v5_0::Connack::builder()
@@ -810,9 +788,8 @@ fn test_auto_ping_response_server_v5_0() {
     // Receive PINGREQ
     let pingreq = mqtt::packet::v5_0::Pingreq::new();
 
-    let buffers = pingreq.to_buffers();
-    let bytes: Vec<u8> = buffers.iter().flat_map(|buf| buf.iter()).copied().collect();
-    let events = connection.recv(&mut std::io::Cursor::new(&bytes));
+    let bytes = pingreq.to_continuous_buffer();
+    let events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
 
     // Find PINGRESP send request event
     let mut pingresp_found = false;
@@ -876,9 +853,8 @@ fn test_qos2_publish_handled_v3_1_1() {
         .build()
         .unwrap();
 
-    let buffers = connack.to_buffers();
-    let bytes: Vec<u8> = buffers.iter().flat_map(|buf| buf.iter()).copied().collect();
-    let _events = connection.recv(&mut std::io::Cursor::new(&bytes));
+    let bytes = connack.to_continuous_buffer();
+    let _events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
 
     // Check initial state - should be empty
     let handled_packet_ids = connection.get_qos2_publish_handled();
@@ -898,9 +874,8 @@ fn test_qos2_publish_handled_v3_1_1() {
         .build()
         .unwrap();
 
-    let buffers = publish_a.to_buffers();
-    let bytes: Vec<u8> = buffers.iter().flat_map(|buf| buf.iter()).copied().collect();
-    let _events = connection.recv(&mut std::io::Cursor::new(&bytes));
+    let bytes = publish_a.to_continuous_buffer();
+    let _events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
 
     // Check state after receiving QoS2 PUBLISH - should contain packet_id 1
     let handled_packet_ids = connection.get_qos2_publish_handled();
@@ -928,9 +903,8 @@ fn test_qos2_publish_handled_v3_1_1() {
         .build()
         .unwrap();
 
-    let buffers = pubrel.to_buffers();
-    let bytes: Vec<u8> = buffers.iter().flat_map(|buf| buf.iter()).copied().collect();
-    let _events = connection.recv(&mut std::io::Cursor::new(&bytes));
+    let bytes = pubrel.to_continuous_buffer();
+    let _events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
 
     // Check final state after receiving PUBREL - should be empty again
     let handled_packet_ids = connection.get_qos2_publish_handled();
@@ -960,12 +934,11 @@ fn test_qos2_publish_handled_restore_v5_0() {
         .build()
         .unwrap();
 
-    let buffers = connack.to_buffers();
-    let bytes: Vec<u8> = buffers.iter().flat_map(|buf| buf.iter()).copied().collect();
-    let _events = connection.recv(&mut std::io::Cursor::new(&bytes));
+    let bytes = connack.to_continuous_buffer();
+    let _events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
 
     // Restore QoS2 publish handled with packet_id 1
-    let mut handled_set = std::collections::HashSet::new();
+    let mut handled_set = mqtt::common::HashSet::new();
     handled_set.insert(1u16);
     connection.restore_qos2_publish_handled(handled_set);
 
@@ -980,9 +953,8 @@ fn test_qos2_publish_handled_restore_v5_0() {
         .build()
         .unwrap();
 
-    let buffers = publish_a.to_buffers();
-    let bytes: Vec<u8> = buffers.iter().flat_map(|buf| buf.iter()).copied().collect();
-    let events = connection.recv(&mut std::io::Cursor::new(&bytes));
+    let bytes = publish_a.to_continuous_buffer();
+    let events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
 
     // Verify that NotifyPacketReceived is NOT in the events (duplicate should be ignored)
     let mut notify_packet_received_found = false;
@@ -1051,9 +1023,8 @@ fn test_restore_packets_v3_1_1() {
         .build()
         .unwrap();
 
-    let buffers = connack.to_buffers();
-    let bytes: Vec<u8> = buffers.iter().flat_map(|buf| buf.iter()).copied().collect();
-    let events = connection.recv(&mut std::io::Cursor::new(&bytes));
+    let bytes = connack.to_continuous_buffer();
+    let events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
 
     // Find RequestSendPacket events for PUBLISH A, PUBLISH B, and PUBREL
     let mut publish_a_found = false;
@@ -1185,9 +1156,8 @@ fn test_restore_packets_v5_0_server() {
         .build()
         .unwrap();
 
-    let buffers = connect.to_buffers();
-    let bytes: Vec<u8> = buffers.iter().flat_map(|buf| buf.iter()).copied().collect();
-    let _events = connection.recv(&mut std::io::Cursor::new(&bytes));
+    let bytes = connect.to_continuous_buffer();
+    let _events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
 
     // Send CONNACK with session_present true
     let connack = mqtt::packet::v5_0::Connack::builder()
@@ -1306,9 +1276,8 @@ fn test_v3_1_1_client_qos2_publish_processing_state() {
         .build()
         .unwrap();
 
-    let buffers = connack.to_buffers();
-    let bytes: Vec<u8> = buffers.iter().flat_map(|buf| buf.iter()).copied().collect();
-    let _events = connection.recv(&mut std::io::Cursor::new(&bytes));
+    let bytes = connack.to_continuous_buffer();
+    let _events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
 
     // Acquire packet ID for QoS2 publish
     let packet_id = connection.acquire_packet_id().unwrap();
@@ -1338,9 +1307,8 @@ fn test_v3_1_1_client_qos2_publish_processing_state() {
         .build()
         .unwrap();
 
-    let buffers = pubrec.to_buffers();
-    let bytes: Vec<u8> = buffers.iter().flat_map(|buf| buf.iter()).copied().collect();
-    let _events = connection.recv(&mut std::io::Cursor::new(&bytes));
+    let bytes = pubrec.to_continuous_buffer();
+    let _events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
 
     // Verify is_publish_processing(1) is still true after receiving PUBREC
     assert!(
@@ -1368,9 +1336,8 @@ fn test_v3_1_1_client_qos2_publish_processing_state() {
         .build()
         .unwrap();
 
-    let buffers = pubcomp.to_buffers();
-    let bytes: Vec<u8> = buffers.iter().flat_map(|buf| buf.iter()).copied().collect();
-    let _events = connection.recv(&mut std::io::Cursor::new(&bytes));
+    let bytes = pubcomp.to_continuous_buffer();
+    let _events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
 
     // Verify is_publish_processing(1) is false after receiving PUBCOMP
     assert!(
@@ -1402,9 +1369,8 @@ fn test_pingresp_recv_timer_reset_v3_1_1() {
         .build()
         .unwrap();
 
-    let buffers = connack.to_buffers();
-    let bytes: Vec<u8> = buffers.iter().flat_map(|buf| buf.iter()).copied().collect();
-    let _events = connection.recv(&mut std::io::Cursor::new(&bytes));
+    let bytes = connack.to_continuous_buffer();
+    let _events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
 
     // Send PINGREQ
     let pingreq = mqtt::packet::v3_1_1::Pingreq::new();

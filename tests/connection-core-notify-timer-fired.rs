@@ -1,3 +1,5 @@
+#![cfg(feature = "std")]
+
 /**
  * MIT License
  *

@@ -1,3 +1,4 @@
+use alloc::vec::Vec;
 /**
  * MIT License
  *
@@ -21,25 +22,27 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-use std::fmt;
+use core::fmt;
+use core::mem;
+use derive_builder::Builder;
+#[cfg(feature = "std")]
 use std::io::IoSlice;
-use std::mem;
 
 use serde::ser::{SerializeStruct, Serializer};
 use serde::Serialize;
 
-use derive_builder::Builder;
 use getset::{CopyGetters, Getters};
 
 use crate::mqtt::packet::mqtt_string::MqttString;
 use crate::mqtt::packet::packet_type::{FixedHeader, PacketType};
+use crate::mqtt::packet::property::PropertiesToContinuousBuffer;
 use crate::mqtt::packet::variable_byte_integer::VariableByteInteger;
 use crate::mqtt::packet::GenericPacketDisplay;
 use crate::mqtt::packet::GenericPacketTrait;
 use crate::mqtt::packet::IsPacketId;
-use crate::mqtt::packet::{
-    Properties, PropertiesParse, PropertiesSize, PropertiesToBuffers, Property,
-};
+#[cfg(feature = "std")]
+use crate::mqtt::packet::PropertiesToBuffers;
+use crate::mqtt::packet::{Properties, PropertiesParse, PropertiesSize, Property};
 use crate::mqtt::result_code::MqttError;
 
 /// MQTT 5.0 UNSUBSCRIBE packet representation
@@ -131,7 +134,7 @@ use crate::mqtt::result_code::MqttError;
 /// let total_size = unsubscribe.size();
 /// ```
 #[derive(PartialEq, Eq, Builder, Clone, Getters, CopyGetters)]
-#[builder(derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
+#[builder(no_std, derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
 pub struct GenericUnsubscribe<PacketIdType>
 where
     PacketIdType: IsPacketId,
@@ -298,7 +301,7 @@ where
     /// to the MQTT 5.0 specification. The input should contain the variable header
     /// and payload data (excluding the fixed header).
     ///
-    /// # Arguments
+    /// # Parameters
     ///
     /// * `data` - Byte slice containing the packet data (variable header + payload)
     ///
@@ -407,32 +410,32 @@ where
         1 + self.remaining_length.size() + self.remaining_length.to_u32() as usize
     }
 
-    /// Converts the UNSUBSCRIBE packet to a vector of I/O slices for efficient network transmission
+    /// Create IoSlice buffers for efficient network I/O
     ///
-    /// Creates a vector of `IoSlice` references that can be used with vectored I/O operations
-    /// for efficient transmission without copying data. The slices represent the complete
-    /// MQTT packet in wire format.
+    /// Returns a vector of `IoSlice` objects that can be used for vectored I/O
+    /// operations, allowing zero-copy writes to network sockets. The buffers
+    /// represent the complete UNSUBSCRIBE packet in wire format.
     ///
     /// # Returns
     ///
-    /// A vector of `IoSlice` containing references to the packet data
+    /// A vector of `IoSlice` objects for vectored I/O operations
     ///
     /// # Examples
     ///
     /// ```ignore
     /// use mqtt_protocol_core::mqtt;
-    /// use std::io::IoSlice;
     ///
     /// let unsubscribe = mqtt::packet::v5_0::Unsubscribe::builder()
-    ///     .packet_id(1)
+    ///     .packet_id(1u16)
     ///     .entries(vec!["test/topic"])
     ///     .unwrap()
     ///     .build()
     ///     .unwrap();
     ///
-    /// let buffers: Vec<IoSlice> = unsubscribe.to_buffers();
-    /// // Use buffers for vectored I/O operations
+    /// let buffers = unsubscribe.to_buffers();
+    /// // Use with vectored write: socket.write_vectored(&buffers)?;
     /// ```
+    #[cfg(feature = "std")]
     pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         let mut bufs = Vec::new();
         bufs.push(IoSlice::new(&self.fixed_header));
@@ -446,6 +449,52 @@ where
         }
 
         bufs
+    }
+
+    /// Create a continuous buffer containing the complete packet data
+    ///
+    /// Returns a vector containing all packet bytes in a single continuous buffer.
+    /// This method provides an alternative to `to_buffers()` for no-std environments
+    /// where vectored I/O is not available.
+    ///
+    /// The returned buffer contains the complete UNSUBSCRIBE packet serialized according
+    /// to the MQTT v5.0 protocol specification, including fixed header, remaining
+    /// length, packet identifier, properties, and topic filter entries.
+    ///
+    /// # Returns
+    ///
+    /// A vector containing the complete packet data
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// use mqtt_protocol_core::mqtt;
+    ///
+    /// let unsubscribe = mqtt::packet::v5_0::Unsubscribe::builder()
+    ///     .packet_id(1u16)
+    ///     .entries(vec!["test/topic"])
+    ///     .unwrap()
+    ///     .build()
+    ///     .unwrap();
+    ///
+    /// let buffer = unsubscribe.to_continuous_buffer();
+    /// // buffer contains all packet bytes
+    /// ```
+    ///
+    /// [`to_buffers()`]: #method.to_buffers
+    pub fn to_continuous_buffer(&self) -> Vec<u8> {
+        let mut buf = Vec::new();
+        buf.extend_from_slice(&self.fixed_header);
+        buf.extend_from_slice(self.remaining_length.as_bytes());
+        buf.extend_from_slice(self.packet_id_buf.as_ref());
+        buf.extend_from_slice(self.property_length.as_bytes());
+        buf.append(&mut self.props.to_continuous_buffer());
+
+        for entry in &self.entry_bufs {
+            buf.append(&mut entry.to_continuous_buffer());
+        }
+
+        buf
     }
 }
 
@@ -463,7 +512,7 @@ where
     /// The packet identifier must be non-zero and is used to match the UNSUBSCRIBE
     /// packet with its corresponding UNSUBACK response.
     ///
-    /// # Arguments
+    /// # Parameters
     ///
     /// * `id` - The packet identifier (must be non-zero)
     ///
@@ -490,7 +539,7 @@ where
     /// Each topic filter must be a valid UTF-8 string and can contain wildcards.
     /// The topic filters should exactly match those used in previous SUBSCRIBE packets.
     ///
-    /// # Arguments
+    /// # Parameters
     ///
     /// * `entries` - An iterable of topic filter strings
     ///
@@ -734,8 +783,13 @@ where
         self.size()
     }
 
+    #[cfg(feature = "std")]
     fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         self.to_buffers()
+    }
+
+    fn to_continuous_buffer(&self) -> Vec<u8> {
+        self.to_continuous_buffer()
     }
 }
 
@@ -747,12 +801,12 @@ impl<PacketIdType> GenericPacketDisplay for GenericUnsubscribe<PacketIdType>
 where
     PacketIdType: IsPacketId + Serialize,
 {
-    fn fmt_debug(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Debug::fmt(self, f)
+    fn fmt_debug(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Debug::fmt(self, f)
     }
 
-    fn fmt_display(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Display::fmt(self, f)
+    fn fmt_display(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Display::fmt(self, f)
     }
 }
 
@@ -761,7 +815,7 @@ where
 /// UNSUBSCRIBE packets can only contain User Properties. Any other property type
 /// is considered a protocol error.
 ///
-/// # Arguments
+/// # Parameters
 ///
 /// * `props` - The properties to validate
 ///

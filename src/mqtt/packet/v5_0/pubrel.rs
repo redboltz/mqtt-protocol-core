@@ -1,3 +1,4 @@
+use alloc::vec::Vec;
 /**
  * MIT License
  *
@@ -21,24 +22,26 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-use std::fmt;
+use core::fmt;
+use core::mem;
+use derive_builder::Builder;
+#[cfg(feature = "std")]
 use std::io::IoSlice;
-use std::mem;
 
 use serde::ser::{SerializeStruct, Serializer};
 use serde::Serialize;
 
-use derive_builder::Builder;
 use getset::{CopyGetters, Getters};
 
 use crate::mqtt::packet::packet_type::{FixedHeader, PacketType};
+use crate::mqtt::packet::property::PropertiesToContinuousBuffer;
 use crate::mqtt::packet::variable_byte_integer::VariableByteInteger;
 use crate::mqtt::packet::GenericPacketDisplay;
 use crate::mqtt::packet::GenericPacketTrait;
 use crate::mqtt::packet::IsPacketId;
-use crate::mqtt::packet::{
-    Properties, PropertiesParse, PropertiesSize, PropertiesToBuffers, Property,
-};
+#[cfg(feature = "std")]
+use crate::mqtt::packet::PropertiesToBuffers;
+use crate::mqtt::packet::{Properties, PropertiesParse, PropertiesSize, Property};
 use crate::mqtt::result_code::MqttError;
 use crate::mqtt::result_code::PubrelReasonCode;
 
@@ -120,7 +123,7 @@ use crate::mqtt::result_code::PubrelReasonCode;
 ///     .unwrap();
 /// ```
 #[derive(PartialEq, Eq, Builder, Clone, Getters, CopyGetters)]
-#[builder(derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
+#[builder(no_std, derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
 pub struct GenericPubrel<PacketIdType>
 where
     PacketIdType: IsPacketId,
@@ -296,15 +299,15 @@ where
         1 + self.remaining_length.size() + self.remaining_length.to_u32() as usize
     }
 
-    /// Converts this PUBREL packet into a vector of I/O slices for efficient network transmission.
+    /// Create IoSlice buffers for efficient network I/O
     ///
-    /// This method creates zero-copy I/O slices that can be used with vectored I/O operations
-    /// for efficient packet transmission over network connections.
+    /// Returns a vector of `IoSlice` objects that can be used for vectored I/O
+    /// operations, allowing zero-copy writes to network sockets. The buffers
+    /// represent the complete PUBREL packet in wire format.
     ///
     /// # Returns
     ///
-    /// A `Vec<IoSlice<'_>>` containing slices of the packet data ready for transmission.
-    /// The slices are ordered according to the MQTT v5.0 packet structure.
+    /// A vector of `IoSlice` objects for vectored I/O operations
     ///
     /// # Examples
     ///
@@ -317,8 +320,9 @@ where
     ///     .unwrap();
     ///
     /// let buffers = pubrel.to_buffers();
-    /// // Can be used with vectored write operations
+    /// // Use with vectored write: socket.write_vectored(&buffers)?;
     /// ```
+    #[cfg(feature = "std")]
     pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         let mut bufs = Vec::new();
         bufs.push(IoSlice::new(&self.fixed_header));
@@ -335,6 +339,52 @@ where
         }
 
         bufs
+    }
+
+    /// Create a continuous buffer containing the complete packet data
+    ///
+    /// Returns a vector containing all packet bytes in a single continuous buffer.
+    /// This method provides an alternative to `to_buffers()` for no-std environments
+    /// where vectored I/O is not available.
+    ///
+    /// The returned buffer contains the complete PUBREL packet serialized according
+    /// to the MQTT v5.0 protocol specification, including fixed header, remaining
+    /// length, packet identifier, optional reason code, and optional properties.
+    ///
+    /// # Returns
+    ///
+    /// A vector containing the complete packet data
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// use mqtt_protocol_core::mqtt;
+    ///
+    /// let pubrel = mqtt::packet::v5_0::Pubrel::builder()
+    ///     .packet_id(1u16)
+    ///     .build()
+    ///     .unwrap();
+    ///
+    /// let buffer = pubrel.to_continuous_buffer();
+    /// // buffer contains all packet bytes
+    /// ```
+    ///
+    /// [`to_buffers()`]: #method.to_buffers
+    pub fn to_continuous_buffer(&self) -> Vec<u8> {
+        let mut buf = Vec::new();
+        buf.extend_from_slice(&self.fixed_header);
+        buf.extend_from_slice(self.remaining_length.as_bytes());
+        buf.extend_from_slice(self.packet_id_buf.as_ref());
+        if let Some(rc_buf) = &self.reason_code_buf {
+            buf.extend_from_slice(rc_buf);
+        }
+        if let Some(pl) = &self.property_length {
+            buf.extend_from_slice(pl.as_bytes());
+        }
+        if let Some(ref props) = self.props {
+            buf.append(&mut props.to_continuous_buffer());
+        }
+        buf
     }
 
     /// Parses a PUBREL packet from raw bytes.
@@ -379,7 +429,7 @@ where
         let mut cursor = 0;
 
         // packet_id
-        let buffer_size = std::mem::size_of::<<PacketIdType as IsPacketId>::Buffer>();
+        let buffer_size = core::mem::size_of::<<PacketIdType as IsPacketId>::Buffer>();
         if data.len() < buffer_size {
             return Err(MqttError::MalformedPacket);
         }
@@ -766,8 +816,13 @@ where
         self.size()
     }
 
+    #[cfg(feature = "std")]
     fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         self.to_buffers()
+    }
+
+    fn to_continuous_buffer(&self) -> Vec<u8> {
+        self.to_continuous_buffer()
     }
 }
 
@@ -785,12 +840,12 @@ impl<PacketIdType> GenericPacketDisplay for GenericPubrel<PacketIdType>
 where
     PacketIdType: IsPacketId + Serialize,
 {
-    fn fmt_debug(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Debug::fmt(self, f)
+    fn fmt_debug(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Debug::fmt(self, f)
     }
 
-    fn fmt_display(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Display::fmt(self, f)
+    fn fmt_display(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Display::fmt(self, f)
     }
 }
 

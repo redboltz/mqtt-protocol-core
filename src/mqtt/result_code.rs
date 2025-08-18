@@ -1,3 +1,4 @@
+use core::fmt;
 /**
  * MIT License
  *
@@ -24,7 +25,6 @@
 use derive_builder::UninitializedFieldError;
 use num_enum::TryFromPrimitive;
 use serde::{Serialize, Serializer};
-use std::fmt;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(u16)]
@@ -92,15 +92,15 @@ impl From<UninitializedFieldError> for MqttError {
 }
 
 // Implement mapping from Infallible to MqttError
-impl From<std::convert::Infallible> for MqttError {
-    fn from(_: std::convert::Infallible) -> Self {
+impl From<core::convert::Infallible> for MqttError {
+    fn from(_: core::convert::Infallible) -> Self {
         // Infallible is an error that never occurs, so this is never actually called
         unreachable!()
     }
 }
 
-impl std::fmt::Display for MqttError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for MqttError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let s = match self {
             Self::UnspecifiedError => "UnspecifiedError",
             Self::MalformedPacket => "MalformedPacket",
@@ -162,7 +162,7 @@ impl Serialize for MqttError {
     where
         S: Serializer,
     {
-        serializer.serialize_str(&self.to_string())
+        serializer.serialize_str(&alloc::format!("{self}"))
     }
 }
 
@@ -249,7 +249,7 @@ impl Serialize for ConnectReturnCode {
     where
         S: Serializer,
     {
-        serializer.serialize_str(&self.to_string())
+        serializer.serialize_str(&alloc::format!("{self}"))
     }
 }
 
@@ -292,7 +292,7 @@ impl Serialize for SubackReturnCode {
     where
         S: Serializer,
     {
-        serializer.serialize_str(&self.to_string())
+        serializer.serialize_str(&alloc::format!("{self}"))
     }
 }
 
@@ -359,7 +359,7 @@ impl Serialize for ConnectReasonCode {
     where
         S: Serializer,
     {
-        serializer.serialize_str(&self.to_string())
+        serializer.serialize_str(&alloc::format!("{self}"))
     }
 }
 
@@ -404,8 +404,8 @@ pub enum DisconnectReasonCode {
     WildcardSubscriptionsNotSupported = 0xa2,
 }
 
-impl std::fmt::Display for DisconnectReasonCode {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for DisconnectReasonCode {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let s = match self {
             Self::NormalDisconnection => "NormalDisconnection",
             Self::DisconnectWithWillMessage => "DisconnectWithWillMessage",
@@ -446,7 +446,7 @@ impl Serialize for DisconnectReasonCode {
     where
         S: Serializer,
     {
-        serializer.serialize_str(&self.to_string())
+        serializer.serialize_str(&alloc::format!("{self}"))
     }
 }
 
@@ -530,8 +530,8 @@ impl SubackReasonCode {
     }
 }
 
-impl std::fmt::Display for SubackReasonCode {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for SubackReasonCode {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let s = match self {
             Self::GrantedQos0 => "GrantedQos0",
             Self::GrantedQos1 => "GrantedQos1",
@@ -555,7 +555,7 @@ impl Serialize for SubackReasonCode {
     where
         S: Serializer,
     {
-        serializer.serialize_str(&self.to_string())
+        serializer.serialize_str(&alloc::format!("{self}"))
     }
 }
 
@@ -587,8 +587,8 @@ impl UnsubackReasonCode {
     }
 }
 
-impl std::fmt::Display for UnsubackReasonCode {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for UnsubackReasonCode {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let s = match self {
             Self::Success => "Success",
             Self::NoSubscriptionExisted => "NoSubscriptionExisted",
@@ -607,7 +607,7 @@ impl Serialize for UnsubackReasonCode {
     where
         S: Serializer,
     {
-        serializer.serialize_str(&self.to_string())
+        serializer.serialize_str(&alloc::format!("{self}"))
     }
 }
 
@@ -641,8 +641,8 @@ impl PubackReasonCode {
     }
 }
 
-impl std::fmt::Display for PubackReasonCode {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for PubackReasonCode {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let s = match self {
             Self::Success => "Success",
             Self::NoMatchingSubscribers => "NoMatchingSubscribers",
@@ -663,7 +663,7 @@ impl Serialize for PubackReasonCode {
     where
         S: Serializer,
     {
-        serializer.serialize_str(&self.to_string())
+        serializer.serialize_str(&alloc::format!("{self}"))
     }
 }
 
@@ -696,8 +696,8 @@ impl PubrecReasonCode {
         !self.is_success()
     }
 }
-impl std::fmt::Display for PubrecReasonCode {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for PubrecReasonCode {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let s = match self {
             Self::Success => "Success",
             Self::NoMatchingSubscribers => "NoMatchingSubscribers",
@@ -718,7 +718,7 @@ impl Serialize for PubrecReasonCode {
     where
         S: Serializer,
     {
-        serializer.serialize_str(&self.to_string())
+        serializer.serialize_str(&alloc::format!("{self}"))
     }
 }
 
@@ -745,8 +745,8 @@ impl PubrelReasonCode {
     }
 }
 
-impl std::fmt::Display for PubrelReasonCode {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for PubrelReasonCode {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let s = match self {
             Self::Success => "Success",
             Self::PacketIdentifierNotFound => "PacketIdentifierNotFound",
@@ -760,7 +760,7 @@ impl Serialize for PubrelReasonCode {
     where
         S: Serializer,
     {
-        serializer.serialize_str(&self.to_string())
+        serializer.serialize_str(&alloc::format!("{self}"))
     }
 }
 
@@ -787,8 +787,8 @@ impl PubcompReasonCode {
     }
 }
 
-impl std::fmt::Display for PubcompReasonCode {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for PubcompReasonCode {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let s = match self {
             Self::Success => "Success",
             Self::PacketIdentifierNotFound => "PacketIdentifierNotFound",
@@ -802,7 +802,7 @@ impl Serialize for PubcompReasonCode {
     where
         S: Serializer,
     {
-        serializer.serialize_str(&self.to_string())
+        serializer.serialize_str(&alloc::format!("{self}"))
     }
 }
 
@@ -833,8 +833,8 @@ impl AuthReasonCode {
     }
 }
 
-impl std::fmt::Display for AuthReasonCode {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for AuthReasonCode {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let s = match self {
             Self::Success => "Success",
             Self::ContinueAuthentication => "ContinueAuthentication",
@@ -849,7 +849,7 @@ impl Serialize for AuthReasonCode {
     where
         S: Serializer,
     {
-        serializer.serialize_str(&self.to_string())
+        serializer.serialize_str(&alloc::format!("{self}"))
     }
 }
 

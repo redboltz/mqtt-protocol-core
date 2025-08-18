@@ -22,6 +22,8 @@
  * SOFTWARE.
  */
 use mqtt_protocol_core::mqtt;
+
+#[cfg(feature = "std")]
 use std::fmt::Write;
 
 // Build fail tests
@@ -86,6 +88,7 @@ fn build_fail_valid_prop_mt() {
 // Display tests
 
 #[test]
+#[cfg(feature = "std")]
 fn display_pid() {
     let packet = mqtt::packet::v5_0::Pubrec::builder()
         .packet_id(1234)
@@ -98,6 +101,7 @@ fn display_pid() {
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn display_pid_rc() {
     let packet = mqtt::packet::v5_0::Pubrec::builder()
         .packet_id(1234)
@@ -116,6 +120,7 @@ fn display_pid_rc() {
 // Debug tests
 
 #[test]
+#[cfg(feature = "std")]
 fn debug_pid() {
     let packet = mqtt::packet::v5_0::Pubrec::builder()
         .packet_id(1234)
@@ -128,6 +133,7 @@ fn debug_pid() {
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn debug_pid_rc() {
     let packet = mqtt::packet::v5_0::Pubrec::builder()
         .packet_id(1234)
@@ -144,6 +150,7 @@ fn debug_pid_rc() {
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn debug_pid_rc_prop0() {
     let packet = mqtt::packet::v5_0::Pubrec::builder()
         .packet_id(1234)
@@ -239,6 +246,7 @@ fn getter_pid_rc_prop_mt() {
 // to_buffers() tests
 
 #[test]
+#[cfg(feature = "std")]
 fn to_buffers_pid() {
     let packet = mqtt::packet::v5_0::Pubrec::builder()
         .packet_id(1234)
@@ -251,9 +259,18 @@ fn to_buffers_pid() {
     assert_eq!(buffers[1].as_ref(), &[0x02]); // remaining length
     assert_eq!(buffers[2].as_ref(), &1234u16.to_be_bytes()); // packet_id
     assert_eq!(packet.size(), 4); // 1 + 1 + 2
+
+    // Verify to_buffers() and to_continuous_buffer() produce same result
+    let continuous = packet.to_continuous_buffer();
+    let mut from_buffers = Vec::new();
+    for buf in buffers {
+        from_buffers.extend_from_slice(&buf);
+    }
+    assert_eq!(continuous, from_buffers);
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn to_buffers_pid_rc() {
     let packet = mqtt::packet::v5_0::Pubrec::builder()
         .packet_id(1234)
@@ -268,9 +285,18 @@ fn to_buffers_pid_rc() {
     assert_eq!(buffers[2].as_ref(), &1234u16.to_be_bytes()); // packet_id
     assert_eq!(buffers[3].as_ref(), &[0x00]); // reason code
     assert_eq!(packet.size(), 5); // 1 + 1 + 2 + 1
+
+    // Verify to_buffers() and to_continuous_buffer() produce same result
+    let continuous = packet.to_continuous_buffer();
+    let mut from_buffers = Vec::new();
+    for buf in buffers {
+        from_buffers.extend_from_slice(&buf);
+    }
+    assert_eq!(continuous, from_buffers);
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn to_buffers_pid_rc_prop0() {
     let packet = mqtt::packet::v5_0::Pubrec::builder()
         .packet_id(1234)
@@ -287,6 +313,14 @@ fn to_buffers_pid_rc_prop0() {
     assert_eq!(buffers[3].as_ref(), &[0x00]); // reason code
     assert_eq!(buffers[4].as_ref(), &[0x00]); // property length
     assert_eq!(packet.size(), 6); // 1 + 1 + 2 + 1 + 1
+
+    // Verify to_buffers() and to_continuous_buffer() produce same result
+    let continuous = packet.to_continuous_buffer();
+    let mut from_buffers = Vec::new();
+    for buf in buffers {
+        from_buffers.extend_from_slice(&buf);
+    }
+    assert_eq!(continuous, from_buffers);
 }
 
 // Parse tests

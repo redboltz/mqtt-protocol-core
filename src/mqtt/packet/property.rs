@@ -4,11 +4,8 @@ use crate::mqtt::packet::mqtt_string::MqttString;
 use crate::mqtt::packet::DecodeResult;
 use crate::mqtt::packet::VariableByteInteger;
 use crate::mqtt::result_code::MqttError;
-use num_enum::TryFromPrimitive;
-use serde::ser::SerializeStruct;
-use serde::ser::Serializer;
-use serde::{Deserialize, Serialize};
-use std::convert::TryFrom;
+use alloc::{string::String, vec::Vec};
+use core::convert::TryFrom;
 /**
  * MIT License
  *
@@ -32,7 +29,12 @@ use std::convert::TryFrom;
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-use std::fmt;
+use core::fmt;
+use num_enum::TryFromPrimitive;
+use serde::ser::SerializeStruct;
+use serde::ser::Serializer;
+use serde::{Deserialize, Serialize};
+#[cfg(feature = "std")]
 use std::io::IoSlice;
 
 /// MQTT v5.0 Property Identifiers
@@ -307,6 +309,18 @@ macro_rules! mqtt_property_common {
         }
 
         impl $name {
+            /// Returns the PropertyId of this property.
+            ///
+            /// # Returns
+            ///
+            /// The PropertyId enum value.
+            ///
+            /// # Examples
+            ///
+            /// ```ignore
+            /// let prop = Property::new(...);
+            /// let id = prop.id();
+            /// ```
             pub fn id(&self) -> PropertyId {
                 $id
             }
@@ -339,6 +353,22 @@ macro_rules! mqtt_property_binary {
         }
 
         impl $name {
+            /// Creates a new binary property with the given value.
+            ///
+            /// # Parameters
+            ///
+            /// * `v` - The binary value to set (can be any type that converts to bytes)
+            ///
+            /// # Returns
+            ///
+            /// * `Ok(Self)` - Successfully created property
+            /// * `Err(MqttError)` - If the binary data is invalid or too large
+            ///
+            /// # Examples
+            ///
+            /// ```ignore
+            /// let prop = CorrelationData::new(b"correlation-123").unwrap();
+            /// ```
             pub fn new<T>(v: T) -> Result<Self, MqttError>
             where
                 T: AsRef<[u8]>,
@@ -351,6 +381,24 @@ macro_rules! mqtt_property_binary {
                 })
             }
 
+            /// Parses a binary property from the given byte slice.
+            ///
+            /// # Parameters
+            ///
+            /// * `bytes` - The byte slice to parse from
+            ///
+            /// # Returns
+            ///
+            /// * `Ok((Self, usize))` - The parsed property and number of bytes consumed
+            /// * `Err(MqttError)` - If parsing fails
+            ///
+            /// # Examples
+            ///
+            /// ```ignore
+            /// let data = &[0x00, 0x05, b'h', b'e', b'l', b'l', b'o'];
+            /// let (prop, consumed) = CorrelationData::parse(data).unwrap();
+            /// assert_eq!(consumed, 7);
+            /// ```
             pub fn parse(bytes: &[u8]) -> Result<(Self, usize), MqttError> {
                 let (mqtt_binary, consumed) = MqttBinary::decode(bytes)?;
                 Ok((
@@ -362,6 +410,19 @@ macro_rules! mqtt_property_binary {
                 ))
             }
 
+            /// Converts the property to I/O slices for efficient transmission.
+            ///
+            /// # Returns
+            ///
+            /// A vector of I/O slices containing the property data.
+            ///
+            /// # Examples
+            ///
+            /// ```ignore
+            /// let prop = CorrelationData::new(b"data").unwrap();
+            /// let buffers = prop.to_buffers();
+            /// ```
+            #[cfg(feature = "std")]
             pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
                 let mut result = vec![IoSlice::new(&self.id_bytes)];
                 let mut binary_bufs = self.value.to_buffers();
@@ -369,10 +430,67 @@ macro_rules! mqtt_property_binary {
                 result
             }
 
+            /// Converts the property to a continuous buffer.
+            ///
+            /// # Returns
+            ///
+            /// A byte vector containing the complete property data.
+            ///
+            /// # Examples
+            ///
+            /// ```ignore
+            /// let prop = CorrelationData::new(b"data").unwrap();
+            /// let buffer = prop.to_continuous_buffer();
+            /// ```
+            /// Converts the property to a continuous buffer.
+            ///
+            /// # Returns
+            ///
+            /// A byte vector containing the complete property data.
+            ///
+            /// # Examples
+            ///
+            /// ```ignore
+            /// let prop = Property::new(...).unwrap();
+            /// let buffer = prop.to_continuous_buffer();
+            /// ```
+            pub fn to_continuous_buffer(&self) -> Vec<u8> {
+                let mut buf = Vec::new();
+                buf.extend_from_slice(&self.id_bytes);
+                buf.append(&mut self.value.to_continuous_buffer());
+                buf
+            }
+
+            /// Returns the binary value of this property.
+            ///
+            /// # Returns
+            ///
+            /// A reference to the binary data as a byte slice.
+            ///
+            /// # Examples
+            ///
+            /// ```ignore
+            /// let prop = CorrelationData::new(b"hello").unwrap();
+            /// assert_eq!(prop.val(), b"hello");
+            /// ```
             pub fn val(&self) -> &[u8] {
                 self.value.as_slice()
             }
 
+            /// Returns the total size of this property in bytes.
+            ///
+            /// This includes the property ID (1 byte) plus the binary data size.
+            ///
+            /// # Returns
+            ///
+            /// The total size in bytes.
+            ///
+            /// # Examples
+            ///
+            /// ```ignore
+            /// let prop = CorrelationData::new(b"hello").unwrap();
+            /// assert_eq!(prop.size(), 8); // 1 (ID) + 2 (length) + 5 (data)
+            /// ```
             pub fn size(&self) -> usize {
                 1 + self.value.size() // ID + MqttBinary size
             }
@@ -416,6 +534,22 @@ macro_rules! mqtt_property_string {
         }
 
         impl $name {
+            /// Creates a new string property with the given value.
+            ///
+            /// # Parameters
+            ///
+            /// * `s` - The string value to set
+            ///
+            /// # Returns
+            ///
+            /// * `Ok(Self)` - Successfully created property
+            /// * `Err(MqttError)` - If the string is invalid or too long
+            ///
+            /// # Examples
+            ///
+            /// ```ignore
+            /// let prop = ContentType::new("application/json").unwrap();
+            /// ```
             pub fn new<T>(s: T) -> Result<Self, MqttError>
             where
                 T: AsRef<str>,
@@ -428,6 +562,24 @@ macro_rules! mqtt_property_string {
                 })
             }
 
+            /// Parses a string property from the given byte slice.
+            ///
+            /// # Parameters
+            ///
+            /// * `bytes` - The byte slice to parse from
+            ///
+            /// # Returns
+            ///
+            /// * `Ok((Self, usize))` - The parsed property and number of bytes consumed
+            /// * `Err(MqttError)` - If parsing fails
+            ///
+            /// # Examples
+            ///
+            /// ```ignore
+            /// let data = &[0x00, 0x05, b'h', b'e', b'l', b'l', b'o'];
+            /// let (prop, consumed) = ContentType::parse(data).unwrap();
+            /// assert_eq!(consumed, 7);
+            /// ```
             pub fn parse(bytes: &[u8]) -> Result<(Self, usize), MqttError> {
                 let (mqtt_string, consumed) = MqttString::decode(bytes)?;
                 Ok((
@@ -439,6 +591,19 @@ macro_rules! mqtt_property_string {
                 ))
             }
 
+            /// Converts the property to I/O slices for efficient transmission.
+            ///
+            /// # Returns
+            ///
+            /// A vector of I/O slices containing the property data.
+            ///
+            /// # Examples
+            ///
+            /// ```ignore
+            /// let prop = ContentType::new("text/plain").unwrap();
+            /// let buffers = prop.to_buffers();
+            /// ```
+            #[cfg(feature = "std")]
             pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
                 let mut result = vec![IoSlice::new(&self.id_bytes)];
                 let mut string_bufs = self.value.to_buffers();
@@ -446,10 +611,55 @@ macro_rules! mqtt_property_string {
                 result
             }
 
+            /// Converts the property to a continuous buffer.
+            ///
+            /// # Returns
+            ///
+            /// A byte vector containing the complete property data.
+            ///
+            /// # Examples
+            ///
+            /// ```ignore
+            /// let prop = Property::new(...).unwrap();
+            /// let buffer = prop.to_continuous_buffer();
+            /// ```
+            pub fn to_continuous_buffer(&self) -> Vec<u8> {
+                let mut buf = Vec::new();
+                buf.extend_from_slice(&self.id_bytes);
+                buf.append(&mut self.value.to_continuous_buffer());
+                buf
+            }
+
+            /// Returns the string value of this property.
+            ///
+            /// # Returns
+            ///
+            /// A reference to the string value.
+            ///
+            /// # Examples
+            ///
+            /// ```ignore
+            /// let prop = ContentType::new("application/json").unwrap();
+            /// assert_eq!(prop.val(), "application/json");
+            /// ```
             pub fn val(&self) -> &str {
                 self.value.as_str()
             }
 
+            /// Returns the total size of this property in bytes.
+            ///
+            /// This includes the property ID (1 byte) plus the string data size.
+            ///
+            /// # Returns
+            ///
+            /// The total size in bytes.
+            ///
+            /// # Examples
+            ///
+            /// ```ignore
+            /// let prop = ContentType::new("hello").unwrap();
+            /// assert_eq!(prop.size(), 8); // 1 (ID) + 2 (length) + 5 (data)
+            /// ```
             pub fn size(&self) -> usize {
                 1 + self.value.size() // ID + MqttString size
             }
@@ -486,6 +696,23 @@ macro_rules! mqtt_property_string_pair {
         }
 
         impl $name {
+            /// Creates a new string pair property with the given key and value.
+            ///
+            /// # Parameters
+            ///
+            /// * `key` - The key string
+            /// * `val` - The value string
+            ///
+            /// # Returns
+            ///
+            /// * `Ok(Self)` - Successfully created property
+            /// * `Err(MqttError)` - If either string is invalid or too long
+            ///
+            /// # Examples
+            ///
+            /// ```ignore
+            /// let prop = UserProperty::new("name", "value").unwrap();
+            /// ```
             pub fn new<K, V>(key: K, val: V) -> Result<Self, MqttError>
             where
                 K: AsRef<str>,
@@ -500,6 +727,24 @@ macro_rules! mqtt_property_string_pair {
                 })
             }
 
+            /// Parses a string pair property from the given byte slice.
+            ///
+            /// # Parameters
+            ///
+            /// * `bytes` - The byte slice to parse from
+            ///
+            /// # Returns
+            ///
+            /// * `Ok((Self, usize))` - The parsed property and number of bytes consumed
+            /// * `Err(MqttError)` - If parsing fails
+            ///
+            /// # Examples
+            ///
+            /// ```ignore
+            /// let data = &[0x00, 0x03, b'k', b'e', b'y', 0x00, 0x05, b'v', b'a', b'l', b'u', b'e'];
+            /// let (prop, consumed) = UserProperty::parse(data).unwrap();
+            /// assert_eq!(consumed, 12);
+            /// ```
             pub fn parse(bytes: &[u8]) -> Result<(Self, usize), MqttError> {
                 let (key, key_consumed) = MqttString::decode(bytes)?;
                 let (val, val_consumed) = MqttString::decode(&bytes[key_consumed..])?;
@@ -513,6 +758,19 @@ macro_rules! mqtt_property_string_pair {
                 ))
             }
 
+            /// Converts the property to I/O slices for efficient transmission.
+            ///
+            /// # Returns
+            ///
+            /// A vector of I/O slices containing the property data.
+            ///
+            /// # Examples
+            ///
+            /// ```ignore
+            /// let prop = UserProperty::new("name", "value").unwrap();
+            /// let buffers = prop.to_buffers();
+            /// ```
+            #[cfg(feature = "std")]
             pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
                 let mut result = vec![IoSlice::new(&self.id_bytes)];
                 let mut key_bufs = self.value.0.to_buffers();
@@ -523,14 +781,72 @@ macro_rules! mqtt_property_string_pair {
                 result
             }
 
+            /// Converts the property to a continuous buffer.
+            ///
+            /// # Returns
+            ///
+            /// A byte vector containing the complete property data.
+            ///
+            /// # Examples
+            ///
+            /// ```ignore
+            /// let prop = UserProperty::new("key", "value").unwrap();
+            /// let buffer = prop.to_continuous_buffer();
+            /// ```
+            pub fn to_continuous_buffer(&self) -> Vec<u8> {
+                let mut buf = Vec::new();
+                buf.extend_from_slice(&self.id_bytes);
+                buf.append(&mut self.value.0.to_continuous_buffer());
+                buf.append(&mut self.value.1.to_continuous_buffer());
+                buf
+            }
+
+            /// Returns the key string of this property.
+            ///
+            /// # Returns
+            ///
+            /// A reference to the key string.
+            ///
+            /// # Examples
+            ///
+            /// ```ignore
+            /// let prop = UserProperty::new("name", "value").unwrap();
+            /// assert_eq!(prop.key(), "name");
+            /// ```
             pub fn key(&self) -> &str {
                 self.value.0.as_str()
             }
 
+            /// Returns the value string of this property.
+            ///
+            /// # Returns
+            ///
+            /// A reference to the value string.
+            ///
+            /// # Examples
+            ///
+            /// ```ignore
+            /// let prop = UserProperty::new("name", "value").unwrap();
+            /// assert_eq!(prop.val(), "value");
+            /// ```
             pub fn val(&self) -> &str {
                 self.value.1.as_str()
             }
 
+            /// Returns the total size of this property in bytes.
+            ///
+            /// This includes the property ID (1 byte) plus both key and value string sizes.
+            ///
+            /// # Returns
+            ///
+            /// The total size in bytes.
+            ///
+            /// # Examples
+            ///
+            /// ```ignore
+            /// let prop = UserProperty::new("key", "value").unwrap();
+            /// assert_eq!(prop.size(), 13); // 1 (ID) + 2 (key len) + 3 (key) + 2 (val len) + 5 (val)
+            /// ```
             pub fn size(&self) -> usize {
                 1 + self.value.0.size() + self.value.1.size() // ID + key size + value size
             }
@@ -567,6 +883,24 @@ macro_rules! mqtt_property_u8_custom_new {
         }
 
         impl $name {
+            /// Parses a u8 property from the given byte slice.
+            ///
+            /// # Parameters
+            ///
+            /// * `bytes` - The byte slice to parse from
+            ///
+            /// # Returns
+            ///
+            /// * `Ok((Self, usize))` - The parsed property and number of bytes consumed
+            /// * `Err(MqttError)` - If parsing fails or validation fails
+            ///
+            /// # Examples
+            ///
+            /// ```ignore
+            /// let data = &[42];
+            /// let (prop, consumed) = PayloadFormatIndicator::parse(data).unwrap();
+            /// assert_eq!(consumed, 1);
+            /// ```
             pub fn parse(bytes: &[u8]) -> Result<(Self, usize), MqttError> {
                 if bytes.len() < 1 {
                     return Err(MqttError::MalformedPacket);
@@ -583,14 +917,72 @@ macro_rules! mqtt_property_u8_custom_new {
                 ))
             }
 
+            /// Converts the property to I/O slices for efficient transmission.
+            ///
+            /// # Returns
+            ///
+            /// A vector of I/O slices containing the property data.
+            ///
+            /// # Examples
+            ///
+            /// ```ignore
+            /// let prop = PayloadFormatIndicator::new(1).unwrap();
+            /// let buffers = prop.to_buffers();
+            /// ```
+            #[cfg(feature = "std")]
             pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
                 vec![IoSlice::new(&self.id_bytes), IoSlice::new(&self.value)]
             }
 
+            /// Converts the property to a continuous buffer.
+            ///
+            /// # Returns
+            ///
+            /// A byte vector containing the complete property data.
+            ///
+            /// # Examples
+            ///
+            /// ```ignore
+            /// let prop = Property::new(...).unwrap();
+            /// let buffer = prop.to_continuous_buffer();
+            /// ```
+            pub fn to_continuous_buffer(&self) -> Vec<u8> {
+                let mut buf = Vec::new();
+                buf.extend_from_slice(&self.id_bytes);
+                buf.extend_from_slice(&self.value);
+                buf
+            }
+
+            /// Returns the u8 value of this property.
+            ///
+            /// # Returns
+            ///
+            /// The u8 value.
+            ///
+            /// # Examples
+            ///
+            /// ```ignore
+            /// let prop = PayloadFormatIndicator::new(1).unwrap();
+            /// assert_eq!(prop.val(), 1);
+            /// ```
             pub fn val(&self) -> u8 {
                 self.value[0]
             }
 
+            /// Returns the total size of this property in bytes.
+            ///
+            /// This includes the property ID (1 byte) plus the u8 value (1 byte).
+            ///
+            /// # Returns
+            ///
+            /// The total size in bytes (always 2 for u8 properties).
+            ///
+            /// # Examples
+            ///
+            /// ```ignore
+            /// let prop = PayloadFormatIndicator::new(1).unwrap();
+            /// assert_eq!(prop.size(), 2);
+            /// ```
             pub fn size(&self) -> usize {
                 1 + self.value.len()
             }
@@ -614,6 +1006,22 @@ macro_rules! mqtt_property_u8 {
         mqtt_property_u8_custom_new!($name, $id, $validator);
 
         impl $name {
+            /// Creates a new u8 property with the given value.
+            ///
+            /// # Parameters
+            ///
+            /// * `v` - The u8 value to set
+            ///
+            /// # Returns
+            ///
+            /// * `Ok(Self)` - Successfully created property
+            /// * `Err(MqttError)` - If the value fails validation
+            ///
+            /// # Examples
+            ///
+            /// ```ignore
+            /// let prop = PayloadFormatIndicator::new(1).unwrap();
+            /// ```
             pub fn new(v: u8) -> Result<Self, MqttError> {
                 if let Some(validator) = $validator {
                     validator(v)?;
@@ -644,6 +1052,22 @@ macro_rules! mqtt_property_u16 {
         }
 
         impl $name {
+            /// Creates a new u16 property with the given value.
+            ///
+            /// # Parameters
+            ///
+            /// * `v` - The u16 value to set
+            ///
+            /// # Returns
+            ///
+            /// * `Ok(Self)` - Successfully created property
+            /// * `Err(MqttError)` - If the value fails validation
+            ///
+            /// # Examples
+            ///
+            /// ```ignore
+            /// let prop = ServerKeepAlive::new(60).unwrap();
+            /// ```
             pub fn new(v: u16) -> Result<Self, MqttError> {
                 if let Some(validator) = $validator {
                     validator(v)?;
@@ -654,6 +1078,24 @@ macro_rules! mqtt_property_u16 {
                 })
             }
 
+            /// Parses a u16 property from the given byte slice.
+            ///
+            /// # Parameters
+            ///
+            /// * `bytes` - The byte slice to parse from
+            ///
+            /// # Returns
+            ///
+            /// * `Ok((Self, usize))` - The parsed property and number of bytes consumed
+            /// * `Err(MqttError)` - If parsing fails or validation fails
+            ///
+            /// # Examples
+            ///
+            /// ```ignore
+            /// let data = &[0x00, 0x3C]; // 60 in big-endian
+            /// let (prop, consumed) = ServerKeepAlive::parse(data).unwrap();
+            /// assert_eq!(consumed, 2);
+            /// ```
             pub fn parse(bytes: &[u8]) -> Result<(Self, usize), MqttError> {
                 if bytes.len() < 2 {
                     return Err(MqttError::MalformedPacket);
@@ -671,14 +1113,72 @@ macro_rules! mqtt_property_u16 {
                 ))
             }
 
+            /// Converts the property to I/O slices for efficient transmission.
+            ///
+            /// # Returns
+            ///
+            /// A vector of I/O slices containing the property data.
+            ///
+            /// # Examples
+            ///
+            /// ```ignore
+            /// let prop = ServerKeepAlive::new(60).unwrap();
+            /// let buffers = prop.to_buffers();
+            /// ```
+            #[cfg(feature = "std")]
             pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
                 vec![IoSlice::new(&self.id_bytes), IoSlice::new(&self.value)]
             }
 
+            /// Converts the property to a continuous buffer.
+            ///
+            /// # Returns
+            ///
+            /// A byte vector containing the complete property data.
+            ///
+            /// # Examples
+            ///
+            /// ```ignore
+            /// let prop = Property::new(...).unwrap();
+            /// let buffer = prop.to_continuous_buffer();
+            /// ```
+            pub fn to_continuous_buffer(&self) -> Vec<u8> {
+                let mut buf = Vec::new();
+                buf.extend_from_slice(&self.id_bytes);
+                buf.extend_from_slice(&self.value);
+                buf
+            }
+
+            /// Returns the u16 value of this property.
+            ///
+            /// # Returns
+            ///
+            /// The u16 value.
+            ///
+            /// # Examples
+            ///
+            /// ```ignore
+            /// let prop = ServerKeepAlive::new(60).unwrap();
+            /// assert_eq!(prop.val(), 60);
+            /// ```
             pub fn val(&self) -> u16 {
                 u16::from_be_bytes([self.value[0], self.value[1]])
             }
 
+            /// Returns the total size of this property in bytes.
+            ///
+            /// This includes the property ID (1 byte) plus the u16 value (2 bytes).
+            ///
+            /// # Returns
+            ///
+            /// The total size in bytes (always 3 for u16 properties).
+            ///
+            /// # Examples
+            ///
+            /// ```ignore
+            /// let prop = ServerKeepAlive::new(60).unwrap();
+            /// assert_eq!(prop.size(), 3);
+            /// ```
             pub fn size(&self) -> usize {
                 1 + self.value.len()
             }
@@ -714,6 +1214,22 @@ macro_rules! mqtt_property_u32 {
         }
 
         impl $name {
+            /// Creates a new u32 property with the given value.
+            ///
+            /// # Parameters
+            ///
+            /// * `v` - The u32 value to set
+            ///
+            /// # Returns
+            ///
+            /// * `Ok(Self)` - Successfully created property
+            /// * `Err(MqttError)` - If the value fails validation
+            ///
+            /// # Examples
+            ///
+            /// ```ignore
+            /// let prop = MessageExpiryInterval::new(300).unwrap();
+            /// ```
             pub fn new(v: u32) -> Result<Self, MqttError> {
                 if let Some(validator) = $validator {
                     validator(v)?;
@@ -724,6 +1240,24 @@ macro_rules! mqtt_property_u32 {
                 })
             }
 
+            /// Parses a u32 property from the given byte slice.
+            ///
+            /// # Parameters
+            ///
+            /// * `bytes` - The byte slice to parse from
+            ///
+            /// # Returns
+            ///
+            /// * `Ok((Self, usize))` - The parsed property and number of bytes consumed
+            /// * `Err(MqttError)` - If parsing fails or validation fails
+            ///
+            /// # Examples
+            ///
+            /// ```ignore
+            /// let data = &[0x00, 0x00, 0x01, 0x2C]; // 300 in big-endian
+            /// let (prop, consumed) = MessageExpiryInterval::parse(data).unwrap();
+            /// assert_eq!(consumed, 4);
+            /// ```
             pub fn parse(bytes: &[u8]) -> Result<(Self, usize), MqttError> {
                 if bytes.len() < 4 {
                     return Err(MqttError::MalformedPacket);
@@ -741,14 +1275,72 @@ macro_rules! mqtt_property_u32 {
                 ))
             }
 
+            /// Converts the property to I/O slices for efficient transmission.
+            ///
+            /// # Returns
+            ///
+            /// A vector of I/O slices containing the property data.
+            ///
+            /// # Examples
+            ///
+            /// ```ignore
+            /// let prop = MessageExpiryInterval::new(300).unwrap();
+            /// let buffers = prop.to_buffers();
+            /// ```
+            #[cfg(feature = "std")]
             pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
                 vec![IoSlice::new(&self.id_bytes), IoSlice::new(&self.value)]
             }
 
+            /// Converts the property to a continuous buffer.
+            ///
+            /// # Returns
+            ///
+            /// A byte vector containing the complete property data.
+            ///
+            /// # Examples
+            ///
+            /// ```ignore
+            /// let prop = Property::new(...).unwrap();
+            /// let buffer = prop.to_continuous_buffer();
+            /// ```
+            pub fn to_continuous_buffer(&self) -> Vec<u8> {
+                let mut buf = Vec::new();
+                buf.extend_from_slice(&self.id_bytes);
+                buf.extend_from_slice(&self.value);
+                buf
+            }
+
+            /// Returns the u32 value of this property.
+            ///
+            /// # Returns
+            ///
+            /// The u32 value.
+            ///
+            /// # Examples
+            ///
+            /// ```ignore
+            /// let prop = MessageExpiryInterval::new(300).unwrap();
+            /// assert_eq!(prop.val(), 300);
+            /// ```
             pub fn val(&self) -> u32 {
                 u32::from_be_bytes([self.value[0], self.value[1], self.value[2], self.value[3]])
             }
 
+            /// Returns the total size of this property in bytes.
+            ///
+            /// This includes the property ID (1 byte) plus the u32 value (4 bytes).
+            ///
+            /// # Returns
+            ///
+            /// The total size in bytes (always 5 for u32 properties).
+            ///
+            /// # Examples
+            ///
+            /// ```ignore
+            /// let prop = MessageExpiryInterval::new(300).unwrap();
+            /// assert_eq!(prop.size(), 5);
+            /// ```
             pub fn size(&self) -> usize {
                 1 + self.value.len()
             }
@@ -784,6 +1376,22 @@ macro_rules! mqtt_property_variable_integer {
         }
 
         impl $name {
+            /// Creates a new variable integer property with the given value.
+            ///
+            /// # Parameters
+            ///
+            /// * `v` - The u32 value to set (encoded as variable byte integer)
+            ///
+            /// # Returns
+            ///
+            /// * `Ok(Self)` - Successfully created property
+            /// * `Err(MqttError)` - If the value fails validation or is out of range
+            ///
+            /// # Examples
+            ///
+            /// ```ignore
+            /// let prop = SubscriptionIdentifier::new(42).unwrap();
+            /// ```
             pub fn new(v: u32) -> Result<Self, MqttError> {
                 let vbi = VariableByteInteger::from_u32(v).ok_or(MqttError::ValueOutOfRange)?;
                 if let Some(validator) = $validator {
@@ -795,6 +1403,24 @@ macro_rules! mqtt_property_variable_integer {
                 })
             }
 
+            /// Parses a variable integer property from the given byte slice.
+            ///
+            /// # Parameters
+            ///
+            /// * `bytes` - The byte slice to parse from
+            ///
+            /// # Returns
+            ///
+            /// * `Ok((Self, usize))` - The parsed property and number of bytes consumed
+            /// * `Err(MqttError)` - If parsing fails or validation fails
+            ///
+            /// # Examples
+            ///
+            /// ```ignore
+            /// let data = &[0x2A]; // 42 as variable byte integer
+            /// let (prop, consumed) = SubscriptionIdentifier::parse(data).unwrap();
+            /// assert_eq!(consumed, 1);
+            /// ```
             pub fn parse(bytes: &[u8]) -> Result<(Self, usize), MqttError> {
                 match VariableByteInteger::decode_stream(bytes) {
                     DecodeResult::Ok(vbi, len) => {
@@ -814,6 +1440,19 @@ macro_rules! mqtt_property_variable_integer {
                 }
             }
 
+            /// Converts the property to I/O slices for efficient transmission.
+            ///
+            /// # Returns
+            ///
+            /// A vector of I/O slices containing the property data.
+            ///
+            /// # Examples
+            ///
+            /// ```ignore
+            /// let prop = SubscriptionIdentifier::new(42).unwrap();
+            /// let buffers = prop.to_buffers();
+            /// ```
+            #[cfg(feature = "std")]
             pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
                 vec![
                     IoSlice::new(&self.id_bytes),
@@ -821,10 +1460,55 @@ macro_rules! mqtt_property_variable_integer {
                 ]
             }
 
+            /// Converts the property to a continuous buffer.
+            ///
+            /// # Returns
+            ///
+            /// A byte vector containing the complete property data.
+            ///
+            /// # Examples
+            ///
+            /// ```ignore
+            /// let prop = Property::new(...).unwrap();
+            /// let buffer = prop.to_continuous_buffer();
+            /// ```
+            pub fn to_continuous_buffer(&self) -> Vec<u8> {
+                let mut buf = Vec::new();
+                buf.extend_from_slice(&self.id_bytes);
+                buf.append(&mut self.value.to_continuous_buffer());
+                buf
+            }
+
+            /// Returns the u32 value of this property.
+            ///
+            /// # Returns
+            ///
+            /// The u32 value encoded as a variable byte integer.
+            ///
+            /// # Examples
+            ///
+            /// ```ignore
+            /// let prop = SubscriptionIdentifier::new(42).unwrap();
+            /// assert_eq!(prop.val(), 42);
+            /// ```
             pub fn val(&self) -> u32 {
                 self.value.to_u32()
             }
 
+            /// Returns the total size of this property in bytes.
+            ///
+            /// This includes the property ID (1 byte) plus the variable byte integer size.
+            ///
+            /// # Returns
+            ///
+            /// The total size in bytes.
+            ///
+            /// # Examples
+            ///
+            /// ```ignore
+            /// let prop = SubscriptionIdentifier::new(42).unwrap();
+            /// assert_eq!(prop.size(), 2); // 1 (ID) + 1 (value < 128)
+            /// ```
             pub fn size(&self) -> usize {
                 1 + self.value.size()
             }
@@ -858,6 +1542,22 @@ mqtt_property_u8_custom_new!(
     })
 );
 impl PayloadFormatIndicator {
+    /// Creates a new PayloadFormatIndicator property.
+    ///
+    /// # Parameters
+    ///
+    /// * `v` - The PayloadFormat enum value
+    ///
+    /// # Returns
+    ///
+    /// * `Ok(Self)` - Successfully created property
+    /// * `Err(MqttError)` - If creation fails
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// let prop = PayloadFormatIndicator::new(PayloadFormat::Utf8String).unwrap();
+    /// ```
     pub fn new(v: PayloadFormat) -> Result<Self, MqttError> {
         Ok(Self {
             id_bytes: [PropertyId::PayloadFormatIndicator.as_u8(); 1],
@@ -1361,6 +2061,7 @@ impl Property {
     /// // Can be used with vectored write operations
     /// // socket.write_vectored(&buffers)?;
     /// ```
+    #[cfg(feature = "std")]
     pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         match self {
             Property::PayloadFormatIndicator(p) => p.to_buffers(),
@@ -1390,6 +2091,59 @@ impl Property {
             Property::WildcardSubscriptionAvailable(p) => p.to_buffers(),
             Property::SubscriptionIdentifierAvailable(p) => p.to_buffers(),
             Property::SharedSubscriptionAvailable(p) => p.to_buffers(),
+        }
+    }
+
+    /// Create a continuous buffer containing the complete property data
+    ///
+    /// Returns a vector containing all property bytes in a single continuous buffer.
+    /// This method is compatible with no-std environments and provides an alternative
+    /// to [`to_buffers()`] when vectored I/O is not needed.
+    ///
+    /// The returned buffer includes the property identifier and the encoded property value.
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// use mqtt_protocol_core::mqtt;
+    ///
+    /// let prop = mqtt::packet::Property::ContentType(
+    ///     mqtt::packet::ContentType::new("application/json").unwrap()
+    /// );
+    /// let buffer = prop.to_continuous_buffer();
+    /// // buffer contains all property bytes
+    /// ```
+    ///
+    /// [`to_buffers()`]: #method.to_buffers
+    pub fn to_continuous_buffer(&self) -> Vec<u8> {
+        match self {
+            Property::PayloadFormatIndicator(p) => p.to_continuous_buffer(),
+            Property::MessageExpiryInterval(p) => p.to_continuous_buffer(),
+            Property::ContentType(p) => p.to_continuous_buffer(),
+            Property::ResponseTopic(p) => p.to_continuous_buffer(),
+            Property::CorrelationData(p) => p.to_continuous_buffer(),
+            Property::SubscriptionIdentifier(p) => p.to_continuous_buffer(),
+            Property::SessionExpiryInterval(p) => p.to_continuous_buffer(),
+            Property::AssignedClientIdentifier(p) => p.to_continuous_buffer(),
+            Property::ServerKeepAlive(p) => p.to_continuous_buffer(),
+            Property::AuthenticationMethod(p) => p.to_continuous_buffer(),
+            Property::AuthenticationData(p) => p.to_continuous_buffer(),
+            Property::RequestProblemInformation(p) => p.to_continuous_buffer(),
+            Property::WillDelayInterval(p) => p.to_continuous_buffer(),
+            Property::RequestResponseInformation(p) => p.to_continuous_buffer(),
+            Property::ResponseInformation(p) => p.to_continuous_buffer(),
+            Property::ServerReference(p) => p.to_continuous_buffer(),
+            Property::ReasonString(p) => p.to_continuous_buffer(),
+            Property::ReceiveMaximum(p) => p.to_continuous_buffer(),
+            Property::TopicAliasMaximum(p) => p.to_continuous_buffer(),
+            Property::TopicAlias(p) => p.to_continuous_buffer(),
+            Property::MaximumQos(p) => p.to_continuous_buffer(),
+            Property::RetainAvailable(p) => p.to_continuous_buffer(),
+            Property::UserProperty(p) => p.to_continuous_buffer(),
+            Property::MaximumPacketSize(p) => p.to_continuous_buffer(),
+            Property::WildcardSubscriptionAvailable(p) => p.to_continuous_buffer(),
+            Property::SubscriptionIdentifierAvailable(p) => p.to_continuous_buffer(),
+            Property::SharedSubscriptionAvailable(p) => p.to_continuous_buffer(),
         }
     }
 
@@ -1570,10 +2324,22 @@ impl Property {
 /// ```
 pub type Properties = Vec<Property>;
 
+/// Trait for converting properties collection to continuous buffer
+///
+/// This trait provides functionality to convert a collection of properties
+/// into a single continuous buffer compatible with no-std environments.
+pub trait PropertiesToContinuousBuffer {
+    /// Convert properties to continuous buffer
+    ///
+    /// Returns a vector containing all property bytes in a single continuous buffer.
+    fn to_continuous_buffer(&self) -> Vec<u8>;
+}
+
 /// Trait for converting properties collection to I/O buffers
 ///
 /// This trait provides functionality to convert a collection of properties
 /// into IoSlice buffers suitable for efficient network I/O operations.
+#[cfg(feature = "std")]
 pub trait PropertiesToBuffers {
     /// Convert properties to IoSlice buffers for vectored I/O
     ///
@@ -1582,9 +2348,25 @@ pub trait PropertiesToBuffers {
     fn to_buffers(&self) -> Vec<IoSlice<'_>>;
 }
 
+/// Implementation of PropertiesToContinuousBuffer for Properties
+///
+/// Concatenates continuous buffers from all properties in the collection.
+impl PropertiesToContinuousBuffer for Properties {
+    fn to_continuous_buffer(&self) -> Vec<u8> {
+        let mut result = Vec::new();
+
+        for prop in self {
+            result.append(&mut prop.to_continuous_buffer());
+        }
+
+        result
+    }
+}
+
 /// Implementation of PropertiesToBuffers for Properties
 ///
 /// Concatenates IoSlice buffers from all properties in the collection.
+#[cfg(feature = "std")]
 impl PropertiesToBuffers for Properties {
     fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         let mut result = Vec::new();

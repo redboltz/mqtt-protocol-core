@@ -1,3 +1,4 @@
+use alloc::vec::Vec;
 /**
  * MIT License
  *
@@ -21,13 +22,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-use std::fmt;
+use core::fmt;
+use derive_builder::Builder;
+#[cfg(feature = "std")]
 use std::io::IoSlice;
 
 use serde::ser::{SerializeStruct, Serializer};
 use serde::Serialize;
 
-use derive_builder::Builder;
 use getset::{CopyGetters, Getters};
 
 use crate::mqtt::packet::packet_type::{FixedHeader, PacketType};
@@ -101,7 +103,7 @@ use crate::mqtt::result_code::MqttError;
 /// let buffers = connack.to_buffers();
 /// ```
 #[derive(PartialEq, Eq, Builder, Clone, Getters, CopyGetters)]
-#[builder(derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
+#[builder(no_std, derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
 pub struct Connack {
     #[builder(private)]
     fixed_header: [u8; 1],
@@ -285,6 +287,7 @@ impl Connack {
     /// let buffers = connack.to_buffers();
     /// // Use with vectored write: socket.write_vectored(&buffers)?;
     /// ```
+    #[cfg(feature = "std")]
     pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         vec![
             IoSlice::new(&self.fixed_header),
@@ -292,6 +295,48 @@ impl Connack {
             IoSlice::new(&self.ack_flags),
             IoSlice::new(&self.return_code_buf),
         ]
+    }
+
+    /// Create a continuous buffer containing the complete packet data
+    ///
+    /// Returns a vector containing all packet bytes in a single continuous buffer.
+    /// This method is compatible with no-std environments and provides an alternative
+    /// to [`to_buffers()`] when vectored I/O is not needed.
+    ///
+    /// The returned buffer contains:
+    /// 1. Fixed header (packet type and flags) - 1 byte
+    /// 2. Remaining length field - 1 byte (always 0x02)
+    /// 3. Acknowledgment flags - 1 byte
+    /// 4. Return code - 1 byte
+    ///
+    /// # Returns
+    ///
+    /// A vector containing the complete packet data
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// use mqtt_protocol_core::mqtt;
+    /// use mqtt_protocol_core::mqtt::result_code::ConnectReturnCode;
+    ///
+    /// let connack = mqtt::packet::v3_1_1::Connack::builder()
+    ///     .session_present(false)
+    ///     .return_code(ConnectReturnCode::Accepted)
+    ///     .build()
+    ///     .unwrap();
+    ///
+    /// let buffer = connack.to_continuous_buffer();
+    /// // buffer contains all packet bytes
+    /// ```
+    ///
+    /// [`to_buffers()`]: #method.to_buffers
+    pub fn to_continuous_buffer(&self) -> Vec<u8> {
+        let mut buf = Vec::new();
+        buf.extend_from_slice(&self.fixed_header);
+        buf.extend_from_slice(self.remaining_length.as_bytes());
+        buf.extend_from_slice(&self.ack_flags);
+        buf.extend_from_slice(&self.return_code_buf);
+        buf
     }
 
     /// Parse a CONNACK packet from raw bytes
@@ -730,8 +775,13 @@ impl GenericPacketTrait for Connack {
         self.size()
     }
 
+    #[cfg(feature = "std")]
     fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         self.to_buffers()
+    }
+
+    fn to_continuous_buffer(&self) -> Vec<u8> {
+        self.to_continuous_buffer()
     }
 }
 
@@ -777,11 +827,11 @@ impl GenericPacketTrait for Connack {
 /// log_packet(&connack);
 /// ```
 impl GenericPacketDisplay for Connack {
-    fn fmt_debug(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Debug::fmt(self, f)
+    fn fmt_debug(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Debug::fmt(self, f)
     }
 
-    fn fmt_display(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Display::fmt(self, f)
+    fn fmt_display(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Display::fmt(self, f)
     }
 }

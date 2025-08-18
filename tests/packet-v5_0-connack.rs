@@ -278,19 +278,29 @@ fn to_buffers_sp_rc() {
         .reason_code(mqtt::result_code::ConnectReasonCode::Success)
         .build()
         .unwrap();
+    let continuous = packet.to_continuous_buffer();
+    assert_eq!(continuous.len(), 5);
+    assert_eq!(continuous[0], 0x20); // fixed header
+    assert_eq!(continuous[1], 0x03); // remaining length
+    assert_eq!(continuous[2], 0x01); // session_present
+    assert_eq!(continuous[3], 0x00); // reason_code
+    assert_eq!(continuous[4], 0x00); // property_length
 
-    let buffers = packet.to_buffers();
-    assert_eq!(buffers.len(), 5);
-    assert_eq!(buffers[0].as_ref(), &[0x20]); // fixed header
-    assert_eq!(buffers[1].as_ref(), &[0x03]); // remaining length
-    assert_eq!(buffers[2].as_ref(), &[0x01]); // session_present
-    assert_eq!(buffers[3].as_ref(), &[0x00]); // reason_code
-    assert_eq!(buffers[4].as_ref(), &[0x00]); // property_length
+    #[cfg(feature = "std")]
+    {
+        let buffers = packet.to_buffers();
+        let mut buffers_data = Vec::new();
+        for buf in buffers.iter() {
+            buffers_data.extend_from_slice(buf);
+        }
+        assert_eq!(continuous, buffers_data.as_slice());
+    }
     assert_eq!(packet.size(), 5); // 1 + 1 + 1 + 1 + 1 = 5
+    assert_eq!(packet.size(), continuous.len());
 }
 
 #[test]
-fn to_buffers_sp_rc_prop1() {
+fn to_continuous_sp_rc_prop1() {
     let packet = mqtt::packet::v5_0::Connack::builder()
         .session_present(true)
         .reason_code(mqtt::result_code::ConnectReasonCode::Success)
@@ -300,17 +310,27 @@ fn to_buffers_sp_rc_prop1() {
         .build()
         .unwrap();
 
-    let buffers = packet.to_buffers();
-    assert_eq!(buffers.len(), 7);
-    assert_eq!(buffers[0].as_ref(), &[0x20]); // fixed header
-    assert_eq!(buffers[1].as_ref(), &[0x08]); // remaining length
-    assert_eq!(buffers[2].as_ref(), &[0x01]); // session_present
-    assert_eq!(buffers[3].as_ref(), &[0x00]); // reason_code
-    assert_eq!(buffers[4].as_ref(), &[0x05]); // property_length
-    assert_eq!(buffers[5].as_ref(), &[0x11]); // prop_id: session_expiry_interval
-    assert_eq!(buffers[6].as_ref(), &[0x00, 0x00, 0x00, 0x01]); // session_expiry_interval
+    let continuous = packet.to_continuous_buffer();
+    assert_eq!(continuous.len(), 10);
+    assert_eq!(continuous[0], 0x20); // fixed header
+    assert_eq!(continuous[1], 0x08); // remaining length
+    assert_eq!(continuous[2], 0x01); // session_present
+    assert_eq!(continuous[3], 0x00); // reason_code
+    assert_eq!(continuous[4], 0x05); // property_length
+    assert_eq!(continuous[5], 0x11); // prop_id: session_expiry_interval
+    assert_eq!(&continuous[6..], [0x00, 0x00, 0x00, 0x01]); // session_expiry_interval
 
+    #[cfg(feature = "std")]
+    {
+        let buffers = packet.to_buffers();
+        let mut buffers_data = Vec::new();
+        for buf in buffers.iter() {
+            buffers_data.extend_from_slice(buf);
+        }
+        assert_eq!(continuous, buffers_data.as_slice());
+    }
     assert_eq!(packet.size(), 10); // 1 + 1 + 1 + 1 + 1 + 1 + 4 = 10
+    assert_eq!(packet.size(), continuous.len());
 }
 
 // Parse tests

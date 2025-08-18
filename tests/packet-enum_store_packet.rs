@@ -447,9 +447,12 @@ fn size_v3_1_1_publish() {
     let size = store_packet.size();
     assert!(size > 0);
 
-    let buffers = store_packet.to_buffers();
-    let actual_size: usize = buffers.iter().map(|buf| buf.len()).sum();
-    assert_eq!(size, actual_size);
+    #[cfg(feature = "std")]
+    {
+        let buffers = store_packet.to_buffers();
+        let actual_size: usize = buffers.iter().map(|buf| buf.len()).sum();
+        assert_eq!(size, actual_size);
+    }
 }
 
 #[test]
@@ -463,9 +466,12 @@ fn size_v3_1_1_pubrel() {
     let size = store_packet.size();
     assert!(size > 0);
 
-    let buffers = store_packet.to_buffers();
-    let actual_size: usize = buffers.iter().map(|buf| buf.len()).sum();
-    assert_eq!(size, actual_size);
+    #[cfg(feature = "std")]
+    {
+        let buffers = store_packet.to_buffers();
+        let actual_size: usize = buffers.iter().map(|buf| buf.len()).sum();
+        assert_eq!(size, actual_size);
+    }
 }
 
 #[test]
@@ -483,9 +489,12 @@ fn size_v5_0_publish() {
     let size = store_packet.size();
     assert!(size > 0);
 
-    let buffers = store_packet.to_buffers();
-    let actual_size: usize = buffers.iter().map(|buf| buf.len()).sum();
-    assert_eq!(size, actual_size);
+    #[cfg(feature = "std")]
+    {
+        let buffers = store_packet.to_buffers();
+        let actual_size: usize = buffers.iter().map(|buf| buf.len()).sum();
+        assert_eq!(size, actual_size);
+    }
 }
 
 #[test]
@@ -499,12 +508,16 @@ fn size_v5_0_pubrel() {
     let size = store_packet.size();
     assert!(size > 0);
 
-    let buffers = store_packet.to_buffers();
-    let actual_size: usize = buffers.iter().map(|buf| buf.len()).sum();
-    assert_eq!(size, actual_size);
+    #[cfg(feature = "std")]
+    {
+        let buffers = store_packet.to_buffers();
+        let actual_size: usize = buffers.iter().map(|buf| buf.len()).sum();
+        assert_eq!(size, actual_size);
+    }
 }
 
 // to_buffers() tests (GenericPacketTrait)
+#[cfg(feature = "std")]
 #[test]
 fn to_buffers_v3_1_1_publish() {
     let publish = mqtt::packet::v3_1_1::Publish::builder()
@@ -528,6 +541,7 @@ fn to_buffers_v3_1_1_publish() {
     assert_eq!(all_bytes[0], 0x32); // PUBLISH packet type with QoS 1
 }
 
+#[cfg(feature = "std")]
 #[test]
 fn to_buffers_v3_1_1_pubrel() {
     let pubrel = mqtt::packet::v3_1_1::Pubrel::builder()
@@ -547,6 +561,7 @@ fn to_buffers_v3_1_1_pubrel() {
     assert_eq!(all_bytes[0], 0x62); // PUBREL packet type
 }
 
+#[cfg(feature = "std")]
 #[test]
 fn to_buffers_v5_0_publish() {
     let publish = mqtt::packet::v5_0::Publish::builder()
@@ -570,6 +585,7 @@ fn to_buffers_v5_0_publish() {
     assert_eq!(all_bytes[0], 0x32); // PUBLISH packet type with QoS 1
 }
 
+#[cfg(feature = "std")]
 #[test]
 fn to_buffers_v5_0_pubrel() {
     let pubrel = mqtt::packet::v5_0::Pubrel::builder()

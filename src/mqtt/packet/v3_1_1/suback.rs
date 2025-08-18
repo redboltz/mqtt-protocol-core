@@ -1,3 +1,4 @@
+use alloc::vec::Vec;
 /**
  * MIT License
  *
@@ -21,14 +22,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-use std::fmt;
+use core::fmt;
+use core::mem;
+use derive_builder::Builder;
+#[cfg(feature = "std")]
 use std::io::IoSlice;
-use std::mem;
 
 use serde::ser::{SerializeStruct, Serializer};
 use serde::Serialize;
 
-use derive_builder::Builder;
 use getset::{CopyGetters, Getters};
 
 use crate::mqtt::packet::packet_type::{FixedHeader, PacketType};
@@ -70,7 +72,7 @@ use crate::mqtt::result_code::SubackReturnCode;
 ///
 /// **Success codes (QoS levels):**
 /// - `0x00` Maximum QoS 0 - Subscription granted with maximum QoS 0
-/// - `0x01` Maximum QoS 1 - Subscription granted with maximum QoS 1  
+/// - `0x01` Maximum QoS 1 - Subscription granted with maximum QoS 1
 /// - `0x02` Maximum QoS 2 - Subscription granted with maximum QoS 2
 ///
 /// **Error codes:**
@@ -119,7 +121,7 @@ use crate::mqtt::result_code::SubackReturnCode;
 /// let buffers = suback.to_buffers();
 /// ```
 #[derive(PartialEq, Eq, Builder, Clone, Getters, CopyGetters)]
-#[builder(derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
+#[builder(no_std, derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
 pub struct GenericSuback<PacketIdType>
 where
     PacketIdType: IsPacketId,
@@ -284,7 +286,7 @@ where
     /// Parses the variable header and payload of a SUBACK packet from the provided
     /// byte buffer. The fixed header should already be parsed before calling this method.
     ///
-    /// # Arguments
+    /// # Parameters
     ///
     /// * `data` - The raw bytes containing the SUBACK packet variable header and payload
     ///
@@ -378,20 +380,15 @@ where
         1 + self.remaining_length.size() + self.remaining_length.to_u32() as usize
     }
 
-    /// Convert the SUBACK packet to I/O buffers for efficient network transmission
+    /// Create IoSlice buffers for efficient network I/O
     ///
-    /// Returns a vector of `IoSlice` references that can be used with vectored I/O
-    /// operations for efficient network transmission without copying data. The buffers
+    /// Returns a vector of `IoSlice` objects that can be used for vectored I/O
+    /// operations, allowing zero-copy writes to network sockets. The buffers
     /// represent the complete SUBACK packet in wire format.
-    ///
-    /// The returned buffers contain the packet in the following order:
-    /// 1. Fixed header (packet type and remaining length)
-    /// 2. Packet identifier
-    /// 3. Return codes
     ///
     /// # Returns
     ///
-    /// A `Vec<IoSlice<'_>>` containing references to the packet data
+    /// A vector of `IoSlice` objects for vectored I/O operations
     ///
     /// # Examples
     ///
@@ -406,9 +403,9 @@ where
     ///     .unwrap();
     ///
     /// let buffers = suback.to_buffers();
-    /// // Use buffers for vectored I/O operations
-    /// // let bytes_written = socket.write_vectored(&buffers)?;
+    /// // Use with vectored write: socket.write_vectored(&buffers)?;
     /// ```
+    #[cfg(feature = "std")]
     pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         let mut bufs = Vec::new();
         bufs.push(IoSlice::new(&self.fixed_header));
@@ -420,6 +417,50 @@ where
         }
 
         bufs
+    }
+
+    /// Create a continuous buffer containing the complete packet data
+    ///
+    /// Returns a vector containing all packet bytes in a single continuous buffer.
+    /// This method is an alternative to [`to_buffers()`] and is compatible with
+    /// no-std environments where vectored I/O may not be available.
+    ///
+    /// The returned buffer contains the complete SUBACK packet serialized according
+    /// to the MQTT v3.1.1 protocol specification, including fixed header, remaining
+    /// length, packet identifier, and return codes.
+    ///
+    /// # Returns
+    ///
+    /// A vector containing the complete packet data
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// use mqtt_protocol_core::mqtt;
+    /// use mqtt_protocol_core::mqtt::result_code::SubackReturnCode;
+    ///
+    /// let suback = mqtt::packet::v3_1_1::Suback::builder()
+    ///     .packet_id(42u16)
+    ///     .return_codes(vec![SubackReturnCode::SuccessMaximumQos1])
+    ///     .build()
+    ///     .unwrap();
+    ///
+    /// let buffer = suback.to_continuous_buffer();
+    /// // buffer contains all packet bytes
+    /// ```
+    ///
+    /// [`to_buffers()`]: #method.to_buffers
+    pub fn to_continuous_buffer(&self) -> Vec<u8> {
+        let mut buf = Vec::new();
+        buf.extend_from_slice(&self.fixed_header);
+        buf.extend_from_slice(self.remaining_length.as_bytes());
+        buf.extend_from_slice(self.packet_id_buf.as_ref());
+
+        if !self.return_codes_buf.is_empty() {
+            buf.extend_from_slice(&self.return_codes_buf);
+        }
+
+        buf
     }
 }
 
@@ -438,7 +479,7 @@ where
     /// SUBSCRIBE packet that this SUBACK is responding to. The packet identifier
     /// cannot be zero.
     ///
-    /// # Arguments
+    /// # Parameters
     ///
     /// * `id` - The packet identifier of type `PacketIdType`
     ///
@@ -469,7 +510,7 @@ where
     /// SUBSCRIBE packet. Each return code corresponds to a topic filter in the SUBSCRIBE
     /// packet, in the same order. At least one return code must be provided.
     ///
-    /// # Arguments
+    /// # Parameters
     ///
     /// * `codes` - A vector of `SubackReturnCode` values indicating subscription results
     ///
@@ -735,8 +776,13 @@ where
         self.size()
     }
 
+    #[cfg(feature = "std")]
     fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         self.to_buffers()
+    }
+
+    fn to_continuous_buffer(&self) -> Vec<u8> {
+        self.to_continuous_buffer()
     }
 }
 
@@ -766,11 +812,11 @@ impl<PacketIdType> GenericPacketDisplay for GenericSuback<PacketIdType>
 where
     PacketIdType: IsPacketId + Serialize,
 {
-    fn fmt_debug(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Debug::fmt(self, f)
+    fn fmt_debug(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Debug::fmt(self, f)
     }
 
-    fn fmt_display(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Display::fmt(self, f)
+    fn fmt_display(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Display::fmt(self, f)
     }
 }

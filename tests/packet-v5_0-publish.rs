@@ -425,10 +425,19 @@ fn to_buffers_qos0() {
         .build()
         .unwrap();
 
-    let buffers = packet.to_buffers();
-    assert_eq!(buffers[0].as_ref(), &[0x30]); // fixed header (QoS 0)
-    assert_eq!(buffers[1].as_ref(), &[0x0C]); // remaining length (12)
+    let continuous = packet.to_continuous_buffer();
+    assert_eq!(continuous[0], 0x30); // fixed header (QoS 0)
+    assert_eq!(continuous[1], 0x0C); // remaining length (12)
 
+    #[cfg(feature = "std")]
+    {
+        let buffers = packet.to_buffers();
+        let mut buffers_data = Vec::new();
+        for buf in buffers.iter() {
+            buffers_data.extend_from_slice(buf);
+        }
+        assert_eq!(continuous, buffers_data.as_slice());
+    }
     // topic length (2) + topic (4) + property length (1) + payload (5) = 12
     assert_eq!(packet.size(), 1 + 1 + 12); // fixed header + remaining length + payload
 }
@@ -444,10 +453,19 @@ fn to_buffers_qos1() {
         .build()
         .unwrap();
 
-    let buffers = packet.to_buffers();
-    assert_eq!(buffers[0].as_ref(), &[0x32]); // fixed header (QoS 1)
-    assert_eq!(buffers[1].as_ref(), &[0x0E]); // remaining length (14)
+    let continuous = packet.to_continuous_buffer();
+    assert_eq!(continuous[0], 0x32); // fixed header (QoS 1)
+    assert_eq!(continuous[1], 0x0E); // remaining length (14)
 
+    #[cfg(feature = "std")]
+    {
+        let buffers = packet.to_buffers();
+        let mut buffers_data = Vec::new();
+        for buf in buffers.iter() {
+            buffers_data.extend_from_slice(buf);
+        }
+        assert_eq!(continuous, buffers_data.as_slice());
+    }
     // topic length (2) + topic (4) + packet_id (2) + property length (1) + payload (5) = 14
     assert_eq!(packet.size(), 1 + 1 + 14); // fixed header + remaining length + payload
 }
@@ -463,8 +481,18 @@ fn to_buffers_with_flags() {
         .build()
         .unwrap();
 
-    let buffers = packet.to_buffers();
-    assert_eq!(buffers[0].as_ref(), &[0x39]); // fixed header with DUP and RETAIN flags
+    let continuous = packet.to_continuous_buffer();
+    assert_eq!(continuous[0], 0x39); // fixed header with DUP and RETAIN flags
+
+    #[cfg(feature = "std")]
+    {
+        let buffers = packet.to_buffers();
+        let mut buffers_data = Vec::new();
+        for buf in buffers.iter() {
+            buffers_data.extend_from_slice(buf);
+        }
+        assert_eq!(continuous, buffers_data.as_slice());
+    }
 }
 
 #[test]
@@ -482,10 +510,20 @@ fn to_buffers_with_props() {
         .build()
         .unwrap();
 
-    let buffers = packet.to_buffers();
+    let continuous = packet.to_continuous_buffer();
+
+    #[cfg(feature = "std")]
+    {
+        let buffers = packet.to_buffers();
+        let mut buffers_data = Vec::new();
+        for buf in buffers.iter() {
+            buffers_data.extend_from_slice(buf);
+        }
+        assert_eq!(continuous, buffers_data.as_slice());
+    }
     // Property length should be 5 bytes (1 byte property ID + 4 bytes value)
     // Total: topic length (2) + topic (4) + property length (1) + property (5) + payload (5) = 17
-    assert_eq!(buffers[1].as_ref(), &[0x11]); // remaining length (17)
+    assert_eq!(continuous[1], 0x11); // remaining length (17)
 }
 
 // Parse tests
@@ -1021,8 +1059,14 @@ fn test_length_recalculation_with_qos1() {
     let publish = result.unwrap();
 
     // Verify the packet can be serialized correctly (implies correct length calculation)
-    let buffers = publish.to_buffers();
-    assert!(!buffers.is_empty());
+    let continuous = publish.to_continuous_buffer();
+    assert!(!continuous.is_empty());
+
+    #[cfg(feature = "std")]
+    {
+        let buffers = publish.to_buffers();
+        assert!(!buffers.is_empty());
+    }
 
     // Verify packet ID is preserved for QoS1
     assert_eq!(publish.packet_id(), Some(123u16));
@@ -1117,8 +1161,13 @@ fn test_empty_properties_after_topic_alias_removal() {
     }
 
     // Verify packet can still be serialized
-    let buffers = publish.to_buffers();
-    assert!(!buffers.is_empty());
+    let continuous = publish.to_continuous_buffer();
+    assert!(!continuous.is_empty());
+    #[cfg(feature = "std")]
+    {
+        let buffers = publish.to_buffers();
+        assert!(!buffers.is_empty());
+    }
 }
 
 #[test]
@@ -1170,11 +1219,16 @@ fn test_roundtrip_serialization_after_modification() {
     }
 
     // Verify packet can be serialized
-    let buffers = publish.to_buffers();
-    assert!(!buffers.is_empty());
+    let continuous = publish.to_continuous_buffer();
+    assert!(!continuous.is_empty());
+    #[cfg(feature = "std")]
+    {
+        let buffers = publish.to_buffers();
+        assert!(!buffers.is_empty());
+    }
 
     // Calculate total size from buffers
-    let total_size: usize = buffers.iter().map(|buf| buf.len()).sum();
+    let total_size: usize = continuous.len();
     assert_eq!(
         total_size,
         publish.size(),

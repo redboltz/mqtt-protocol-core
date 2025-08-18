@@ -1,3 +1,4 @@
+use alloc::vec::Vec;
 /**
  * MIT License
  *
@@ -21,22 +22,24 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-use std::fmt;
+use core::fmt;
+use derive_builder::Builder;
+#[cfg(feature = "std")]
 use std::io::IoSlice;
 
 use serde::ser::{SerializeStruct, Serializer};
 use serde::Serialize;
 
-use derive_builder::Builder;
 use getset::{CopyGetters, Getters};
 
 use crate::mqtt::packet::packet_type::{FixedHeader, PacketType};
+use crate::mqtt::packet::property::PropertiesToContinuousBuffer;
 use crate::mqtt::packet::variable_byte_integer::VariableByteInteger;
 use crate::mqtt::packet::GenericPacketDisplay;
 use crate::mqtt::packet::GenericPacketTrait;
-use crate::mqtt::packet::{
-    Properties, PropertiesParse, PropertiesSize, PropertiesToBuffers, Property,
-};
+#[cfg(feature = "std")]
+use crate::mqtt::packet::PropertiesToBuffers;
+use crate::mqtt::packet::{Properties, PropertiesParse, PropertiesSize, Property};
 use crate::mqtt::result_code::AuthReasonCode;
 use crate::mqtt::result_code::MqttError;
 
@@ -100,7 +103,7 @@ use crate::mqtt::result_code::MqttError;
 ///     .unwrap();
 /// ```
 #[derive(PartialEq, Eq, Builder, Clone, Getters, CopyGetters)]
-#[builder(derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
+#[builder(no_std, derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
 pub struct Auth {
     /// Fixed header containing packet type and flags
     #[builder(private)]
@@ -216,36 +219,26 @@ impl Auth {
         1 + self.remaining_length.size() + self.remaining_length.to_u32() as usize
     }
 
-    /// Convert the AUTH packet to a series of I/O buffers for efficient network transmission
+    /// Create IoSlice buffers for efficient network I/O
     ///
-    /// Creates a vector of `IoSlice` buffers that represent the complete packet data.
-    /// This enables zero-copy transmission using vectored I/O operations like `writev()`.
-    /// The buffers are ordered according to the MQTT wire format.
+    /// Returns a vector of `IoSlice` objects that can be used for vectored I/O
+    /// operations, allowing zero-copy writes to network sockets. The buffers
+    /// represent the complete AUTH packet in wire format.
     ///
     /// # Returns
     ///
-    /// * `Vec<IoSlice<'_>>` - Vector of I/O slices representing the packet data
-    ///
-    /// # Buffer Order
-    ///
-    /// 1. Fixed header (1 byte)
-    /// 2. Remaining length (1-4 bytes)
-    /// 3. Reason code (1 byte, if present)
-    /// 4. Property length (1-4 bytes, if properties present)
-    /// 5. Properties data (variable length, if present)
+    /// A vector of `IoSlice` objects for vectored I/O operations
     ///
     /// # Examples
     ///
     /// ```ignore
     /// use mqtt_protocol_core::mqtt;
-    /// use std::io::IoSlice;
     ///
     /// let auth = mqtt::packet::v5_0::Auth::builder().build().unwrap();
     /// let buffers = auth.to_buffers();
-    ///
-    /// // Send using vectored I/O
-    /// // socket.write_vectored(&buffers)?;
+    /// // Use with vectored write: socket.write_vectored(&buffers)?;
     /// ```
+    #[cfg(feature = "std")]
     pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         let mut bufs = Vec::new();
         bufs.push(IoSlice::new(&self.fixed_header));
@@ -261,6 +254,47 @@ impl Auth {
         }
 
         bufs
+    }
+
+    /// Create a continuous buffer containing the complete packet data
+    ///
+    /// Returns a vector containing all packet bytes in a single continuous buffer.
+    /// This method provides an alternative to `to_buffers()` for no-std environments
+    /// where vectored I/O is not available.
+    ///
+    /// The returned buffer contains the complete AUTH packet serialized according
+    /// to the MQTT v5.0 protocol specification, including fixed header, remaining
+    /// length, optional reason code, and optional properties.
+    ///
+    /// # Returns
+    ///
+    /// A vector containing the complete packet data
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// use mqtt_protocol_core::mqtt;
+    ///
+    /// let auth = mqtt::packet::v5_0::Auth::builder().build().unwrap();
+    /// let buffer = auth.to_continuous_buffer();
+    /// // buffer contains all packet bytes
+    /// ```
+    ///
+    /// [`to_buffers()`]: #method.to_buffers
+    pub fn to_continuous_buffer(&self) -> Vec<u8> {
+        let mut buf = Vec::new();
+        buf.extend_from_slice(&self.fixed_header);
+        buf.extend_from_slice(self.remaining_length.as_bytes());
+        if let Some(rc_buf) = &self.reason_code_buf {
+            buf.extend_from_slice(rc_buf);
+        }
+        if let Some(pl) = &self.property_length {
+            buf.extend_from_slice(pl.as_bytes());
+        }
+        if let Some(ref props) = self.props {
+            buf.append(&mut props.to_continuous_buffer());
+        }
+        buf
     }
 
     /// Parse an AUTH packet from raw bytes
@@ -624,8 +658,13 @@ impl GenericPacketTrait for Auth {
         self.size()
     }
 
+    #[cfg(feature = "std")]
     fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         self.to_buffers()
+    }
+
+    fn to_continuous_buffer(&self) -> Vec<u8> {
+        self.to_continuous_buffer()
     }
 }
 
@@ -635,12 +674,12 @@ impl GenericPacketTrait for Auth {
 /// formatting capabilities for AUTH packets. This trait enables consistent
 /// display and debug output across different packet types.
 impl GenericPacketDisplay for Auth {
-    fn fmt_debug(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Debug::fmt(self, f)
+    fn fmt_debug(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Debug::fmt(self, f)
     }
 
-    fn fmt_display(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Display::fmt(self, f)
+    fn fmt_display(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Display::fmt(self, f)
     }
 }
 

@@ -21,8 +21,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-use std::collections::HashMap;
-
+use crate::mqtt::common::HashMap;
+use alloc::{
+    string::{String, ToString},
+    vec::Vec,
+};
 use indexmap::IndexMap;
 use tracing::trace;
 
@@ -63,7 +66,7 @@ impl TopicAliasSend {
 
     /// Insert or update a topic-alias mapping
     ///
-    /// # Arguments
+    /// # Parameters
     /// * `topic` - The topic name (must not be empty)
     /// * `alias` - The alias value (must be between MIN_ALIAS and max_alias)
     ///
@@ -104,7 +107,7 @@ impl TopicAliasSend {
 
     /// Get topic by alias and update access timestamp (affects LRU)
     ///
-    /// # Arguments
+    /// # Parameters
     /// * `alias` - The alias to look up
     ///
     /// # Returns
@@ -125,7 +128,7 @@ impl TopicAliasSend {
 
     /// Peek topic by alias without updating access timestamp (does not affect LRU)
     ///
-    /// # Arguments
+    /// # Parameters
     /// * `alias` - The alias to look up
     ///
     /// # Returns
@@ -143,7 +146,7 @@ impl TopicAliasSend {
 
     /// Find alias by topic name
     ///
-    /// # Arguments
+    /// # Parameters
     /// * `topic` - The topic name to look up
     ///
     /// # Returns

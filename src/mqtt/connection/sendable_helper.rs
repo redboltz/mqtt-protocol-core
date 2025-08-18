@@ -27,6 +27,7 @@ use crate::mqtt::connection::GenericConnection;
 use crate::mqtt::connection::GenericEvent;
 use crate::mqtt::packet::IsPacketId;
 use crate::mqtt::packet::{v3_1_1, v5_0};
+use alloc::vec::Vec;
 
 macro_rules! impl_sendable_helper {
     ($role:ty, $packet_type:ty, $method:ident, $process_method:ident) => {

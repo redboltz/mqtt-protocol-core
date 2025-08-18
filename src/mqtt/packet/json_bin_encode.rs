@@ -1,3 +1,5 @@
+use alloc::string::ToString;
+
 /**
  * MIT License
  *
@@ -21,8 +23,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+use alloc::string::String;
+
 pub fn escape_binary_json_string(bytes: &[u8]) -> Option<String> {
-    match std::str::from_utf8(bytes) {
+    match core::str::from_utf8(bytes) {
         Ok(s) => Some(s.to_string()),
         Err(_) => None,
     }

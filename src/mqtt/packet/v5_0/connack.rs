@@ -1,3 +1,4 @@
+use alloc::vec::Vec;
 /**
  * MIT License
  *
@@ -21,22 +22,24 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-use std::fmt;
+use core::fmt;
+use derive_builder::Builder;
+#[cfg(feature = "std")]
 use std::io::IoSlice;
 
 use serde::ser::{SerializeStruct, Serializer};
 use serde::Serialize;
 
-use derive_builder::Builder;
 use getset::{CopyGetters, Getters};
 
 use crate::mqtt::packet::packet_type::{FixedHeader, PacketType};
+use crate::mqtt::packet::property::PropertiesToContinuousBuffer;
 use crate::mqtt::packet::variable_byte_integer::VariableByteInteger;
 use crate::mqtt::packet::GenericPacketDisplay;
 use crate::mqtt::packet::GenericPacketTrait;
-use crate::mqtt::packet::{
-    Properties, PropertiesParse, PropertiesSize, PropertiesToBuffers, Property,
-};
+#[cfg(feature = "std")]
+use crate::mqtt::packet::PropertiesToBuffers;
+use crate::mqtt::packet::{Properties, PropertiesParse, PropertiesSize, Property};
 use crate::mqtt::result_code::ConnectReasonCode;
 use crate::mqtt::result_code::MqttError;
 
@@ -135,7 +138,7 @@ use crate::mqtt::result_code::MqttError;
 /// let buffers = connack.to_buffers();
 /// ```
 #[derive(PartialEq, Eq, Builder, Clone, Getters, CopyGetters)]
-#[builder(derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
+#[builder(no_std, derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
 pub struct Connack {
     #[builder(private)]
     fixed_header: [u8; 1],
@@ -292,14 +295,6 @@ impl Connack {
     /// operations, allowing zero-copy writes to network sockets. The buffers
     /// represent the complete CONNACK packet in wire format.
     ///
-    /// The returned buffers contain:
-    /// 1. Fixed header (packet type and flags)
-    /// 2. Remaining length field
-    /// 3. Acknowledgment flags
-    /// 4. Reason code
-    /// 5. Property length field
-    /// 6. Properties data (if any)
-    ///
     /// # Returns
     ///
     /// A vector of `IoSlice` objects for vectored I/O operations
@@ -319,6 +314,7 @@ impl Connack {
     /// let buffers = connack.to_buffers();
     /// // Use with vectored write: socket.write_vectored(&buffers)?;
     /// ```
+    #[cfg(feature = "std")]
     pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         let mut bufs = Vec::new();
         bufs.push(IoSlice::new(&self.fixed_header));
@@ -329,6 +325,48 @@ impl Connack {
         bufs.extend(self.props.to_buffers());
 
         bufs
+    }
+
+    /// Create a continuous buffer containing the complete packet data
+    ///
+    /// Returns a vector containing all packet bytes in a single continuous buffer.
+    /// This method provides an alternative to `to_buffers()` for no-std environments
+    /// where vectored I/O is not available.
+    ///
+    /// The returned buffer contains the complete CONNACK packet serialized according
+    /// to the MQTT v5.0 protocol specification, including fixed header, remaining
+    /// length, acknowledgment flags, reason code, property length, and properties.
+    ///
+    /// # Returns
+    ///
+    /// A vector containing the complete packet data
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// use mqtt_protocol_core::mqtt;
+    /// use mqtt_protocol_core::mqtt::result_code::ConnectReasonCode;
+    ///
+    /// let connack = mqtt::packet::v5_0::Connack::builder()
+    ///     .session_present(false)
+    ///     .reason_code(ConnectReasonCode::Success)
+    ///     .build()
+    ///     .unwrap();
+    ///
+    /// let buffer = connack.to_continuous_buffer();
+    /// // buffer contains all packet bytes
+    /// ```
+    ///
+    /// [`to_buffers()`]: #method.to_buffers
+    pub fn to_continuous_buffer(&self) -> Vec<u8> {
+        let mut buf = Vec::new();
+        buf.extend_from_slice(&self.fixed_header);
+        buf.extend_from_slice(self.remaining_length.as_bytes());
+        buf.extend_from_slice(&self.ack_flags);
+        buf.extend_from_slice(&self.reason_code_buf);
+        buf.extend_from_slice(self.property_length.as_bytes());
+        buf.append(&mut self.props.to_continuous_buffer());
+        buf
     }
 
     /// Parse a CONNACK packet from raw bytes
@@ -706,8 +744,13 @@ impl GenericPacketTrait for Connack {
         self.size()
     }
 
+    #[cfg(feature = "std")]
     fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         self.to_buffers()
+    }
+
+    fn to_continuous_buffer(&self) -> Vec<u8> {
+        self.to_continuous_buffer()
     }
 }
 
@@ -739,12 +782,12 @@ impl GenericPacketTrait for Connack {
 /// println!("{}", format_args!("{}", connack)); // Uses fmt_display
 /// ```
 impl GenericPacketDisplay for Connack {
-    fn fmt_debug(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Debug::fmt(self, f)
+    fn fmt_debug(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Debug::fmt(self, f)
     }
 
-    fn fmt_display(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Display::fmt(self, f)
+    fn fmt_display(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Display::fmt(self, f)
     }
 }
 

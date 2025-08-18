@@ -1,3 +1,17 @@
+# 0.3.0
+
+## Breaking changes
+
+* Support no-std (required core and alloc). #17
+  * HashSet, HashMap, and Cursor are in `mqtt::common` instead of `std::*`.
+
+## Other updates
+
+* Add to_continuous_buffer() method for packets. #17
+* Refine CI. #9
+* Refine TopicAlias for sending. # 15, #16
+* Add tests. #8, #10, #11, #12, #13
+
 # 0.2.0
 
 ## Breaking changes

@@ -1,3 +1,4 @@
+use alloc::vec::Vec;
 /**
  * MIT License
  *
@@ -21,13 +22,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-use std::fmt;
+use core::fmt;
+use derive_builder::Builder;
+#[cfg(feature = "std")]
 use std::io::IoSlice;
 
 use serde::ser::{SerializeStruct, Serializer};
 use serde::Serialize;
-
-use derive_builder::Builder;
 
 use crate::mqtt::packet::packet_type::{FixedHeader, PacketType};
 use crate::mqtt::packet::variable_byte_integer::VariableByteInteger;
@@ -91,7 +92,7 @@ use crate::mqtt::result_code::MqttError;
 /// assert_eq!(buffers.len(), 2); // Fixed header + remaining length
 /// ```
 #[derive(PartialEq, Eq, Builder, Clone)]
-#[builder(derive(Debug), pattern = "owned", build_fn(skip))]
+#[builder(no_std, derive(Debug), pattern = "owned", build_fn(skip))]
 pub struct Pingreq {
     #[builder(private)]
     fixed_header: [u8; 1],
@@ -187,16 +188,15 @@ impl Pingreq {
         1 + self.remaining_length.size() + self.remaining_length.to_u32() as usize
     }
 
-    /// Converts the PINGREQ packet to a vector of I/O slices for efficient network transmission
+    /// Create IoSlice buffers for efficient network I/O
     ///
-    /// This method provides zero-copy serialization by returning references to the
-    /// internal packet data as I/O slices, which can be used directly with vectored I/O operations.
+    /// Returns a vector of `IoSlice` objects that can be used for vectored I/O
+    /// operations, allowing zero-copy writes to network sockets. The buffers
+    /// represent the complete PINGREQ packet in wire format.
     ///
     /// # Returns
     ///
-    /// A vector containing:
-    /// - Fixed header slice (1 byte)
-    /// - Remaining length slice (1 byte)
+    /// A vector of `IoSlice` objects for vectored I/O operations
     ///
     /// # Examples
     ///
@@ -205,16 +205,46 @@ impl Pingreq {
     ///
     /// let pingreq = mqtt::packet::v5_0::Pingreq::new();
     /// let buffers = pingreq.to_buffers();
-    /// assert_eq!(buffers.len(), 2);
-    ///
-    /// // Can be used with vectored write operations
-    /// // stream.write_vectored(&buffers).await?;
+    /// // Use with vectored write: socket.write_vectored(&buffers)?;
     /// ```
+    #[cfg(feature = "std")]
+    #[cfg(feature = "std")]
     pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         vec![
             IoSlice::new(&self.fixed_header),
             IoSlice::new(self.remaining_length.as_bytes()),
         ]
+    }
+
+    /// Create a continuous buffer containing the complete packet data
+    ///
+    /// Returns a vector containing all packet bytes in a single continuous buffer.
+    /// This method provides an alternative to `to_buffers()` for no-std environments
+    /// where vectored I/O is not available.
+    ///
+    /// The returned buffer contains the complete PINGREQ packet serialized according
+    /// to the MQTT v5.0 protocol specification.
+    ///
+    /// # Returns
+    ///
+    /// A vector containing the complete packet data
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// use mqtt_protocol_core::mqtt;
+    ///
+    /// let pingreq = mqtt::packet::v5_0::Pingreq::new();
+    /// let buffer = pingreq.to_continuous_buffer();
+    /// // buffer contains all packet bytes
+    /// ```
+    ///
+    /// [`to_buffers()`]: #method.to_buffers
+    pub fn to_continuous_buffer(&self) -> Vec<u8> {
+        let mut buf = Vec::new();
+        buf.extend_from_slice(&self.fixed_header);
+        buf.extend_from_slice(self.remaining_length.as_bytes());
+        buf
     }
 
     /// Parses a PINGREQ packet from raw bytes
@@ -379,8 +409,13 @@ impl GenericPacketTrait for Pingreq {
         self.size()
     }
 
+    #[cfg(feature = "std")]
     fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         self.to_buffers()
+    }
+
+    fn to_continuous_buffer(&self) -> Vec<u8> {
+        self.to_continuous_buffer()
     }
 }
 
@@ -394,11 +429,11 @@ impl GenericPacketTrait for Pingreq {
 /// - `fmt_debug()`: Debug formatting
 /// - `fmt_display()`: Display formatting
 impl GenericPacketDisplay for Pingreq {
-    fn fmt_debug(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Debug::fmt(self, f)
+    fn fmt_debug(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Debug::fmt(self, f)
     }
 
-    fn fmt_display(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Display::fmt(self, f)
+    fn fmt_display(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Display::fmt(self, f)
     }
 }
