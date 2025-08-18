@@ -27,6 +27,7 @@ use alloc::{
 };
 use core::marker::PhantomData;
 
+use crate::mqtt::common::tracing::trace;
 use crate::mqtt::common::Cursor;
 use crate::mqtt::common::HashSet;
 use crate::mqtt::connection::event::{GenericEvent, TimerKind};
@@ -1580,7 +1581,7 @@ where
         } else if let Some(ta) = ta_opt {
             // Topic alias is provided
             if self.validate_topic_alias_range(ta) {
-                tracing::trace!(
+                trace!(
                     "topic alias: {} - {} is registered.",
                     packet.topic_name(),
                     ta
@@ -1603,6 +1604,7 @@ where
             if self.auto_map_topic_alias_send {
                 if let Some(ref mut topic_alias_send) = self.topic_alias_send {
                     if let Some(found_ta) = topic_alias_send.find_by_topic(packet.topic_name()) {
+                        #[cfg(feature = "tracing")]
                         tracing::trace!(
                             "topic alias: {} - {} is found.",
                             packet.topic_name(),
@@ -1618,6 +1620,7 @@ where
             } else if self.auto_replace_topic_alias_send {
                 if let Some(ref topic_alias_send) = self.topic_alias_send {
                     if let Some(found_ta) = topic_alias_send.find_by_topic(packet.topic_name()) {
+                        #[cfg(feature = "tracing")]
                         tracing::trace!(
                             "topic alias: {} - {} is found.",
                             packet.topic_name(),

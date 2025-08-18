@@ -21,40 +21,19 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#[cfg(feature = "tracing")]
-use once_cell::sync::OnceCell;
-#[cfg(feature = "tracing")]
-use tracing::Level;
-#[cfg(feature = "tracing")]
-use tracing_subscriber::{fmt, EnvFilter};
+
+/// Feature-conditional tracing macros
+/// When the 'tracing' feature is enabled, these delegate to the real tracing macros.
+/// When disabled, they compile to no-ops.
 
 #[cfg(feature = "tracing")]
-static LOGGER: OnceCell<()> = OnceCell::new();
+pub use tracing::trace;
 
-/// Initializes the tracing logger with the specified default level.
-///
-/// This function is only available when the `tracing` feature is enabled.
-/// It sets up a tracing subscriber with environment filtering capabilities.
-///
-/// # Parameters
-///
-/// * `default_level` - The default logging level to use if no environment configuration is found
-///
-/// # Examples
-///
-/// ```ignore
-/// #[cfg(feature = "tracing")]
-/// {
-///     use tracing::Level;
-///     mqtt_protocol_core::logger::init(Level::INFO);
-/// }
-/// ```
-#[cfg(feature = "tracing")]
-pub fn init(default_level: Level) {
-    LOGGER.get_or_init(|| {
-        let env_filter = EnvFilter::try_from_default_env()
-            .unwrap_or_else(|_| EnvFilter::from(default_level.to_string()));
-
-        fmt().with_env_filter(env_filter).with_target(true).init();
-    });
+#[cfg(not(feature = "tracing"))]
+#[macro_export]
+macro_rules! trace {
+    ($($arg:tt)*) => {};
 }
+
+#[cfg(not(feature = "tracing"))]
+pub use crate::trace;

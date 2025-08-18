@@ -1,3 +1,7 @@
+# 0.3.1
+
+* Separate tracing feature. #18
+
 # 0.3.0
 
 ## Breaking changes

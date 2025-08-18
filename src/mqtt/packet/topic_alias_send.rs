@@ -1,3 +1,4 @@
+use crate::mqtt::common::tracing::trace;
 /**
  * MIT License
  *
@@ -27,7 +28,6 @@ use alloc::{
     vec::Vec,
 };
 use indexmap::IndexMap;
-use tracing::trace;
 
 use crate::mqtt::ValueAllocator;
 
