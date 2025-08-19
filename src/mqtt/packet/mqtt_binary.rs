@@ -26,11 +26,21 @@ use serde::{Serialize, Serializer};
 #[cfg(feature = "std")]
 use std::io::IoSlice;
 
-/// MQTT Binary Data representation with pre-encoded byte buffer
+// Default stack buffer size for small binary optimization
+const DEFAULT_STACK_BUFFER_SIZE: usize = 32;
+
+/// MQTT Binary Data representation with Small Buffer Optimization (SBO)
 ///
-/// This struct represents binary data as specified in the MQTT protocol specification.
+/// `GenericMqttBinary` represents binary data as specified in the MQTT protocol specification.
 /// It efficiently stores binary data with a 2-byte length prefix, following the MQTT
-/// wire format for binary data fields.
+/// wire format for binary data fields. Small binary data (≤ STACK_BUFFER_SIZE bytes) is
+/// stored on the stack to avoid heap allocation, while larger data uses heap allocation.
+///
+/// # Small Buffer Optimization
+///
+/// - Binary data with encoded size ≤ STACK_BUFFER_SIZE bytes are stored on the stack
+/// - Larger binary data is stored on the heap using Vec<u8>
+/// - This provides zero heap allocation for typical small MQTT binary payloads
 ///
 /// The binary data is stored in a pre-encoded format internally, which includes:
 /// - 2 bytes for the length prefix (big-endian u16)
@@ -41,6 +51,10 @@ use std::io::IoSlice;
 /// - Efficient memory usage with single allocation
 /// - Guaranteed MQTT protocol compliance
 /// - Fast size calculations
+///
+/// # Type Parameters
+///
+/// * `STACK_BUFFER_SIZE` - Size of the stack buffer in bytes (default: 32)
 ///
 /// # Size Limits
 ///
@@ -53,9 +67,12 @@ use std::io::IoSlice;
 /// ```ignore
 /// use mqtt_protocol_core::mqtt;
 ///
-/// // Create binary data from a byte slice
+/// // Default stack buffer size (32 bytes)
 /// let data = b"hello world";
 /// let mqtt_binary = mqtt::packet::MqttBinary::new(data).unwrap();
+///
+/// // Custom stack buffer size (64 bytes)
+/// let custom_binary = mqtt::packet::GenericMqttBinary::<64>::new(data).unwrap();
 ///
 /// // Access the binary data
 /// assert_eq!(mqtt_binary.as_slice(), b"hello world");
@@ -65,17 +82,40 @@ use std::io::IoSlice;
 /// let encoded = mqtt_binary.as_bytes();
 /// assert_eq!(encoded.len(), 13); // 2 bytes length + 11 bytes data
 /// ```
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub struct MqttBinary {
-    /// Complete buffer containing length prefix (2 bytes) + binary data
-    encoded: Vec<u8>,
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub enum GenericMqttBinary<const STACK_BUFFER_SIZE: usize = DEFAULT_STACK_BUFFER_SIZE> {
+    /// Small binary data stored on the stack (encoded size ≤ STACK_BUFFER_SIZE)
+    Small([u8; STACK_BUFFER_SIZE], usize), // buffer, actual_encoded_length
+    /// Large binary data stored on the heap
+    Large(Vec<u8>), // complete encoded buffer
 }
 
-impl MqttBinary {
+impl<const STACK_BUFFER_SIZE: usize> core::fmt::Debug for GenericMqttBinary<STACK_BUFFER_SIZE> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        if STACK_BUFFER_SIZE == DEFAULT_STACK_BUFFER_SIZE {
+            f.debug_struct("MqttBinary")
+                .field("len", &self.len())
+                .field("data", &self.as_slice())
+                .finish()
+        } else {
+            f.debug_struct(&format!("GenericMqttBinary<{STACK_BUFFER_SIZE}>"))
+                .field("len", &self.len())
+                .field("data", &self.as_slice())
+                .finish()
+        }
+    }
+}
+
+/// Type alias for MqttBinary with default stack buffer size
+pub type MqttBinary = GenericMqttBinary<DEFAULT_STACK_BUFFER_SIZE>;
+
+impl<const STACK_BUFFER_SIZE: usize> GenericMqttBinary<STACK_BUFFER_SIZE> {
     /// Create a new MqttBinary from binary data
     ///
     /// Creates an `MqttBinary` instance from the provided binary data.
     /// The data is copied into an internal buffer with a 2-byte length prefix.
+    /// Small data (encoded size ≤ STACK_BUFFER_SIZE bytes) is stored on the stack,
+    /// while larger data uses heap allocation.
     ///
     /// # Parameters
     ///
@@ -108,13 +148,21 @@ impl MqttBinary {
             return Err(MqttError::MalformedPacket);
         }
         let len = data_ref.len() as u16;
+        let encoded_size = 2 + data_ref.len(); // 2 bytes for length prefix + data
 
-        let mut encoded = Vec::with_capacity(2 + data_ref.len());
-        encoded.push((len >> 8) as u8);
-        encoded.push(len as u8);
-        encoded.extend_from_slice(data_ref);
-
-        Ok(Self { encoded })
+        if encoded_size <= STACK_BUFFER_SIZE {
+            let mut buffer = [0u8; STACK_BUFFER_SIZE];
+            buffer[0] = (len >> 8) as u8;
+            buffer[1] = len as u8;
+            buffer[2..2 + data_ref.len()].copy_from_slice(data_ref);
+            Ok(Self::Small(buffer, encoded_size))
+        } else {
+            let mut encoded = Vec::with_capacity(encoded_size);
+            encoded.push((len >> 8) as u8);
+            encoded.push(len as u8);
+            encoded.extend_from_slice(data_ref);
+            Ok(Self::Large(encoded))
+        }
     }
 
     /// Get the complete encoded byte sequence including length prefix
@@ -136,7 +184,10 @@ impl MqttBinary {
     /// assert_eq!(bytes, &[0x00, 0x02, b'h', b'i']);
     /// ```
     pub fn as_bytes(&self) -> &[u8] {
-        &self.encoded
+        match self {
+            Self::Small(buffer, len) => &buffer[..*len],
+            Self::Large(encoded) => encoded,
+        }
     }
 
     /// Get only the binary data without the length prefix
@@ -157,7 +208,10 @@ impl MqttBinary {
     /// assert_eq!(binary.as_slice(), b"hello");
     /// ```
     pub fn as_slice(&self) -> &[u8] {
-        &self.encoded[2..]
+        match self {
+            Self::Small(buffer, len) => &buffer[2..*len],
+            Self::Large(encoded) => &encoded[2..],
+        }
     }
 
     /// Get the length of the binary data in bytes
@@ -181,7 +235,10 @@ impl MqttBinary {
     /// assert_eq!(empty.len(), 0);
     /// ```
     pub fn len(&self) -> usize {
-        self.encoded.len() - 2
+        match self {
+            Self::Small(_, len) => len - 2,
+            Self::Large(encoded) => encoded.len() - 2,
+        }
     }
 
     /// Check if the binary data is empty
@@ -205,7 +262,10 @@ impl MqttBinary {
     /// assert!(!data.is_empty());
     /// ```
     pub fn is_empty(&self) -> bool {
-        self.encoded.len() <= 2
+        match self {
+            Self::Small(_, len) => *len <= 2,
+            Self::Large(encoded) => encoded.len() <= 2,
+        }
     }
 
     /// Get the total encoded size including the length field
@@ -227,7 +287,10 @@ impl MqttBinary {
     /// assert_eq!(binary.len(), 5);  // Only data length
     /// ```
     pub fn size(&self) -> usize {
-        self.encoded.len()
+        match self {
+            Self::Small(_, len) => *len,
+            Self::Large(encoded) => encoded.len(),
+        }
     }
 
     /// Create IoSlice buffers for efficient network I/O
@@ -252,7 +315,7 @@ impl MqttBinary {
     /// ```
     #[cfg(feature = "std")]
     pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
-        vec![IoSlice::new(&self.encoded)]
+        vec![IoSlice::new(self.as_bytes())]
     }
 
     /// Create a continuous buffer containing the complete packet data
@@ -277,13 +340,15 @@ impl MqttBinary {
     ///
     /// [`to_buffers()`]: #method.to_buffers
     pub fn to_continuous_buffer(&self) -> Vec<u8> {
-        self.encoded.clone()
+        self.as_bytes().to_vec()
     }
 
     /// Parse binary data from a byte sequence
     ///
     /// Decodes MQTT binary data from a byte buffer according to the MQTT protocol.
     /// The buffer must start with a 2-byte length prefix followed by the binary data.
+    /// Small data (encoded size ≤ STACK_BUFFER_SIZE bytes) is stored on the stack,
+    /// while larger data uses heap allocation.
     ///
     /// # Parameters
     ///
@@ -312,34 +377,39 @@ impl MqttBinary {
         }
 
         let data_len = ((data[0] as usize) << 8) | (data[1] as usize);
-        if data.len() < 2 + data_len {
+        let total_size = 2 + data_len;
+        if data.len() < total_size {
             return Err(MqttError::MalformedPacket);
         }
 
-        // Create encoded buffer
-        let mut encoded = Vec::with_capacity(2 + data_len);
-        encoded.extend_from_slice(&data[0..2 + data_len]);
-
-        Ok((Self { encoded }, 2 + data_len))
+        if total_size <= STACK_BUFFER_SIZE {
+            let mut buffer = [0u8; STACK_BUFFER_SIZE];
+            buffer[..total_size].copy_from_slice(&data[..total_size]);
+            Ok((Self::Small(buffer, total_size), total_size))
+        } else {
+            let mut encoded = Vec::with_capacity(total_size);
+            encoded.extend_from_slice(&data[..total_size]);
+            Ok((Self::Large(encoded), total_size))
+        }
     }
 }
 
-/// Implementation of `AsRef<[u8]>` for `MqttBinary`
+/// Implementation of `AsRef<[u8]>` for `GenericMqttBinary`
 ///
 /// Returns the binary data portion (without length prefix) when the
-/// `MqttBinary` is used in contexts expecting a byte slice reference.
-impl AsRef<[u8]> for MqttBinary {
+/// `GenericMqttBinary` is used in contexts expecting a byte slice reference.
+impl<const STACK_BUFFER_SIZE: usize> AsRef<[u8]> for GenericMqttBinary<STACK_BUFFER_SIZE> {
     fn as_ref(&self) -> &[u8] {
         self.as_slice()
     }
 }
 
-/// Implementation of `Deref` for `MqttBinary`
+/// Implementation of `Deref` for `GenericMqttBinary`
 ///
-/// Allows `MqttBinary` to be used directly as a byte slice in many contexts
+/// Allows `GenericMqttBinary` to be used directly as a byte slice in many contexts
 /// through automatic dereferencing. The dereferenced value is the binary data
 /// without the length prefix.
-impl core::ops::Deref for MqttBinary {
+impl<const STACK_BUFFER_SIZE: usize> core::ops::Deref for GenericMqttBinary<STACK_BUFFER_SIZE> {
     type Target = [u8];
 
     fn deref(&self) -> &Self::Target {
@@ -347,11 +417,11 @@ impl core::ops::Deref for MqttBinary {
     }
 }
 
-/// Implementation of `Serialize` for `MqttBinary`
+/// Implementation of `Serialize` for `GenericMqttBinary`
 ///
 /// Serializes the binary data portion (without length prefix) as bytes.
 /// This is useful for JSON serialization and other serialization formats.
-impl Serialize for MqttBinary {
+impl<const STACK_BUFFER_SIZE: usize> Serialize for GenericMqttBinary<STACK_BUFFER_SIZE> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -360,11 +430,11 @@ impl Serialize for MqttBinary {
     }
 }
 
-/// Implementation of `TryFrom<&str>` for `MqttBinary`
+/// Implementation of `TryFrom<&str>` for `GenericMqttBinary`
 ///
-/// Converts a string slice to `MqttBinary` by converting the string to UTF-8 bytes.
+/// Converts a string slice to `GenericMqttBinary` by converting the string to UTF-8 bytes.
 /// This is useful when you need to store text data as binary in MQTT packets.
-impl TryFrom<&str> for MqttBinary {
+impl<const STACK_BUFFER_SIZE: usize> TryFrom<&str> for GenericMqttBinary<STACK_BUFFER_SIZE> {
     type Error = MqttError;
 
     fn try_from(s: &str) -> Result<Self, Self::Error> {
@@ -372,14 +442,15 @@ impl TryFrom<&str> for MqttBinary {
     }
 }
 
-/// Implementation of `Default` for `MqttBinary`
+/// Implementation of `Default` for `GenericMqttBinary`
 ///
-/// Creates an empty `MqttBinary` with zero-length binary data.
+/// Creates an empty `GenericMqttBinary` with zero-length binary data.
 /// The internal buffer contains only the 2-byte length prefix (0x00, 0x00).
-impl Default for MqttBinary {
+impl<const STACK_BUFFER_SIZE: usize> Default for GenericMqttBinary<STACK_BUFFER_SIZE> {
     fn default() -> Self {
-        MqttBinary {
-            encoded: vec![0x00, 0x00],
-        }
+        let mut buffer = [0u8; STACK_BUFFER_SIZE];
+        buffer[0] = 0x00; // length high byte
+        buffer[1] = 0x00; // length low byte
+        Self::Small(buffer, 2) // encoded size is 2 bytes (just the length prefix)
     }
 }

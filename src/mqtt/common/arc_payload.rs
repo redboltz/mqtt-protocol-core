@@ -23,28 +23,57 @@
 use alloc::{string::String, sync::Arc, vec::Vec};
 use serde::{Serialize, Serializer};
 
-/// A reference-counted byte payload with slice semantics
+// Default stack buffer size for small payload optimization
+const DEFAULT_STACK_BUFFER_SIZE: usize = 32;
+
+/// A reference-counted byte payload with slice semantics and Small Buffer Optimization (SBO)
 ///
-/// `ArcPayload` provides an efficient way to handle byte data by using `Arc<[u8]>`
-/// for reference counting, combined with offset and length information to represent
-/// a slice view of the underlying data. This allows for zero-copy sharing of payload
-/// data across multiple consumers while maintaining slice-like semantics.
+/// `GenericArcPayload` provides an efficient way to handle byte data with automatic optimization
+/// for small payloads. Small payloads (up to `STACK_BUFFER_SIZE` bytes) are stored on the
+/// stack to avoid heap allocation, while larger payloads use `Arc<[u8]>` for reference counting.
+/// This provides optimal performance for both small and large payloads.
+///
+/// # Small Buffer Optimization
+///
+/// - Payloads with size ≤ STACK_BUFFER_SIZE bytes are stored on the stack
+/// - Larger payloads are stored on the heap using Arc<[u8]> for reference counting
+/// - This provides zero heap allocation for typical small MQTT payloads
+///
+/// # Type Parameters
+///
+/// * `STACK_BUFFER_SIZE` - Size of the stack buffer in bytes (default: 32)
+///
+/// # Examples
+///
+/// ```ignore
+/// use mqtt_protocol_core::mqtt;
+///
+/// // Default stack buffer size (32 bytes)
+/// let small_payload = mqtt::ArcPayload::from(&b"hello"[..]);
+///
+/// // Custom stack buffer size (64 bytes)
+/// let custom_payload = mqtt::GenericArcPayload::<64>::from(&b"hello"[..]);
+/// ```
 #[derive(Clone, Debug)]
-pub struct ArcPayload {
-    data: Arc<[u8]>,
-    start: usize,
-    length: usize,
+pub enum GenericArcPayload<const STACK_BUFFER_SIZE: usize = DEFAULT_STACK_BUFFER_SIZE> {
+    /// Small payload stored on the stack (size ≤ STACK_BUFFER_SIZE)
+    Small([u8; STACK_BUFFER_SIZE], usize), // buffer, actual_length
+    /// Large payload stored with Arc for reference counting
+    Large(Arc<[u8]>, usize, usize), // data, start, length
 }
 
-impl PartialEq for ArcPayload {
+/// Type alias for ArcPayload with default stack buffer size
+pub type ArcPayload = GenericArcPayload<DEFAULT_STACK_BUFFER_SIZE>;
+
+impl<const STACK_BUFFER_SIZE: usize> PartialEq for GenericArcPayload<STACK_BUFFER_SIZE> {
     fn eq(&self, other: &Self) -> bool {
         self.as_slice() == other.as_slice()
     }
 }
 
-impl Eq for ArcPayload {}
+impl<const STACK_BUFFER_SIZE: usize> Eq for GenericArcPayload<STACK_BUFFER_SIZE> {}
 
-impl Serialize for ArcPayload {
+impl<const STACK_BUFFER_SIZE: usize> Serialize for GenericArcPayload<STACK_BUFFER_SIZE> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -53,8 +82,34 @@ impl Serialize for ArcPayload {
     }
 }
 
-impl ArcPayload {
-    /// Create a new `ArcPayload` from reference-counted data with specified range
+impl<const STACK_BUFFER_SIZE: usize> GenericArcPayload<STACK_BUFFER_SIZE> {
+    /// Create a new payload from byte data
+    ///
+    /// Creates a payload from the provided byte data. Small data (≤ STACK_BUFFER_SIZE bytes)
+    /// is stored on the stack, while larger data uses heap allocation.
+    ///
+    /// # Parameters
+    ///
+    /// * `data` - The byte data to store
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// use mqtt_protocol_core::mqtt::ArcPayload;
+    ///
+    /// let payload = ArcPayload::from(&b"hello world"[..]);
+    /// ```
+    pub fn from(data: &[u8]) -> Self {
+        if data.len() <= STACK_BUFFER_SIZE {
+            let mut buffer = [0u8; STACK_BUFFER_SIZE];
+            buffer[..data.len()].copy_from_slice(data);
+            Self::Small(buffer, data.len())
+        } else {
+            Self::Large(Arc::from(data), 0, data.len())
+        }
+    }
+
+    /// Create a new payload from reference-counted data with specified range
     ///
     /// Creates a new payload that represents a slice view of the provided `Arc<[u8]>` data
     /// starting at the specified offset with the given length.
@@ -68,45 +123,45 @@ impl ArcPayload {
     /// # Panics
     ///
     /// Panics in debug mode if `start + length > data.len()` (payload out of bounds)
-    ///
-    /// # Examples
-    ///
-    /// ```ignore
-    /// use alloc::sync::Arc;
-    /// use mqtt_protocol_core::mqtt::ArcPayload;
-    ///
-    /// let data = Arc::from(&b"hello world"[..]);
-    /// let payload = ArcPayload::new(data, 0, 5); // "hello"
-    /// ```
     pub fn new(data: Arc<[u8]>, start: usize, length: usize) -> Self {
-        debug_assert!(start + length <= data.len(), "payload out of bounds",);
-        Self {
-            data,
-            start,
-            length,
+        debug_assert!(start + length <= data.len(), "payload out of bounds");
+
+        let slice_len = length;
+        if slice_len <= STACK_BUFFER_SIZE {
+            let mut buffer = [0u8; STACK_BUFFER_SIZE];
+            buffer[..slice_len].copy_from_slice(&data[start..start + length]);
+            Self::Small(buffer, slice_len)
+        } else {
+            Self::Large(data, start, length)
         }
     }
 
     /// Get a slice view of the payload data
     ///
-    /// Returns a byte slice representing the payload data within the specified range.
+    /// Returns a byte slice representing the payload data.
     ///
     /// # Returns
     ///
     /// A `&[u8]` slice of the payload data
     pub fn as_slice(&self) -> &[u8] {
-        &self.data[self.start..self.start + self.length]
+        match self {
+            Self::Small(buffer, len) => &buffer[..*len],
+            Self::Large(data, start, length) => &data[*start..*start + *length],
+        }
     }
 
     /// Get the length of the payload
     ///
-    /// Returns the number of bytes in the payload slice.
+    /// Returns the number of bytes in the payload.
     ///
     /// # Returns
     ///
     /// The length of the payload in bytes
     pub fn len(&self) -> usize {
-        self.length
+        match self {
+            Self::Small(_, len) => *len,
+            Self::Large(_, _, length) => *length,
+        }
     }
 
     /// Check if the payload is empty
@@ -117,112 +172,99 @@ impl ArcPayload {
     ///
     /// `true` if the payload length is zero, `false` otherwise
     pub fn is_empty(&self) -> bool {
-        self.length == 0
+        self.len() == 0
     }
 
     /// Get a reference to the underlying `Arc<[u8]>` data
     ///
-    /// Returns a reference to the reference-counted byte array that contains
-    /// the actual data. This provides access to the full underlying data,
-    /// not just the slice view represented by this payload.
+    /// Returns a reference to the reference-counted byte array for large payloads,
+    /// or None for small payloads stored on the stack.
     ///
     /// # Returns
     ///
-    /// A reference to the underlying `Arc<[u8]>` data
-    pub fn arc_data(&self) -> &Arc<[u8]> {
-        &self.data
-    }
-}
-
-impl Default for ArcPayload {
-    fn default() -> Self {
-        ArcPayload {
-            data: Arc::from(&[] as &[u8]),
-            start: 0,
-            length: 0,
+    /// An option containing a reference to the underlying `Arc<[u8]>` data
+    pub fn arc_data(&self) -> Option<&Arc<[u8]>> {
+        match self {
+            Self::Small(_, _) => None,
+            Self::Large(data, _, _) => Some(data),
         }
     }
 }
 
-/// Trait for converting various types into `ArcPayload`
-///
-/// This trait provides a uniform interface for converting different data types
-/// into `ArcPayload` instances. It allows for convenient creation of payloads
-/// from common types like strings, byte slices, vectors, and arrays.
-pub trait IntoPayload {
-    /// Convert the value into an `ArcPayload`
-    ///
-    /// # Returns
-    ///
-    /// An `ArcPayload` containing the converted data
-    fn into_payload(self) -> ArcPayload;
-}
-
-/// Convert a string slice (`&str`) into an `ArcPayload`
-impl IntoPayload for &str {
-    fn into_payload(self) -> ArcPayload {
-        let bytes = self.as_bytes();
-        ArcPayload::new(Arc::from(bytes), 0, bytes.len())
+impl<const STACK_BUFFER_SIZE: usize> Default for GenericArcPayload<STACK_BUFFER_SIZE> {
+    fn default() -> Self {
+        Self::Small([0u8; STACK_BUFFER_SIZE], 0)
     }
 }
 
-/// Convert an owned string (`String`) into an `ArcPayload`
-impl IntoPayload for String {
-    fn into_payload(self) -> ArcPayload {
-        let bytes = self.as_bytes();
-        ArcPayload::new(Arc::from(bytes), 0, bytes.len())
+/// Trait for converting various types into payload
+pub trait IntoPayload<const STACK_BUFFER_SIZE: usize = DEFAULT_STACK_BUFFER_SIZE> {
+    /// Convert the value into a payload
+    fn into_payload(self) -> GenericArcPayload<STACK_BUFFER_SIZE>;
+}
+
+/// Convert a string slice (`&str`) into a payload
+impl<const STACK_BUFFER_SIZE: usize> IntoPayload<STACK_BUFFER_SIZE> for &str {
+    fn into_payload(self) -> GenericArcPayload<STACK_BUFFER_SIZE> {
+        GenericArcPayload::from(self.as_bytes())
     }
 }
 
-/// Convert a byte slice (`&[u8]`) into an `ArcPayload`
-impl IntoPayload for &[u8] {
-    fn into_payload(self) -> ArcPayload {
-        ArcPayload::new(Arc::from(self), 0, self.len())
+/// Convert an owned string (`String`) into a payload
+impl<const STACK_BUFFER_SIZE: usize> IntoPayload<STACK_BUFFER_SIZE> for String {
+    fn into_payload(self) -> GenericArcPayload<STACK_BUFFER_SIZE> {
+        GenericArcPayload::from(self.as_bytes())
     }
 }
 
-/// Convert an owned byte vector (`Vec<u8>`) into an `ArcPayload`
-impl IntoPayload for Vec<u8> {
-    fn into_payload(self) -> ArcPayload {
+/// Convert a byte slice (`&[u8]`) into a payload
+impl<const STACK_BUFFER_SIZE: usize> IntoPayload<STACK_BUFFER_SIZE> for &[u8] {
+    fn into_payload(self) -> GenericArcPayload<STACK_BUFFER_SIZE> {
+        GenericArcPayload::from(self)
+    }
+}
+
+/// Convert an owned byte vector (`Vec<u8>`) into a payload
+impl<const STACK_BUFFER_SIZE: usize> IntoPayload<STACK_BUFFER_SIZE> for Vec<u8> {
+    fn into_payload(self) -> GenericArcPayload<STACK_BUFFER_SIZE> {
+        GenericArcPayload::from(&self)
+    }
+}
+
+/// Convert a reference to a byte vector (`&Vec<u8>`) into a payload
+impl<const STACK_BUFFER_SIZE: usize> IntoPayload<STACK_BUFFER_SIZE> for &Vec<u8> {
+    fn into_payload(self) -> GenericArcPayload<STACK_BUFFER_SIZE> {
+        GenericArcPayload::from(self.as_slice())
+    }
+}
+
+/// Convert a reference to a byte array (`&[u8; N]`) into a payload
+impl<const N: usize, const STACK_BUFFER_SIZE: usize> IntoPayload<STACK_BUFFER_SIZE> for &[u8; N] {
+    fn into_payload(self) -> GenericArcPayload<STACK_BUFFER_SIZE> {
+        GenericArcPayload::from(self.as_slice())
+    }
+}
+
+/// Convert an `Arc<[u8]>` directly into a payload
+impl<const STACK_BUFFER_SIZE: usize> IntoPayload<STACK_BUFFER_SIZE> for Arc<[u8]> {
+    fn into_payload(self) -> GenericArcPayload<STACK_BUFFER_SIZE> {
         let len = self.len();
-        ArcPayload::new(Arc::from(self), 0, len)
+        GenericArcPayload::new(self, 0, len)
     }
 }
 
-/// Convert a reference to a byte vector (`&Vec<u8>`) into an `ArcPayload`
-impl IntoPayload for &Vec<u8> {
-    fn into_payload(self) -> ArcPayload {
-        let slice: &[u8] = self.as_slice();
-        ArcPayload::new(Arc::from(slice), 0, slice.len())
+/// Convert unit type (`()`) into an empty payload
+impl<const STACK_BUFFER_SIZE: usize> IntoPayload<STACK_BUFFER_SIZE> for () {
+    fn into_payload(self) -> GenericArcPayload<STACK_BUFFER_SIZE> {
+        GenericArcPayload::default()
     }
 }
 
-/// Convert a reference to a byte array (`&[u8; N]`) into an `ArcPayload`
-impl<const N: usize> IntoPayload for &[u8; N] {
-    fn into_payload(self) -> ArcPayload {
-        let slice: &[u8] = self.as_slice();
-        ArcPayload::new(Arc::from(slice), 0, slice.len())
-    }
-}
-
-/// Convert an `Arc<[u8]>` directly into an `ArcPayload`
-impl IntoPayload for Arc<[u8]> {
-    fn into_payload(self) -> ArcPayload {
-        let len = self.len();
-        ArcPayload::new(self, 0, len)
-    }
-}
-
-/// Convert unit type (`()`) into an empty `ArcPayload`
-impl IntoPayload for () {
-    fn into_payload(self) -> ArcPayload {
-        ArcPayload::default() // Empty payload
-    }
-}
-
-/// Identity conversion for `ArcPayload` (no-op)
-impl IntoPayload for ArcPayload {
-    fn into_payload(self) -> ArcPayload {
+/// Identity conversion for payload (no-op)
+impl<const STACK_BUFFER_SIZE: usize> IntoPayload<STACK_BUFFER_SIZE>
+    for GenericArcPayload<STACK_BUFFER_SIZE>
+{
+    fn into_payload(self) -> GenericArcPayload<STACK_BUFFER_SIZE> {
         self
     }
 }

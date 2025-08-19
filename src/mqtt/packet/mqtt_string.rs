@@ -25,22 +25,28 @@ use serde::{Serialize, Serializer};
 #[cfg(feature = "std")]
 use std::io::IoSlice;
 
-/// MQTT String representation with pre-encoded byte buffer
+// Default stack buffer size for small string optimization
+const DEFAULT_STACK_BUFFER_SIZE: usize = 32;
+
+/// MQTT String representation with Small String Optimization (SSO)
 ///
 /// This struct represents UTF-8 strings as specified in the MQTT protocol specification.
-/// It efficiently stores string data with a 2-byte length prefix, following the MQTT
-/// wire format for string fields.
+/// It uses Small String Optimization to store small strings on the stack
+/// and larger strings on the heap, providing optimal performance for both cases.
 ///
 /// The string data is stored in a pre-encoded format internally, which includes:
 /// - 2 bytes for the length prefix (big-endian u16)
 /// - The UTF-8 encoded string bytes
 ///
-/// This approach provides several benefits:
-/// - Zero-copy serialization to network buffers
-/// - Efficient memory usage with single allocation
-/// - Guaranteed MQTT protocol compliance
-/// - Fast size calculations
-/// - UTF-8 validation at construction time
+/// # Small String Optimization
+///
+/// - Strings with total encoded size ≤ STACK_BUFFER_SIZE bytes are stored on the stack
+/// - Larger strings are stored on the heap using Vec<u8>
+/// - This provides zero heap allocation for typical MQTT strings like topic names
+///
+/// # Type Parameters
+///
+/// * `STACK_BUFFER_SIZE` - Size of the stack buffer in bytes (default: 32)
 ///
 /// # Size Limits
 ///
@@ -59,32 +65,29 @@ use std::io::IoSlice;
 /// ```ignore
 /// use mqtt_protocol_core::mqtt;
 ///
-/// // Create from string literal
-/// let mqtt_str = mqtt::packet::MqttString::new("hello world").unwrap();
+/// // Default stack buffer size (32 bytes)
+/// let small_str = mqtt::packet::MqttString::new("hello").unwrap();
 ///
-/// // Access the string content
-/// assert_eq!(mqtt_str.as_str(), "hello world");
-/// assert_eq!(mqtt_str.len(), 11);
-///
-/// // Get the complete encoded buffer (length prefix + UTF-8 bytes)
-/// let encoded = mqtt_str.as_bytes();
-/// assert_eq!(encoded.len(), 13); // 2 bytes length + 11 bytes data
-///
-/// // String operations
-/// assert!(mqtt_str.contains('w'));
-/// assert!(mqtt_str.starts_with("hello"));
+/// // Custom stack buffer size (64 bytes)
+/// let custom_str = mqtt::packet::GenericMqttString::<64>::new("hello").unwrap();
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub struct MqttString {
-    /// Complete buffer including length prefix (2 bytes) + UTF-8 byte sequence
-    encoded: Vec<u8>,
+pub enum GenericMqttString<const STACK_BUFFER_SIZE: usize = DEFAULT_STACK_BUFFER_SIZE> {
+    /// Small string stored on the stack (total size ≤ STACK_BUFFER_SIZE)
+    Small([u8; STACK_BUFFER_SIZE], usize), // buffer, actual_length
+    /// Large string stored on the heap
+    Large(Vec<u8>),
 }
 
-impl MqttString {
+/// Type alias for MqttString with default stack buffer size
+pub type MqttString = GenericMqttString<DEFAULT_STACK_BUFFER_SIZE>;
+
+impl<const STACK_BUFFER_SIZE: usize> GenericMqttString<STACK_BUFFER_SIZE> {
     /// Create a new MqttString from a string
     ///
     /// Creates an `MqttString` instance from the provided string data.
     /// The string is converted to UTF-8 bytes and stored with a 2-byte length prefix.
+    /// Small strings (≤ 32 bytes total) are stored on the stack, larger ones on the heap.
     ///
     /// # Parameters
     ///
@@ -101,15 +104,11 @@ impl MqttString {
     /// ```ignore
     /// use mqtt_protocol_core::mqtt;
     ///
-    /// // From string literal
-    /// let mqtt_str = mqtt::packet::MqttString::new("hello").unwrap();
+    /// // Small string - stored on stack
+    /// let small_str = mqtt::packet::MqttString::new("hello").unwrap();
     ///
-    /// // From String
-    /// let owned = String::from("world");
-    /// let mqtt_str = mqtt::packet::MqttString::new(owned).unwrap();
-    ///
-    /// // UTF-8 strings are supported
-    /// let mqtt_str = mqtt::packet::MqttString::new("hello").unwrap();
+    /// // Large string - stored on heap
+    /// let large_str = mqtt::packet::MqttString::new("a".repeat(100)).unwrap();
     /// ```
     pub fn new(s: impl AsRef<str>) -> Result<Self, MqttError> {
         let s_ref = s.as_ref();
@@ -119,12 +118,24 @@ impl MqttString {
             return Err(MqttError::MalformedPacket);
         }
 
-        let mut encoded = Vec::with_capacity(2 + len);
-        encoded.push((len >> 8) as u8);
-        encoded.push(len as u8);
-        encoded.extend_from_slice(s_ref.as_bytes());
+        // Calculate total encoded size (2 bytes for length prefix + string bytes)
+        let total_size = 2 + len;
 
-        Ok(Self { encoded })
+        if total_size <= STACK_BUFFER_SIZE {
+            // Use stack storage for small strings
+            let mut buffer = [0u8; STACK_BUFFER_SIZE];
+            buffer[0] = (len >> 8) as u8;
+            buffer[1] = len as u8;
+            buffer[2..2 + len].copy_from_slice(s_ref.as_bytes());
+            Ok(Self::Small(buffer, total_size))
+        } else {
+            // Use heap storage for large strings
+            let mut encoded = Vec::with_capacity(total_size);
+            encoded.push((len >> 8) as u8);
+            encoded.push(len as u8);
+            encoded.extend_from_slice(s_ref.as_bytes());
+            Ok(Self::Large(encoded))
+        }
     }
 
     /// Get the complete encoded byte sequence including length prefix
@@ -147,7 +158,10 @@ impl MqttString {
     /// assert_eq!(bytes, &[0x00, 0x02, b'h', b'i']);
     /// ```
     pub fn as_bytes(&self) -> &[u8] {
-        &self.encoded
+        match self {
+            Self::Small(buffer, len) => &buffer[..*len],
+            Self::Large(encoded) => encoded,
+        }
     }
 
     /// Get the string content as a string slice
@@ -170,9 +184,12 @@ impl MqttString {
     /// ```
     pub fn as_str(&self) -> &str {
         // SAFETY: UTF-8 validity verified during MqttString creation or decode
-        // Also, no direct modification of encoded field is provided,
+        // Also, no direct modification of internal data is provided,
         // ensuring buffer immutability
-        unsafe { core::str::from_utf8_unchecked(&self.encoded[2..]) }
+        match self {
+            Self::Small(buffer, len) => unsafe { core::str::from_utf8_unchecked(&buffer[2..*len]) },
+            Self::Large(encoded) => unsafe { core::str::from_utf8_unchecked(&encoded[2..]) },
+        }
     }
 
     /// Get the length of the string data in bytes
@@ -198,7 +215,10 @@ impl MqttString {
     /// assert_eq!(utf8.len(), 5); // 5 characters
     /// ```
     pub fn len(&self) -> usize {
-        self.encoded.len() - 2
+        match self {
+            Self::Small(_, len) => len - 2,
+            Self::Large(encoded) => encoded.len() - 2,
+        }
     }
 
     /// Check if the string is empty
@@ -222,7 +242,10 @@ impl MqttString {
     /// assert!(!text.is_empty());
     /// ```
     pub fn is_empty(&self) -> bool {
-        self.encoded.len() <= 2
+        match self {
+            Self::Small(_, len) => *len <= 2,
+            Self::Large(encoded) => encoded.len() <= 2,
+        }
     }
 
     /// Get the total encoded size including the length field
@@ -244,7 +267,10 @@ impl MqttString {
     /// assert_eq!(mqtt_str.len(), 5);  // Only string length
     /// ```
     pub fn size(&self) -> usize {
-        self.encoded.len()
+        match self {
+            Self::Small(_, len) => *len,
+            Self::Large(encoded) => encoded.len(),
+        }
     }
 
     /// Create IoSlice buffers for efficient network I/O
@@ -269,7 +295,7 @@ impl MqttString {
     /// ```
     #[cfg(feature = "std")]
     pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
-        vec![IoSlice::new(&self.encoded)]
+        vec![IoSlice::new(self.as_bytes())]
     }
 
     /// Create a continuous buffer containing the complete packet data
@@ -294,7 +320,7 @@ impl MqttString {
     ///
     /// [`to_buffers()`]: #method.to_buffers
     pub fn to_continuous_buffer(&self) -> Vec<u8> {
-        self.encoded.clone()
+        self.as_bytes().to_vec()
     }
 
     /// Parse string data from a byte sequence
@@ -329,7 +355,9 @@ impl MqttString {
         }
 
         let string_len = ((data[0] as usize) << 8) | (data[1] as usize);
-        if data.len() < 2 + string_len {
+        let total_size = 2 + string_len;
+
+        if data.len() < total_size {
             return Err(MqttError::MalformedPacket);
         }
 
@@ -338,11 +366,17 @@ impl MqttString {
             return Err(MqttError::MalformedPacket);
         }
 
-        // Create encoded buffer
-        let mut encoded = Vec::with_capacity(2 + string_len);
-        encoded.extend_from_slice(&data[0..2 + string_len]);
-
-        Ok((Self { encoded }, 2 + string_len))
+        if total_size <= STACK_BUFFER_SIZE {
+            // Use stack storage for small strings
+            let mut buffer = [0u8; STACK_BUFFER_SIZE];
+            buffer[..total_size].copy_from_slice(&data[..total_size]);
+            Ok((Self::Small(buffer, total_size), total_size))
+        } else {
+            // Use heap storage for large strings
+            let mut encoded = Vec::with_capacity(total_size);
+            encoded.extend_from_slice(&data[..total_size]);
+            Ok((Self::Large(encoded), total_size))
+        }
     }
 
     /// Check if the string contains a specific character
@@ -424,32 +458,22 @@ impl MqttString {
     }
 }
 
-/// Implementation of `AsRef<str>` for `MqttString`
-///
-/// Returns the string content when the `MqttString` is used in contexts
-/// expecting a string slice reference.
-impl AsRef<str> for MqttString {
+/// Implementation of `AsRef<str>` for `GenericMqttString`
+impl<const STACK_BUFFER_SIZE: usize> AsRef<str> for GenericMqttString<STACK_BUFFER_SIZE> {
     fn as_ref(&self) -> &str {
         self.as_str()
     }
 }
 
-/// Implementation of `Display` for `MqttString`
-///
-/// Formats the string content for display purposes.
-/// This allows `MqttString` to be used with `println!`, `format!`, etc.
-impl core::fmt::Display for MqttString {
+/// Implementation of `Display` for `GenericMqttString`
+impl<const STACK_BUFFER_SIZE: usize> core::fmt::Display for GenericMqttString<STACK_BUFFER_SIZE> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "{}", self.as_str())
     }
 }
 
-/// Implementation of `Deref` for `MqttString`
-///
-/// Allows `MqttString` to be used directly as a string slice in many contexts
-/// through automatic dereferencing. This enables method calls like `mqtt_str.len()`
-/// to work directly on the string content.
-impl core::ops::Deref for MqttString {
+/// Implementation of `Deref` for `GenericMqttString`
+impl<const STACK_BUFFER_SIZE: usize> core::ops::Deref for GenericMqttString<STACK_BUFFER_SIZE> {
     type Target = str;
 
     fn deref(&self) -> &Self::Target {
@@ -457,11 +481,8 @@ impl core::ops::Deref for MqttString {
     }
 }
 
-/// Implementation of `Serialize` for `MqttString`
-///
-/// Serializes the string content as a string value.
-/// This is useful for JSON serialization and other serialization formats.
-impl Serialize for MqttString {
+/// Implementation of `Serialize` for `GenericMqttString`
+impl<const STACK_BUFFER_SIZE: usize> Serialize for GenericMqttString<STACK_BUFFER_SIZE> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -470,75 +491,64 @@ impl Serialize for MqttString {
     }
 }
 
-/// Implementation of `PartialEq<str>` for `MqttString`
-///
-/// Allows direct comparison between `MqttString` and `str`.
-impl core::cmp::PartialEq<str> for MqttString {
+/// Implementation of `PartialEq<str>` for `GenericMqttString`
+impl<const STACK_BUFFER_SIZE: usize> core::cmp::PartialEq<str>
+    for GenericMqttString<STACK_BUFFER_SIZE>
+{
     fn eq(&self, other: &str) -> bool {
         self.as_str() == other
     }
 }
 
-/// Implementation of `PartialEq<&str>` for `MqttString`
-///
-/// Allows direct comparison between `MqttString` and `&str`.
-impl core::cmp::PartialEq<&str> for MqttString {
+/// Implementation of `PartialEq<&str>` for `GenericMqttString`
+impl<const STACK_BUFFER_SIZE: usize> core::cmp::PartialEq<&str>
+    for GenericMqttString<STACK_BUFFER_SIZE>
+{
     fn eq(&self, other: &&str) -> bool {
         self.as_str() == *other
     }
 }
 
-/// Implementation of `PartialEq<String>` for `MqttString`
-///
-/// Allows direct comparison between `MqttString` and `String`.
-impl core::cmp::PartialEq<String> for MqttString {
+/// Implementation of `PartialEq<String>` for `GenericMqttString`
+impl<const STACK_BUFFER_SIZE: usize> core::cmp::PartialEq<String>
+    for GenericMqttString<STACK_BUFFER_SIZE>
+{
     fn eq(&self, other: &String) -> bool {
         self.as_str() == other.as_str()
     }
 }
 
-/// Implementation of `Hash` for `MqttString`
-///
-/// Hashes the string content, allowing `MqttString` to be used in hash-based
-/// collections like `HashMap` and `HashSet`.
-impl core::hash::Hash for MqttString {
+/// Implementation of `Hash` for `GenericMqttString`
+impl<const STACK_BUFFER_SIZE: usize> core::hash::Hash for GenericMqttString<STACK_BUFFER_SIZE> {
     fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
         self.as_str().hash(state);
     }
 }
 
-/// Implementation of `Default` for `MqttString`
-///
-/// Creates an empty `MqttString` with zero-length string content.
-/// The internal buffer contains only the 2-byte length prefix (0x00, 0x00).
-impl Default for MqttString {
+/// Implementation of `Default` for `GenericMqttString`
+impl<const STACK_BUFFER_SIZE: usize> Default for GenericMqttString<STACK_BUFFER_SIZE> {
     fn default() -> Self {
-        MqttString {
-            encoded: vec![0x00, 0x00],
-        }
+        let mut buffer = [0u8; STACK_BUFFER_SIZE];
+        buffer[0] = 0x00;
+        buffer[1] = 0x00;
+        Self::Small(buffer, 2)
     }
 }
 
-/// Implementation of `TryFrom<&str>` for `MqttString`
-///
-/// Converts a string slice to `MqttString`. This is a convenient way to
-/// create `MqttString` instances from string literals.
-impl TryFrom<&str> for MqttString {
+/// Implementation of `TryFrom<&str>` for `GenericMqttString`
+impl<const STACK_BUFFER_SIZE: usize> TryFrom<&str> for GenericMqttString<STACK_BUFFER_SIZE> {
     type Error = MqttError;
 
     fn try_from(s: &str) -> Result<Self, Self::Error> {
-        MqttString::new(s)
+        Self::new(s)
     }
 }
 
-/// Implementation of `TryFrom<String>` for `MqttString`
-///
-/// Converts an owned `String` to `MqttString`. This is a convenient way to
-/// create `MqttString` instances from owned strings.
-impl TryFrom<String> for MqttString {
+/// Implementation of `TryFrom<String>` for `GenericMqttString`
+impl<const STACK_BUFFER_SIZE: usize> TryFrom<String> for GenericMqttString<STACK_BUFFER_SIZE> {
     type Error = MqttError;
 
     fn try_from(s: String) -> Result<Self, Self::Error> {
-        MqttString::new(s)
+        Self::new(s)
     }
 }
