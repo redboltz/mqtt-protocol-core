@@ -160,8 +160,11 @@ use crate::mqtt::result_code::MqttError;
 /// ```
 #[derive(PartialEq, Eq, Builder, Clone, Getters, CopyGetters)]
 #[builder(no_std, derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
-pub struct GenericSubscribe<PacketIdType>
-where
+pub struct GenericSubscribe<
+    PacketIdType,
+    const STRING_BUFFER_SIZE: usize = 32,
+    const BINARY_BUFFER_SIZE: usize = 32,
+> where
     PacketIdType: IsPacketId,
 {
     #[builder(private)]
@@ -175,7 +178,7 @@ where
 
     #[builder(setter(into, strip_option))]
     #[getset(get = "pub")]
-    pub props: GenericProperties,
+    pub props: GenericProperties<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>,
 
     #[getset(get = "pub")]
     entries: Vec<SubEntry>,
@@ -208,7 +211,8 @@ where
 /// ```
 pub type Subscribe = GenericSubscribe<u16>;
 
-impl<PacketIdType> GenericSubscribe<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
+    GenericSubscribe<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId,
 {
@@ -243,8 +247,9 @@ where
     ///     .build()
     ///     .unwrap();
     /// ```
-    pub fn builder() -> GenericSubscribeBuilder<PacketIdType> {
-        GenericSubscribeBuilder::<PacketIdType>::default()
+    pub fn builder() -> GenericSubscribeBuilder<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+    {
+        GenericSubscribeBuilder::<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::default()
     }
 
     /// Returns the packet type for SUBSCRIBE packets
@@ -348,7 +353,8 @@ where
         let packet_id_buf = packet_id.to_buffer();
         cursor += buffer_size;
 
-        let (props, property_length) = GenericProperties::parse(&data[cursor..])?;
+        let (props, property_length) =
+            GenericProperties::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::parse(&data[cursor..])?;
         cursor += property_length;
         validate_subscribe_properties(&props)?;
         let prop_len = VariableByteInteger::from_u32(props.size() as u32).unwrap();
@@ -517,7 +523,8 @@ where
 /// The builder provides a fluent interface for constructing SUBSCRIBE packets with
 /// validation of required fields and protocol compliance. It ensures that all
 /// SUBSCRIBE packets have a valid packet identifier and at least one subscription entry.
-impl<PacketIdType> GenericSubscribeBuilder<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
+    GenericSubscribeBuilder<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId,
 {
@@ -623,13 +630,18 @@ where
     ///     .build()
     ///     .unwrap();
     /// ```
-    pub fn build(self) -> Result<GenericSubscribe<PacketIdType>, MqttError> {
+    pub fn build(
+        self,
+    ) -> Result<GenericSubscribe<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>, MqttError>
+    {
         self.validate()?;
 
         let packet_id_buf = self.packet_id_buf.unwrap();
         let entries = self.entries.unwrap_or_default();
 
-        let props = self.props.unwrap_or_else(GenericProperties::new);
+        let props = self
+            .props
+            .unwrap_or_else(|| GenericProperties::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::new());
         let props_size = props.size();
         let property_length = VariableByteInteger::from_u32(props_size as u32).unwrap();
 
@@ -680,7 +692,8 @@ where
 /// println!("{}", subscribe);
 /// // Output: {"type":"subscribe","packet_id":42,"entries":[...]}
 /// ```
-impl<PacketIdType> fmt::Display for GenericSubscribe<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> fmt::Display
+    for GenericSubscribe<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId + Serialize,
 {
@@ -719,7 +732,8 @@ where
 ///
 /// println!("{:?}", subscribe);
 /// ```
-impl<PacketIdType> fmt::Debug for GenericSubscribe<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> fmt::Debug
+    for GenericSubscribe<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId + Serialize,
 {
@@ -764,7 +778,8 @@ where
 /// let json = serde_json::to_string(&subscribe).unwrap();
 /// // json contains: {"type":"subscribe","packet_id":123,"entries":[...]}
 /// ```
-impl<PacketIdType> Serialize for GenericSubscribe<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> Serialize
+    for GenericSubscribe<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId + Serialize,
 {
@@ -809,7 +824,8 @@ where
 ///
 /// - `size()`: Returns the total packet size in bytes
 /// - `to_buffers()`: Returns I/O slices for efficient transmission
-impl<PacketIdType> GenericPacketTrait for GenericSubscribe<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
+    GenericPacketTrait for GenericSubscribe<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId,
 {
@@ -832,7 +848,8 @@ where
 /// Provides unified display formatting for packet types, supporting both
 /// debug and display formatting through a common interface. This is used
 /// by the packet handling infrastructure for consistent logging and debugging.
-impl<PacketIdType> GenericPacketDisplay for GenericSubscribe<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
+    GenericPacketDisplay for GenericSubscribe<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId + Serialize,
 {
@@ -872,7 +889,12 @@ where
 /// props.push(Property::SubscriptionIdentifier(42));
 /// // This would be valid for SUBSCRIBE packets
 /// ```
-fn validate_subscribe_properties(props: &GenericProperties) -> Result<(), MqttError> {
+fn validate_subscribe_properties<
+    const STRING_BUFFER_SIZE: usize,
+    const BINARY_BUFFER_SIZE: usize,
+>(
+    props: &GenericProperties<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>,
+) -> Result<(), MqttError> {
     for prop in props {
         match prop {
             GenericProperty::SubscriptionIdentifier(_) => {}
