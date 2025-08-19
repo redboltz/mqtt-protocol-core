@@ -2663,7 +2663,7 @@ where
         let flags = raw_packet.flags();
         match &raw_packet.data {
             PacketData::Publish(arc) => {
-                match v3_1_1::GenericPublish::parse(flags, arc.clone()) {
+                match v3_1_1::GenericPublish::<PacketIdType>::parse(flags, arc.clone()) {
                     Ok((packet, _consumed)) => {
                         match packet.qos() {
                             Qos::AtMostOnce => {

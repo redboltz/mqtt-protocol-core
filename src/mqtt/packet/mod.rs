@@ -25,6 +25,10 @@ mod mqtt_binary;
 pub use self::mqtt_binary::{GenericMqttBinary, MqttBinary};
 
 mod optimization;
+pub use self::optimization::{
+    DefaultStackOptimization, HighPerformanceStackOptimization, LargeBufferStackOptimization,
+    LowMemoryStackOptimization, MinimalStackOptimization, StackOptimization,
+};
 
 mod enum_packet;
 mod enum_store_packet;

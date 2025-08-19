@@ -33,8 +33,9 @@ use serde::Serialize;
 
 use getset::{CopyGetters, Getters};
 
+use crate::mqtt::common::{GenericArcPayload, IntoPayload};
 use crate::mqtt::packet::json_bin_encode::escape_binary_json_string;
-use crate::mqtt::packet::mqtt_string::MqttString;
+use crate::mqtt::packet::mqtt_string::GenericMqttString;
 use crate::mqtt::packet::packet_type::{FixedHeader, PacketType};
 use crate::mqtt::packet::qos::Qos;
 use crate::mqtt::packet::variable_byte_integer::VariableByteInteger;
@@ -42,7 +43,6 @@ use crate::mqtt::packet::GenericPacketDisplay;
 use crate::mqtt::packet::GenericPacketTrait;
 use crate::mqtt::packet::IsPacketId;
 use crate::mqtt::result_code::MqttError;
-use crate::mqtt::{ArcPayload, IntoPayload};
 
 /// MQTT 3.1.1 PUBLISH packet representation
 ///
@@ -86,19 +86,50 @@ use crate::mqtt::{ArcPayload, IntoPayload};
 /// to send the packet. This flag is only meaningful for QoS > 0 messages and should be
 /// set when re-transmitting a PUBLISH packet.
 ///
-/// # Generic Type Parameter
+/// # Generic Type Parameters
 ///
-/// The `PacketIdType` generic parameter allows using packet identifiers larger than
-/// the standard u16, which can be useful for broker clusters to avoid packet ID
-/// exhaustion when extending the MQTT protocol.
+/// - `PacketIdType`: The type used for packet identifiers (usually u16, but can be u32 for broker clusters)
+/// - `STRING_BUFFER_SIZE`: Stack buffer size for topic names in bytes (default: 32)
+/// - `PAYLOAD_BUFFER_SIZE`: Stack buffer size for message payloads in bytes (default: 32)
+///
+/// # Stack Buffer Optimization
+///
+/// This implementation uses Small String/Buffer Optimization (SSO) to store small data on the stack
+/// rather than the heap, improving performance for typical MQTT messages. When data exceeds the
+/// buffer size, it automatically falls back to heap allocation.
+///
+/// # Custom Buffer Sizes
+///
+/// For applications that need different performance characteristics, you can define custom
+/// type aliases with specific buffer sizes:
+///
+/// ```ignore
+/// use mqtt_protocol_core::mqtt::packet::v3_1_1::GenericPublish;
+///
+/// // For high-throughput applications with larger messages
+/// type LargePublish = GenericPublish<u16, 128, 512>;
+///
+/// // For memory-constrained environments
+/// type SmallPublish = GenericPublish<u16, 16, 16>;
+///
+/// // For broker clusters with extended packet IDs
+/// type ClusterPublish = GenericPublish<u32, 64, 256>;
+///
+/// // Usage is identical to the standard Publish type
+/// let publish = LargePublish::builder()
+///     .topic_name("sensors/temperature/detailed/location")
+///     .payload(&large_sensor_data)
+///     .build()
+///     .unwrap();
+/// ```
 ///
 /// # Examples
 ///
 /// ```ignore
 /// use mqtt_protocol_core::mqtt;
-/// use mqtt_protocol_core::mqtt::packet::qos::Qos;
+/// use mqtt_protocol_core::mqtt::packet::Qos;
 ///
-/// // Create a simple QoS 0 PUBLISH message
+/// // Create a simple QoS 0 PUBLISH message using the standard type
 /// let publish = mqtt::packet::v3_1_1::Publish::builder()
 ///     .topic_name("sensor/temperature")
 ///     .unwrap()
@@ -130,13 +161,16 @@ use crate::mqtt::{ArcPayload, IntoPayload};
 /// assert_eq!(publish.packet_id(), Some(123));
 ///
 /// // Serialize to bytes for network transmission
-/// let buffers = publish.to_buffers();
 /// let total_size = publish.size();
+/// let buffer = publish.to_continuous_buffer();
 /// ```
 #[derive(PartialEq, Eq, Builder, Clone, Getters, CopyGetters)]
 #[builder(no_std, derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
-pub struct GenericPublish<PacketIdType>
-where
+pub struct GenericPublish<
+    PacketIdType,
+    const STRING_BUFFER_SIZE: usize = 32,
+    const PAYLOAD_BUFFER_SIZE: usize = 32,
+> where
     PacketIdType: IsPacketId,
 {
     #[builder(private)]
@@ -144,28 +178,28 @@ where
     #[builder(private)]
     remaining_length: VariableByteInteger,
     #[builder(private)]
-    topic_name_buf: MqttString,
+    topic_name_buf: GenericMqttString<STRING_BUFFER_SIZE>,
     #[builder(private)]
     packet_id_buf: Option<PacketIdType::Buffer>,
 
     #[builder(private)]
-    payload_buf: ArcPayload,
+    payload_buf: GenericArcPayload<PAYLOAD_BUFFER_SIZE>,
 }
 
-/// Type alias for PUBLISH packet with standard u16 packet identifiers
+/// Standard PUBLISH packet with default settings
 ///
 /// This is the most commonly used PUBLISH packet type for standard MQTT 3.1.1
-/// implementations that use 16-bit packet identifiers as specified in the protocol.
+/// applications. It uses u16 packet identifiers and default buffer sizes
+/// (32 bytes for both topic names and payloads).
 ///
 /// # Examples
 ///
 /// ```ignore
-/// use mqtt_protocol_core::mqtt;
-/// use mqtt_protocol_core::mqtt::packet::qos::Qos;
+/// use mqtt_protocol_core::mqtt::packet::v3_1_1::Publish;
+/// use mqtt_protocol_core::mqtt::packet::Qos;
 ///
-/// let publish = mqtt::packet::v3_1_1::Publish::builder()
+/// let publish = Publish::builder()
 ///     .topic_name("my/topic")
-///     .unwrap()
 ///     .qos(Qos::AtLeastOnce)
 ///     .packet_id(42)
 ///     .payload(b"Hello, MQTT!")
@@ -174,7 +208,8 @@ where
 /// ```
 pub type Publish = GenericPublish<u16>;
 
-impl<PacketIdType> GenericPublish<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const PAYLOAD_BUFFER_SIZE: usize>
+    GenericPublish<PacketIdType, STRING_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId,
 {
@@ -203,8 +238,9 @@ where
     ///     .build()
     ///     .unwrap();
     /// ```
-    pub fn builder() -> GenericPublishBuilder<PacketIdType> {
-        GenericPublishBuilder::<PacketIdType>::default()
+    pub fn builder() -> GenericPublishBuilder<PacketIdType, STRING_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>
+    {
+        GenericPublishBuilder::<PacketIdType, STRING_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>::default()
     }
 
     /// Returns the packet type for PUBLISH packets
@@ -458,7 +494,7 @@ where
     ///
     /// assert_eq!(publish.payload().as_slice(), message_data);
     /// ```
-    pub fn payload(&self) -> &ArcPayload {
+    pub fn payload(&self) -> &GenericArcPayload<PAYLOAD_BUFFER_SIZE> {
         &self.payload_buf
     }
 
@@ -627,7 +663,8 @@ where
 
         let mut cursor = 0;
 
-        let (topic_name, consumed) = MqttString::decode(&data_arc[cursor..])?;
+        let (topic_name, consumed) =
+            GenericMqttString::<STRING_BUFFER_SIZE>::decode(&data_arc[cursor..])?;
         cursor += consumed;
 
         let qos = match qos_value {
@@ -653,9 +690,9 @@ where
 
         let payload_len = data_arc.len() - cursor;
         let payload = if payload_len > 0 {
-            ArcPayload::new(data_arc.clone(), cursor, payload_len)
+            GenericArcPayload::<PAYLOAD_BUFFER_SIZE>::new(data_arc.clone(), cursor, payload_len)
         } else {
-            ArcPayload::default()
+            GenericArcPayload::<PAYLOAD_BUFFER_SIZE>::default()
         };
 
         let remaining_size = topic_name.size()
@@ -681,7 +718,8 @@ where
 /// The builder provides a fluent interface for constructing PUBLISH packets
 /// with various configurations. It validates the packet configuration before
 /// building and ensures MQTT 3.1.1 protocol compliance.
-impl<PacketIdType> GenericPublishBuilder<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const PAYLOAD_BUFFER_SIZE: usize>
+    GenericPublishBuilder<PacketIdType, STRING_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId,
 {
@@ -722,7 +760,7 @@ where
     /// //     .unwrap();
     /// ```
     pub fn topic_name<T: AsRef<str>>(mut self, topic: T) -> Result<Self, MqttError> {
-        let mqtt_str = MqttString::new(topic)?;
+        let mqtt_str = GenericMqttString::<STRING_BUFFER_SIZE>::new(topic)?;
         if mqtt_str.as_str().contains('#') || mqtt_str.as_str().contains('+') {
             return Err(MqttError::MalformedPacket);
         }
@@ -908,7 +946,7 @@ where
     /// ```
     pub fn payload<T>(mut self, data: T) -> Self
     where
-        T: IntoPayload,
+        T: IntoPayload<PAYLOAD_BUFFER_SIZE>,
     {
         self.payload_buf = Some(data.into_payload());
         self
@@ -1012,13 +1050,18 @@ where
     /// //     .build()
     /// //     .unwrap();
     /// ```
-    pub fn build(self) -> Result<GenericPublish<PacketIdType>, MqttError> {
+    pub fn build(
+        self,
+    ) -> Result<GenericPublish<PacketIdType, STRING_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>, MqttError>
+    {
         self.validate()?;
 
         let topic_name_buf = self.topic_name_buf.unwrap();
         let fixed_header = self.fixed_header.unwrap_or([FixedHeader::Publish as u8]);
         let packet_id_buf = self.packet_id_buf.flatten();
-        let payload = self.payload_buf.unwrap_or_else(ArcPayload::default);
+        let payload = self
+            .payload_buf
+            .unwrap_or_else(|| GenericArcPayload::<PAYLOAD_BUFFER_SIZE>::default());
 
         let mut remaining = topic_name_buf.size();
         if (fixed_header[0] >> 1) & 0b0000_0011 != 0 && packet_id_buf.is_some() {
@@ -1053,7 +1096,8 @@ where
 /// - `dup`: Boolean DUP flag
 /// - `packet_id`: Optional packet identifier (null for QoS 0)
 /// - `payload`: Payload data (escaped if binary)
-impl<PacketIdType> Serialize for GenericPublish<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const PAYLOAD_BUFFER_SIZE: usize> Serialize
+    for GenericPublish<PacketIdType, STRING_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId + Serialize,
 {
@@ -1107,7 +1151,8 @@ where
 /// println!("{}", publish);
 /// // Output: {"type":"publish","topic_name":"test/topic","qos":1,...}
 /// ```
-impl<PacketIdType> fmt::Display for GenericPublish<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const PAYLOAD_BUFFER_SIZE: usize> fmt::Display
+    for GenericPublish<PacketIdType, STRING_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId + Serialize,
 {
@@ -1124,7 +1169,8 @@ where
 /// Uses the same JSON formatting as the Display implementation to provide
 /// consistent debug output. This makes debugging easier by showing all
 /// packet fields in a structured format.
-impl<PacketIdType> fmt::Debug for GenericPublish<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const PAYLOAD_BUFFER_SIZE: usize> fmt::Debug
+    for GenericPublish<PacketIdType, STRING_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId + Serialize,
 {
@@ -1138,7 +1184,8 @@ where
 /// Provides common packet functionality including size calculation and
 /// buffer conversion for network transmission. This trait is used by
 /// the generic packet handling infrastructure.
-impl<PacketIdType> GenericPacketTrait for GenericPublish<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const PAYLOAD_BUFFER_SIZE: usize>
+    GenericPacketTrait for GenericPublish<PacketIdType, STRING_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId,
 {
@@ -1164,7 +1211,8 @@ where
 /// Provides unified display and debug formatting through the generic
 /// packet display trait. This enables consistent packet formatting
 /// across different packet types in the library.
-impl<PacketIdType> GenericPacketDisplay for GenericPublish<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const PAYLOAD_BUFFER_SIZE: usize>
+    GenericPacketDisplay for GenericPublish<PacketIdType, STRING_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId + Serialize,
 {
