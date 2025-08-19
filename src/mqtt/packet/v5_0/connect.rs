@@ -43,7 +43,7 @@ use crate::mqtt::packet::qos::Qos;
 use crate::mqtt::packet::variable_byte_integer::VariableByteInteger;
 #[cfg(feature = "std")]
 use crate::mqtt::packet::PropertiesToBuffers;
-use crate::mqtt::packet::{Properties, PropertiesParse, PropertiesSize, Property};
+use crate::mqtt::packet::{GenericProperties, GenericProperty, PropertiesParse, PropertiesSize};
 use crate::mqtt::result_code::MqttError;
 
 /// MQTT 5.0 CONNECT packet representation
@@ -155,7 +155,7 @@ pub struct Connect {
 
     #[builder(setter(into, strip_option))]
     #[getset(get = "pub")]
-    pub props: Properties,
+    pub props: GenericProperties,
 
     #[builder(private)]
     client_id_buf: MqttString,
@@ -164,7 +164,7 @@ pub struct Connect {
     will_property_length: VariableByteInteger,
     #[builder(setter(into, strip_option))]
     #[getset(get = "pub")]
-    pub will_props: Properties,
+    pub will_props: GenericProperties,
     #[builder(private)]
     will_topic_buf: MqttString,
     #[builder(private)]
@@ -597,7 +597,7 @@ impl Connect {
         cursor += 2;
 
         // Properties
-        let (props, consumed) = Properties::parse(&data[cursor..])?;
+        let (props, consumed) = GenericProperties::parse(&data[cursor..])?;
         cursor += consumed;
         validate_connect_properties(&props)?;
         let property_length = VariableByteInteger::from_u32(props.size() as u32).unwrap();
@@ -609,14 +609,14 @@ impl Connect {
 
         // Will Properties and Messages (if will flag is set)
         let will_flag = (connect_flags & 0b0000_0100) != 0;
-        let mut will_props = Properties::new();
+        let mut will_props = GenericProperties::new();
         let mut will_property_length = VariableByteInteger::from_u32(0).unwrap();
         let mut will_topic_buf = MqttString::default();
         let mut will_payload_buf = MqttBinary::default();
 
         if will_flag {
             // Will Properties
-            let (w_props, consumed) = Properties::parse(&data[cursor..])?;
+            let (w_props, consumed) = GenericProperties::parse(&data[cursor..])?;
             cursor += consumed;
             validate_will_properties(&w_props)?;
             will_props = w_props;
@@ -1033,13 +1033,13 @@ impl ConnectBuilder {
         let connect_flags_buf = self.connect_flags_buf.unwrap_or([0b0000_0010]); // Default: clean_start = true
         let connect_flags = connect_flags_buf[0];
         let keep_alive_buf = self.keep_alive_buf.unwrap_or([0, 0]);
-        let props = self.props.unwrap_or_else(Properties::new);
+        let props = self.props.unwrap_or_else(GenericProperties::new);
         let property_length = VariableByteInteger::from_u32(props.size() as u32).unwrap();
 
         let client_id_buf = self.client_id_buf.unwrap_or_default();
 
         let will_flag = (connect_flags & 0b0000_0100) != 0;
-        let will_props = self.will_props.unwrap_or_else(Properties::new);
+        let will_props = self.will_props.unwrap_or_else(GenericProperties::new);
         let will_property_length = VariableByteInteger::from_u32(will_props.size() as u32).unwrap();
         let will_topic_buf = self.will_topic_buf.unwrap_or_default();
         let will_payload_buf = self.will_payload_buf.unwrap_or_default();
@@ -1352,7 +1352,7 @@ impl GenericPacketDisplay for Connect {
 /// Returns `MqttError::ProtocolError` if:
 /// - Invalid property types are present
 /// - Required-unique properties appear more than once
-fn validate_connect_properties(props: &Properties) -> Result<(), MqttError> {
+fn validate_connect_properties(props: &GenericProperties) -> Result<(), MqttError> {
     let mut count_session_expiry_interval = 0;
     let mut count_receive_maximum = 0;
     let mut count_maximum_packet_size = 0;
@@ -1364,15 +1364,17 @@ fn validate_connect_properties(props: &Properties) -> Result<(), MqttError> {
 
     for prop in props {
         match prop {
-            Property::SessionExpiryInterval(_) => count_session_expiry_interval += 1,
-            Property::ReceiveMaximum(_) => count_receive_maximum += 1,
-            Property::MaximumPacketSize(_) => count_maximum_packet_size += 1,
-            Property::TopicAliasMaximum(_) => count_topic_alias_maximum += 1,
-            Property::RequestResponseInformation(_) => count_request_response_information += 1,
-            Property::RequestProblemInformation(_) => count_request_problem_information += 1,
-            Property::UserProperty(_) => {}
-            Property::AuthenticationMethod(_) => count_authentication_method += 1,
-            Property::AuthenticationData(_) => count_authentication_data += 1,
+            GenericProperty::SessionExpiryInterval(_) => count_session_expiry_interval += 1,
+            GenericProperty::ReceiveMaximum(_) => count_receive_maximum += 1,
+            GenericProperty::MaximumPacketSize(_) => count_maximum_packet_size += 1,
+            GenericProperty::TopicAliasMaximum(_) => count_topic_alias_maximum += 1,
+            GenericProperty::RequestResponseInformation(_) => {
+                count_request_response_information += 1
+            }
+            GenericProperty::RequestProblemInformation(_) => count_request_problem_information += 1,
+            GenericProperty::UserProperty(_) => {}
+            GenericProperty::AuthenticationMethod(_) => count_authentication_method += 1,
+            GenericProperty::AuthenticationData(_) => count_authentication_data += 1,
             _ => return Err(MqttError::ProtocolError),
         }
     }
@@ -1421,7 +1423,7 @@ fn validate_connect_properties(props: &Properties) -> Result<(), MqttError> {
 /// Returns `MqttError::ProtocolError` if:
 /// - Invalid property types are present for will messages
 /// - Required-unique properties appear more than once
-fn validate_will_properties(props: &Properties) -> Result<(), MqttError> {
+fn validate_will_properties(props: &GenericProperties) -> Result<(), MqttError> {
     let mut count_will_delay_interval = 0;
     let mut count_payload_format_indicator = 0;
     let mut count_message_expiry_interval = 0;
@@ -1431,13 +1433,13 @@ fn validate_will_properties(props: &Properties) -> Result<(), MqttError> {
 
     for prop in props {
         match prop {
-            Property::WillDelayInterval(_) => count_will_delay_interval += 1,
-            Property::PayloadFormatIndicator(_) => count_payload_format_indicator += 1,
-            Property::MessageExpiryInterval(_) => count_message_expiry_interval += 1,
-            Property::ContentType(_) => count_content_type += 1,
-            Property::ResponseTopic(_) => count_response_topic += 1,
-            Property::CorrelationData(_) => count_correlation_data += 1,
-            Property::UserProperty(_) => {}
+            GenericProperty::WillDelayInterval(_) => count_will_delay_interval += 1,
+            GenericProperty::PayloadFormatIndicator(_) => count_payload_format_indicator += 1,
+            GenericProperty::MessageExpiryInterval(_) => count_message_expiry_interval += 1,
+            GenericProperty::ContentType(_) => count_content_type += 1,
+            GenericProperty::ResponseTopic(_) => count_response_topic += 1,
+            GenericProperty::CorrelationData(_) => count_correlation_data += 1,
+            GenericProperty::UserProperty(_) => {}
             _ => return Err(MqttError::ProtocolError),
         }
     }

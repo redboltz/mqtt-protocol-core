@@ -40,7 +40,7 @@ use crate::mqtt::packet::GenericPacketTrait;
 use crate::mqtt::packet::IsPacketId;
 #[cfg(feature = "std")]
 use crate::mqtt::packet::PropertiesToBuffers;
-use crate::mqtt::packet::{Properties, PropertiesParse, PropertiesSize, Property};
+use crate::mqtt::packet::{GenericProperties, GenericProperty, PropertiesParse, PropertiesSize};
 use crate::mqtt::result_code::MqttError;
 use crate::mqtt::result_code::PubcompReasonCode;
 
@@ -131,7 +131,7 @@ where
     /// Only one `ReasonString` property is allowed per packet.
     #[builder(setter(into, strip_option))]
     #[getset(get = "pub")]
-    pub props: Option<Properties>,
+    pub props: Option<GenericProperties>,
 }
 
 /// Type alias for PUBCOMP packet with standard u16 packet identifiers.
@@ -447,7 +447,7 @@ where
 
         // properties
         let (property_length, props) = if reason_code_buf.is_some() && cursor < data.len() {
-            let (props, consumed) = Properties::parse(&data[cursor..])?;
+            let (props, consumed) = GenericProperties::parse(&data[cursor..])?;
             cursor += consumed;
             validate_pubcomp_properties(&props)?;
             let prop_len = VariableByteInteger::from_u32(props.size() as u32).unwrap();
@@ -875,12 +875,12 @@ where
 /// // This would pass validation
 /// // validate_pubcomp_properties(&valid_props).unwrap();
 /// ```
-fn validate_pubcomp_properties(props: &[Property]) -> Result<(), MqttError> {
+fn validate_pubcomp_properties(props: &[GenericProperty]) -> Result<(), MqttError> {
     let mut count_reason_string = 0;
     for prop in props {
         match prop {
-            Property::ReasonString(_) => count_reason_string += 1,
-            Property::UserProperty(_) => {}
+            GenericProperty::ReasonString(_) => count_reason_string += 1,
+            GenericProperty::UserProperty(_) => {}
             _ => return Err(MqttError::ProtocolError),
         }
     }

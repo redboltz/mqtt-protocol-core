@@ -38,7 +38,7 @@ use crate::mqtt::packet::GenericPacketDisplay;
 use crate::mqtt::packet::GenericPacketTrait;
 #[cfg(feature = "std")]
 use crate::mqtt::packet::PropertiesToBuffers;
-use crate::mqtt::packet::{Properties, PropertiesParse, PropertiesSize, Property};
+use crate::mqtt::packet::{GenericProperties, GenericProperty, PropertiesParse, PropertiesSize};
 use crate::mqtt::result_code::DisconnectReasonCode;
 use crate::mqtt::result_code::MqttError;
 
@@ -157,7 +157,7 @@ pub struct Disconnect {
     /// - Server Reference
     #[builder(setter(into, strip_option))]
     #[getset(get = "pub")]
-    pub props: Option<Properties>,
+    pub props: Option<GenericProperties>,
 }
 
 impl Disconnect {
@@ -406,7 +406,7 @@ impl Disconnect {
 
         // properties
         let (property_length, props) = if reason_code_buf.is_some() && cursor < data.len() {
-            let (props, consumed) = Properties::parse(&data[cursor..])?;
+            let (props, consumed) = GenericProperties::parse(&data[cursor..])?;
             cursor += consumed;
             validate_disconnect_properties(&props)?;
             let prop_len = VariableByteInteger::from_u32(props.size() as u32).unwrap();
@@ -790,16 +790,16 @@ impl GenericPacketDisplay for Disconnect {
 /// // This is called internally during packet construction
 /// // validate_disconnect_properties(&props).unwrap();
 /// ```
-fn validate_disconnect_properties(props: &[Property]) -> Result<(), MqttError> {
+fn validate_disconnect_properties(props: &[GenericProperty]) -> Result<(), MqttError> {
     let mut count_session_expiry_interval = 0;
     let mut count_reason_string = 0;
     let mut count_server_reference = 0;
     for prop in props {
         match prop {
-            Property::SessionExpiryInterval(_) => count_session_expiry_interval += 1,
-            Property::ReasonString(_) => count_reason_string += 1,
-            Property::UserProperty(_) => {}
-            Property::ServerReference(_) => count_server_reference += 1,
+            GenericProperty::SessionExpiryInterval(_) => count_session_expiry_interval += 1,
+            GenericProperty::ReasonString(_) => count_reason_string += 1,
+            GenericProperty::UserProperty(_) => {}
+            GenericProperty::ServerReference(_) => count_server_reference += 1,
             _ => return Err(MqttError::ProtocolError),
         }
     }

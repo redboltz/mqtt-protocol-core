@@ -59,8 +59,12 @@ pub trait GenericPacketDisplay {
 
 #[enum_dispatch(GenericPacketTrait, GenericPacketDisplay)]
 #[derive(Serialize, Clone, PartialEq, Eq)]
-pub enum GenericPacket<PacketIdType>
-where
+pub enum GenericPacket<
+    PacketIdType,
+    const STRING_BUFFER_SIZE: usize = 32,
+    const BINARY_BUFFER_SIZE: usize = 32,
+    const PAYLOAD_BUFFER_SIZE: usize = 32,
+> where
     PacketIdType: IsPacketId + Serialize,
 {
     V3_1_1Connect(v3_1_1::Connect),
@@ -69,7 +73,7 @@ where
     V3_1_1Suback(v3_1_1::GenericSuback<PacketIdType>),
     V3_1_1Unsubscribe(v3_1_1::GenericUnsubscribe<PacketIdType>),
     V3_1_1Unsuback(v3_1_1::GenericUnsuback<PacketIdType>),
-    V3_1_1Publish(v3_1_1::GenericPublish<PacketIdType>),
+    V3_1_1Publish(v3_1_1::GenericPublish<PacketIdType, STRING_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>),
     V3_1_1Puback(v3_1_1::GenericPuback<PacketIdType>),
     V3_1_1Pubrec(v3_1_1::GenericPubrec<PacketIdType>),
     V3_1_1Pubrel(v3_1_1::GenericPubrel<PacketIdType>),
@@ -84,7 +88,14 @@ where
     V5_0Suback(v5_0::GenericSuback<PacketIdType>),
     V5_0Unsubscribe(v5_0::GenericUnsubscribe<PacketIdType>),
     V5_0Unsuback(v5_0::GenericUnsuback<PacketIdType>),
-    V5_0Publish(v5_0::GenericPublish<PacketIdType>),
+    V5_0Publish(
+        v5_0::GenericPublish<
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
+    ),
     V5_0Puback(v5_0::GenericPuback<PacketIdType>),
     V5_0Pubrec(v5_0::GenericPubrec<PacketIdType>),
     V5_0Pubrel(v5_0::GenericPubrel<PacketIdType>),

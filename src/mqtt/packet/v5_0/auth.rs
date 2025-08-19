@@ -38,7 +38,7 @@ use crate::mqtt::packet::GenericPacketDisplay;
 use crate::mqtt::packet::GenericPacketTrait;
 #[cfg(feature = "std")]
 use crate::mqtt::packet::PropertiesToBuffers;
-use crate::mqtt::packet::{Properties, PropertiesParse, PropertiesSize, Property};
+use crate::mqtt::packet::{GenericProperties, GenericProperty, PropertiesParse, PropertiesSize};
 use crate::mqtt::result_code::AuthReasonCode;
 use crate::mqtt::result_code::MqttError;
 
@@ -126,7 +126,7 @@ pub struct Auth {
     /// - User Property: Application-specific key-value pairs
     #[builder(setter(into, strip_option))]
     #[getset(get = "pub")]
-    pub props: Option<Properties>,
+    pub props: Option<GenericProperties>,
 }
 
 impl Auth {
@@ -348,7 +348,7 @@ impl Auth {
 
         // properties
         let (property_length, props) = if reason_code_buf.is_some() && cursor < data.len() {
-            let (props, consumed) = Properties::parse(&data[cursor..])?;
+            let (props, consumed) = GenericProperties::parse(&data[cursor..])?;
             cursor += consumed;
             let prop_len = VariableByteInteger::from_u32(props.size() as u32).unwrap();
 
@@ -457,7 +457,7 @@ impl AuthBuilder {
         self.reason_code_buf = Some(Some([rc as u8]));
         // For AUTH packets, if reason_code is set and props is not already set, set empty props
         if self.props.is_none() {
-            self.props = Some(Some(Properties::new()));
+            self.props = Some(Some(GenericProperties::new()));
         }
         self
     }
@@ -739,7 +739,7 @@ impl GenericPacketDisplay for Auth {
 /// ```
 fn validate_auth_packet(
     reason_code: Option<AuthReasonCode>,
-    props: &Option<Properties>,
+    props: &Option<GenericProperties>,
 ) -> Result<(), MqttError> {
     // Validate properties if present
     if let Some(properties) = props {
@@ -749,10 +749,10 @@ fn validate_auth_packet(
 
         for prop in properties {
             match prop {
-                Property::AuthenticationMethod(_) => count_authentication_method += 1,
-                Property::AuthenticationData(_) => count_authentication_data += 1,
-                Property::ReasonString(_) => count_reason_string += 1,
-                Property::UserProperty(_) => {}
+                GenericProperty::AuthenticationMethod(_) => count_authentication_method += 1,
+                GenericProperty::AuthenticationData(_) => count_authentication_data += 1,
+                GenericProperty::ReasonString(_) => count_reason_string += 1,
+                GenericProperty::UserProperty(_) => {}
                 _ => return Err(MqttError::ProtocolError),
             }
         }

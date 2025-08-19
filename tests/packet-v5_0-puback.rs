@@ -50,7 +50,7 @@ fn build_fail_props_without_rc() {
     common::init_tracing();
     let err = mqtt::packet::v5_0::Puback::builder()
         .packet_id(1234)
-        .props(mqtt::packet::Properties::new())
+        .props(mqtt::packet::GenericProperties::new())
         .build()
         .unwrap_err();
 
@@ -158,7 +158,7 @@ fn debug_pid_rc_prop0() {
     let packet = mqtt::packet::v5_0::Puback::builder()
         .packet_id(1234)
         .reason_code(mqtt::result_code::PubackReasonCode::Success)
-        .props(mqtt::packet::Properties::new())
+        .props(mqtt::packet::GenericProperties::new())
         .build()
         .unwrap();
 
@@ -209,7 +209,7 @@ fn getter_pid_rc_prop0() {
     let packet = mqtt::packet::v5_0::Puback::builder()
         .packet_id(1234)
         .reason_code(mqtt::result_code::PubackReasonCode::Success)
-        .props(mqtt::packet::Properties::new())
+        .props(mqtt::packet::GenericProperties::new())
         .build()
         .unwrap();
 
@@ -314,7 +314,7 @@ fn to_buffers_pid_rc_prop0() {
     let packet = mqtt::packet::v5_0::Puback::builder()
         .packet_id(1234)
         .reason_code(mqtt::result_code::PubackReasonCode::Success)
-        .props(mqtt::packet::Properties::new())
+        .props(mqtt::packet::GenericProperties::new())
         .build()
         .unwrap();
 
@@ -413,7 +413,7 @@ fn parse_pid_rc_prop0() {
     let expected = mqtt::packet::v5_0::Puback::builder()
         .packet_id(1234)
         .reason_code(mqtt::result_code::PubackReasonCode::UnspecifiedError)
-        .props(mqtt::packet::Properties::new())
+        .props(mqtt::packet::GenericProperties::new())
         .build()
         .unwrap();
     assert_eq!(packet, expected);

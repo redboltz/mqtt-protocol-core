@@ -41,7 +41,7 @@ use crate::mqtt::packet::IsPacketId;
 #[cfg(feature = "std")]
 use crate::mqtt::packet::PropertiesToBuffers;
 use crate::mqtt::packet::SubEntry;
-use crate::mqtt::packet::{Properties, PropertiesParse, PropertiesSize, Property};
+use crate::mqtt::packet::{GenericProperties, GenericProperty, PropertiesParse, PropertiesSize};
 use crate::mqtt::result_code::MqttError;
 
 /// MQTT 5.0 SUBSCRIBE packet representation
@@ -175,7 +175,7 @@ where
 
     #[builder(setter(into, strip_option))]
     #[getset(get = "pub")]
-    pub props: Properties,
+    pub props: GenericProperties,
 
     #[getset(get = "pub")]
     entries: Vec<SubEntry>,
@@ -348,7 +348,7 @@ where
         let packet_id_buf = packet_id.to_buffer();
         cursor += buffer_size;
 
-        let (props, property_length) = Properties::parse(&data[cursor..])?;
+        let (props, property_length) = GenericProperties::parse(&data[cursor..])?;
         cursor += property_length;
         validate_subscribe_properties(&props)?;
         let prop_len = VariableByteInteger::from_u32(props.size() as u32).unwrap();
@@ -629,7 +629,7 @@ where
         let packet_id_buf = self.packet_id_buf.unwrap();
         let entries = self.entries.unwrap_or_default();
 
-        let props = self.props.unwrap_or_else(Properties::new);
+        let props = self.props.unwrap_or_else(GenericProperties::new);
         let props_size = props.size();
         let property_length = VariableByteInteger::from_u32(props_size as u32).unwrap();
 
@@ -872,11 +872,11 @@ where
 /// props.push(Property::SubscriptionIdentifier(42));
 /// // This would be valid for SUBSCRIBE packets
 /// ```
-fn validate_subscribe_properties(props: &Properties) -> Result<(), MqttError> {
+fn validate_subscribe_properties(props: &GenericProperties) -> Result<(), MqttError> {
     for prop in props {
         match prop {
-            Property::SubscriptionIdentifier(_) => {}
-            Property::UserProperty(_) => {}
+            GenericProperty::SubscriptionIdentifier(_) => {}
+            GenericProperty::UserProperty(_) => {}
             _ => return Err(MqttError::ProtocolError),
         }
     }

@@ -21,8 +21,8 @@
 // SOFTWARE.
 
 use crate::mqtt::packet::escape_binary_json_string;
-use crate::mqtt::packet::mqtt_binary::MqttBinary;
-use crate::mqtt::packet::mqtt_string::MqttString;
+use crate::mqtt::packet::mqtt_binary::GenericMqttBinary;
+use crate::mqtt::packet::mqtt_string::GenericMqttString;
 use crate::mqtt::packet::DecodeResult;
 use crate::mqtt::packet::VariableByteInteger;
 use crate::mqtt::result_code::MqttError;
@@ -325,9 +325,11 @@ macro_rules! mqtt_property_common {
             }
         }
 
-        impl From<$name> for Property {
+        impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> From<$name>
+            for GenericProperty<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+        {
             fn from(v: $name) -> Self {
-                Property::$name(v)
+                GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::$name(v)
             }
         }
     };
@@ -335,23 +337,37 @@ macro_rules! mqtt_property_common {
 
 macro_rules! mqtt_property_binary {
     ($name:ident, $id:expr) => {
-        mqtt_property_common!($name, $id, MqttBinary);
+        #[derive(Debug, PartialEq, Eq, Clone)]
+        pub struct $name<const BINARY_BUFFER_SIZE: usize = 32> {
+            id_bytes: [u8; 1],
+            value: GenericMqttBinary<BINARY_BUFFER_SIZE>,
+        }
 
-        impl serde::Serialize for $name {
+        impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
+            From<$name<BINARY_BUFFER_SIZE>>
+            for GenericProperty<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+        {
+            fn from(v: $name<BINARY_BUFFER_SIZE>) -> Self {
+                GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::$name(v)
+            }
+        }
+
+        impl<const BINARY_BUFFER_SIZE: usize> serde::Serialize for $name<BINARY_BUFFER_SIZE> {
             fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
             where
                 S: serde::Serializer,
             {
                 let escaped = escape_binary_json_string(self.val());
 
-                let mut state = serializer.serialize_struct(stringify!($name), 2)?;
+                let mut state =
+                    serializer.serialize_struct(stringify!($name<BINARY_BUFFER_SIZE>), 2)?;
                 state.serialize_field("id", &($id as u8))?;
                 state.serialize_field("val", &escaped)?;
                 state.end()
             }
         }
 
-        impl $name {
+        impl<const BINARY_BUFFER_SIZE: usize> $name<BINARY_BUFFER_SIZE> {
             /// Creates a new binary property with the given value.
             ///
             /// # Parameters
@@ -372,12 +388,28 @@ macro_rules! mqtt_property_binary {
             where
                 T: AsRef<[u8]>,
             {
-                let binary = MqttBinary::new(v)?;
+                let binary = GenericMqttBinary::<BINARY_BUFFER_SIZE>::new(v)?;
 
                 Ok(Self {
                     id_bytes: [$id as u8],
                     value: binary,
                 })
+            }
+
+            /// Returns the PropertyId of this property.
+            ///
+            /// # Returns
+            ///
+            /// The PropertyId enum value.
+            ///
+            /// # Examples
+            ///
+            /// ```ignore
+            /// let prop = Property::new(...);
+            /// let id = prop.id();
+            /// ```
+            pub fn id(&self) -> PropertyId {
+                $id
             }
 
             /// Parses a binary property from the given byte slice.
@@ -399,7 +431,8 @@ macro_rules! mqtt_property_binary {
             /// assert_eq!(consumed, 7);
             /// ```
             pub fn parse(bytes: &[u8]) -> Result<(Self, usize), MqttError> {
-                let (mqtt_binary, consumed) = MqttBinary::decode(bytes)?;
+                let (mqtt_binary, consumed) =
+                    GenericMqttBinary::<BINARY_BUFFER_SIZE>::decode(bytes)?;
                 Ok((
                     Self {
                         id_bytes: [$id as u8],
@@ -495,7 +528,7 @@ macro_rules! mqtt_property_binary {
             }
         }
 
-        impl fmt::Display for $name {
+        impl<const BINARY_BUFFER_SIZE: usize> fmt::Display for $name<BINARY_BUFFER_SIZE> {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                 match escape_binary_json_string(self.val()) {
                     Some(escaped) => write!(
@@ -518,21 +551,35 @@ macro_rules! mqtt_property_binary {
 
 macro_rules! mqtt_property_string {
     ($name:ident, $id:expr) => {
-        mqtt_property_common!($name, $id, MqttString);
+        #[derive(Debug, PartialEq, Eq, Clone)]
+        pub struct $name<const STRING_BUFFER_SIZE: usize = 32> {
+            id_bytes: [u8; 1],
+            value: GenericMqttString<STRING_BUFFER_SIZE>,
+        }
 
-        impl serde::Serialize for $name {
+        impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
+            From<$name<STRING_BUFFER_SIZE>>
+            for GenericProperty<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+        {
+            fn from(v: $name<STRING_BUFFER_SIZE>) -> Self {
+                GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::$name(v)
+            }
+        }
+
+        impl<const STRING_BUFFER_SIZE: usize> serde::Serialize for $name<STRING_BUFFER_SIZE> {
             fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
             where
                 S: serde::Serializer,
             {
-                let mut s = serializer.serialize_struct(stringify!($name), 2)?;
+                let mut s =
+                    serializer.serialize_struct(stringify!($name<STRING_BUFFER_SIZE>), 2)?;
                 s.serialize_field("id", &($id as u8))?;
                 s.serialize_field("val", self.val())?;
                 s.end()
             }
         }
 
-        impl $name {
+        impl<const STRING_BUFFER_SIZE: usize> $name<STRING_BUFFER_SIZE> {
             /// Creates a new string property with the given value.
             ///
             /// # Parameters
@@ -553,12 +600,28 @@ macro_rules! mqtt_property_string {
             where
                 T: AsRef<str>,
             {
-                let value = MqttString::new(s)?;
+                let value = GenericMqttString::<STRING_BUFFER_SIZE>::new(s)?;
 
                 Ok(Self {
                     id_bytes: [$id as u8],
                     value,
                 })
+            }
+
+            /// Returns the PropertyId of this property.
+            ///
+            /// # Returns
+            ///
+            /// The PropertyId enum value.
+            ///
+            /// # Examples
+            ///
+            /// ```ignore
+            /// let prop = Property::new(...);
+            /// let id = prop.id();
+            /// ```
+            pub fn id(&self) -> PropertyId {
+                $id
             }
 
             /// Parses a string property from the given byte slice.
@@ -580,7 +643,8 @@ macro_rules! mqtt_property_string {
             /// assert_eq!(consumed, 7);
             /// ```
             pub fn parse(bytes: &[u8]) -> Result<(Self, usize), MqttError> {
-                let (mqtt_string, consumed) = MqttString::decode(bytes)?;
+                let (mqtt_string, consumed) =
+                    GenericMqttString::<STRING_BUFFER_SIZE>::decode(bytes)?;
                 Ok((
                     Self {
                         id_bytes: [$id as u8],
@@ -664,7 +728,7 @@ macro_rules! mqtt_property_string {
             }
         }
 
-        impl fmt::Display for $name {
+        impl<const STRING_BUFFER_SIZE: usize> fmt::Display for $name<STRING_BUFFER_SIZE> {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                 write!(
                     f,
@@ -679,14 +743,31 @@ macro_rules! mqtt_property_string {
 
 macro_rules! mqtt_property_string_pair {
     ($name:ident, $id:expr) => {
-        mqtt_property_common!($name, $id, (MqttString, MqttString));
+        #[derive(Debug, PartialEq, Eq, Clone)]
+        pub struct $name<const STRING_BUFFER_SIZE: usize = 32> {
+            id_bytes: [u8; 1],
+            value: (
+                GenericMqttString<STRING_BUFFER_SIZE>,
+                GenericMqttString<STRING_BUFFER_SIZE>,
+            ),
+        }
 
-        impl serde::Serialize for $name {
+        impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
+            From<$name<STRING_BUFFER_SIZE>>
+            for GenericProperty<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+        {
+            fn from(v: $name<STRING_BUFFER_SIZE>) -> Self {
+                GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::$name(v)
+            }
+        }
+
+        impl<const STRING_BUFFER_SIZE: usize> serde::Serialize for $name<STRING_BUFFER_SIZE> {
             fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
             where
                 S: serde::Serializer,
             {
-                let mut s = serializer.serialize_struct(stringify!($name), 3)?;
+                let mut s =
+                    serializer.serialize_struct(stringify!($name<STRING_BUFFER_SIZE>), 3)?;
                 s.serialize_field("id", &($id as u8))?;
                 s.serialize_field("key", self.key())?;
                 s.serialize_field("val", self.val())?;
@@ -694,7 +775,7 @@ macro_rules! mqtt_property_string_pair {
             }
         }
 
-        impl $name {
+        impl<const STRING_BUFFER_SIZE: usize> $name<STRING_BUFFER_SIZE> {
             /// Creates a new string pair property with the given key and value.
             ///
             /// # Parameters
@@ -717,13 +798,29 @@ macro_rules! mqtt_property_string_pair {
                 K: AsRef<str>,
                 V: AsRef<str>,
             {
-                let key_mqtt = MqttString::new(key)?;
-                let val_mqtt = MqttString::new(val)?;
+                let key_mqtt = GenericMqttString::<STRING_BUFFER_SIZE>::new(key)?;
+                let val_mqtt = GenericMqttString::<STRING_BUFFER_SIZE>::new(val)?;
 
                 Ok(Self {
                     id_bytes: [$id as u8],
                     value: (key_mqtt, val_mqtt),
                 })
+            }
+
+            /// Returns the PropertyId of this property.
+            ///
+            /// # Returns
+            ///
+            /// The PropertyId enum value.
+            ///
+            /// # Examples
+            ///
+            /// ```ignore
+            /// let prop = Property::new(...);
+            /// let id = prop.id();
+            /// ```
+            pub fn id(&self) -> PropertyId {
+                $id
             }
 
             /// Parses a string pair property from the given byte slice.
@@ -745,8 +842,9 @@ macro_rules! mqtt_property_string_pair {
             /// assert_eq!(consumed, 12);
             /// ```
             pub fn parse(bytes: &[u8]) -> Result<(Self, usize), MqttError> {
-                let (key, key_consumed) = MqttString::decode(bytes)?;
-                let (val, val_consumed) = MqttString::decode(&bytes[key_consumed..])?;
+                let (key, key_consumed) = GenericMqttString::<STRING_BUFFER_SIZE>::decode(bytes)?;
+                let (val, val_consumed) =
+                    GenericMqttString::<STRING_BUFFER_SIZE>::decode(&bytes[key_consumed..])?;
 
                 Ok((
                     Self {
@@ -851,7 +949,7 @@ macro_rules! mqtt_property_string_pair {
             }
         }
 
-        impl fmt::Display for $name {
+        impl<const STRING_BUFFER_SIZE: usize> fmt::Display for $name<STRING_BUFFER_SIZE> {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                 write!(
                     f,
@@ -1753,66 +1851,69 @@ mqtt_property_u8!(
 /// let property = mqtt::packet::Property::UserProperty(user_prop);
 /// ```
 #[derive(Debug, Serialize, PartialEq, Eq, Clone)]
-pub enum Property {
+pub enum GenericProperty<const STRING_BUFFER_SIZE: usize = 32, const BINARY_BUFFER_SIZE: usize = 32>
+{
     PayloadFormatIndicator(PayloadFormatIndicator),
     MessageExpiryInterval(MessageExpiryInterval),
-    ContentType(ContentType),
-    ResponseTopic(ResponseTopic),
-    CorrelationData(CorrelationData),
+    ContentType(ContentType<STRING_BUFFER_SIZE>),
+    ResponseTopic(ResponseTopic<STRING_BUFFER_SIZE>),
+    CorrelationData(CorrelationData<BINARY_BUFFER_SIZE>),
     SubscriptionIdentifier(SubscriptionIdentifier),
     SessionExpiryInterval(SessionExpiryInterval),
-    AssignedClientIdentifier(AssignedClientIdentifier),
+    AssignedClientIdentifier(AssignedClientIdentifier<STRING_BUFFER_SIZE>),
     ServerKeepAlive(ServerKeepAlive),
-    AuthenticationMethod(AuthenticationMethod),
-    AuthenticationData(AuthenticationData),
+    AuthenticationMethod(AuthenticationMethod<STRING_BUFFER_SIZE>),
+    AuthenticationData(AuthenticationData<BINARY_BUFFER_SIZE>),
     RequestProblemInformation(RequestProblemInformation),
     WillDelayInterval(WillDelayInterval),
     RequestResponseInformation(RequestResponseInformation),
-    ResponseInformation(ResponseInformation),
-    ServerReference(ServerReference),
-    ReasonString(ReasonString),
+    ResponseInformation(ResponseInformation<STRING_BUFFER_SIZE>),
+    ServerReference(ServerReference<STRING_BUFFER_SIZE>),
+    ReasonString(ReasonString<STRING_BUFFER_SIZE>),
     ReceiveMaximum(ReceiveMaximum),
     TopicAliasMaximum(TopicAliasMaximum),
     TopicAlias(TopicAlias),
     MaximumQos(MaximumQos),
     RetainAvailable(RetainAvailable),
-    UserProperty(UserProperty),
+    UserProperty(UserProperty<STRING_BUFFER_SIZE>),
     MaximumPacketSize(MaximumPacketSize),
     WildcardSubscriptionAvailable(WildcardSubscriptionAvailable),
     SubscriptionIdentifierAvailable(SubscriptionIdentifierAvailable),
     SharedSubscriptionAvailable(SharedSubscriptionAvailable),
 }
 
-impl fmt::Display for Property {
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> fmt::Display
+    for GenericProperty<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Property::PayloadFormatIndicator(p) => write!(f, "{p}"),
-            Property::MessageExpiryInterval(p) => write!(f, "{p}"),
-            Property::ContentType(p) => write!(f, "{p}"),
-            Property::ResponseTopic(p) => write!(f, "{p}"),
-            Property::CorrelationData(p) => write!(f, "{p}"),
-            Property::SubscriptionIdentifier(p) => write!(f, "{p}"),
-            Property::SessionExpiryInterval(p) => write!(f, "{p}"),
-            Property::AssignedClientIdentifier(p) => write!(f, "{p}"),
-            Property::ServerKeepAlive(p) => write!(f, "{p}"),
-            Property::AuthenticationMethod(p) => write!(f, "{p}"),
-            Property::AuthenticationData(p) => write!(f, "{p}"),
-            Property::RequestProblemInformation(p) => write!(f, "{p}"),
-            Property::WillDelayInterval(p) => write!(f, "{p}"),
-            Property::RequestResponseInformation(p) => write!(f, "{p}"),
-            Property::ResponseInformation(p) => write!(f, "{p}"),
-            Property::ServerReference(p) => write!(f, "{p}"),
-            Property::ReasonString(p) => write!(f, "{p}"),
-            Property::ReceiveMaximum(p) => write!(f, "{p}"),
-            Property::TopicAliasMaximum(p) => write!(f, "{p}"),
-            Property::TopicAlias(p) => write!(f, "{p}"),
-            Property::MaximumQos(p) => write!(f, "{p}"),
-            Property::RetainAvailable(p) => write!(f, "{p}"),
-            Property::UserProperty(p) => write!(f, "{p}"),
-            Property::MaximumPacketSize(p) => write!(f, "{p}"),
-            Property::WildcardSubscriptionAvailable(p) => write!(f, "{p}"),
-            Property::SubscriptionIdentifierAvailable(p) => write!(f, "{p}"),
-            Property::SharedSubscriptionAvailable(p) => write!(f, "{p}"),
+            GenericProperty::PayloadFormatIndicator(p) => write!(f, "{p}"),
+            GenericProperty::MessageExpiryInterval(p) => write!(f, "{p}"),
+            GenericProperty::ContentType(p) => write!(f, "{p}"),
+            GenericProperty::ResponseTopic(p) => write!(f, "{p}"),
+            GenericProperty::CorrelationData(p) => write!(f, "{p}"),
+            GenericProperty::SubscriptionIdentifier(p) => write!(f, "{p}"),
+            GenericProperty::SessionExpiryInterval(p) => write!(f, "{p}"),
+            GenericProperty::AssignedClientIdentifier(p) => write!(f, "{p}"),
+            GenericProperty::ServerKeepAlive(p) => write!(f, "{p}"),
+            GenericProperty::AuthenticationMethod(p) => write!(f, "{p}"),
+            GenericProperty::AuthenticationData(p) => write!(f, "{p}"),
+            GenericProperty::RequestProblemInformation(p) => write!(f, "{p}"),
+            GenericProperty::WillDelayInterval(p) => write!(f, "{p}"),
+            GenericProperty::RequestResponseInformation(p) => write!(f, "{p}"),
+            GenericProperty::ResponseInformation(p) => write!(f, "{p}"),
+            GenericProperty::ServerReference(p) => write!(f, "{p}"),
+            GenericProperty::ReasonString(p) => write!(f, "{p}"),
+            GenericProperty::ReceiveMaximum(p) => write!(f, "{p}"),
+            GenericProperty::TopicAliasMaximum(p) => write!(f, "{p}"),
+            GenericProperty::TopicAlias(p) => write!(f, "{p}"),
+            GenericProperty::MaximumQos(p) => write!(f, "{p}"),
+            GenericProperty::RetainAvailable(p) => write!(f, "{p}"),
+            GenericProperty::UserProperty(p) => write!(f, "{p}"),
+            GenericProperty::MaximumPacketSize(p) => write!(f, "{p}"),
+            GenericProperty::WildcardSubscriptionAvailable(p) => write!(f, "{p}"),
+            GenericProperty::SubscriptionIdentifierAvailable(p) => write!(f, "{p}"),
+            GenericProperty::SharedSubscriptionAvailable(p) => write!(f, "{p}"),
         }
     }
 }
@@ -1874,18 +1975,20 @@ pub trait PropertyValueAccess {
     fn as_key_value(&self) -> Option<(&str, &str)>;
 }
 
-impl PropertyValueAccess for Property {
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> PropertyValueAccess
+    for GenericProperty<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
     fn as_u8(&self) -> Option<u8> {
         match self {
             // All property types that return u8
-            Property::PayloadFormatIndicator(p) => Some(p.val()),
-            Property::MaximumQos(p) => Some(p.val()),
-            Property::RetainAvailable(p) => Some(p.val()),
-            Property::RequestProblemInformation(p) => Some(p.val()),
-            Property::RequestResponseInformation(p) => Some(p.val()),
-            Property::WildcardSubscriptionAvailable(p) => Some(p.val()),
-            Property::SubscriptionIdentifierAvailable(p) => Some(p.val()),
-            Property::SharedSubscriptionAvailable(p) => Some(p.val()),
+            GenericProperty::PayloadFormatIndicator(p) => Some(p.val()),
+            GenericProperty::MaximumQos(p) => Some(p.val()),
+            GenericProperty::RetainAvailable(p) => Some(p.val()),
+            GenericProperty::RequestProblemInformation(p) => Some(p.val()),
+            GenericProperty::RequestResponseInformation(p) => Some(p.val()),
+            GenericProperty::WildcardSubscriptionAvailable(p) => Some(p.val()),
+            GenericProperty::SubscriptionIdentifierAvailable(p) => Some(p.val()),
+            GenericProperty::SharedSubscriptionAvailable(p) => Some(p.val()),
             _ => None,
         }
     }
@@ -1893,10 +1996,10 @@ impl PropertyValueAccess for Property {
     fn as_u16(&self) -> Option<u16> {
         match self {
             // All property types that return u16
-            Property::TopicAlias(p) => Some(p.val()),
-            Property::ReceiveMaximum(p) => Some(p.val()),
-            Property::TopicAliasMaximum(p) => Some(p.val()),
-            Property::ServerKeepAlive(p) => Some(p.val()),
+            GenericProperty::TopicAlias(p) => Some(p.val()),
+            GenericProperty::ReceiveMaximum(p) => Some(p.val()),
+            GenericProperty::TopicAliasMaximum(p) => Some(p.val()),
+            GenericProperty::ServerKeepAlive(p) => Some(p.val()),
             _ => None,
         }
     }
@@ -1904,11 +2007,11 @@ impl PropertyValueAccess for Property {
     fn as_u32(&self) -> Option<u32> {
         match self {
             // All property types that return u32
-            Property::MessageExpiryInterval(p) => Some(p.val()),
-            Property::SessionExpiryInterval(p) => Some(p.val()),
-            Property::WillDelayInterval(p) => Some(p.val()),
-            Property::MaximumPacketSize(p) => Some(p.val()),
-            Property::SubscriptionIdentifier(p) => Some(p.val()),
+            GenericProperty::MessageExpiryInterval(p) => Some(p.val()),
+            GenericProperty::SessionExpiryInterval(p) => Some(p.val()),
+            GenericProperty::WillDelayInterval(p) => Some(p.val()),
+            GenericProperty::MaximumPacketSize(p) => Some(p.val()),
+            GenericProperty::SubscriptionIdentifier(p) => Some(p.val()),
             _ => None,
         }
     }
@@ -1916,13 +2019,13 @@ impl PropertyValueAccess for Property {
     fn as_str(&self) -> Option<&str> {
         match self {
             // All property types that return strings
-            Property::ContentType(p) => Some(p.val()),
-            Property::ResponseTopic(p) => Some(p.val()),
-            Property::AssignedClientIdentifier(p) => Some(p.val()),
-            Property::AuthenticationMethod(p) => Some(p.val()),
-            Property::ResponseInformation(p) => Some(p.val()),
-            Property::ServerReference(p) => Some(p.val()),
-            Property::ReasonString(p) => Some(p.val()),
+            GenericProperty::ContentType(p) => Some(p.val()),
+            GenericProperty::ResponseTopic(p) => Some(p.val()),
+            GenericProperty::AssignedClientIdentifier(p) => Some(p.val()),
+            GenericProperty::AuthenticationMethod(p) => Some(p.val()),
+            GenericProperty::ResponseInformation(p) => Some(p.val()),
+            GenericProperty::ServerReference(p) => Some(p.val()),
+            GenericProperty::ReasonString(p) => Some(p.val()),
             _ => None,
         }
     }
@@ -1930,8 +2033,8 @@ impl PropertyValueAccess for Property {
     fn as_bytes(&self) -> Option<&[u8]> {
         match self {
             // Property types that return binary data
-            Property::CorrelationData(p) => Some(p.val()),
-            Property::AuthenticationData(p) => Some(p.val()),
+            GenericProperty::CorrelationData(p) => Some(p.val()),
+            GenericProperty::AuthenticationData(p) => Some(p.val()),
             _ => None,
         }
     }
@@ -1939,13 +2042,15 @@ impl PropertyValueAccess for Property {
     fn as_key_value(&self) -> Option<(&str, &str)> {
         match self {
             // Property types that return key-value pairs
-            Property::UserProperty(p) => Some((p.key(), p.val())),
+            GenericProperty::UserProperty(p) => Some((p.key(), p.val())),
             _ => None,
         }
     }
 }
 
-impl Property {
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
+    GenericProperty<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
     /// Get the property identifier for this property
     ///
     /// Returns the `PropertyId` that corresponds to this property type.
@@ -1964,33 +2069,45 @@ impl Property {
     /// ```
     pub fn id(&self) -> PropertyId {
         match self {
-            Property::PayloadFormatIndicator(p) => p.id(),
-            Property::MessageExpiryInterval(p) => p.id(),
-            Property::ContentType(p) => p.id(),
-            Property::ResponseTopic(p) => p.id(),
-            Property::CorrelationData(p) => p.id(),
-            Property::SubscriptionIdentifier(p) => p.id(),
-            Property::SessionExpiryInterval(p) => p.id(),
-            Property::AssignedClientIdentifier(p) => p.id(),
-            Property::ServerKeepAlive(p) => p.id(),
-            Property::AuthenticationMethod(p) => p.id(),
-            Property::AuthenticationData(p) => p.id(),
-            Property::RequestProblemInformation(p) => p.id(),
-            Property::WillDelayInterval(p) => p.id(),
-            Property::RequestResponseInformation(p) => p.id(),
-            Property::ResponseInformation(p) => p.id(),
-            Property::ServerReference(p) => p.id(),
-            Property::ReasonString(p) => p.id(),
-            Property::ReceiveMaximum(p) => p.id(),
-            Property::TopicAliasMaximum(p) => p.id(),
-            Property::TopicAlias(p) => p.id(),
-            Property::MaximumQos(p) => p.id(),
-            Property::RetainAvailable(p) => p.id(),
-            Property::UserProperty(p) => p.id(),
-            Property::MaximumPacketSize(p) => p.id(),
-            Property::WildcardSubscriptionAvailable(p) => p.id(),
-            Property::SubscriptionIdentifierAvailable(p) => p.id(),
-            Property::SharedSubscriptionAvailable(p) => p.id(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::PayloadFormatIndicator(
+                p,
+            ) => p.id(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::MessageExpiryInterval(p) => {
+                p.id()
+            }
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ContentType(p) => p.id(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ResponseTopic(p) => p.id(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::CorrelationData(p) => p.id(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::SubscriptionIdentifier(
+                p,
+            ) => p.id(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::SessionExpiryInterval(p) => {
+                p.id()
+            }
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::AssignedClientIdentifier(
+                p,
+            ) => p.id(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ServerKeepAlive(p) => p.id(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::AuthenticationMethod(p) => {
+                p.id()
+            }
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::AuthenticationData(p) => p.id(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::RequestProblemInformation(p) => p.id(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::WillDelayInterval(p) => p.id(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::RequestResponseInformation(p) => p.id(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ResponseInformation(p) => p.id(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ServerReference(p) => p.id(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ReasonString(p) => p.id(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ReceiveMaximum(p) => p.id(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::TopicAliasMaximum(p) => p.id(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::TopicAlias(p) => p.id(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::MaximumQos(p) => p.id(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::RetainAvailable(p) => p.id(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::UserProperty(p) => p.id(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::MaximumPacketSize(p) => p.id(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::WildcardSubscriptionAvailable(p) => p.id(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::SubscriptionIdentifierAvailable(p) => p.id(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::SharedSubscriptionAvailable(p) => p.id(),
         }
     }
 
@@ -2012,33 +2129,33 @@ impl Property {
     /// ```
     pub fn size(&self) -> usize {
         match self {
-            Property::PayloadFormatIndicator(p) => p.size(),
-            Property::MessageExpiryInterval(p) => p.size(),
-            Property::ContentType(p) => p.size(),
-            Property::ResponseTopic(p) => p.size(),
-            Property::CorrelationData(p) => p.size(),
-            Property::SubscriptionIdentifier(p) => p.size(),
-            Property::SessionExpiryInterval(p) => p.size(),
-            Property::AssignedClientIdentifier(p) => p.size(),
-            Property::ServerKeepAlive(p) => p.size(),
-            Property::AuthenticationMethod(p) => p.size(),
-            Property::AuthenticationData(p) => p.size(),
-            Property::RequestProblemInformation(p) => p.size(),
-            Property::WillDelayInterval(p) => p.size(),
-            Property::RequestResponseInformation(p) => p.size(),
-            Property::ResponseInformation(p) => p.size(),
-            Property::ServerReference(p) => p.size(),
-            Property::ReasonString(p) => p.size(),
-            Property::ReceiveMaximum(p) => p.size(),
-            Property::TopicAliasMaximum(p) => p.size(),
-            Property::TopicAlias(p) => p.size(),
-            Property::MaximumQos(p) => p.size(),
-            Property::RetainAvailable(p) => p.size(),
-            Property::UserProperty(p) => p.size(),
-            Property::MaximumPacketSize(p) => p.size(),
-            Property::WildcardSubscriptionAvailable(p) => p.size(),
-            Property::SubscriptionIdentifierAvailable(p) => p.size(),
-            Property::SharedSubscriptionAvailable(p) => p.size(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::PayloadFormatIndicator(p) => p.size(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::MessageExpiryInterval(p) => p.size(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ContentType(p) => p.size(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ResponseTopic(p) => p.size(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::CorrelationData(p) => p.size(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::SubscriptionIdentifier(p) => p.size(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::SessionExpiryInterval(p) => p.size(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::AssignedClientIdentifier(p) => p.size(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ServerKeepAlive(p) => p.size(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::AuthenticationMethod(p) => p.size(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::AuthenticationData(p) => p.size(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::RequestProblemInformation(p) => p.size(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::WillDelayInterval(p) => p.size(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::RequestResponseInformation(p) => p.size(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ResponseInformation(p) => p.size(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ServerReference(p) => p.size(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ReasonString(p) => p.size(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ReceiveMaximum(p) => p.size(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::TopicAliasMaximum(p) => p.size(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::TopicAlias(p) => p.size(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::MaximumQos(p) => p.size(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::RetainAvailable(p) => p.size(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::UserProperty(p) => p.size(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::MaximumPacketSize(p) => p.size(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::WildcardSubscriptionAvailable(p) => p.size(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::SubscriptionIdentifierAvailable(p) => p.size(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::SharedSubscriptionAvailable(p) => p.size(),
         }
     }
 
@@ -2063,33 +2180,33 @@ impl Property {
     #[cfg(feature = "std")]
     pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         match self {
-            Property::PayloadFormatIndicator(p) => p.to_buffers(),
-            Property::MessageExpiryInterval(p) => p.to_buffers(),
-            Property::ContentType(p) => p.to_buffers(),
-            Property::ResponseTopic(p) => p.to_buffers(),
-            Property::CorrelationData(p) => p.to_buffers(),
-            Property::SubscriptionIdentifier(p) => p.to_buffers(),
-            Property::SessionExpiryInterval(p) => p.to_buffers(),
-            Property::AssignedClientIdentifier(p) => p.to_buffers(),
-            Property::ServerKeepAlive(p) => p.to_buffers(),
-            Property::AuthenticationMethod(p) => p.to_buffers(),
-            Property::AuthenticationData(p) => p.to_buffers(),
-            Property::RequestProblemInformation(p) => p.to_buffers(),
-            Property::WillDelayInterval(p) => p.to_buffers(),
-            Property::RequestResponseInformation(p) => p.to_buffers(),
-            Property::ResponseInformation(p) => p.to_buffers(),
-            Property::ServerReference(p) => p.to_buffers(),
-            Property::ReasonString(p) => p.to_buffers(),
-            Property::ReceiveMaximum(p) => p.to_buffers(),
-            Property::TopicAliasMaximum(p) => p.to_buffers(),
-            Property::TopicAlias(p) => p.to_buffers(),
-            Property::MaximumQos(p) => p.to_buffers(),
-            Property::RetainAvailable(p) => p.to_buffers(),
-            Property::UserProperty(p) => p.to_buffers(),
-            Property::MaximumPacketSize(p) => p.to_buffers(),
-            Property::WildcardSubscriptionAvailable(p) => p.to_buffers(),
-            Property::SubscriptionIdentifierAvailable(p) => p.to_buffers(),
-            Property::SharedSubscriptionAvailable(p) => p.to_buffers(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::PayloadFormatIndicator(p) => p.to_buffers(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::MessageExpiryInterval(p) => p.to_buffers(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ContentType(p) => p.to_buffers(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ResponseTopic(p) => p.to_buffers(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::CorrelationData(p) => p.to_buffers(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::SubscriptionIdentifier(p) => p.to_buffers(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::SessionExpiryInterval(p) => p.to_buffers(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::AssignedClientIdentifier(p) => p.to_buffers(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ServerKeepAlive(p) => p.to_buffers(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::AuthenticationMethod(p) => p.to_buffers(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::AuthenticationData(p) => p.to_buffers(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::RequestProblemInformation(p) => p.to_buffers(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::WillDelayInterval(p) => p.to_buffers(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::RequestResponseInformation(p) => p.to_buffers(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ResponseInformation(p) => p.to_buffers(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ServerReference(p) => p.to_buffers(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ReasonString(p) => p.to_buffers(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ReceiveMaximum(p) => p.to_buffers(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::TopicAliasMaximum(p) => p.to_buffers(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::TopicAlias(p) => p.to_buffers(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::MaximumQos(p) => p.to_buffers(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::RetainAvailable(p) => p.to_buffers(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::UserProperty(p) => p.to_buffers(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::MaximumPacketSize(p) => p.to_buffers(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::WildcardSubscriptionAvailable(p) => p.to_buffers(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::SubscriptionIdentifierAvailable(p) => p.to_buffers(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::SharedSubscriptionAvailable(p) => p.to_buffers(),
         }
     }
 
@@ -2116,33 +2233,33 @@ impl Property {
     /// [`to_buffers()`]: #method.to_buffers
     pub fn to_continuous_buffer(&self) -> Vec<u8> {
         match self {
-            Property::PayloadFormatIndicator(p) => p.to_continuous_buffer(),
-            Property::MessageExpiryInterval(p) => p.to_continuous_buffer(),
-            Property::ContentType(p) => p.to_continuous_buffer(),
-            Property::ResponseTopic(p) => p.to_continuous_buffer(),
-            Property::CorrelationData(p) => p.to_continuous_buffer(),
-            Property::SubscriptionIdentifier(p) => p.to_continuous_buffer(),
-            Property::SessionExpiryInterval(p) => p.to_continuous_buffer(),
-            Property::AssignedClientIdentifier(p) => p.to_continuous_buffer(),
-            Property::ServerKeepAlive(p) => p.to_continuous_buffer(),
-            Property::AuthenticationMethod(p) => p.to_continuous_buffer(),
-            Property::AuthenticationData(p) => p.to_continuous_buffer(),
-            Property::RequestProblemInformation(p) => p.to_continuous_buffer(),
-            Property::WillDelayInterval(p) => p.to_continuous_buffer(),
-            Property::RequestResponseInformation(p) => p.to_continuous_buffer(),
-            Property::ResponseInformation(p) => p.to_continuous_buffer(),
-            Property::ServerReference(p) => p.to_continuous_buffer(),
-            Property::ReasonString(p) => p.to_continuous_buffer(),
-            Property::ReceiveMaximum(p) => p.to_continuous_buffer(),
-            Property::TopicAliasMaximum(p) => p.to_continuous_buffer(),
-            Property::TopicAlias(p) => p.to_continuous_buffer(),
-            Property::MaximumQos(p) => p.to_continuous_buffer(),
-            Property::RetainAvailable(p) => p.to_continuous_buffer(),
-            Property::UserProperty(p) => p.to_continuous_buffer(),
-            Property::MaximumPacketSize(p) => p.to_continuous_buffer(),
-            Property::WildcardSubscriptionAvailable(p) => p.to_continuous_buffer(),
-            Property::SubscriptionIdentifierAvailable(p) => p.to_continuous_buffer(),
-            Property::SharedSubscriptionAvailable(p) => p.to_continuous_buffer(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::PayloadFormatIndicator(p) => p.to_continuous_buffer(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::MessageExpiryInterval(p) => p.to_continuous_buffer(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ContentType(p) => p.to_continuous_buffer(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ResponseTopic(p) => p.to_continuous_buffer(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::CorrelationData(p) => p.to_continuous_buffer(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::SubscriptionIdentifier(p) => p.to_continuous_buffer(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::SessionExpiryInterval(p) => p.to_continuous_buffer(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::AssignedClientIdentifier(p) => p.to_continuous_buffer(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ServerKeepAlive(p) => p.to_continuous_buffer(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::AuthenticationMethod(p) => p.to_continuous_buffer(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::AuthenticationData(p) => p.to_continuous_buffer(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::RequestProblemInformation(p) => p.to_continuous_buffer(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::WillDelayInterval(p) => p.to_continuous_buffer(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::RequestResponseInformation(p) => p.to_continuous_buffer(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ResponseInformation(p) => p.to_continuous_buffer(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ServerReference(p) => p.to_continuous_buffer(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ReasonString(p) => p.to_continuous_buffer(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ReceiveMaximum(p) => p.to_continuous_buffer(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::TopicAliasMaximum(p) => p.to_continuous_buffer(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::TopicAlias(p) => p.to_continuous_buffer(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::MaximumQos(p) => p.to_continuous_buffer(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::RetainAvailable(p) => p.to_continuous_buffer(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::UserProperty(p) => p.to_continuous_buffer(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::MaximumPacketSize(p) => p.to_continuous_buffer(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::WildcardSubscriptionAvailable(p) => p.to_continuous_buffer(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::SubscriptionIdentifierAvailable(p) => p.to_continuous_buffer(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::SharedSubscriptionAvailable(p) => p.to_continuous_buffer(),
         }
     }
 
@@ -2321,7 +2438,10 @@ impl Property {
 /// let user_prop = mqtt::packet::UserProperty::new("app", "myapp").unwrap();
 /// properties.push(mqtt::packet::Property::UserProperty(user_prop));
 /// ```
-pub type Properties = Vec<Property>;
+pub type GenericProperties<
+    const STRING_BUFFER_SIZE: usize = 32,
+    const BINARY_BUFFER_SIZE: usize = 32,
+> = Vec<GenericProperty<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>>;
 
 /// Trait for converting properties collection to continuous buffer
 ///
@@ -2350,7 +2470,9 @@ pub trait PropertiesToBuffers {
 /// Implementation of PropertiesToContinuousBuffer for Properties
 ///
 /// Concatenates continuous buffers from all properties in the collection.
-impl PropertiesToContinuousBuffer for Properties {
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> PropertiesToContinuousBuffer
+    for GenericProperties<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
     fn to_continuous_buffer(&self) -> Vec<u8> {
         let mut result = Vec::new();
 
@@ -2366,7 +2488,9 @@ impl PropertiesToContinuousBuffer for Properties {
 ///
 /// Concatenates IoSlice buffers from all properties in the collection.
 #[cfg(feature = "std")]
-impl PropertiesToBuffers for Properties {
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> PropertiesToBuffers
+    for GenericProperties<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
     fn to_buffers(&self) -> Vec<IoSlice<'_>> {
         let mut result = Vec::new();
 
@@ -2392,7 +2516,9 @@ pub trait PropertiesSize {
 /// Implementation of PropertiesSize for Properties
 ///
 /// Calculates the total size by summing the encoded size of each property.
-impl PropertiesSize for Properties {
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> PropertiesSize
+    for GenericProperties<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
     fn size(&self) -> usize {
         self.iter().map(|prop| prop.size()).sum()
     }
@@ -2426,7 +2552,9 @@ pub trait PropertiesParse {
 /// Parses properties according to MQTT v5.0 specification format:
 /// - Variable-length integer indicating properties length
 /// - Sequence of encoded properties
-impl PropertiesParse for Properties {
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> PropertiesParse
+    for GenericProperties<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
     fn parse(data: &[u8]) -> Result<(Self, usize), MqttError> {
         if data.is_empty() {
             return Err(MqttError::MalformedPacket);
@@ -2438,7 +2566,7 @@ impl PropertiesParse for Properties {
         };
 
         let mut cursor = consumed;
-        let mut props = Properties::new();
+        let mut props = GenericProperties::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::new();
 
         if prop_len.to_u32() == 0 {
             return Ok((props, cursor));
@@ -2450,7 +2578,9 @@ impl PropertiesParse for Properties {
         }
 
         while cursor < props_end {
-            let (p, c) = Property::parse(&data[cursor..props_end])?;
+            let (p, c) = GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::parse(
+                &data[cursor..props_end],
+            )?;
             props.push(p);
             cursor += c;
         }

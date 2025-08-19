@@ -27,167 +27,167 @@ use mqtt_protocol_core::mqtt::prelude::*;
 #[test]
 fn test_all_properties() {
     common::init_tracing();
-    let test_cases: Vec<(mqtt::packet::PropertyId, mqtt::packet::Property)> = vec![
+    let test_cases: Vec<(mqtt::packet::PropertyId, mqtt::packet::GenericProperty)> = vec![
         (
             mqtt::packet::PropertyId::PayloadFormatIndicator,
-            mqtt::packet::Property::PayloadFormatIndicator(
+            mqtt::packet::GenericProperty::PayloadFormatIndicator(
                 mqtt::packet::PayloadFormatIndicator::new(mqtt::packet::PayloadFormat::String)
                     .expect("valid value"),
             ),
         ),
         (
             mqtt::packet::PropertyId::MessageExpiryInterval,
-            mqtt::packet::Property::MessageExpiryInterval(
+            mqtt::packet::GenericProperty::MessageExpiryInterval(
                 mqtt::packet::MessageExpiryInterval::new(60).expect("valid value"),
             ),
         ),
         (
             mqtt::packet::PropertyId::ContentType,
-            mqtt::packet::Property::ContentType(
+            mqtt::packet::GenericProperty::ContentType(
                 mqtt::packet::ContentType::new("text/plain").expect("valid value"),
             ),
         ),
         (
             mqtt::packet::PropertyId::ResponseTopic,
-            mqtt::packet::Property::ResponseTopic(
+            mqtt::packet::GenericProperty::ResponseTopic(
                 mqtt::packet::ResponseTopic::new("reply/topic").expect("valid value"),
             ),
         ),
         (
             mqtt::packet::PropertyId::CorrelationData,
-            mqtt::packet::Property::CorrelationData(
+            mqtt::packet::GenericProperty::CorrelationData(
                 mqtt::packet::CorrelationData::new("binary").expect("valid value"),
             ),
         ),
         (
             mqtt::packet::PropertyId::SubscriptionIdentifier,
-            mqtt::packet::Property::SubscriptionIdentifier(
+            mqtt::packet::GenericProperty::SubscriptionIdentifier(
                 mqtt::packet::SubscriptionIdentifier::new(456).expect("valid value"),
             ),
         ),
         (
             mqtt::packet::PropertyId::SessionExpiryInterval,
-            mqtt::packet::Property::SessionExpiryInterval(
+            mqtt::packet::GenericProperty::SessionExpiryInterval(
                 mqtt::packet::SessionExpiryInterval::new(300).expect("valid value"),
             ),
         ),
         (
             mqtt::packet::PropertyId::AssignedClientIdentifier,
-            mqtt::packet::Property::AssignedClientIdentifier(
+            mqtt::packet::GenericProperty::AssignedClientIdentifier(
                 mqtt::packet::AssignedClientIdentifier::new("client-id").expect("valid value"),
             ),
         ),
         (
             mqtt::packet::PropertyId::ServerKeepAlive,
-            mqtt::packet::Property::ServerKeepAlive(
+            mqtt::packet::GenericProperty::ServerKeepAlive(
                 mqtt::packet::ServerKeepAlive::new(120).expect("valid value"),
             ),
         ),
         (
             mqtt::packet::PropertyId::AuthenticationMethod,
-            mqtt::packet::Property::AuthenticationMethod(
+            mqtt::packet::GenericProperty::AuthenticationMethod(
                 mqtt::packet::AuthenticationMethod::new("token").expect("valid value"),
             ),
         ),
         (
             mqtt::packet::PropertyId::AuthenticationData,
-            mqtt::packet::Property::AuthenticationData(
+            mqtt::packet::GenericProperty::AuthenticationData(
                 mqtt::packet::AuthenticationData::new(vec![1, 2, 3]).expect("valid value"),
             ),
         ),
         (
             mqtt::packet::PropertyId::RequestProblemInformation,
-            mqtt::packet::Property::RequestProblemInformation(
+            mqtt::packet::GenericProperty::RequestProblemInformation(
                 mqtt::packet::RequestProblemInformation::new(1).expect("valid value"),
             ),
         ),
         (
             mqtt::packet::PropertyId::WillDelayInterval,
-            mqtt::packet::Property::WillDelayInterval(
+            mqtt::packet::GenericProperty::WillDelayInterval(
                 mqtt::packet::WillDelayInterval::new(10).expect("valid value"),
             ),
         ),
         (
             mqtt::packet::PropertyId::RequestResponseInformation,
-            mqtt::packet::Property::RequestResponseInformation(
+            mqtt::packet::GenericProperty::RequestResponseInformation(
                 mqtt::packet::RequestResponseInformation::new(1).expect("valid value"),
             ),
         ),
         (
             mqtt::packet::PropertyId::ResponseInformation,
-            mqtt::packet::Property::ResponseInformation(
+            mqtt::packet::GenericProperty::ResponseInformation(
                 mqtt::packet::ResponseInformation::new("info").expect("valid value"),
             ),
         ),
         (
             mqtt::packet::PropertyId::ServerReference,
-            mqtt::packet::Property::ServerReference(
+            mqtt::packet::GenericProperty::ServerReference(
                 mqtt::packet::ServerReference::new("server").expect("valid value"),
             ),
         ),
         (
             mqtt::packet::PropertyId::ReasonString,
-            mqtt::packet::Property::ReasonString(
+            mqtt::packet::GenericProperty::ReasonString(
                 mqtt::packet::ReasonString::new("ok").expect("valid value"),
             ),
         ),
         (
             mqtt::packet::PropertyId::ReceiveMaximum,
-            mqtt::packet::Property::ReceiveMaximum(
+            mqtt::packet::GenericProperty::ReceiveMaximum(
                 mqtt::packet::ReceiveMaximum::new(10).expect("valid value"),
             ),
         ),
         (
             mqtt::packet::PropertyId::TopicAliasMaximum,
-            mqtt::packet::Property::TopicAliasMaximum(
+            mqtt::packet::GenericProperty::TopicAliasMaximum(
                 mqtt::packet::TopicAliasMaximum::new(20).expect("valid value"),
             ),
         ),
         (
             mqtt::packet::PropertyId::TopicAlias,
-            mqtt::packet::Property::TopicAlias(
+            mqtt::packet::GenericProperty::TopicAlias(
                 mqtt::packet::TopicAlias::new(1).expect("valid value"),
             ),
         ),
         (
             mqtt::packet::PropertyId::MaximumQos,
-            mqtt::packet::Property::MaximumQos(
+            mqtt::packet::GenericProperty::MaximumQos(
                 mqtt::packet::MaximumQos::new(1).expect("valid value"),
             ),
         ),
         (
             mqtt::packet::PropertyId::RetainAvailable,
-            mqtt::packet::Property::RetainAvailable(
+            mqtt::packet::GenericProperty::RetainAvailable(
                 mqtt::packet::RetainAvailable::new(1).expect("valid value"),
             ),
         ),
         (
             mqtt::packet::PropertyId::UserProperty,
-            mqtt::packet::Property::UserProperty(
+            mqtt::packet::GenericProperty::UserProperty(
                 mqtt::packet::UserProperty::new("k", "v").expect("valid value"),
             ),
         ),
         (
             mqtt::packet::PropertyId::MaximumPacketSize,
-            mqtt::packet::Property::MaximumPacketSize(
+            mqtt::packet::GenericProperty::MaximumPacketSize(
                 mqtt::packet::MaximumPacketSize::new(1024).expect("valid value"),
             ),
         ),
         (
             mqtt::packet::PropertyId::WildcardSubscriptionAvailable,
-            mqtt::packet::Property::WildcardSubscriptionAvailable(
+            mqtt::packet::GenericProperty::WildcardSubscriptionAvailable(
                 mqtt::packet::WildcardSubscriptionAvailable::new(1).expect("valid value"),
             ),
         ),
         (
             mqtt::packet::PropertyId::SubscriptionIdentifierAvailable,
-            mqtt::packet::Property::SubscriptionIdentifierAvailable(
+            mqtt::packet::GenericProperty::SubscriptionIdentifierAvailable(
                 mqtt::packet::SubscriptionIdentifierAvailable::new(0).expect("valid value"),
             ),
         ),
         (
             mqtt::packet::PropertyId::SharedSubscriptionAvailable,
-            mqtt::packet::Property::SharedSubscriptionAvailable(
+            mqtt::packet::GenericProperty::SharedSubscriptionAvailable(
                 mqtt::packet::SharedSubscriptionAvailable::new(1).expect("valid value"),
             ),
         ),
@@ -198,98 +198,98 @@ fn test_all_properties() {
 
         // Test type-specific values using PropertyValueAccess trait
         match &prop {
-            mqtt::packet::Property::PayloadFormatIndicator(_) => {
+            mqtt::packet::GenericProperty::PayloadFormatIndicator(_) => {
                 assert_eq!(prop.as_u8(), Some(1));
             }
-            mqtt::packet::Property::MessageExpiryInterval(_) => {
+            mqtt::packet::GenericProperty::MessageExpiryInterval(_) => {
                 assert_eq!(prop.as_u32(), Some(60));
             }
-            mqtt::packet::Property::ContentType(_) => {
+            mqtt::packet::GenericProperty::ContentType(_) => {
                 assert_eq!(prop.as_str(), Some("text/plain"));
             }
-            mqtt::packet::Property::ResponseTopic(_) => {
+            mqtt::packet::GenericProperty::ResponseTopic(_) => {
                 assert_eq!(prop.as_str(), Some("reply/topic"));
             }
-            mqtt::packet::Property::CorrelationData(_) => {
+            mqtt::packet::GenericProperty::CorrelationData(_) => {
                 assert_eq!(prop.as_bytes(), Some("binary".as_bytes()));
             }
-            mqtt::packet::Property::SubscriptionIdentifier(_) => {
+            mqtt::packet::GenericProperty::SubscriptionIdentifier(_) => {
                 assert_eq!(prop.as_u32(), Some(456));
             }
-            mqtt::packet::Property::SessionExpiryInterval(_) => {
+            mqtt::packet::GenericProperty::SessionExpiryInterval(_) => {
                 assert_eq!(prop.as_u32(), Some(300));
             }
-            mqtt::packet::Property::AssignedClientIdentifier(_) => {
+            mqtt::packet::GenericProperty::AssignedClientIdentifier(_) => {
                 assert_eq!(prop.as_str(), Some("client-id"));
             }
-            mqtt::packet::Property::ServerKeepAlive(_) => {
+            mqtt::packet::GenericProperty::ServerKeepAlive(_) => {
                 assert_eq!(prop.as_u16(), Some(120));
             }
-            mqtt::packet::Property::AuthenticationMethod(_) => {
+            mqtt::packet::GenericProperty::AuthenticationMethod(_) => {
                 assert_eq!(prop.as_str(), Some("token"));
             }
-            mqtt::packet::Property::AuthenticationData(_) => {
+            mqtt::packet::GenericProperty::AuthenticationData(_) => {
                 assert_eq!(prop.as_bytes(), Some(&[1, 2, 3][..]));
             }
-            mqtt::packet::Property::RequestProblemInformation(_) => {
+            mqtt::packet::GenericProperty::RequestProblemInformation(_) => {
                 assert_eq!(prop.as_u8(), Some(1));
             }
-            mqtt::packet::Property::WillDelayInterval(_) => {
+            mqtt::packet::GenericProperty::WillDelayInterval(_) => {
                 assert_eq!(prop.as_u32(), Some(10));
             }
-            mqtt::packet::Property::RequestResponseInformation(_) => {
+            mqtt::packet::GenericProperty::RequestResponseInformation(_) => {
                 assert_eq!(prop.as_u8(), Some(1));
             }
-            mqtt::packet::Property::ResponseInformation(_) => {
+            mqtt::packet::GenericProperty::ResponseInformation(_) => {
                 assert_eq!(prop.as_str(), Some("info"));
             }
-            mqtt::packet::Property::ServerReference(_) => {
+            mqtt::packet::GenericProperty::ServerReference(_) => {
                 assert_eq!(prop.as_str(), Some("server"));
             }
-            mqtt::packet::Property::ReasonString(_) => {
+            mqtt::packet::GenericProperty::ReasonString(_) => {
                 assert_eq!(prop.as_str(), Some("ok"));
             }
-            mqtt::packet::Property::ReceiveMaximum(_) => {
+            mqtt::packet::GenericProperty::ReceiveMaximum(_) => {
                 assert_eq!(prop.as_u16(), Some(10));
             }
-            mqtt::packet::Property::TopicAliasMaximum(_) => {
+            mqtt::packet::GenericProperty::TopicAliasMaximum(_) => {
                 assert_eq!(prop.as_u16(), Some(20));
             }
-            mqtt::packet::Property::TopicAlias(_) => {
+            mqtt::packet::GenericProperty::TopicAlias(_) => {
                 assert_eq!(prop.as_u16(), Some(1));
             }
-            mqtt::packet::Property::MaximumQos(_) => {
+            mqtt::packet::GenericProperty::MaximumQos(_) => {
                 assert_eq!(prop.as_u8(), Some(1));
             }
-            mqtt::packet::Property::RetainAvailable(_) => {
+            mqtt::packet::GenericProperty::RetainAvailable(_) => {
                 assert_eq!(prop.as_u8(), Some(1));
             }
-            mqtt::packet::Property::UserProperty(_) => {
+            mqtt::packet::GenericProperty::UserProperty(_) => {
                 assert_eq!(prop.as_key_value(), Some(("k", "v")));
             }
-            mqtt::packet::Property::MaximumPacketSize(_) => {
+            mqtt::packet::GenericProperty::MaximumPacketSize(_) => {
                 assert_eq!(prop.as_u32(), Some(1024));
             }
-            mqtt::packet::Property::WildcardSubscriptionAvailable(_) => {
+            mqtt::packet::GenericProperty::WildcardSubscriptionAvailable(_) => {
                 assert_eq!(prop.as_u8(), Some(1));
             }
-            mqtt::packet::Property::SubscriptionIdentifierAvailable(_) => {
+            mqtt::packet::GenericProperty::SubscriptionIdentifierAvailable(_) => {
                 assert_eq!(prop.as_u8(), Some(0));
             }
-            mqtt::packet::Property::SharedSubscriptionAvailable(_) => {
+            mqtt::packet::GenericProperty::SharedSubscriptionAvailable(_) => {
                 assert_eq!(prop.as_u8(), Some(1));
             }
         }
 
         // Also test direct access to specific property instances
         match &prop {
-            mqtt::packet::Property::TopicAlias(p) => {
+            mqtt::packet::GenericProperty::TopicAlias(p) => {
                 assert_eq!(p.val(), 1);
             }
-            mqtt::packet::Property::ContentType(p) => {
+            mqtt::packet::GenericProperty::ContentType(p) => {
                 assert_eq!(p.val(), "text/plain");
             }
-            mqtt::packet::Property::UserProperty(p) => {
+            mqtt::packet::GenericProperty::UserProperty(p) => {
                 assert_eq!(p.key(), "k");
                 assert_eq!(p.val(), "v");
             }
@@ -306,7 +306,7 @@ fn test_all_properties() {
             let concatenated: Vec<u8> = buffers.iter().flat_map(|s| s.as_ref().to_vec()).collect();
             assert_eq!(continuous, concatenated);
         }
-        let (parsed_prop, parsed_len) = mqtt::packet::Property::parse(&continuous).unwrap();
+        let (parsed_prop, parsed_len) = mqtt::packet::GenericProperty::parse(&continuous).unwrap();
         assert_eq!(parsed_len, continuous.len());
         assert_eq!(parsed_prop, prop);
     }
@@ -455,40 +455,42 @@ fn test_payload_format_display() {
 fn test_property_type_access() {
     common::init_tracing();
     // Test u8 values
-    let max_qos =
-        mqtt::packet::Property::MaximumQos(mqtt::packet::MaximumQos::new(1).expect("valid value"));
+    let max_qos = mqtt::packet::GenericProperty::MaximumQos(
+        mqtt::packet::MaximumQos::new(1).expect("valid value"),
+    );
     assert_eq!(max_qos.as_u8(), Some(1));
     assert_eq!(max_qos.as_u16(), None); // Inappropriate type access returns None
 
     // Test u16 values
-    let topic_alias =
-        mqtt::packet::Property::TopicAlias(mqtt::packet::TopicAlias::new(5).expect("valid value"));
+    let topic_alias = mqtt::packet::GenericProperty::TopicAlias(
+        mqtt::packet::TopicAlias::new(5).expect("valid value"),
+    );
     assert_eq!(topic_alias.as_u16(), Some(5));
     assert_eq!(topic_alias.as_u8(), None);
     assert_eq!(topic_alias.as_u32(), None);
 
     // Test string values
-    let content_type = mqtt::packet::Property::ContentType(
+    let content_type = mqtt::packet::GenericProperty::ContentType(
         mqtt::packet::ContentType::new("application/json").expect("valid value"),
     );
     assert_eq!(content_type.as_str(), Some("application/json"));
     assert_eq!(content_type.as_u8(), None);
 
     // Test UserProperty
-    let user_prop = mqtt::packet::Property::UserProperty(
+    let user_prop = mqtt::packet::GenericProperty::UserProperty(
         mqtt::packet::UserProperty::new("name", "value").expect("valid value"),
     );
     assert_eq!(user_prop.as_key_value(), Some(("name", "value")));
     assert_eq!(user_prop.as_str(), None);
 
     // Test additional property value access methods
-    let correlation_data = mqtt::packet::Property::CorrelationData(
+    let correlation_data = mqtt::packet::GenericProperty::CorrelationData(
         mqtt::packet::CorrelationData::new("test_data").expect("valid value"),
     );
     assert_eq!(correlation_data.as_bytes(), Some(b"test_data" as &[u8]));
     assert_eq!(correlation_data.as_str(), None);
 
-    let session_expiry = mqtt::packet::Property::SessionExpiryInterval(
+    let session_expiry = mqtt::packet::GenericProperty::SessionExpiryInterval(
         mqtt::packet::SessionExpiryInterval::new(7200).expect("valid value"),
     );
     assert_eq!(session_expiry.as_u32(), Some(7200));
@@ -548,130 +550,133 @@ fn test_property_size_trait() {
 fn test_property_display() {
     common::init_tracing();
     // Test PayloadFormatIndicator display (line 1090)
-    let payload_format = mqtt::packet::Property::PayloadFormatIndicator(
+    let payload_format = mqtt::packet::GenericProperty::PayloadFormatIndicator(
         mqtt::packet::PayloadFormatIndicator::new(mqtt::packet::PayloadFormat::String).unwrap(),
     );
     let display_str = format!("{payload_format}");
     assert!(display_str.contains("payload_format_indicator"));
 
     // Test MessageExpiryInterval display (line 1091)
-    let message_expiry = mqtt::packet::Property::MessageExpiryInterval(
+    let message_expiry = mqtt::packet::GenericProperty::MessageExpiryInterval(
         mqtt::packet::MessageExpiryInterval::new(3600).unwrap(),
     );
     let display_str = format!("{message_expiry}");
     assert!(display_str.contains("message_expiry_interval"));
 
     // Test ContentType display (line 1092)
-    let content_type = mqtt::packet::Property::ContentType(
+    let content_type = mqtt::packet::GenericProperty::ContentType(
         mqtt::packet::ContentType::new("application/json").unwrap(),
     );
     let display_str = format!("{content_type}");
     assert!(display_str.contains("content_type"));
 
     // Test ResponseTopic display (line 1093)
-    let response_topic = mqtt::packet::Property::ResponseTopic(
+    let response_topic = mqtt::packet::GenericProperty::ResponseTopic(
         mqtt::packet::ResponseTopic::new("response/topic").unwrap(),
     );
     let display_str = format!("{response_topic}");
     assert!(display_str.contains("response_topic"));
 
     // Test CorrelationData display (line 1094)
-    let correlation_data = mqtt::packet::Property::CorrelationData(
+    let correlation_data = mqtt::packet::GenericProperty::CorrelationData(
         mqtt::packet::CorrelationData::new("correlation").unwrap(),
     );
     let display_str = format!("{correlation_data}");
     assert!(display_str.contains("correlation_data"));
 
     // Test SubscriptionIdentifier display (line 1095)
-    let subscription_id = mqtt::packet::Property::SubscriptionIdentifier(
+    let subscription_id = mqtt::packet::GenericProperty::SubscriptionIdentifier(
         mqtt::packet::SubscriptionIdentifier::new(123).unwrap(),
     );
     let display_str = format!("{subscription_id}");
     assert!(display_str.contains("subscription_identifier"));
 
     // Test SessionExpiryInterval display (line 1096)
-    let session_expiry = mqtt::packet::Property::SessionExpiryInterval(
+    let session_expiry = mqtt::packet::GenericProperty::SessionExpiryInterval(
         mqtt::packet::SessionExpiryInterval::new(7200).unwrap(),
     );
     let display_str = format!("{session_expiry}");
     assert!(display_str.contains("session_expiry_interval"));
 
     // Test AssignedClientIdentifier display (line 1097)
-    let assigned_client_id = mqtt::packet::Property::AssignedClientIdentifier(
+    let assigned_client_id = mqtt::packet::GenericProperty::AssignedClientIdentifier(
         mqtt::packet::AssignedClientIdentifier::new("assigned_client").unwrap(),
     );
     let display_str = format!("{assigned_client_id}");
     assert!(display_str.contains("assigned_client_identifier"));
 
     // Test ServerKeepAlive display (line 1098)
-    let server_keep_alive =
-        mqtt::packet::Property::ServerKeepAlive(mqtt::packet::ServerKeepAlive::new(60).unwrap());
+    let server_keep_alive = mqtt::packet::GenericProperty::ServerKeepAlive(
+        mqtt::packet::ServerKeepAlive::new(60).unwrap(),
+    );
     let display_str = format!("{server_keep_alive}");
     assert!(display_str.contains("server_keep_alive"));
 
     // Test AuthenticationMethod display (line 1099)
-    let auth_method = mqtt::packet::Property::AuthenticationMethod(
+    let auth_method = mqtt::packet::GenericProperty::AuthenticationMethod(
         mqtt::packet::AuthenticationMethod::new("SCRAM-SHA-1").unwrap(),
     );
     let display_str = format!("{auth_method}");
     assert!(display_str.contains("authentication_method"));
 
     // Test AuthenticationData display (line 1100)
-    let auth_data = mqtt::packet::Property::AuthenticationData(
+    let auth_data = mqtt::packet::GenericProperty::AuthenticationData(
         mqtt::packet::AuthenticationData::new(vec![1, 2, 3]).unwrap(),
     );
     let display_str = format!("{auth_data}");
     assert!(display_str.contains("authentication_data"));
 
     // Test RequestProblemInformation display (line 1101)
-    let request_problem_info = mqtt::packet::Property::RequestProblemInformation(
+    let request_problem_info = mqtt::packet::GenericProperty::RequestProblemInformation(
         mqtt::packet::RequestProblemInformation::new(1).unwrap(),
     );
     let display_str = format!("{request_problem_info}");
     assert!(display_str.contains("request_problem_information"));
 
     // Test WillDelayInterval display (line 1102)
-    let will_delay = mqtt::packet::Property::WillDelayInterval(
+    let will_delay = mqtt::packet::GenericProperty::WillDelayInterval(
         mqtt::packet::WillDelayInterval::new(30).unwrap(),
     );
     let display_str = format!("{will_delay}");
     assert!(display_str.contains("will_delay_interval"));
 
     // Test RequestResponseInformation display (line 1103)
-    let request_response_info = mqtt::packet::Property::RequestResponseInformation(
+    let request_response_info = mqtt::packet::GenericProperty::RequestResponseInformation(
         mqtt::packet::RequestResponseInformation::new(1).unwrap(),
     );
     let display_str = format!("{request_response_info}");
     assert!(display_str.contains("request_response_information"));
 
     // Test ResponseInformation display (line 1104)
-    let response_info = mqtt::packet::Property::ResponseInformation(
+    let response_info = mqtt::packet::GenericProperty::ResponseInformation(
         mqtt::packet::ResponseInformation::new("response_info").unwrap(),
     );
     let display_str = format!("{response_info}");
     assert!(display_str.contains("response_information"));
 
     // Test ServerReference display (line 1105)
-    let server_ref = mqtt::packet::Property::ServerReference(
+    let server_ref = mqtt::packet::GenericProperty::ServerReference(
         mqtt::packet::ServerReference::new("server_reference").unwrap(),
     );
     let display_str = format!("{server_ref}");
     assert!(display_str.contains("server_reference"));
 
     // Test ReasonString display (line 1106)
-    let reason_string =
-        mqtt::packet::Property::ReasonString(mqtt::packet::ReasonString::new("Success").unwrap());
+    let reason_string = mqtt::packet::GenericProperty::ReasonString(
+        mqtt::packet::ReasonString::new("Success").unwrap(),
+    );
     let display_str = format!("{reason_string}");
     assert!(display_str.contains("reason_string"));
 
     // Test ReceiveMaximum display (line 1107)
-    let receive_max =
-        mqtt::packet::Property::ReceiveMaximum(mqtt::packet::ReceiveMaximum::new(100).unwrap());
+    let receive_max = mqtt::packet::GenericProperty::ReceiveMaximum(
+        mqtt::packet::ReceiveMaximum::new(100).unwrap(),
+    );
     let display_str = format!("{receive_max}");
     assert!(display_str.contains("receive_maximum"));
 
     // Test TopicAliasMaximum display (line 1108)
-    let topic_alias_max = mqtt::packet::Property::TopicAliasMaximum(
+    let topic_alias_max = mqtt::packet::GenericProperty::TopicAliasMaximum(
         mqtt::packet::TopicAliasMaximum::new(50).unwrap(),
     );
     let display_str = format!("{topic_alias_max}");
@@ -679,51 +684,53 @@ fn test_property_display() {
 
     // Test TopicAlias display (line 1109)
     let topic_alias =
-        mqtt::packet::Property::TopicAlias(mqtt::packet::TopicAlias::new(10).unwrap());
+        mqtt::packet::GenericProperty::TopicAlias(mqtt::packet::TopicAlias::new(10).unwrap());
     let display_str = format!("{topic_alias}");
     assert!(display_str.contains("topic_alias"));
 
     // Test MaximumQos display (line 1110)
-    let max_qos = mqtt::packet::Property::MaximumQos(mqtt::packet::MaximumQos::new(1).unwrap());
+    let max_qos =
+        mqtt::packet::GenericProperty::MaximumQos(mqtt::packet::MaximumQos::new(1).unwrap());
     let display_str = format!("{max_qos}");
     assert!(display_str.contains("maximum_qos"));
 
     // Test RetainAvailable display (line 1111)
-    let retain_available =
-        mqtt::packet::Property::RetainAvailable(mqtt::packet::RetainAvailable::new(1).unwrap());
+    let retain_available = mqtt::packet::GenericProperty::RetainAvailable(
+        mqtt::packet::RetainAvailable::new(1).unwrap(),
+    );
     let display_str = format!("{retain_available}");
     assert!(display_str.contains("retain_available"));
 
     // Test UserProperty display (line 1112)
-    let user_property = mqtt::packet::Property::UserProperty(
+    let user_property = mqtt::packet::GenericProperty::UserProperty(
         mqtt::packet::UserProperty::new("key", "value").unwrap(),
     );
     let display_str = format!("{user_property}");
     assert!(display_str.contains("user_property"));
 
     // Test MaximumPacketSize display (line 1113)
-    let max_packet_size = mqtt::packet::Property::MaximumPacketSize(
+    let max_packet_size = mqtt::packet::GenericProperty::MaximumPacketSize(
         mqtt::packet::MaximumPacketSize::new(8192).unwrap(),
     );
     let display_str = format!("{max_packet_size}");
     assert!(display_str.contains("maximum_packet_size"));
 
     // Test WildcardSubscriptionAvailable display (line 1114)
-    let wildcard_sub_available = mqtt::packet::Property::WildcardSubscriptionAvailable(
+    let wildcard_sub_available = mqtt::packet::GenericProperty::WildcardSubscriptionAvailable(
         mqtt::packet::WildcardSubscriptionAvailable::new(1).unwrap(),
     );
     let display_str = format!("{wildcard_sub_available}");
     assert!(display_str.contains("wildcard_subscription_available"));
 
     // Test SubscriptionIdentifierAvailable display (line 1115)
-    let sub_id_available = mqtt::packet::Property::SubscriptionIdentifierAvailable(
+    let sub_id_available = mqtt::packet::GenericProperty::SubscriptionIdentifierAvailable(
         mqtt::packet::SubscriptionIdentifierAvailable::new(0).unwrap(),
     );
     let display_str = format!("{sub_id_available}");
     assert!(display_str.contains("subscription_identifier_available"));
 
     // Test SharedSubscriptionAvailable display (line 1116)
-    let shared_sub_available = mqtt::packet::Property::SharedSubscriptionAvailable(
+    let shared_sub_available = mqtt::packet::GenericProperty::SharedSubscriptionAvailable(
         mqtt::packet::SharedSubscriptionAvailable::new(1).unwrap(),
     );
     let display_str = format!("{shared_sub_available}");
@@ -965,34 +972,37 @@ fn test_property_enum_size_methods() {
     // Test Property enum size() method calls individual property size() methods
 
     // Line 1324: ServerKeepAlive size
-    let server_keep_alive =
-        mqtt::packet::Property::ServerKeepAlive(mqtt::packet::ServerKeepAlive::new(3600).unwrap());
+    let server_keep_alive = mqtt::packet::GenericProperty::ServerKeepAlive(
+        mqtt::packet::ServerKeepAlive::new(3600).unwrap(),
+    );
     assert_eq!(server_keep_alive.size(), 3); // 1 byte ID + 2 bytes value
 
     // Line 1330: RequestResponseInformation size
-    let request_response = mqtt::packet::Property::RequestResponseInformation(
+    let request_response = mqtt::packet::GenericProperty::RequestResponseInformation(
         mqtt::packet::RequestResponseInformation::new(1).unwrap(),
     );
     assert_eq!(request_response.size(), 2); // 1 byte ID + 1 byte value
 
     // Line 1340: MaximumQos size
-    let max_qos = mqtt::packet::Property::MaximumQos(mqtt::packet::MaximumQos::new(1).unwrap());
+    let max_qos =
+        mqtt::packet::GenericProperty::MaximumQos(mqtt::packet::MaximumQos::new(1).unwrap());
     assert_eq!(max_qos.size(), 2); // 1 byte ID + 1 byte value
 
     // Line 1341: RetainAvailable size
-    let retain_available =
-        mqtt::packet::Property::RetainAvailable(mqtt::packet::RetainAvailable::new(0).unwrap());
+    let retain_available = mqtt::packet::GenericProperty::RetainAvailable(
+        mqtt::packet::RetainAvailable::new(0).unwrap(),
+    );
     assert_eq!(retain_available.size(), 2); // 1 byte ID + 1 byte value
 
     // Line 1342: UserProperty size
-    let user_property = mqtt::packet::Property::UserProperty(
+    let user_property = mqtt::packet::GenericProperty::UserProperty(
         mqtt::packet::UserProperty::new("test_key", "test_val").unwrap(),
     );
     let expected_size = 1 + 2 + 8 + 2 + 8; // 1 byte ID + key MqttString + val MqttString
     assert_eq!(user_property.size(), expected_size);
 
     // Line 1430: Test Property enum to_buffers method
-    let content_type = mqtt::packet::Property::ContentType(
+    let content_type = mqtt::packet::GenericProperty::ContentType(
         mqtt::packet::ContentType::new("application/json").unwrap(),
     );
     let continuous = content_type.to_continuous_buffer();
@@ -1070,10 +1080,10 @@ fn test_property_enum_parsing() {
         mqtt::packet::PropertyId::WildcardSubscriptionAvailable as u8,
         0x01, // value 1
     ];
-    let (property, consumed) = mqtt::packet::Property::parse(&wildcard_sub_data).unwrap();
+    let (property, consumed) = mqtt::packet::GenericProperty::parse(&wildcard_sub_data).unwrap();
     assert_eq!(consumed, 2);
     match property {
-        mqtt::packet::Property::WildcardSubscriptionAvailable(p) => {
+        mqtt::packet::GenericProperty::WildcardSubscriptionAvailable(p) => {
             assert_eq!(p.val(), 1);
         }
         _ => panic!("Expected WildcardSubscriptionAvailable"),
@@ -1084,10 +1094,10 @@ fn test_property_enum_parsing() {
         mqtt::packet::PropertyId::SharedSubscriptionAvailable as u8,
         0x00, // value 0
     ];
-    let (property, consumed) = mqtt::packet::Property::parse(&shared_sub_data).unwrap();
+    let (property, consumed) = mqtt::packet::GenericProperty::parse(&shared_sub_data).unwrap();
     assert_eq!(consumed, 2);
     match property {
-        mqtt::packet::Property::SharedSubscriptionAvailable(p) => {
+        mqtt::packet::GenericProperty::SharedSubscriptionAvailable(p) => {
             assert_eq!(p.val(), 0);
         }
         _ => panic!("Expected SharedSubscriptionAvailable"),

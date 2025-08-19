@@ -41,7 +41,7 @@ use crate::mqtt::packet::GenericPacketTrait;
 use crate::mqtt::packet::IsPacketId;
 #[cfg(feature = "std")]
 use crate::mqtt::packet::PropertiesToBuffers;
-use crate::mqtt::packet::{Properties, PropertiesParse, PropertiesSize, Property};
+use crate::mqtt::packet::{GenericProperties, GenericProperty, PropertiesParse, PropertiesSize};
 use crate::mqtt::result_code::MqttError;
 
 /// MQTT 5.0 UNSUBSCRIBE packet representation
@@ -153,7 +153,7 @@ where
     /// For UNSUBSCRIBE packets, only User Properties are allowed.
     #[builder(setter(into, strip_option))]
     #[getset(get = "pub")]
-    pub props: Properties,
+    pub props: GenericProperties,
 
     /// Topic filter entries to unsubscribe from
     ///
@@ -349,7 +349,7 @@ where
         let packet_id_buf = packet_id.to_buffer();
         cursor += buffer_size;
 
-        let (props, property_length) = Properties::parse(&data[cursor..])?;
+        let (props, property_length) = GenericProperties::parse(&data[cursor..])?;
         cursor += property_length;
         validate_unsubscribe_properties(&props)?;
         let prop_len = VariableByteInteger::from_u32(props.size() as u32).unwrap();
@@ -655,7 +655,7 @@ where
 
         let packet_id_buf = self.packet_id_buf.unwrap();
         let entries = self.entry_bufs.unwrap_or_default();
-        let props = self.props.unwrap_or_else(Properties::new);
+        let props = self.props.unwrap_or_else(GenericProperties::new);
         let props_size = props.size();
         let property_length = VariableByteInteger::from_u32(props_size as u32).unwrap();
 
@@ -839,10 +839,10 @@ where
 /// - Server Reference
 /// - Reason String
 /// - And all other properties defined in MQTT 5.0
-fn validate_unsubscribe_properties(props: &Properties) -> Result<(), MqttError> {
+fn validate_unsubscribe_properties(props: &GenericProperties) -> Result<(), MqttError> {
     for prop in props {
         match prop {
-            Property::UserProperty(_) => {}
+            GenericProperty::UserProperty(_) => {}
             _ => return Err(MqttError::ProtocolError),
         }
     }

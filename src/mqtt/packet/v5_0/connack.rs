@@ -38,7 +38,7 @@ use crate::mqtt::packet::GenericPacketDisplay;
 use crate::mqtt::packet::GenericPacketTrait;
 #[cfg(feature = "std")]
 use crate::mqtt::packet::PropertiesToBuffers;
-use crate::mqtt::packet::{Properties, PropertiesParse, PropertiesSize, Property};
+use crate::mqtt::packet::{GenericProperties, GenericProperty, PropertiesParse, PropertiesSize};
 use crate::mqtt::result_code::ConnectReasonCode;
 use crate::mqtt::result_code::MqttError;
 
@@ -152,7 +152,7 @@ pub struct Connack {
 
     #[builder(setter(into, strip_option))]
     #[getset(get = "pub")]
-    pub props: Properties,
+    pub props: GenericProperties,
 }
 
 impl Connack {
@@ -416,7 +416,7 @@ impl Connack {
         let _reason = ConnectReasonCode::try_from(code).map_err(|_| MqttError::MalformedPacket)?;
 
         // properties
-        let (props, consumed) = Properties::parse(&data[cursor..])?;
+        let (props, consumed) = GenericProperties::parse(&data[cursor..])?;
         cursor += consumed;
         validate_connack_properties(&props)?;
         let prop_len = VariableByteInteger::from_u32(props.size() as u32).unwrap();
@@ -592,7 +592,7 @@ impl ConnackBuilder {
 
         let ack_flags = self.ack_flags.unwrap_or([0]);
         let reason_code_buf = self.reason_code_buf.unwrap_or([0]);
-        let props = self.props.unwrap_or_else(Properties::new);
+        let props = self.props.unwrap_or_else(GenericProperties::new);
         let props_size: usize = props.size();
         let property_length = VariableByteInteger::from_u32(props_size as u32).unwrap();
 
@@ -835,7 +835,7 @@ impl GenericPacketDisplay for Connack {
 /// // This validation is automatically called during packet construction
 /// // validate_connack_properties(&props).unwrap();
 /// ```
-fn validate_connack_properties(props: &[Property]) -> Result<(), MqttError> {
+fn validate_connack_properties(props: &[GenericProperty]) -> Result<(), MqttError> {
     let mut count_session_expiry_interval = 0;
     let mut count_receive_maximum = 0;
     let mut count_maximum_qos = 0;
@@ -846,15 +846,15 @@ fn validate_connack_properties(props: &[Property]) -> Result<(), MqttError> {
     let mut count_reason_string = 0;
     for prop in props {
         match prop {
-            Property::SessionExpiryInterval(_) => count_session_expiry_interval += 1,
-            Property::ReceiveMaximum(_) => count_receive_maximum += 1,
-            Property::MaximumQos(_) => count_maximum_qos += 1,
-            Property::RetainAvailable(_) => count_retain_available += 1,
-            Property::MaximumPacketSize(_) => count_maximum_packet_size += 1,
-            Property::AssignedClientIdentifier(_) => count_assigned_client_identifier += 1,
-            Property::TopicAliasMaximum(_) => count_topic_alias_maximum += 1,
-            Property::ReasonString(_) => count_reason_string += 1,
-            Property::UserProperty(_) => {}
+            GenericProperty::SessionExpiryInterval(_) => count_session_expiry_interval += 1,
+            GenericProperty::ReceiveMaximum(_) => count_receive_maximum += 1,
+            GenericProperty::MaximumQos(_) => count_maximum_qos += 1,
+            GenericProperty::RetainAvailable(_) => count_retain_available += 1,
+            GenericProperty::MaximumPacketSize(_) => count_maximum_packet_size += 1,
+            GenericProperty::AssignedClientIdentifier(_) => count_assigned_client_identifier += 1,
+            GenericProperty::TopicAliasMaximum(_) => count_topic_alias_maximum += 1,
+            GenericProperty::ReasonString(_) => count_reason_string += 1,
+            GenericProperty::UserProperty(_) => {}
             _ => return Err(MqttError::ProtocolError),
         }
     }

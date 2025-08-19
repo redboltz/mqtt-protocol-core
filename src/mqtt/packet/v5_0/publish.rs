@@ -34,8 +34,9 @@ use serde::Serialize;
 
 use getset::{CopyGetters, Getters};
 
+use crate::mqtt::common::{GenericArcPayload, IntoPayload};
 use crate::mqtt::packet::json_bin_encode::escape_binary_json_string;
-use crate::mqtt::packet::mqtt_string::MqttString;
+use crate::mqtt::packet::mqtt_string::GenericMqttString;
 use crate::mqtt::packet::packet_type::{FixedHeader, PacketType};
 use crate::mqtt::packet::property::PropertiesToContinuousBuffer;
 use crate::mqtt::packet::qos::Qos;
@@ -46,9 +47,8 @@ use crate::mqtt::packet::GenericPacketTrait;
 use crate::mqtt::packet::IsPacketId;
 #[cfg(feature = "std")]
 use crate::mqtt::packet::PropertiesToBuffers;
-use crate::mqtt::packet::{Properties, PropertiesParse, PropertiesSize, Property};
+use crate::mqtt::packet::{GenericProperties, GenericProperty, PropertiesParse, PropertiesSize};
 use crate::mqtt::result_code::MqttError;
-use crate::mqtt::{ArcPayload, IntoPayload};
 
 /// MQTT 5.0 PUBLISH packet representation
 ///
@@ -142,8 +142,12 @@ use crate::mqtt::{ArcPayload, IntoPayload};
 /// ```
 #[derive(PartialEq, Eq, Builder, Clone, Getters, CopyGetters)]
 #[builder(no_std, derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
-pub struct GenericPublish<PacketIdType>
-where
+pub struct GenericPublish<
+    PacketIdType,
+    const STRING_BUFFER_SIZE: usize = 32,
+    const BINARY_BUFFER_SIZE: usize = 32,
+    const PAYLOAD_BUFFER_SIZE: usize = 32,
+> where
     PacketIdType: IsPacketId,
 {
     #[builder(private)]
@@ -151,7 +155,7 @@ where
     #[builder(private)]
     remaining_length: VariableByteInteger,
     #[builder(private)]
-    topic_name_buf: MqttString,
+    topic_name_buf: GenericMqttString<STRING_BUFFER_SIZE>,
     #[builder(private)]
     packet_id_buf: Option<PacketIdType::Buffer>,
     #[builder(private)]
@@ -159,10 +163,10 @@ where
 
     #[builder(setter(into, strip_option))]
     #[getset(get = "pub")]
-    pub props: Option<Properties>,
+    pub props: Option<GenericProperties<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>>,
 
     #[builder(private)]
-    payload_buf: ArcPayload,
+    payload_buf: GenericArcPayload<PAYLOAD_BUFFER_SIZE>,
 
     #[builder(private)]
     #[getset(get_copy = "pub")]
@@ -191,7 +195,12 @@ where
 /// ```
 pub type Publish = GenericPublish<u16>;
 
-impl<PacketIdType> GenericPublish<PacketIdType>
+impl<
+        PacketIdType,
+        const STRING_BUFFER_SIZE: usize,
+        const BINARY_BUFFER_SIZE: usize,
+        const PAYLOAD_BUFFER_SIZE: usize,
+    > GenericPublish<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId,
 {
@@ -481,7 +490,7 @@ where
     /// assert_eq!(publish.payload().as_slice(), message_data);
     /// assert_eq!(publish.payload().len(), message_data.len());
     /// ```
-    pub fn payload(&self) -> &ArcPayload {
+    pub fn payload(&self) -> &GenericArcPayload<PAYLOAD_BUFFER_SIZE> {
         &self.payload_buf
     }
 
@@ -537,11 +546,13 @@ where
         }
 
         // Set the topic name
-        self.topic_name_buf = MqttString::new(topic)?;
+        self.topic_name_buf = GenericMqttString::<STRING_BUFFER_SIZE>::new(topic)?;
 
         // Remove TopicAlias property if present
         if let Some(ref mut props) = self.props {
-            props.retain(|prop| !matches!(prop, crate::mqtt::packet::Property::TopicAlias(_)));
+            props.retain(|prop| {
+                !matches!(prop, crate::mqtt::packet::GenericProperty::TopicAlias(_))
+            });
         }
 
         // Recalculate property_length and remaining_length
@@ -580,7 +591,9 @@ where
     /// ```
     pub fn remove_topic_alias(mut self) -> Self {
         if let Some(ref mut props) = self.props {
-            props.retain(|prop| !matches!(prop, crate::mqtt::packet::Property::TopicAlias(_)));
+            props.retain(|prop| {
+                !matches!(prop, crate::mqtt::packet::GenericProperty::TopicAlias(_))
+            });
         }
 
         // Recalculate property_length and remaining_length
@@ -640,7 +653,7 @@ where
         }
 
         // Set the topic name
-        self.topic_name_buf = MqttString::new(topic)?;
+        self.topic_name_buf = GenericMqttString::<STRING_BUFFER_SIZE>::new(topic)?;
 
         // Mark that topic name was extracted
         self.topic_name_extracted = true;
@@ -689,16 +702,16 @@ where
     /// ```
     pub fn remove_topic_add_topic_alias(mut self, topic_alias: TopicAliasType) -> Self {
         // Set topic name to empty string
-        self.topic_name_buf = MqttString::new("").unwrap();
+        self.topic_name_buf = GenericMqttString::<STRING_BUFFER_SIZE>::new("").unwrap();
 
         // Add TopicAlias property to the end of properties
         let topic_alias_property =
-            Property::TopicAlias(crate::mqtt::packet::TopicAlias::new(topic_alias).unwrap());
+            GenericProperty::TopicAlias(crate::mqtt::packet::TopicAlias::new(topic_alias).unwrap());
 
         match &mut self.props {
             Some(props) => {
                 // Remove existing TopicAlias property if present
-                props.retain(|prop| !matches!(prop, Property::TopicAlias(_)));
+                props.retain(|prop| !matches!(prop, GenericProperty::TopicAlias(_)));
                 // Add new TopicAlias property at the end
                 props.push(topic_alias_property);
             }
@@ -952,7 +965,8 @@ where
 
         let mut cursor = 0;
 
-        let (topic_name, consumed) = MqttString::decode(&data_arc[cursor..])?;
+        let (topic_name, consumed) =
+            GenericMqttString::<STRING_BUFFER_SIZE>::decode(&data_arc[cursor..])?;
         cursor += consumed;
 
         let qos = match qos_value {
@@ -977,7 +991,10 @@ where
         };
 
         let (property_length, props) = if cursor < data_arc.len() {
-            let (props, consumed) = Properties::parse(&data_arc[cursor..])?;
+            let (props, consumed) =
+                GenericProperties::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::parse(
+                    &data_arc[cursor..],
+                )?;
             cursor += consumed;
             validate_publish_properties(&props)?;
             let prop_len = VariableByteInteger::from_u32(props.size() as u32).unwrap();
@@ -988,9 +1005,9 @@ where
 
         let payload_len = data_arc.len() - cursor;
         let payload = if payload_len > 0 {
-            ArcPayload::new(data_arc.clone(), cursor, payload_len)
+            GenericArcPayload::<PAYLOAD_BUFFER_SIZE>::new(data_arc.clone(), cursor, payload_len)
         } else {
-            ArcPayload::default()
+            GenericArcPayload::<PAYLOAD_BUFFER_SIZE>::default()
         };
 
         let remaining_size = topic_name.size()
@@ -1020,7 +1037,13 @@ where
 ///
 /// The builder provides a fluent interface for constructing PUBLISH packets
 /// with validation of packet constraints and automatic calculation of lengths.
-impl<PacketIdType> GenericPublishBuilder<PacketIdType>
+impl<
+        PacketIdType,
+        const STRING_BUFFER_SIZE: usize,
+        const BINARY_BUFFER_SIZE: usize,
+        const PAYLOAD_BUFFER_SIZE: usize,
+    >
+    GenericPublishBuilder<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId,
 {
@@ -1054,7 +1077,7 @@ where
     ///     .unwrap();
     /// ```
     pub fn topic_name<T: AsRef<str>>(mut self, topic: T) -> Result<Self, MqttError> {
-        let mqtt_str = MqttString::new(topic)?;
+        let mqtt_str = GenericMqttString::<STRING_BUFFER_SIZE>::new(topic)?;
         if mqtt_str.as_str().contains('#') || mqtt_str.as_str().contains('+') {
             return Err(MqttError::MalformedPacket);
         }
@@ -1215,7 +1238,7 @@ where
     /// ```
     pub fn payload<T>(mut self, data: T) -> Self
     where
-        T: IntoPayload,
+        T: IntoPayload<PAYLOAD_BUFFER_SIZE>,
     {
         self.payload_buf = Some(data.into_payload());
         self
@@ -1304,7 +1327,7 @@ where
     ///
     /// # Returns
     ///
-    /// - `Ok(GenericPublish<PacketIdType>)` - The constructed PUBLISH packet
+    /// - `Ok(GenericPublish<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>)` - The constructed PUBLISH packet
     /// - `Err(MqttError)` - If validation fails or packet construction is invalid
     ///
     /// # Errors
@@ -1326,7 +1349,12 @@ where
     ///     .build()
     ///     .unwrap();
     /// ```
-    pub fn build(self) -> Result<GenericPublish<PacketIdType>, MqttError> {
+    pub fn build(
+        self,
+    ) -> Result<
+        GenericPublish<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>,
+        MqttError,
+    > {
         self.validate()?;
 
         let topic_name_buf = self.topic_name_buf.unwrap();
@@ -1339,7 +1367,9 @@ where
         } else {
             None
         };
-        let payload = self.payload_buf.unwrap_or_else(ArcPayload::default);
+        let payload = self
+            .payload_buf
+            .unwrap_or_else(GenericArcPayload::<PAYLOAD_BUFFER_SIZE>::default);
 
         let mut remaining = topic_name_buf.size();
         if (fixed_header[0] >> 1) & 0b0000_0011 != 0 && packet_id_buf.is_some() {
@@ -1371,7 +1401,13 @@ where
 /// Provides JSON serialization support for PUBLISH packets, converting
 /// all packet fields to a structured JSON representation. Binary payload
 /// data is handled appropriately with escape sequences when necessary.
-impl<PacketIdType> Serialize for GenericPublish<PacketIdType>
+impl<
+        PacketIdType,
+        const STRING_BUFFER_SIZE: usize,
+        const BINARY_BUFFER_SIZE: usize,
+        const PAYLOAD_BUFFER_SIZE: usize,
+    > Serialize
+    for GenericPublish<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId + Serialize,
 {
@@ -1424,7 +1460,13 @@ where
 ///
 /// Provides human-readable JSON string representation of PUBLISH packets
 /// using the Serialize implementation.
-impl<PacketIdType> fmt::Display for GenericPublish<PacketIdType>
+impl<
+        PacketIdType,
+        const STRING_BUFFER_SIZE: usize,
+        const BINARY_BUFFER_SIZE: usize,
+        const PAYLOAD_BUFFER_SIZE: usize,
+    > fmt::Display
+    for GenericPublish<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId + Serialize,
 {
@@ -1448,7 +1490,13 @@ where
 /// Debug trait implementation for PUBLISH packets
 ///
 /// Uses the same JSON representation as Display for consistent debugging output.
-impl<PacketIdType> fmt::Debug for GenericPublish<PacketIdType>
+impl<
+        PacketIdType,
+        const STRING_BUFFER_SIZE: usize,
+        const BINARY_BUFFER_SIZE: usize,
+        const PAYLOAD_BUFFER_SIZE: usize,
+    > fmt::Debug
+    for GenericPublish<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId + Serialize,
 {
@@ -1472,7 +1520,13 @@ where
 ///
 /// Provides the common packet interface used by the MQTT protocol implementation
 /// for size calculation and buffer generation.
-impl<PacketIdType> GenericPacketTrait for GenericPublish<PacketIdType>
+impl<
+        PacketIdType,
+        const STRING_BUFFER_SIZE: usize,
+        const BINARY_BUFFER_SIZE: usize,
+        const PAYLOAD_BUFFER_SIZE: usize,
+    > GenericPacketTrait
+    for GenericPublish<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId,
 {
@@ -1507,7 +1561,13 @@ where
 /// Generic packet display trait implementation for PUBLISH packets
 ///
 /// Provides the display interface used by the generic packet handling system.
-impl<PacketIdType> GenericPacketDisplay for GenericPublish<PacketIdType>
+impl<
+        PacketIdType,
+        const STRING_BUFFER_SIZE: usize,
+        const BINARY_BUFFER_SIZE: usize,
+        const PAYLOAD_BUFFER_SIZE: usize,
+    > GenericPacketDisplay
+    for GenericPublish<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId + Serialize,
 {
@@ -1577,7 +1637,9 @@ enum PropertyValidation {
 /// - UserProperty (multiple allowed)
 /// - SubscriptionIdentifier (server to client only)
 /// - ContentType
-fn validate_publish_properties(props: &[Property]) -> Result<PropertyValidation, MqttError> {
+fn validate_publish_properties<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>(
+    props: &[GenericProperty<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>],
+) -> Result<PropertyValidation, MqttError> {
     let mut count_payload_format = 0;
     let mut count_expiry = 0;
     let mut count_topic_alias = 0;
@@ -1587,14 +1649,14 @@ fn validate_publish_properties(props: &[Property]) -> Result<PropertyValidation,
 
     for prop in props {
         match prop {
-            Property::ContentType(_) => count_content_type += 1,
-            Property::CorrelationData(_) => count_correlation_data += 1,
-            Property::MessageExpiryInterval(_) => count_expiry += 1,
-            Property::PayloadFormatIndicator(_) => count_payload_format += 1,
-            Property::ResponseTopic(_) => count_response_topic += 1,
-            Property::SubscriptionIdentifier(_) => {}
-            Property::TopicAlias(_) => count_topic_alias += 1,
-            Property::UserProperty(_) => {}
+            GenericProperty::ContentType(_) => count_content_type += 1,
+            GenericProperty::CorrelationData(_) => count_correlation_data += 1,
+            GenericProperty::MessageExpiryInterval(_) => count_expiry += 1,
+            GenericProperty::PayloadFormatIndicator(_) => count_payload_format += 1,
+            GenericProperty::ResponseTopic(_) => count_response_topic += 1,
+            GenericProperty::SubscriptionIdentifier(_) => {}
+            GenericProperty::TopicAlias(_) => count_topic_alias += 1,
+            GenericProperty::UserProperty(_) => {}
             _ => return Err(MqttError::ProtocolError),
         }
     }

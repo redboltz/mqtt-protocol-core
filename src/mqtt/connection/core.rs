@@ -57,7 +57,7 @@ use crate::mqtt::packet::GenericStorePacket;
 use crate::mqtt::packet::IsPacketId;
 use crate::mqtt::packet::Qos;
 use crate::mqtt::packet::ResponsePacket;
-use crate::mqtt::packet::{Property, TopicAliasRecv, TopicAliasSend};
+use crate::mqtt::packet::{GenericProperty, TopicAliasRecv, TopicAliasSend};
 use crate::mqtt::prelude::GenericPacketTrait;
 use crate::mqtt::result_code::{
     ConnectReasonCode, ConnectReturnCode, DisconnectReasonCode, MqttError, PubrecReasonCode,
@@ -1322,20 +1322,20 @@ where
         // Process properties
         for prop in packet.props() {
             match prop {
-                Property::TopicAliasMaximum(val) => {
+                GenericProperty::TopicAliasMaximum(val) => {
                     if val.val() != 0 {
                         self.topic_alias_recv = Some(TopicAliasRecv::new(val.val()));
                     }
                 }
-                Property::ReceiveMaximum(val) => {
+                GenericProperty::ReceiveMaximum(val) => {
                     debug_assert!(val.val() != 0, "ReceiveMaximum must not be 0");
                     self.publish_recv_max = Some(val.val());
                 }
-                Property::MaximumPacketSize(val) => {
+                GenericProperty::MaximumPacketSize(val) => {
                     debug_assert!(val.val() != 0, "MaximumPacketSize must not be 0");
                     self.maximum_packet_size_recv = val.val();
                 }
-                Property::SessionExpiryInterval(val) => {
+                GenericProperty::SessionExpiryInterval(val) => {
                     if val.val() != 0 {
                         self.need_store = true;
                     }
@@ -1400,16 +1400,16 @@ where
             // Process properties
             for prop in packet.props() {
                 match prop {
-                    Property::TopicAliasMaximum(val) => {
+                    GenericProperty::TopicAliasMaximum(val) => {
                         if val.val() != 0 {
                             self.topic_alias_recv = Some(TopicAliasRecv::new(val.val()));
                         }
                     }
-                    Property::ReceiveMaximum(val) => {
+                    GenericProperty::ReceiveMaximum(val) => {
                         debug_assert!(val.val() != 0, "ReceiveMaximum must not be 0");
                         self.publish_recv_max = Some(val.val());
                     }
-                    Property::MaximumPacketSize(val) => {
+                    GenericProperty::MaximumPacketSize(val) => {
                         debug_assert!(val.val() != 0, "MaximumPacketSize must not be 0");
                         self.maximum_packet_size_recv = val.val();
                     }
@@ -2509,16 +2509,16 @@ where
                     self.clear_store_related();
                 }
                 packet.props().iter().for_each(|prop| match prop {
-                    Property::TopicAliasMaximum(p) => {
+                    GenericProperty::TopicAliasMaximum(p) => {
                         self.topic_alias_send = Some(TopicAliasSend::new(p.val()));
                     }
-                    Property::ReceiveMaximum(p) => {
+                    GenericProperty::ReceiveMaximum(p) => {
                         self.publish_send_max = Some(p.val());
                     }
-                    Property::MaximumPacketSize(p) => {
+                    GenericProperty::MaximumPacketSize(p) => {
                         self.maximum_packet_size_send = p.val();
                     }
-                    Property::SessionExpiryInterval(p) => {
+                    GenericProperty::SessionExpiryInterval(p) => {
                         if p.val() != 0 {
                             self.need_store = true;
                         }
@@ -2604,20 +2604,20 @@ where
                     // Process properties
                     for prop in packet.props() {
                         match prop {
-                            Property::TopicAliasMaximum(val) => {
+                            GenericProperty::TopicAliasMaximum(val) => {
                                 if val.val() > 0 {
                                     self.topic_alias_send = Some(TopicAliasSend::new(val.val()));
                                 }
                             }
-                            Property::ReceiveMaximum(val) => {
+                            GenericProperty::ReceiveMaximum(val) => {
                                 assert!(val.val() != 0);
                                 self.publish_send_max = Some(val.val());
                             }
-                            Property::MaximumPacketSize(val) => {
+                            GenericProperty::MaximumPacketSize(val) => {
                                 assert!(val.val() != 0);
                                 self.maximum_packet_size_send = val.val();
                             }
-                            Property::ServerKeepAlive(val) => {
+                            GenericProperty::ServerKeepAlive(val) => {
                                 // Set PINGREQ send interval if this is a client
                                 let timeout_ms = (val.val() as u64) * 1000;
                                 self.pingreq_send_interval_ms = Some(timeout_ms);
@@ -3609,7 +3609,7 @@ where
         events
     }
 
-    fn get_topic_alias_from_props_opt(props: &Option<Vec<Property>>) -> Option<u16> {
+    fn get_topic_alias_from_props_opt(props: &Option<Vec<GenericProperty>>) -> Option<u16> {
         if let Some(props) = props {
             Self::get_topic_alias_from_props(props.as_slice())
         } else {
@@ -3654,9 +3654,9 @@ where
     }
 
     /// Helper function to extract TopicAlias from properties
-    fn get_topic_alias_from_props(props: &[Property]) -> Option<u16> {
+    fn get_topic_alias_from_props(props: &[GenericProperty]) -> Option<u16> {
         for prop in props {
-            if let Property::TopicAlias(ta) = prop {
+            if let GenericProperty::TopicAlias(ta) = prop {
                 return Some(ta.val());
             }
         }

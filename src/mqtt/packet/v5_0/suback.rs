@@ -40,7 +40,7 @@ use crate::mqtt::packet::GenericPacketTrait;
 use crate::mqtt::packet::IsPacketId;
 #[cfg(feature = "std")]
 use crate::mqtt::packet::PropertiesToBuffers;
-use crate::mqtt::packet::{Properties, PropertiesParse, PropertiesSize, Property};
+use crate::mqtt::packet::{GenericProperties, GenericProperty, PropertiesParse, PropertiesSize};
 use crate::mqtt::result_code::MqttError;
 use crate::mqtt::result_code::SubackReasonCode;
 
@@ -170,7 +170,7 @@ where
     /// The properties are validated to ensure only allowed properties are included.
     #[builder(setter(into, strip_option))]
     #[getset(get = "pub")]
-    pub props: Properties,
+    pub props: GenericProperties,
 
     #[builder(private)]
     reason_codes_buf: Vec<u8>,
@@ -369,7 +369,7 @@ where
         let packet_id_buf = packet_id.to_buffer();
         cursor += buffer_size;
 
-        let (props, property_length) = Properties::parse(&data[cursor..])?;
+        let (props, property_length) = GenericProperties::parse(&data[cursor..])?;
         cursor += property_length;
         validate_suback_properties(&props)?;
         let prop_len = VariableByteInteger::from_u32(props.size() as u32).unwrap();
@@ -685,7 +685,7 @@ where
         let packet_id_buf = self.packet_id_buf.unwrap();
         let reason_codes_buf = self.reason_codes_buf.unwrap_or_default();
 
-        let props = self.props.unwrap_or_else(Properties::new);
+        let props = self.props.unwrap_or_else(GenericProperties::new);
         let props_size = props.size();
         let property_length = VariableByteInteger::from_u32(props_size as u32).unwrap();
 
@@ -942,12 +942,12 @@ where
 /// // This would be called internally during packet validation
 /// // validate_suback_properties(&props).unwrap();
 /// ```
-fn validate_suback_properties(props: &Properties) -> Result<(), MqttError> {
+fn validate_suback_properties(props: &GenericProperties) -> Result<(), MqttError> {
     let mut count_reason_string = 0;
     for prop in props {
         match prop {
-            Property::ReasonString(_) => count_reason_string += 1,
-            Property::UserProperty(_) => {}
+            GenericProperty::ReasonString(_) => count_reason_string += 1,
+            GenericProperty::UserProperty(_) => {}
             _ => return Err(MqttError::ProtocolError),
         }
     }
