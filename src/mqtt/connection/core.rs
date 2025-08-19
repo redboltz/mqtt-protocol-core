@@ -2562,7 +2562,9 @@ where
     ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
     {
         let mut events = Vec::new();
-        match v3_1_1::Connect::parse(raw_packet.data_as_slice()) {
+        match v3_1_1::GenericConnect::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::parse(
+            raw_packet.data_as_slice(),
+        ) {
             Ok((packet, _)) => {
                 if self.status != ConnectionStatus::Disconnected {
                     events.push(GenericEvent::NotifyError(MqttError::ProtocolError));
@@ -3362,7 +3364,9 @@ where
     {
         let mut events = Vec::new();
 
-        match v3_1_1::GenericSubscribe::<PacketIdType>::parse(raw_packet.data_as_slice()) {
+        match v3_1_1::GenericSubscribe::<PacketIdType, STRING_BUFFER_SIZE>::parse(
+            raw_packet.data_as_slice(),
+        ) {
             Ok((packet, _)) => {
                 events.extend(self.refresh_pingreq_recv());
                 events.push(GenericEvent::NotifyPacketReceived(packet.into()));
@@ -3478,7 +3482,9 @@ where
     {
         let mut events = Vec::new();
 
-        match v3_1_1::GenericUnsubscribe::<PacketIdType>::parse(raw_packet.data_as_slice()) {
+        match v3_1_1::GenericUnsubscribe::<PacketIdType, STRING_BUFFER_SIZE>::parse(
+            raw_packet.data_as_slice(),
+        ) {
             Ok((packet, _)) => {
                 events.extend(self.refresh_pingreq_recv());
                 events.push(GenericEvent::NotifyPacketReceived(packet.into()));
