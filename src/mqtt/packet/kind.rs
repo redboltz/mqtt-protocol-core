@@ -185,7 +185,18 @@ impl<T: PacketKind> PacketKind for &T {
 /// packet type is determined at runtime. This implementation provides a
 /// fallback for generic packet handling where compile-time type information
 /// is not available.
-impl<PacketIdType> PacketKind for crate::mqtt::packet::GenericPacket<PacketIdType>
+impl<
+        PacketIdType,
+        const STRING_BUFFER_SIZE: usize,
+        const BINARY_BUFFER_SIZE: usize,
+        const PAYLOAD_BUFFER_SIZE: usize,
+    > PacketKind
+    for crate::mqtt::packet::GenericPacket<
+        PacketIdType,
+        STRING_BUFFER_SIZE,
+        BINARY_BUFFER_SIZE,
+        PAYLOAD_BUFFER_SIZE,
+    >
 where
     PacketIdType: crate::mqtt::packet::IsPacketId + serde::Serialize,
 {
@@ -195,7 +206,12 @@ where
 // Generic packet implementations for v3.1.1
 
 /// `PacketKind` implementation for generic v3.1.1 PUBLISH packet
-impl<PacketIdType> PacketKind for crate::mqtt::packet::v3_1_1::GenericPublish<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const PAYLOAD_BUFFER_SIZE: usize> PacketKind
+    for crate::mqtt::packet::v3_1_1::GenericPublish<
+        PacketIdType,
+        STRING_BUFFER_SIZE,
+        PAYLOAD_BUFFER_SIZE,
+    >
 where
     PacketIdType: crate::mqtt::packet::IsPacketId,
     PacketIdType: 'static, // Ensure PacketIdType is not u16 implicitly
@@ -269,7 +285,18 @@ where
 }
 
 // Generic packet implementations for v5.0
-impl<PacketIdType> PacketKind for crate::mqtt::packet::v5_0::GenericPublish<PacketIdType>
+impl<
+        PacketIdType,
+        const STRING_BUFFER_SIZE: usize,
+        const BINARY_BUFFER_SIZE: usize,
+        const PAYLOAD_BUFFER_SIZE: usize,
+    > PacketKind
+    for crate::mqtt::packet::v5_0::GenericPublish<
+        PacketIdType,
+        STRING_BUFFER_SIZE,
+        BINARY_BUFFER_SIZE,
+        PAYLOAD_BUFFER_SIZE,
+    >
 where
     PacketIdType: crate::mqtt::packet::IsPacketId,
 {

@@ -125,7 +125,12 @@ pub enum GenericEvent<
     /// * `release_packet_id_if_send_error` - Optional packet ID to release if sending fails
     RequestSendPacket {
         /// The MQTT packet that needs to be sent over the network
-        packet: GenericPacket<PacketIdType>,
+        packet: GenericPacket<
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
         /// Packet ID to release if the send operation fails (QoS > 0 packets only)
         release_packet_id_if_send_error: Option<PacketIdType>,
     },

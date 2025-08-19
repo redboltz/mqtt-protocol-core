@@ -43,20 +43,42 @@ pub enum ResponsePacket {
 }
 
 #[derive(Serialize, Clone, PartialEq, Eq)]
-pub enum GenericStorePacket<PacketIdType>
-where
+pub enum GenericStorePacket<
+    PacketIdType,
+    const STRING_BUFFER_SIZE: usize = 32,
+    const BINARY_BUFFER_SIZE: usize = 32,
+    const PAYLOAD_BUFFER_SIZE: usize = 32,
+> where
     PacketIdType: IsPacketId + Serialize,
 {
-    V3_1_1Publish(v3_1_1::GenericPublish<PacketIdType>),
+    V3_1_1Publish(v3_1_1::GenericPublish<PacketIdType, STRING_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>),
     V3_1_1Pubrel(v3_1_1::GenericPubrel<PacketIdType>),
-    V5_0Publish(v5_0::GenericPublish<PacketIdType>),
+    V5_0Publish(
+        v5_0::GenericPublish<
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
+    ),
     V5_0Pubrel(v5_0::GenericPubrel<PacketIdType>),
 }
 
 // Type alias for commonly used u16 PacketIdType
 pub type StorePacket = GenericStorePacket<u16>;
 
-impl<PacketIdType> core::fmt::Debug for GenericStorePacket<PacketIdType>
+impl<
+        PacketIdType,
+        const STRING_BUFFER_SIZE: usize,
+        const BINARY_BUFFER_SIZE: usize,
+        const PAYLOAD_BUFFER_SIZE: usize,
+    > core::fmt::Debug
+    for GenericStorePacket<
+        PacketIdType,
+        STRING_BUFFER_SIZE,
+        BINARY_BUFFER_SIZE,
+        PAYLOAD_BUFFER_SIZE,
+    >
 where
     PacketIdType: IsPacketId + Serialize,
 {
@@ -65,7 +87,18 @@ where
     }
 }
 
-impl<PacketIdType> core::fmt::Display for GenericStorePacket<PacketIdType>
+impl<
+        PacketIdType,
+        const STRING_BUFFER_SIZE: usize,
+        const BINARY_BUFFER_SIZE: usize,
+        const PAYLOAD_BUFFER_SIZE: usize,
+    > core::fmt::Display
+    for GenericStorePacket<
+        PacketIdType,
+        STRING_BUFFER_SIZE,
+        BINARY_BUFFER_SIZE,
+        PAYLOAD_BUFFER_SIZE,
+    >
 where
     PacketIdType: IsPacketId + Serialize,
 {
@@ -74,7 +107,18 @@ where
     }
 }
 
-impl<PacketIdType> GenericPacketTrait for GenericStorePacket<PacketIdType>
+impl<
+        PacketIdType,
+        const STRING_BUFFER_SIZE: usize,
+        const BINARY_BUFFER_SIZE: usize,
+        const PAYLOAD_BUFFER_SIZE: usize,
+    > GenericPacketTrait
+    for GenericStorePacket<
+        PacketIdType,
+        STRING_BUFFER_SIZE,
+        BINARY_BUFFER_SIZE,
+        PAYLOAD_BUFFER_SIZE,
+    >
 where
     PacketIdType: IsPacketId + Serialize,
 {
@@ -107,7 +151,18 @@ where
     }
 }
 
-impl<PacketIdType> GenericPacketDisplay for GenericStorePacket<PacketIdType>
+impl<
+        PacketIdType,
+        const STRING_BUFFER_SIZE: usize,
+        const BINARY_BUFFER_SIZE: usize,
+        const PAYLOAD_BUFFER_SIZE: usize,
+    > GenericPacketDisplay
+    for GenericStorePacket<
+        PacketIdType,
+        STRING_BUFFER_SIZE,
+        BINARY_BUFFER_SIZE,
+        PAYLOAD_BUFFER_SIZE,
+    >
 where
     PacketIdType: IsPacketId + Serialize,
 {
@@ -130,7 +185,12 @@ where
     }
 }
 
-impl<PacketIdType> GenericStorePacket<PacketIdType>
+impl<
+        PacketIdType,
+        const STRING_BUFFER_SIZE: usize,
+        const BINARY_BUFFER_SIZE: usize,
+        const PAYLOAD_BUFFER_SIZE: usize,
+    > GenericStorePacket<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId + Serialize,
 {
@@ -174,14 +234,26 @@ where
 }
 
 // TryFrom implementations for all packet types (unified API)
-impl<PacketIdType> TryFrom<v3_1_1::GenericPublish<PacketIdType>>
-    for GenericStorePacket<PacketIdType>
+impl<
+        PacketIdType,
+        const STRING_BUFFER_SIZE: usize,
+        const BINARY_BUFFER_SIZE: usize,
+        const PAYLOAD_BUFFER_SIZE: usize,
+    > TryFrom<v3_1_1::GenericPublish<PacketIdType, STRING_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    for GenericStorePacket<
+        PacketIdType,
+        STRING_BUFFER_SIZE,
+        BINARY_BUFFER_SIZE,
+        PAYLOAD_BUFFER_SIZE,
+    >
 where
     PacketIdType: IsPacketId + Serialize,
 {
     type Error = MqttError;
 
-    fn try_from(publish: v3_1_1::GenericPublish<PacketIdType>) -> Result<Self, Self::Error> {
+    fn try_from(
+        publish: v3_1_1::GenericPublish<PacketIdType, STRING_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>,
+    ) -> Result<Self, Self::Error> {
         match publish.qos() {
             Qos::AtMostOnce => Err(MqttError::InvalidQos),
             _ => Ok(GenericStorePacket::V3_1_1Publish(publish)),
@@ -189,13 +261,39 @@ where
     }
 }
 
-impl<PacketIdType> TryFrom<v5_0::GenericPublish<PacketIdType>> for GenericStorePacket<PacketIdType>
+impl<
+        PacketIdType,
+        const STRING_BUFFER_SIZE: usize,
+        const BINARY_BUFFER_SIZE: usize,
+        const PAYLOAD_BUFFER_SIZE: usize,
+    >
+    TryFrom<
+        v5_0::GenericPublish<
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
+    >
+    for GenericStorePacket<
+        PacketIdType,
+        STRING_BUFFER_SIZE,
+        BINARY_BUFFER_SIZE,
+        PAYLOAD_BUFFER_SIZE,
+    >
 where
     PacketIdType: IsPacketId + Serialize,
 {
     type Error = MqttError;
 
-    fn try_from(publish: v5_0::GenericPublish<PacketIdType>) -> Result<Self, Self::Error> {
+    fn try_from(
+        publish: v5_0::GenericPublish<
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
+    ) -> Result<Self, Self::Error> {
         match publish.qos() {
             Qos::AtMostOnce => Err(MqttError::InvalidQos),
             _ => Ok(GenericStorePacket::V5_0Publish(publish)),
@@ -203,7 +301,18 @@ where
     }
 }
 
-impl<PacketIdType> TryFrom<v3_1_1::GenericPubrel<PacketIdType>> for GenericStorePacket<PacketIdType>
+impl<
+        PacketIdType,
+        const STRING_BUFFER_SIZE: usize,
+        const BINARY_BUFFER_SIZE: usize,
+        const PAYLOAD_BUFFER_SIZE: usize,
+    > TryFrom<v3_1_1::GenericPubrel<PacketIdType>>
+    for GenericStorePacket<
+        PacketIdType,
+        STRING_BUFFER_SIZE,
+        BINARY_BUFFER_SIZE,
+        PAYLOAD_BUFFER_SIZE,
+    >
 where
     PacketIdType: IsPacketId + Serialize,
 {
@@ -214,7 +323,18 @@ where
     }
 }
 
-impl<PacketIdType> TryFrom<v5_0::GenericPubrel<PacketIdType>> for GenericStorePacket<PacketIdType>
+impl<
+        PacketIdType,
+        const STRING_BUFFER_SIZE: usize,
+        const BINARY_BUFFER_SIZE: usize,
+        const PAYLOAD_BUFFER_SIZE: usize,
+    > TryFrom<v5_0::GenericPubrel<PacketIdType>>
+    for GenericStorePacket<
+        PacketIdType,
+        STRING_BUFFER_SIZE,
+        BINARY_BUFFER_SIZE,
+        PAYLOAD_BUFFER_SIZE,
+    >
 where
     PacketIdType: IsPacketId + Serialize,
 {
@@ -226,11 +346,31 @@ where
 }
 
 // From implementations for GenericStorePacket to GenericPacket conversion
-impl<PacketIdType> From<GenericStorePacket<PacketIdType>> for GenericPacket<PacketIdType>
+impl<
+        PacketIdType,
+        const STRING_BUFFER_SIZE: usize,
+        const BINARY_BUFFER_SIZE: usize,
+        const PAYLOAD_BUFFER_SIZE: usize,
+    >
+    From<
+        GenericStorePacket<
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
+    > for GenericPacket<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId + Serialize,
 {
-    fn from(store_packet: GenericStorePacket<PacketIdType>) -> Self {
+    fn from(
+        store_packet: GenericStorePacket<
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
+    ) -> Self {
         match store_packet {
             GenericStorePacket::V3_1_1Publish(p) => GenericPacket::V3_1_1Publish(p),
             GenericStorePacket::V3_1_1Pubrel(p) => GenericPacket::V3_1_1Pubrel(p),

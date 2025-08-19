@@ -152,7 +152,7 @@ pub struct GenericConnection<
 
     need_store: bool,
     // Store for retransmission packets
-    store: GenericStore<PacketIdType>,
+    store: GenericStore<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>,
 
     offline_publish: bool,
     auto_pub_response: bool,
@@ -345,7 +345,13 @@ where
         packet: T,
     ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
     where
-        T: Sendable<Role, PacketIdType>,
+        T: Sendable<
+            Role,
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
     {
         // dispatch concrete packet or generic packet
         packet.dispatch_send(self)
@@ -395,7 +401,16 @@ where
     ///     }
     /// }
     /// ```
-    pub fn send(&mut self, packet: GenericPacket<PacketIdType>) -> Vec<GenericEvent<PacketIdType>> {
+    pub fn send(
+        &mut self,
+        packet: GenericPacket<
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         use core::any::TypeId;
 
         let role_id = TypeId::of::<Role>();
@@ -605,7 +620,11 @@ where
     ///     }
     /// }
     /// ```
-    pub fn recv(&mut self, data: &mut Cursor<&[u8]>) -> Vec<GenericEvent<PacketIdType>> {
+    pub fn recv(
+        &mut self,
+        data: &mut Cursor<&[u8]>,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         let mut events = Vec::new();
 
         match self.packet_builder.feed(data) {
@@ -639,7 +658,11 @@ where
     /// # Returns
     ///
     /// Events generated from timer processing (e.g., sending PINGREQ, connection timeouts)
-    pub fn notify_timer_fired(&mut self, kind: TimerKind) -> Vec<GenericEvent<PacketIdType>> {
+    pub fn notify_timer_fired(
+        &mut self,
+        kind: TimerKind,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         let mut events = Vec::new();
 
         match kind {
@@ -733,7 +756,10 @@ where
     /// # Returns
     ///
     /// Events generated from connection closure processing
-    pub fn notify_closed(&mut self) -> Vec<GenericEvent<PacketIdType>> {
+    pub fn notify_closed(
+        &mut self,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         let mut events = Vec::new();
 
         // Reset packet size limits to MQTT protocol maximum
@@ -814,7 +840,8 @@ where
     pub fn set_pingreq_send_interval(
         &mut self,
         duration_ms: u64,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         let mut events = Vec::new();
 
         if duration_ms == 0 {
@@ -959,7 +986,8 @@ where
     pub fn release_packet_id(
         &mut self,
         packet_id: PacketIdType,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         let mut events = Vec::new();
 
         if self.pid_man.is_used_id(packet_id) {
@@ -1002,7 +1030,17 @@ where
     /// # Parameters
     ///
     /// * `packets` - Vector of packets to restore
-    pub fn restore_packets(&mut self, packets: Vec<GenericStorePacket<PacketIdType>>) {
+    pub fn restore_packets(
+        &mut self,
+        packets: Vec<
+            GenericStorePacket<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >,
+        >,
+    ) {
         for packet in packets {
             match &packet {
                 GenericStorePacket::V3_1_1Publish(p) => {
@@ -1093,7 +1131,16 @@ where
     /// # Returns
     ///
     /// Vector of packets that should be persisted
-    pub fn get_stored_packets(&self) -> Vec<GenericStorePacket<PacketIdType>> {
+    pub fn get_stored_packets(
+        &self,
+    ) -> Vec<
+        GenericStorePacket<
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
+    > {
         self.store.get_stored()
     }
 
@@ -1125,8 +1172,21 @@ where
     /// and removing TopicAlias properties to ensure the packet can be retransmitted correctly.
     pub fn regulate_for_store(
         &self,
-        mut packet: v5_0::GenericPublish<PacketIdType>,
-    ) -> Result<v5_0::GenericPublish<PacketIdType>, MqttError> {
+        mut packet: v5_0::GenericPublish<
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
+    ) -> Result<
+        v5_0::GenericPublish<
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
+        MqttError,
+    > {
         if packet.topic_name().is_empty() {
             // Topic is empty, need to resolve from topic alias
             if let Some(props) = packet.props() {
@@ -1191,7 +1251,10 @@ where
     }
 
     /// Send all stored packets for retransmission
-    fn send_stored(&mut self) -> Vec<GenericEvent<PacketIdType>> {
+    fn send_stored(
+        &mut self,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         let mut events = Vec::new();
         self.store.for_each(|packet| {
             if packet.size() > self.maximum_packet_size_send as usize {
@@ -1267,7 +1330,8 @@ where
     pub(crate) fn process_send_v3_1_1_connect(
         &mut self,
         packet: v3_1_1::Connect,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         info!("send connect v3.1.1: {packet}");
 
         if self.status != ConnectionStatus::Disconnected {
@@ -1310,7 +1374,8 @@ where
     pub(crate) fn process_send_v5_0_connect(
         &mut self,
         packet: v5_0::Connect,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         info!("send connect v5.0: {packet}");
         if !self.validate_maximum_packet_size_send(packet.size()) {
             return vec![GenericEvent::NotifyError(MqttError::PacketTooLarge)];
@@ -1373,7 +1438,8 @@ where
     pub(crate) fn process_send_v3_1_1_connack(
         &mut self,
         packet: v3_1_1::Connack,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         info!("send connack v3.1.1: {packet}");
         if self.status != ConnectionStatus::Connecting {
             return vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)];
@@ -1398,7 +1464,8 @@ where
     pub(crate) fn process_send_v5_0_connack(
         &mut self,
         packet: v5_0::Connack,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         info!("send connack v5.0: {packet}");
         if !self.validate_maximum_packet_size_send(packet.size()) {
             return vec![GenericEvent::NotifyError(MqttError::PacketTooLarge)];
@@ -1450,8 +1517,9 @@ where
 
     pub(crate) fn process_send_v3_1_1_publish(
         &mut self,
-        packet: v3_1_1::GenericPublish<PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+        packet: v3_1_1::GenericPublish<PacketIdType, STRING_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         let mut events = Vec::new();
         let mut release_packet_id_if_send_error: Option<PacketIdType> = None;
 
@@ -1508,8 +1576,14 @@ where
 
     pub(crate) fn process_send_v5_0_publish(
         &mut self,
-        mut packet: v5_0::GenericPublish<PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+        mut packet: v5_0::GenericPublish<
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         if !self.validate_maximum_packet_size_send(packet.size()) {
             return vec![GenericEvent::NotifyError(MqttError::PacketTooLarge)];
         }
@@ -1679,7 +1753,8 @@ where
     pub(crate) fn process_send_v3_1_1_puback(
         &mut self,
         packet: v3_1_1::GenericPuback<PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         if self.status != ConnectionStatus::Connected {
             return vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)];
         }
@@ -1697,7 +1772,8 @@ where
     pub(crate) fn process_send_v5_0_puback(
         &mut self,
         packet: v5_0::GenericPuback<PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         if !self.validate_maximum_packet_size_send(packet.size()) {
             return vec![GenericEvent::NotifyError(MqttError::PacketTooLarge)];
         }
@@ -1720,7 +1796,8 @@ where
     pub(crate) fn process_send_v3_1_1_pubrec(
         &mut self,
         packet: v3_1_1::GenericPubrec<PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         if self.status != ConnectionStatus::Connected {
             return vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)];
         }
@@ -1738,7 +1815,8 @@ where
     pub(crate) fn process_send_v5_0_pubrec(
         &mut self,
         packet: v5_0::GenericPubrec<PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         if !self.validate_maximum_packet_size_send(packet.size()) {
             return vec![GenericEvent::NotifyError(MqttError::PacketTooLarge)];
         }
@@ -1768,7 +1846,8 @@ where
     pub(crate) fn process_send_v3_1_1_pubrel(
         &mut self,
         packet: v3_1_1::GenericPubrel<PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         if self.status != ConnectionStatus::Connected && !self.need_store {
             return vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)];
         }
@@ -1800,7 +1879,8 @@ where
     pub(crate) fn process_send_v5_0_pubrel(
         &mut self,
         packet: v5_0::GenericPubrel<PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         if !self.validate_maximum_packet_size_send(packet.size()) {
             return vec![GenericEvent::NotifyError(MqttError::PacketTooLarge)];
         }
@@ -1836,7 +1916,8 @@ where
     pub(crate) fn process_send_v3_1_1_pubcomp(
         &mut self,
         packet: v3_1_1::GenericPubcomp<PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         if self.status != ConnectionStatus::Connected {
             return vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)];
         }
@@ -1854,7 +1935,8 @@ where
     pub(crate) fn process_send_v5_0_pubcomp(
         &mut self,
         packet: v5_0::GenericPubcomp<PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         if !self.validate_maximum_packet_size_send(packet.size()) {
             return vec![GenericEvent::NotifyError(MqttError::PacketTooLarge)];
         }
@@ -1877,7 +1959,8 @@ where
     pub(crate) fn process_send_v3_1_1_subscribe(
         &mut self,
         packet: v3_1_1::GenericSubscribe<PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         let mut events = Vec::new();
         let packet_id = packet.packet_id();
         if self.status != ConnectionStatus::Connected {
@@ -1909,7 +1992,8 @@ where
     pub(crate) fn process_send_v5_0_subscribe(
         &mut self,
         packet: v5_0::GenericSubscribe<PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         if !self.validate_maximum_packet_size_send(packet.size()) {
             return vec![GenericEvent::NotifyError(MqttError::PacketTooLarge)];
         }
@@ -1945,7 +2029,8 @@ where
     pub(crate) fn process_send_v3_1_1_suback(
         &mut self,
         packet: v3_1_1::GenericSuback<PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         if self.status != ConnectionStatus::Connected {
             return vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)];
         }
@@ -1962,7 +2047,8 @@ where
     pub(crate) fn process_send_v5_0_suback(
         &mut self,
         packet: v5_0::GenericSuback<PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         if !self.validate_maximum_packet_size_send(packet.size()) {
             return vec![GenericEvent::NotifyError(MqttError::PacketTooLarge)];
         }
@@ -1983,7 +2069,8 @@ where
     pub(crate) fn process_send_v3_1_1_unsubscribe(
         &mut self,
         packet: v3_1_1::GenericUnsubscribe<PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         let mut events = Vec::new();
         let packet_id = packet.packet_id();
         if self.status != ConnectionStatus::Connected {
@@ -2015,7 +2102,8 @@ where
     pub(crate) fn process_send_v5_0_unsubscribe(
         &mut self,
         packet: v5_0::GenericUnsubscribe<PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         if !self.validate_maximum_packet_size_send(packet.size()) {
             return vec![GenericEvent::NotifyError(MqttError::PacketTooLarge)];
         }
@@ -2051,7 +2139,8 @@ where
     pub(crate) fn process_send_v3_1_1_unsuback(
         &mut self,
         packet: v3_1_1::GenericUnsuback<PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         if self.status != ConnectionStatus::Connected {
             return vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)];
         }
@@ -2068,7 +2157,8 @@ where
     pub(crate) fn process_send_v5_0_unsuback(
         &mut self,
         packet: v5_0::GenericUnsuback<PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         if !self.validate_maximum_packet_size_send(packet.size()) {
             return vec![GenericEvent::NotifyError(MqttError::PacketTooLarge)];
         }
@@ -2089,7 +2179,8 @@ where
     pub(crate) fn process_send_v3_1_1_pingreq(
         &mut self,
         packet: v3_1_1::Pingreq,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         if self.status != ConnectionStatus::Connected {
             return vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)];
         }
@@ -2113,7 +2204,8 @@ where
     pub(crate) fn process_send_v5_0_pingreq(
         &mut self,
         packet: v5_0::Pingreq,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         if !self.validate_maximum_packet_size_send(packet.size()) {
             return vec![GenericEvent::NotifyError(MqttError::PacketTooLarge)];
         }
@@ -2141,7 +2233,8 @@ where
     pub(crate) fn process_send_v3_1_1_pingresp(
         &mut self,
         packet: v3_1_1::Pingresp,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         if self.status != ConnectionStatus::Connected {
             return vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)];
         }
@@ -2158,7 +2251,8 @@ where
     pub(crate) fn process_send_v5_0_pingresp(
         &mut self,
         packet: v5_0::Pingresp,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         if !self.validate_maximum_packet_size_send(packet.size()) {
             return vec![GenericEvent::NotifyError(MqttError::PacketTooLarge)];
         }
@@ -2179,7 +2273,8 @@ where
     pub(crate) fn process_send_v3_1_1_disconnect(
         &mut self,
         packet: v3_1_1::Disconnect,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         if self.status != ConnectionStatus::Connected {
             return vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)];
         }
@@ -2198,7 +2293,8 @@ where
     pub(crate) fn process_send_v5_0_disconnect(
         &mut self,
         packet: v5_0::Disconnect,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         if !self.validate_maximum_packet_size_send(packet.size()) {
             return vec![GenericEvent::NotifyError(MqttError::PacketTooLarge)];
         }
@@ -2221,7 +2317,8 @@ where
     pub(crate) fn process_send_v5_0_auth(
         &mut self,
         packet: v5_0::Auth,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         if !self.validate_maximum_packet_size_send(packet.size()) {
             return vec![GenericEvent::NotifyError(MqttError::PacketTooLarge)];
         }
@@ -2239,7 +2336,12 @@ where
         events
     }
 
-    fn send_post_process(&mut self, events: &mut Vec<GenericEvent<PacketIdType>>) {
+    fn send_post_process(
+        &mut self,
+        events: &mut Vec<
+            GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>,
+        >,
+    ) {
         if self.is_client {
             if let Some(timeout_ms) = self.pingreq_send_interval_ms {
                 self.pingreq_send_set = true;
@@ -2259,7 +2361,11 @@ where
         true
     }
 
-    fn process_recv_packet(&mut self, raw_packet: RawPacket) -> Vec<GenericEvent<PacketIdType>> {
+    fn process_recv_packet(
+        &mut self,
+        raw_packet: RawPacket,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         let mut events = Vec::new();
 
         // packet size limit validation (v3.1.1 is always satisfied)
@@ -2453,7 +2559,8 @@ where
     fn process_recv_v3_1_1_connect(
         &mut self,
         raw_packet: RawPacket,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         let mut events = Vec::new();
         match v3_1_1::Connect::parse(raw_packet.data_as_slice()) {
             Ok((packet, _)) => {
@@ -2506,7 +2613,8 @@ where
     fn process_recv_v5_0_connect(
         &mut self,
         raw_packet: RawPacket,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         let mut events = Vec::new();
         match v5_0::Connect::parse(raw_packet.data_as_slice()) {
             Ok((packet, _)) => {
@@ -2579,7 +2687,8 @@ where
     fn process_recv_v3_1_1_connack(
         &mut self,
         raw_packet: RawPacket,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         let mut events = Vec::new();
 
         match v3_1_1::Connack::parse(raw_packet.data_as_slice()) {
@@ -2608,7 +2717,8 @@ where
     fn process_recv_v5_0_connack(
         &mut self,
         raw_packet: RawPacket,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         let mut events = Vec::new();
 
         match v5_0::Connack::parse(raw_packet.data_as_slice()) {
@@ -2672,7 +2782,8 @@ where
     fn process_recv_v3_1_1_publish(
         &mut self,
         raw_packet: RawPacket,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         let mut events = Vec::new();
 
         let flags = raw_packet.flags();
@@ -2737,7 +2848,8 @@ where
     fn process_recv_v5_0_publish(
         &mut self,
         raw_packet: RawPacket,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         let mut events = Vec::new();
 
         let flags = raw_packet.flags();
@@ -2931,7 +3043,8 @@ where
     fn process_recv_v3_1_1_puback(
         &mut self,
         raw_packet: RawPacket,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         let mut events = Vec::new();
 
         match v3_1_1::GenericPuback::<PacketIdType>::parse(raw_packet.data_as_slice()) {
@@ -2962,7 +3075,8 @@ where
     fn process_recv_v5_0_puback(
         &mut self,
         raw_packet: RawPacket,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         let mut events = Vec::new();
 
         match v5_0::GenericPuback::<PacketIdType>::parse(raw_packet.data_as_slice()) {
@@ -3004,7 +3118,8 @@ where
     fn process_recv_v3_1_1_pubrec(
         &mut self,
         raw_packet: RawPacket,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         let mut events = Vec::new();
 
         match v3_1_1::GenericPubrec::<PacketIdType>::parse(raw_packet.data_as_slice()) {
@@ -3038,7 +3153,8 @@ where
     fn process_recv_v5_0_pubrec(
         &mut self,
         raw_packet: RawPacket,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         let mut events = Vec::new();
 
         match v5_0::GenericPubrec::<PacketIdType>::parse(raw_packet.data_as_slice()) {
@@ -3101,7 +3217,8 @@ where
     fn process_recv_v3_1_1_pubrel(
         &mut self,
         raw_packet: RawPacket,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         let mut events = Vec::new();
 
         match v3_1_1::GenericPubrel::<PacketIdType>::parse(raw_packet.data_as_slice()) {
@@ -3130,7 +3247,8 @@ where
     fn process_recv_v5_0_pubrel(
         &mut self,
         raw_packet: RawPacket,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         let mut events = Vec::new();
 
         match v5_0::GenericPubrel::<PacketIdType>::parse(raw_packet.data_as_slice()) {
@@ -3163,7 +3281,8 @@ where
     fn process_recv_v3_1_1_pubcomp(
         &mut self,
         raw_packet: RawPacket,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         let mut events = Vec::new();
 
         match v3_1_1::GenericPubcomp::<PacketIdType>::parse(raw_packet.data_as_slice()) {
@@ -3195,7 +3314,8 @@ where
     fn process_recv_v5_0_pubcomp(
         &mut self,
         raw_packet: RawPacket,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         let mut events = Vec::new();
 
         match v5_0::GenericPubcomp::<PacketIdType>::parse(raw_packet.data_as_slice()) {
@@ -3238,7 +3358,8 @@ where
     fn process_recv_v3_1_1_subscribe(
         &mut self,
         raw_packet: RawPacket,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         let mut events = Vec::new();
 
         match v3_1_1::GenericSubscribe::<PacketIdType>::parse(raw_packet.data_as_slice()) {
@@ -3258,7 +3379,8 @@ where
     fn process_recv_v5_0_subscribe(
         &mut self,
         raw_packet: RawPacket,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         let mut events = Vec::new();
 
         match v5_0::GenericSubscribe::<PacketIdType>::parse(raw_packet.data_as_slice()) {
@@ -3282,7 +3404,8 @@ where
     fn process_recv_v3_1_1_suback(
         &mut self,
         raw_packet: RawPacket,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         let mut events = Vec::new();
 
         match v3_1_1::GenericSuback::<PacketIdType>::parse(raw_packet.data_as_slice()) {
@@ -3312,7 +3435,8 @@ where
     fn process_recv_v5_0_suback(
         &mut self,
         raw_packet: RawPacket,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         let mut events = Vec::new();
 
         match v5_0::GenericSuback::<PacketIdType>::parse(raw_packet.data_as_slice()) {
@@ -3350,7 +3474,8 @@ where
     fn process_recv_v3_1_1_unsubscribe(
         &mut self,
         raw_packet: RawPacket,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         let mut events = Vec::new();
 
         match v3_1_1::GenericUnsubscribe::<PacketIdType>::parse(raw_packet.data_as_slice()) {
@@ -3370,7 +3495,8 @@ where
     fn process_recv_v5_0_unsubscribe(
         &mut self,
         raw_packet: RawPacket,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         let mut events = Vec::new();
 
         match v5_0::GenericUnsubscribe::<PacketIdType>::parse(raw_packet.data_as_slice()) {
@@ -3394,7 +3520,8 @@ where
     fn process_recv_v3_1_1_unsuback(
         &mut self,
         raw_packet: RawPacket,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         let mut events = Vec::new();
 
         match v3_1_1::GenericUnsuback::<PacketIdType>::parse(raw_packet.data_as_slice()) {
@@ -3424,7 +3551,8 @@ where
     fn process_recv_v5_0_unsuback(
         &mut self,
         raw_packet: RawPacket,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         let mut events = Vec::new();
 
         match v5_0::GenericUnsuback::<PacketIdType>::parse(raw_packet.data_as_slice()) {
@@ -3462,7 +3590,8 @@ where
     fn process_recv_v3_1_1_pingreq(
         &mut self,
         raw_packet: RawPacket,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         let mut events = Vec::new();
 
         match v3_1_1::Pingreq::parse(raw_packet.data_as_slice()) {
@@ -3490,7 +3619,8 @@ where
     fn process_recv_v5_0_pingreq(
         &mut self,
         raw_packet: RawPacket,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         let mut events = Vec::new();
 
         match v5_0::Pingreq::parse(raw_packet.data_as_slice()) {
@@ -3522,7 +3652,8 @@ where
     fn process_recv_v3_1_1_pingresp(
         &mut self,
         raw_packet: RawPacket,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         let mut events = Vec::new();
 
         match v3_1_1::Pingresp::parse(raw_packet.data_as_slice()) {
@@ -3543,7 +3674,8 @@ where
     fn process_recv_v5_0_pingresp(
         &mut self,
         raw_packet: RawPacket,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         let mut events = Vec::new();
 
         match v5_0::Pingresp::parse(raw_packet.data_as_slice()) {
@@ -3568,7 +3700,8 @@ where
     fn process_recv_v3_1_1_disconnect(
         &mut self,
         raw_packet: RawPacket,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         let mut events = Vec::new();
 
         match v3_1_1::Disconnect::parse(raw_packet.data_as_slice()) {
@@ -3588,7 +3721,8 @@ where
     fn process_recv_v5_0_disconnect(
         &mut self,
         raw_packet: RawPacket,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         let mut events = Vec::new();
 
         match v5_0::Disconnect::parse(raw_packet.data_as_slice()) {
@@ -3609,7 +3743,11 @@ where
         events
     }
 
-    fn process_recv_v5_0_auth(&mut self, raw_packet: RawPacket) -> Vec<GenericEvent<PacketIdType>> {
+    fn process_recv_v5_0_auth(
+        &mut self,
+        raw_packet: RawPacket,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         let mut events = Vec::new();
 
         match v5_0::Auth::parse(raw_packet.data_as_slice()) {
@@ -3630,7 +3768,9 @@ where
         events
     }
 
-    fn get_topic_alias_from_props_opt(props: &Option<Vec<GenericProperty>>) -> Option<u16> {
+    fn get_topic_alias_from_props_opt(
+        props: &Option<Vec<GenericProperty<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>>>,
+    ) -> Option<u16> {
         if let Some(props) = props {
             Self::get_topic_alias_from_props(props.as_slice())
         } else {
@@ -3638,7 +3778,10 @@ where
         }
     }
 
-    fn refresh_pingreq_recv(&mut self) -> Vec<GenericEvent<PacketIdType>> {
+    fn refresh_pingreq_recv(
+        &mut self,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         let mut events = Vec::new();
         if let Some(timeout_ms) = self.pingreq_recv_timeout_ms {
             if self.status == ConnectionStatus::Connecting
@@ -3659,7 +3802,12 @@ where
     }
 
     /// Cancel timers and collect events instead of calling handlers
-    fn cancel_timers(&mut self, events: &mut Vec<GenericEvent<PacketIdType>>) {
+    fn cancel_timers(
+        &mut self,
+        events: &mut Vec<
+            GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>,
+        >,
+    ) {
         if self.pingreq_send_set {
             self.pingreq_send_set = false;
             events.push(GenericEvent::RequestTimerCancel(TimerKind::PingreqSend));
@@ -3675,7 +3823,9 @@ where
     }
 
     /// Helper function to extract TopicAlias from properties
-    fn get_topic_alias_from_props(props: &[GenericProperty]) -> Option<u16> {
+    fn get_topic_alias_from_props(
+        props: &[GenericProperty<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>],
+    ) -> Option<u16> {
         for prop in props {
             if let GenericProperty::TopicAlias(ta) = prop {
                 return Some(ta.val());
@@ -3692,40 +3842,114 @@ where
 
 // traits
 
-pub trait RecvBehavior<Role, PacketIdType>
-where
+pub trait RecvBehavior<
+    Role,
+    PacketIdType,
+    const STRING_BUFFER_SIZE: usize = 32,
+    const BINARY_BUFFER_SIZE: usize = 32,
+    const PAYLOAD_BUFFER_SIZE: usize = 32,
+> where
     PacketIdType: IsPacketId,
 {
-    fn recv(&mut self, data: &mut Cursor<&[u8]>) -> Vec<GenericEvent<PacketIdType>>;
+    fn recv(
+        &mut self,
+        data: &mut Cursor<&[u8]>,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>;
 }
 
 // RecvBehavior implementations
-impl<PacketIdType> RecvBehavior<role::Client, PacketIdType>
-    for GenericConnection<role::Client, PacketIdType>
+impl<
+        PacketIdType,
+        const STRING_BUFFER_SIZE: usize,
+        const BINARY_BUFFER_SIZE: usize,
+        const PAYLOAD_BUFFER_SIZE: usize,
+    >
+    RecvBehavior<
+        role::Client,
+        PacketIdType,
+        STRING_BUFFER_SIZE,
+        BINARY_BUFFER_SIZE,
+        PAYLOAD_BUFFER_SIZE,
+    >
+    for GenericConnection<
+        role::Client,
+        PacketIdType,
+        STRING_BUFFER_SIZE,
+        BINARY_BUFFER_SIZE,
+        PAYLOAD_BUFFER_SIZE,
+    >
 where
     PacketIdType: IsPacketId,
 {
-    fn recv(&mut self, data: &mut Cursor<&[u8]>) -> Vec<GenericEvent<PacketIdType>> {
+    fn recv(
+        &mut self,
+        data: &mut Cursor<&[u8]>,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         self.recv(data)
     }
 }
 
-impl<PacketIdType> RecvBehavior<role::Server, PacketIdType>
-    for GenericConnection<role::Server, PacketIdType>
+impl<
+        PacketIdType,
+        const STRING_BUFFER_SIZE: usize,
+        const BINARY_BUFFER_SIZE: usize,
+        const PAYLOAD_BUFFER_SIZE: usize,
+    >
+    RecvBehavior<
+        role::Server,
+        PacketIdType,
+        STRING_BUFFER_SIZE,
+        BINARY_BUFFER_SIZE,
+        PAYLOAD_BUFFER_SIZE,
+    >
+    for GenericConnection<
+        role::Server,
+        PacketIdType,
+        STRING_BUFFER_SIZE,
+        BINARY_BUFFER_SIZE,
+        PAYLOAD_BUFFER_SIZE,
+    >
 where
     PacketIdType: IsPacketId,
 {
-    fn recv(&mut self, data: &mut Cursor<&[u8]>) -> Vec<GenericEvent<PacketIdType>> {
+    fn recv(
+        &mut self,
+        data: &mut Cursor<&[u8]>,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         self.recv(data)
     }
 }
 
-impl<PacketIdType> RecvBehavior<role::Any, PacketIdType>
-    for GenericConnection<role::Any, PacketIdType>
+impl<
+        PacketIdType,
+        const STRING_BUFFER_SIZE: usize,
+        const BINARY_BUFFER_SIZE: usize,
+        const PAYLOAD_BUFFER_SIZE: usize,
+    >
+    RecvBehavior<
+        role::Any,
+        PacketIdType,
+        STRING_BUFFER_SIZE,
+        BINARY_BUFFER_SIZE,
+        PAYLOAD_BUFFER_SIZE,
+    >
+    for GenericConnection<
+        role::Any,
+        PacketIdType,
+        STRING_BUFFER_SIZE,
+        BINARY_BUFFER_SIZE,
+        PAYLOAD_BUFFER_SIZE,
+    >
 where
     PacketIdType: IsPacketId,
 {
-    fn recv(&mut self, data: &mut Cursor<&[u8]>) -> Vec<GenericEvent<PacketIdType>> {
+    fn recv(
+        &mut self,
+        data: &mut Cursor<&[u8]>,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         self.recv(data)
     }
 }

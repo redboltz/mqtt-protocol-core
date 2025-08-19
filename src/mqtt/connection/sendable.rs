@@ -35,242 +35,483 @@ use alloc::vec::Vec;
 use core::fmt::Debug;
 
 /// Core trait for sendable packets
-pub trait Sendable<Role, PacketIdType>: PacketKind
-where
+pub trait Sendable<
+    Role,
+    PacketIdType,
+    const STRING_BUFFER_SIZE: usize = 32,
+    const BINARY_BUFFER_SIZE: usize = 32,
+    const PAYLOAD_BUFFER_SIZE: usize = 32,
+>: PacketKind where
     Role: RoleType,
     PacketIdType: IsPacketId,
 {
     fn dispatch_send(
         self,
-        connection: &mut GenericConnection<Role, PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>>;
+        connection: &mut GenericConnection<
+            Role,
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>;
 }
 
 /// Trait for connection send behavior
-pub trait SendBehavior<Role, PacketIdType>
-where
+pub trait SendBehavior<
+    Role,
+    PacketIdType,
+    const STRING_BUFFER_SIZE: usize = 32,
+    const BINARY_BUFFER_SIZE: usize = 32,
+    const PAYLOAD_BUFFER_SIZE: usize = 32,
+> where
     Role: RoleType,
     PacketIdType: IsPacketId,
 {
-    fn send<T>(&mut self, packet: T) -> Vec<GenericEvent<PacketIdType>>
+    fn send<T>(
+        &mut self,
+        packet: T,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
     where
-        T: Sendable<Role, PacketIdType>;
+        T: Sendable<
+            Role,
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >;
 }
 
 /// Helper trait for type-specific send operations
-pub trait SendableHelper<Role, PacketIdType>: PacketKind + Sized
-where
+pub trait SendableHelper<
+    Role,
+    PacketIdType,
+    const STRING_BUFFER_SIZE: usize = 32,
+    const BINARY_BUFFER_SIZE: usize = 32,
+    const PAYLOAD_BUFFER_SIZE: usize = 32,
+>: PacketKind + Sized where
     Role: RoleType,
     PacketIdType: IsPacketId,
 {
     // v3.1.1 methods
     fn send_connect_v3_1_1(
         self,
-        _connection: &mut GenericConnection<Role, PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+        _connection: &mut GenericConnection<
+            Role,
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         unreachable!("send_connect_v3_1_1 not implemented for this type")
     }
 
     fn send_connack_v3_1_1(
         self,
-        _connection: &mut GenericConnection<Role, PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+        _connection: &mut GenericConnection<
+            Role,
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         unreachable!("send_connack_v3_1_1 not implemented for this type")
     }
 
     fn send_publish_v3_1_1(
         self,
-        _connection: &mut GenericConnection<Role, PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+        _connection: &mut GenericConnection<
+            Role,
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         unreachable!("send_publish_v3_1_1 not implemented for this type")
     }
 
     fn send_puback_v3_1_1(
         self,
-        _connection: &mut GenericConnection<Role, PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+        _connection: &mut GenericConnection<
+            Role,
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         unreachable!("send_puback_v3_1_1 not implemented for this type")
     }
 
     fn send_pubrec_v3_1_1(
         self,
-        _connection: &mut GenericConnection<Role, PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+        _connection: &mut GenericConnection<
+            Role,
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         unreachable!("send_pubrec_v3_1_1 not implemented for this type")
     }
 
     fn send_pubrel_v3_1_1(
         self,
-        _connection: &mut GenericConnection<Role, PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+        _connection: &mut GenericConnection<
+            Role,
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         unreachable!("send_pubrel_v3_1_1 not implemented for this type")
     }
 
     fn send_pubcomp_v3_1_1(
         self,
-        _connection: &mut GenericConnection<Role, PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+        _connection: &mut GenericConnection<
+            Role,
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         unreachable!("send_pubcomp_v3_1_1 not implemented for this type")
     }
 
     fn send_subscribe_v3_1_1(
         self,
-        _connection: &mut GenericConnection<Role, PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+        _connection: &mut GenericConnection<
+            Role,
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         unreachable!("send_subscribe_v3_1_1 not implemented for this type")
     }
 
     fn send_suback_v3_1_1(
         self,
-        _connection: &mut GenericConnection<Role, PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+        _connection: &mut GenericConnection<
+            Role,
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         unreachable!("send_suback_v3_1_1 not implemented for this type")
     }
 
     fn send_unsubscribe_v3_1_1(
         self,
-        _connection: &mut GenericConnection<Role, PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+        _connection: &mut GenericConnection<
+            Role,
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         unreachable!("send_unsubscribe_v3_1_1 not implemented for this type")
     }
 
     fn send_unsuback_v3_1_1(
         self,
-        _connection: &mut GenericConnection<Role, PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+        _connection: &mut GenericConnection<
+            Role,
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         unreachable!("send_unsuback_v3_1_1 not implemented for this type")
     }
 
     fn send_pingreq_v3_1_1(
         self,
-        _connection: &mut GenericConnection<Role, PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+        _connection: &mut GenericConnection<
+            Role,
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         unreachable!("send_pingreq_v3_1_1 not implemented for this type")
     }
 
     fn send_pingresp_v3_1_1(
         self,
-        _connection: &mut GenericConnection<Role, PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+        _connection: &mut GenericConnection<
+            Role,
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         unreachable!("send_pingresp_v3_1_1 not implemented for this type")
     }
 
     fn send_disconnect_v3_1_1(
         self,
-        _connection: &mut GenericConnection<Role, PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+        _connection: &mut GenericConnection<
+            Role,
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         unreachable!("send_disconnect_v3_1_1 not implemented for this type")
     }
 
     // v5.0 methods
     fn send_connect_v5_0(
         self,
-        _connection: &mut GenericConnection<Role, PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+        _connection: &mut GenericConnection<
+            Role,
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         unreachable!("send_connect_v5_0 not implemented for this type")
     }
 
     fn send_connack_v5_0(
         self,
-        _connection: &mut GenericConnection<Role, PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+        _connection: &mut GenericConnection<
+            Role,
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         unreachable!("send_connack_v5_0 not implemented for this type")
     }
 
     fn send_publish_v5_0(
         self,
-        _connection: &mut GenericConnection<Role, PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+        _connection: &mut GenericConnection<
+            Role,
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         unreachable!("send_publish_v5_0 not implemented for this type")
     }
 
     fn send_puback_v5_0(
         self,
-        _connection: &mut GenericConnection<Role, PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+        _connection: &mut GenericConnection<
+            Role,
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         unreachable!("send_puback_v5_0 not implemented for this type")
     }
 
     fn send_pubrec_v5_0(
         self,
-        _connection: &mut GenericConnection<Role, PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+        _connection: &mut GenericConnection<
+            Role,
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         unreachable!("send_pubrec_v5_0 not implemented for this type")
     }
 
     fn send_pubrel_v5_0(
         self,
-        _connection: &mut GenericConnection<Role, PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+        _connection: &mut GenericConnection<
+            Role,
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         unreachable!("send_pubrel_v5_0 not implemented for this type")
     }
 
     fn send_pubcomp_v5_0(
         self,
-        _connection: &mut GenericConnection<Role, PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+        _connection: &mut GenericConnection<
+            Role,
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         unreachable!("send_pubcomp_v5_0 not implemented for this type")
     }
 
     fn send_subscribe_v5_0(
         self,
-        _connection: &mut GenericConnection<Role, PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+        _connection: &mut GenericConnection<
+            Role,
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         unreachable!("send_subscribe_v5_0 not implemented for this type")
     }
 
     fn send_suback_v5_0(
         self,
-        _connection: &mut GenericConnection<Role, PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+        _connection: &mut GenericConnection<
+            Role,
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         unreachable!("send_suback_v5_0 not implemented for this type")
     }
 
     fn send_unsubscribe_v5_0(
         self,
-        _connection: &mut GenericConnection<Role, PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+        _connection: &mut GenericConnection<
+            Role,
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         unreachable!("send_unsubscribe_v5_0 not implemented for this type")
     }
 
     fn send_unsuback_v5_0(
         self,
-        _connection: &mut GenericConnection<Role, PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+        _connection: &mut GenericConnection<
+            Role,
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         unreachable!("send_unsuback_v5_0 not implemented for this type")
     }
 
     fn send_pingreq_v5_0(
         self,
-        _connection: &mut GenericConnection<Role, PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+        _connection: &mut GenericConnection<
+            Role,
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         unreachable!("send_pingreq_v5_0 not implemented for this type")
     }
 
     fn send_pingresp_v5_0(
         self,
-        _connection: &mut GenericConnection<Role, PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+        _connection: &mut GenericConnection<
+            Role,
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         unreachable!("send_pingresp_v5_0 not implemented for this type")
     }
 
     fn send_disconnect_v5_0(
         self,
-        _connection: &mut GenericConnection<Role, PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+        _connection: &mut GenericConnection<
+            Role,
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         unreachable!("send_disconnect_v5_0 not implemented for this type")
     }
 
     fn send_auth_v5_0(
         self,
-        _connection: &mut GenericConnection<Role, PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+        _connection: &mut GenericConnection<
+            Role,
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         unreachable!("send_auth_v5_0 not implemented for this type")
     }
 }
 
 // Generic implementation for specific packet types with compile-time dispatch
-impl<Role, PacketIdType, T> Sendable<Role, PacketIdType> for T
+impl<
+        Role,
+        PacketIdType,
+        T,
+        const STRING_BUFFER_SIZE: usize,
+        const BINARY_BUFFER_SIZE: usize,
+        const PAYLOAD_BUFFER_SIZE: usize,
+    > Sendable<Role, PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>
+    for T
 where
     Role: role::RoleType,
     PacketIdType: IsPacketId,
@@ -279,12 +520,25 @@ where
         + core::fmt::Display
         + Debug
         + PacketKind
-        + SendableHelper<Role, PacketIdType>,
+        + SendableHelper<
+            Role,
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
 {
     fn dispatch_send(
         self,
-        connection: &mut GenericConnection<Role, PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+        connection: &mut GenericConnection<
+            Role,
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         // Version check first
         if !T::check(&connection.get_protocol_version()) {
             return vec![GenericEvent::NotifyError(MqttError::VersionMismatch)];
@@ -418,38 +672,89 @@ where
 }
 
 // Sendable implementation for GenericPacket (runtime dispatch)
-impl<PacketIdType> Sendable<role::Client, PacketIdType> for GenericPacket<PacketIdType>
+impl<
+        PacketIdType,
+        const STRING_BUFFER_SIZE: usize,
+        const BINARY_BUFFER_SIZE: usize,
+        const PAYLOAD_BUFFER_SIZE: usize,
+    >
+    Sendable<
+        role::Client,
+        PacketIdType,
+        STRING_BUFFER_SIZE,
+        BINARY_BUFFER_SIZE,
+        PAYLOAD_BUFFER_SIZE,
+    > for GenericPacket<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>
 where
-    PacketIdType: IsPacketId,
+    PacketIdType: IsPacketId + serde::Serialize,
 {
     fn dispatch_send(
         self,
-        connection: &mut GenericConnection<role::Client, PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+        connection: &mut GenericConnection<
+            role::Client,
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         connection.send(self)
     }
 }
 
-impl<PacketIdType> Sendable<role::Server, PacketIdType> for GenericPacket<PacketIdType>
+impl<
+        PacketIdType,
+        const STRING_BUFFER_SIZE: usize,
+        const BINARY_BUFFER_SIZE: usize,
+        const PAYLOAD_BUFFER_SIZE: usize,
+    >
+    Sendable<
+        role::Server,
+        PacketIdType,
+        STRING_BUFFER_SIZE,
+        BINARY_BUFFER_SIZE,
+        PAYLOAD_BUFFER_SIZE,
+    > for GenericPacket<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>
 where
-    PacketIdType: IsPacketId,
+    PacketIdType: IsPacketId + serde::Serialize,
 {
     fn dispatch_send(
         self,
-        connection: &mut GenericConnection<role::Server, PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+        connection: &mut GenericConnection<
+            role::Server,
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         connection.send(self)
     }
 }
 
-impl<PacketIdType> Sendable<role::Any, PacketIdType> for GenericPacket<PacketIdType>
+impl<
+        PacketIdType,
+        const STRING_BUFFER_SIZE: usize,
+        const BINARY_BUFFER_SIZE: usize,
+        const PAYLOAD_BUFFER_SIZE: usize,
+    > Sendable<role::Any, PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>
+    for GenericPacket<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>
 where
-    PacketIdType: IsPacketId,
+    PacketIdType: IsPacketId + serde::Serialize,
 {
     fn dispatch_send(
         self,
-        connection: &mut GenericConnection<role::Any, PacketIdType>,
-    ) -> Vec<GenericEvent<PacketIdType>> {
+        connection: &mut GenericConnection<
+            role::Any,
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
+    {
         connection.send(self)
     }
 }

@@ -29,13 +29,32 @@ use alloc::vec::Vec;
 use indexmap::IndexMap;
 
 /// A store that holds packets in insertion order and allows O(1) insert/remove by id.
-pub struct GenericStore<PacketIdType: IsPacketId> {
-    map: IndexMap<PacketIdType, GenericStorePacket<PacketIdType>>,
+pub struct GenericStore<
+    PacketIdType: IsPacketId,
+    const STRING_BUFFER_SIZE: usize = 32,
+    const BINARY_BUFFER_SIZE: usize = 32,
+    const PAYLOAD_BUFFER_SIZE: usize = 32,
+> {
+    map: IndexMap<
+        PacketIdType,
+        GenericStorePacket<
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
+    >,
 }
 
 pub type Store = GenericStore<u16>;
 
-impl<PacketIdType: IsPacketId> GenericStore<PacketIdType> {
+impl<
+        PacketIdType: IsPacketId,
+        const STRING_BUFFER_SIZE: usize,
+        const BINARY_BUFFER_SIZE: usize,
+        const PAYLOAD_BUFFER_SIZE: usize,
+    > GenericStore<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>
+{
     /// Create a new empty store.
     pub fn new() -> Self {
         Self {
@@ -45,7 +64,15 @@ impl<PacketIdType: IsPacketId> GenericStore<PacketIdType> {
 
     /// Add a packet to the store.
     /// Returns true if inserted, false if a packet with same id already exists.
-    pub fn add(&mut self, packet: GenericStorePacket<PacketIdType>) -> Result<(), MqttError> {
+    pub fn add(
+        &mut self,
+        packet: GenericStorePacket<
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
+    ) -> Result<(), MqttError> {
         let id = packet.packet_id();
         if self.map.contains_key(&id) {
             return Err(MqttError::PacketIdentifierConflict);
@@ -92,7 +119,14 @@ impl<PacketIdType: IsPacketId> GenericStore<PacketIdType> {
     /// The provided function returns true to keep the packet, or false to remove it.
     pub fn for_each<F>(&mut self, mut func: F)
     where
-        F: FnMut(&GenericStorePacket<PacketIdType>) -> bool,
+        F: FnMut(
+            &GenericStorePacket<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >,
+        ) -> bool,
     {
         let mut to_remove = Vec::new();
         for (id, pkt) in &self.map {
@@ -107,7 +141,16 @@ impl<PacketIdType: IsPacketId> GenericStore<PacketIdType> {
     }
 
     /// Return a vector of all stored packets in insertion order.
-    pub fn get_stored(&self) -> Vec<GenericStorePacket<PacketIdType>> {
+    pub fn get_stored(
+        &self,
+    ) -> Vec<
+        GenericStorePacket<
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >,
+    > {
         self.map.values().cloned().collect()
     }
 }

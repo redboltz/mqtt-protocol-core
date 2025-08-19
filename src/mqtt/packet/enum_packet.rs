@@ -109,7 +109,13 @@ pub enum GenericPacket<
 // Type alias for commonly used u16 PacketIdType
 pub type Packet = GenericPacket<u16>;
 
-impl<PacketIdType> core::fmt::Debug for GenericPacket<PacketIdType>
+impl<
+        PacketIdType,
+        const STRING_BUFFER_SIZE: usize,
+        const BINARY_BUFFER_SIZE: usize,
+        const PAYLOAD_BUFFER_SIZE: usize,
+    > core::fmt::Debug
+    for GenericPacket<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId + Serialize,
 {
@@ -118,7 +124,13 @@ where
     }
 }
 
-impl<PacketIdType> core::fmt::Display for GenericPacket<PacketIdType>
+impl<
+        PacketIdType,
+        const STRING_BUFFER_SIZE: usize,
+        const BINARY_BUFFER_SIZE: usize,
+        const PAYLOAD_BUFFER_SIZE: usize,
+    > core::fmt::Display
+    for GenericPacket<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId + Serialize,
 {
@@ -127,7 +139,12 @@ where
     }
 }
 
-impl<PacketIdType> GenericPacket<PacketIdType>
+impl<
+        PacketIdType,
+        const STRING_BUFFER_SIZE: usize,
+        const BINARY_BUFFER_SIZE: usize,
+        const PAYLOAD_BUFFER_SIZE: usize,
+    > GenericPacket<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId + Serialize,
 {
