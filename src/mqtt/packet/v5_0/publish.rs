@@ -93,11 +93,43 @@ use crate::mqtt::result_code::MqttError;
 /// - Subscription Identifier - identifier matching subscription (server to client only)
 /// - Content Type - MIME type of the payload
 ///
-/// # Generic Type Parameter
+/// # Generic Type Parameters
 ///
-/// The `PacketIdType` generic parameter allows using packet identifiers larger than
-/// the standard u16, which can be useful for broker clusters to avoid packet ID
-/// exhaustion when extending the MQTT protocol.
+/// - `PacketIdType`: The type used for packet identifiers (usually u16, but can be u32 for broker clusters)
+/// - `STRING_BUFFER_SIZE`: Stack buffer size for topic names in bytes (default: 32)
+/// - `BINARY_BUFFER_SIZE`: Stack buffer size for binary properties in bytes (default: 32)
+/// - `PAYLOAD_BUFFER_SIZE`: Stack buffer size for message payloads in bytes (default: 32)
+///
+/// # Stack Buffer Optimization
+///
+/// This implementation uses Small String/Buffer Optimization (SSO) to store small data on the stack
+/// rather than the heap, improving performance for typical MQTT messages. When data exceeds the
+/// buffer size, it automatically falls back to heap allocation.
+///
+/// # Custom Buffer Sizes
+///
+/// For applications that need different performance characteristics, you can define custom
+/// type aliases with specific buffer sizes:
+///
+/// ```ignore
+/// use mqtt_protocol_core::mqtt::packet::v5_0::GenericPublish;
+///
+/// // For high-throughput applications with larger messages
+/// type LargePublish = GenericPublish<u16, 128, 128, 512>;
+///
+/// // For memory-constrained environments  
+/// type SmallPublish = GenericPublish<u16, 16, 16, 16>;
+///
+/// // For broker clusters with extended packet IDs
+/// type ClusterPublish = GenericPublish<u32, 64, 64, 256>;
+///
+/// // Usage is identical to the standard Publish type
+/// let publish = LargePublish::builder()
+///     .topic_name("sensors/temperature/detailed/location")
+///     .payload(&large_sensor_data)
+///     .build()
+///     .unwrap();
+/// ```
 ///
 /// # Examples
 ///
