@@ -236,7 +236,7 @@ macro_rules! make_type_size_aliases {
 /// # Parameters
 ///
 /// * `$string_buffer_size` - Buffer size for string data (typically 32, 64, 128, etc.)
-/// * `$binary_buffer_size` - Buffer size for binary data (typically 32, 64, 128, etc.)  
+/// * `$binary_buffer_size` - Buffer size for binary data (typically 32, 64, 128, etc.)
 /// * `$payload_buffer_size` - Buffer size for payload data (typically 32, 64, 128, etc.)
 ///
 /// # Examples

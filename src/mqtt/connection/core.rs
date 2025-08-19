@@ -423,7 +423,12 @@ where
 
         // Return error if versions don't match
         if self.protocol_version != packet_version {
-            return vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)];
+            return vec![GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(MqttError::PacketNotAllowedToSend)];
         }
 
         match packet {
@@ -432,14 +437,28 @@ where
                 if role_id == client_id || role_id == any_id {
                     self.process_send_v3_1_1_connect(p)
                 } else {
-                    vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)]
+                    vec![GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::NotifyError(
+                        MqttError::PacketNotAllowedToSend
+                    )]
                 }
             }
             GenericPacket::V5_0Connect(p) => {
                 if role_id == client_id || role_id == any_id {
                     self.process_send_v5_0_connect(p)
                 } else {
-                    vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)]
+                    vec![GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::NotifyError(
+                        MqttError::PacketNotAllowedToSend
+                    )]
                 }
             }
             // CONNACK - Server/Any can send
@@ -447,14 +466,28 @@ where
                 if role_id == server_id || role_id == any_id {
                     self.process_send_v3_1_1_connack(p)
                 } else {
-                    vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)]
+                    vec![GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::NotifyError(
+                        MqttError::PacketNotAllowedToSend
+                    )]
                 }
             }
             GenericPacket::V5_0Connack(p) => {
                 if role_id == server_id || role_id == any_id {
                     self.process_send_v5_0_connack(p)
                 } else {
-                    vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)]
+                    vec![GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::NotifyError(
+                        MqttError::PacketNotAllowedToSend
+                    )]
                 }
             }
             // PUBLISH - Any role can send
@@ -474,28 +507,56 @@ where
                 if role_id == client_id || role_id == any_id {
                     self.process_send_v3_1_1_subscribe(p)
                 } else {
-                    vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)]
+                    vec![GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::NotifyError(
+                        MqttError::PacketNotAllowedToSend
+                    )]
                 }
             }
             GenericPacket::V5_0Subscribe(p) => {
                 if role_id == client_id || role_id == any_id {
                     self.process_send_v5_0_subscribe(p)
                 } else {
-                    vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)]
+                    vec![GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::NotifyError(
+                        MqttError::PacketNotAllowedToSend
+                    )]
                 }
             }
             GenericPacket::V3_1_1Unsubscribe(p) => {
                 if role_id == client_id || role_id == any_id {
                     self.process_send_v3_1_1_unsubscribe(p)
                 } else {
-                    vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)]
+                    vec![GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::NotifyError(
+                        MqttError::PacketNotAllowedToSend
+                    )]
                 }
             }
             GenericPacket::V5_0Unsubscribe(p) => {
                 if role_id == client_id || role_id == any_id {
                     self.process_send_v5_0_unsubscribe(p)
                 } else {
-                    vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)]
+                    vec![GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::NotifyError(
+                        MqttError::PacketNotAllowedToSend
+                    )]
                 }
             }
             // SUBACK/UNSUBACK - Server/Any can send
@@ -503,28 +564,56 @@ where
                 if role_id == server_id || role_id == any_id {
                     self.process_send_v3_1_1_suback(p)
                 } else {
-                    vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)]
+                    vec![GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::NotifyError(
+                        MqttError::PacketNotAllowedToSend
+                    )]
                 }
             }
             GenericPacket::V5_0Suback(p) => {
                 if role_id == server_id || role_id == any_id {
                     self.process_send_v5_0_suback(p)
                 } else {
-                    vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)]
+                    vec![GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::NotifyError(
+                        MqttError::PacketNotAllowedToSend
+                    )]
                 }
             }
             GenericPacket::V3_1_1Unsuback(p) => {
                 if role_id == server_id || role_id == any_id {
                     self.process_send_v3_1_1_unsuback(p)
                 } else {
-                    vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)]
+                    vec![GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::NotifyError(
+                        MqttError::PacketNotAllowedToSend
+                    )]
                 }
             }
             GenericPacket::V5_0Unsuback(p) => {
                 if role_id == server_id || role_id == any_id {
                     self.process_send_v5_0_unsuback(p)
                 } else {
-                    vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)]
+                    vec![GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::NotifyError(
+                        MqttError::PacketNotAllowedToSend
+                    )]
                 }
             }
             // PINGREQ - Client/Any can send
@@ -532,14 +621,28 @@ where
                 if role_id == client_id || role_id == any_id {
                     self.process_send_v3_1_1_pingreq(p)
                 } else {
-                    vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)]
+                    vec![GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::NotifyError(
+                        MqttError::PacketNotAllowedToSend
+                    )]
                 }
             }
             GenericPacket::V5_0Pingreq(p) => {
                 if role_id == client_id || role_id == any_id {
                     self.process_send_v5_0_pingreq(p)
                 } else {
-                    vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)]
+                    vec![GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::NotifyError(
+                        MqttError::PacketNotAllowedToSend
+                    )]
                 }
             }
             // PINGRESP - Server/Any can send
@@ -547,14 +650,28 @@ where
                 if role_id == server_id || role_id == any_id {
                     self.process_send_v3_1_1_pingresp(p)
                 } else {
-                    vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)]
+                    vec![GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::NotifyError(
+                        MqttError::PacketNotAllowedToSend
+                    )]
                 }
             }
             GenericPacket::V5_0Pingresp(p) => {
                 if role_id == server_id || role_id == any_id {
                     self.process_send_v5_0_pingresp(p)
                 } else {
-                    vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)]
+                    vec![GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::NotifyError(
+                        MqttError::PacketNotAllowedToSend
+                    )]
                 }
             }
             // DISCONNECT(v3.1.1) - Client/Any role can send
@@ -562,7 +679,14 @@ where
                 if role_id == client_id || role_id == any_id {
                     self.process_send_v3_1_1_disconnect(p)
                 } else {
-                    vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)]
+                    vec![GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::NotifyError(
+                        MqttError::PacketNotAllowedToSend
+                    )]
                 }
             }
             // DISCONNECT(v5.0) - Any role can send
@@ -634,8 +758,20 @@ where
             PacketBuildResult::Incomplete => {}
             PacketBuildResult::Error(e) => {
                 self.cancel_timers(&mut events);
-                events.push(GenericEvent::RequestClose);
-                events.push(GenericEvent::NotifyError(e));
+                events.push(
+                    GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::RequestClose,
+                );
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyError(e));
             }
         }
 
@@ -696,14 +832,24 @@ where
                 match self.protocol_version {
                     Version::V3_1_1 => {
                         // V3.1.1: Close connection
-                        events.push(GenericEvent::RequestClose);
+                        events.push(
+                            GenericEvent::<
+                                PacketIdType,
+                                STRING_BUFFER_SIZE,
+                                BINARY_BUFFER_SIZE,
+                                PAYLOAD_BUFFER_SIZE,
+                            >::RequestClose,
+                        );
                     }
                     Version::V5_0 => {
                         // V5.0: Send DISCONNECT with keep_alive_timeout if connected
                         if self.status == ConnectionStatus::Connected {
-                            if let Ok(disconnect) = v5_0::Disconnect::builder()
-                                .reason_code(DisconnectReasonCode::KeepAliveTimeout)
-                                .build()
+                            if let Ok(disconnect) = v5_0::GenericDisconnect::<
+                                STRING_BUFFER_SIZE,
+                                BINARY_BUFFER_SIZE,
+                            >::builder()
+                            .reason_code(DisconnectReasonCode::KeepAliveTimeout)
+                            .build()
                             {
                                 events.extend(self.process_send_v5_0_disconnect(disconnect));
                             }
@@ -721,14 +867,24 @@ where
                 match self.protocol_version {
                     Version::V3_1_1 => {
                         // V3.1.1: Close connection
-                        events.push(GenericEvent::RequestClose);
+                        events.push(
+                            GenericEvent::<
+                                PacketIdType,
+                                STRING_BUFFER_SIZE,
+                                BINARY_BUFFER_SIZE,
+                                PAYLOAD_BUFFER_SIZE,
+                            >::RequestClose,
+                        );
                     }
                     Version::V5_0 => {
                         // V5.0: Send DISCONNECT with keep_alive_timeout if connected
                         if self.status == ConnectionStatus::Connected {
-                            if let Ok(disconnect) = v5_0::Disconnect::builder()
-                                .reason_code(DisconnectReasonCode::KeepAliveTimeout)
-                                .build()
+                            if let Ok(disconnect) = v5_0::GenericDisconnect::<
+                                STRING_BUFFER_SIZE,
+                                BINARY_BUFFER_SIZE,
+                            >::builder()
+                            .reason_code(DisconnectReasonCode::KeepAliveTimeout)
+                            .build()
                             {
                                 events.extend(self.process_send_v5_0_disconnect(disconnect));
                             }
@@ -777,7 +933,12 @@ where
         for packet_id in self.pid_suback.drain() {
             if self.pid_man.is_used_id(packet_id) {
                 self.pid_man.release_id(packet_id);
-                events.push(GenericEvent::NotifyPacketIdReleased(packet_id));
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyPacketIdReleased(packet_id));
             }
         }
 
@@ -785,7 +946,12 @@ where
         for packet_id in self.pid_unsuback.drain() {
             if self.pid_man.is_used_id(packet_id) {
                 self.pid_man.release_id(packet_id);
-                events.push(GenericEvent::NotifyPacketIdReleased(packet_id));
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyPacketIdReleased(packet_id));
             }
         }
 
@@ -798,7 +964,12 @@ where
             for packet_id in self.pid_puback.drain() {
                 if self.pid_man.is_used_id(packet_id) {
                     self.pid_man.release_id(packet_id);
-                    events.push(GenericEvent::NotifyPacketIdReleased(packet_id));
+                    events.push(GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::NotifyPacketIdReleased(packet_id));
                 }
             }
 
@@ -806,7 +977,12 @@ where
             for packet_id in self.pid_pubrec.drain() {
                 if self.pid_man.is_used_id(packet_id) {
                     self.pid_man.release_id(packet_id);
-                    events.push(GenericEvent::NotifyPacketIdReleased(packet_id));
+                    events.push(GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::NotifyPacketIdReleased(packet_id));
                 }
             }
 
@@ -814,7 +990,12 @@ where
             for packet_id in self.pid_pubcomp.drain() {
                 if self.pid_man.is_used_id(packet_id) {
                     self.pid_man.release_id(packet_id);
-                    events.push(GenericEvent::NotifyPacketIdReleased(packet_id));
+                    events.push(GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::NotifyPacketIdReleased(packet_id));
                 }
             }
         }
@@ -847,11 +1028,21 @@ where
         if duration_ms == 0 {
             self.pingreq_send_interval_ms = None;
             self.pingreq_send_set = false;
-            events.push(GenericEvent::RequestTimerCancel(TimerKind::PingreqSend));
+            events.push(GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::RequestTimerCancel(TimerKind::PingreqSend));
         } else {
             self.pingreq_send_interval_ms = Some(duration_ms);
             self.pingreq_send_set = true;
-            events.push(GenericEvent::RequestTimerReset {
+            events.push(GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::RequestTimerReset {
                 kind: TimerKind::PingreqSend,
                 duration_ms,
             });
@@ -992,7 +1183,12 @@ where
 
         if self.pid_man.is_used_id(packet_id) {
             self.pid_man.release_id(packet_id);
-            events.push(GenericEvent::NotifyPacketIdReleased(packet_id));
+            events.push(GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyPacketIdReleased(packet_id));
         }
 
         events
@@ -1260,10 +1456,20 @@ where
             if packet.size() > self.maximum_packet_size_send as usize {
                 let packet_id = packet.packet_id();
                 self.pid_man.release_id(packet_id);
-                events.push(GenericEvent::NotifyPacketIdReleased(packet_id));
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyPacketIdReleased(packet_id));
                 return false; // Remove from store
             }
-            events.push(GenericEvent::RequestSendPacket {
+            events.push(GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::RequestSendPacket {
                 packet: packet.clone().into(),
                 release_packet_id_if_send_error: None,
             });
@@ -1335,10 +1541,20 @@ where
         info!("send connect v3.1.1: {packet}");
 
         if self.status != ConnectionStatus::Disconnected {
-            return vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)];
+            return vec![GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(MqttError::PacketNotAllowedToSend)];
         }
         if !self.validate_maximum_packet_size_send(packet.size()) {
-            return vec![GenericEvent::NotifyError(MqttError::PacketTooLarge)];
+            return vec![GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(MqttError::PacketTooLarge)];
         }
 
         let mut events = Vec::new();
@@ -1361,7 +1577,12 @@ where
         // Clear topic alias for sending
         self.topic_alias_send = None;
 
-        events.push(GenericEvent::RequestSendPacket {
+        events.push(GenericEvent::<
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >::RequestSendPacket {
             packet: packet.into(),
             release_packet_id_if_send_error: None,
         });
@@ -1373,15 +1594,25 @@ where
     /// Process v5.0 CONNECT packet - C++ constexpr if implementation
     pub(crate) fn process_send_v5_0_connect(
         &mut self,
-        packet: v5_0::Connect,
+        packet: v5_0::GenericConnect<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>,
     ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
     {
         info!("send connect v5.0: {packet}");
         if !self.validate_maximum_packet_size_send(packet.size()) {
-            return vec![GenericEvent::NotifyError(MqttError::PacketTooLarge)];
+            return vec![GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(MqttError::PacketTooLarge)];
         }
         if self.status != ConnectionStatus::Disconnected {
-            return vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)];
+            return vec![GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(MqttError::PacketNotAllowedToSend)];
         }
 
         let mut events = Vec::new();
@@ -1426,7 +1657,12 @@ where
             }
         }
 
-        events.push(GenericEvent::RequestSendPacket {
+        events.push(GenericEvent::<
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >::RequestSendPacket {
             packet: packet.into(),
             release_packet_id_if_send_error: None,
         });
@@ -1442,7 +1678,12 @@ where
     {
         info!("send connack v3.1.1: {packet}");
         if self.status != ConnectionStatus::Connecting {
-            return vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)];
+            return vec![GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(MqttError::PacketNotAllowedToSend)];
         }
         let mut events = Vec::new();
         if packet.return_code() == ConnectReturnCode::Accepted {
@@ -1451,7 +1692,12 @@ where
             self.status = ConnectionStatus::Disconnected;
         }
 
-        events.push(GenericEvent::RequestSendPacket {
+        events.push(GenericEvent::<
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >::RequestSendPacket {
             packet: packet.into(),
             release_packet_id_if_send_error: None,
         });
@@ -1463,15 +1709,25 @@ where
 
     pub(crate) fn process_send_v5_0_connack(
         &mut self,
-        packet: v5_0::Connack,
+        packet: v5_0::GenericConnack<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>,
     ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
     {
         info!("send connack v5.0: {packet}");
         if !self.validate_maximum_packet_size_send(packet.size()) {
-            return vec![GenericEvent::NotifyError(MqttError::PacketTooLarge)];
+            return vec![GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(MqttError::PacketTooLarge)];
         }
         if self.status != ConnectionStatus::Connecting {
-            return vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)];
+            return vec![GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(MqttError::PacketNotAllowedToSend)];
         }
 
         let mut events = Vec::new();
@@ -1505,7 +1761,12 @@ where
             self.cancel_timers(&mut events);
         }
 
-        events.push(GenericEvent::RequestSendPacket {
+        events.push(GenericEvent::<
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >::RequestSendPacket {
             packet: packet.into(),
             release_packet_id_if_send_error: None,
         });
@@ -1530,17 +1791,34 @@ where
                 && !self.need_store
                 && !self.offline_publish
             {
-                events.push(GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend));
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyError(
+                    MqttError::PacketNotAllowedToSend
+                ));
                 if self.pid_man.is_used_id(packet_id) {
                     self.pid_man.release_id(packet_id);
-                    events.push(GenericEvent::NotifyPacketIdReleased(packet_id));
+                    events.push(GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::NotifyPacketIdReleased(packet_id));
                 }
                 return events;
             }
             if !self.pid_man.is_used_id(packet_id) {
                 error!("packet_id {packet_id} must be acquired or registered");
-                events.push(GenericEvent::NotifyError(
-                    MqttError::PacketIdentifierInvalid,
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyError(
+                    MqttError::PacketIdentifierInvalid
                 ));
                 return events;
             }
@@ -1559,12 +1837,22 @@ where
                 self.pid_puback.insert(packet_id);
             }
         } else if self.status != ConnectionStatus::Connected {
-            events.push(GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend));
+            events.push(GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(MqttError::PacketNotAllowedToSend));
             return events;
         }
 
         if self.status == ConnectionStatus::Connected {
-            events.push(GenericEvent::RequestSendPacket {
+            events.push(GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::RequestSendPacket {
                 packet: packet.into(),
                 release_packet_id_if_send_error,
             });
@@ -1585,7 +1873,12 @@ where
     ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
     {
         if !self.validate_maximum_packet_size_send(packet.size()) {
-            return vec![GenericEvent::NotifyError(MqttError::PacketTooLarge)];
+            return vec![GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(MqttError::PacketTooLarge)];
         }
 
         let mut events = Vec::new();
@@ -1597,10 +1890,22 @@ where
                 && !self.need_store
                 && !self.offline_publish
             {
-                events.push(GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend));
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyError(
+                    MqttError::PacketNotAllowedToSend
+                ));
                 if self.pid_man.is_used_id(packet_id) {
                     self.pid_man.release_id(packet_id);
-                    events.push(GenericEvent::NotifyPacketIdReleased(packet_id));
+                    events.push(GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::NotifyPacketIdReleased(packet_id));
                 }
                 return events;
             }
@@ -1608,8 +1913,13 @@ where
             // Extract topic_name from TopicAlias and remove TopicAlias property, then store it
             if !self.pid_man.is_used_id(packet_id) {
                 error!("packet_id {packet_id} must be acquired or registered");
-                events.push(GenericEvent::NotifyError(
-                    MqttError::PacketIdentifierInvalid,
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyError(
+                    MqttError::PacketIdentifierInvalid
                 ));
                 return events;
             }
@@ -1622,10 +1932,24 @@ where
                     // Topic name is empty, must validate topic alias
                     let topic_opt = self.validate_topic_alias(ta_opt);
                     if topic_opt.is_none() {
-                        events.push(GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend));
+                        events.push(GenericEvent::<
+                            PacketIdType,
+                            STRING_BUFFER_SIZE,
+                            BINARY_BUFFER_SIZE,
+                            PAYLOAD_BUFFER_SIZE,
+                        >::NotifyError(
+                            MqttError::PacketNotAllowedToSend
+                        ));
                         if self.pid_man.is_used_id(packet_id) {
                             self.pid_man.release_id(packet_id);
-                            events.push(GenericEvent::NotifyPacketIdReleased(packet_id));
+                            events.push(GenericEvent::<
+                                PacketIdType,
+                                STRING_BUFFER_SIZE,
+                                BINARY_BUFFER_SIZE,
+                                PAYLOAD_BUFFER_SIZE,
+                            >::NotifyPacketIdReleased(
+                                packet_id
+                            ));
                         }
                         return events;
                     }
@@ -1652,7 +1976,12 @@ where
                 self.pid_puback.insert(packet_id);
             }
         } else if self.status != ConnectionStatus::Connected {
-            events.push(GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend));
+            events.push(GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(MqttError::PacketNotAllowedToSend));
             return events;
         }
 
@@ -1661,11 +1990,23 @@ where
         if packet.topic_name().is_empty() {
             // process manually provided TopicAlias
             if !topic_alias_validated && self.validate_topic_alias(ta_opt).is_none() {
-                events.push(GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend));
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyError(
+                    MqttError::PacketNotAllowedToSend
+                ));
                 if let Some(packet_id) = packet_id_opt {
                     if self.pid_man.is_used_id(packet_id) {
                         self.pid_man.release_id(packet_id);
-                        events.push(GenericEvent::NotifyPacketIdReleased(packet_id));
+                        events.push(GenericEvent::<
+                            PacketIdType,
+                            STRING_BUFFER_SIZE,
+                            BINARY_BUFFER_SIZE,
+                            PAYLOAD_BUFFER_SIZE,
+                        >::NotifyPacketIdReleased(packet_id));
                     }
                 }
                 return events;
@@ -1682,11 +2023,23 @@ where
                     topic_alias_send.insert_or_update(packet.topic_name(), ta);
                 }
             } else {
-                events.push(GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend));
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyError(
+                    MqttError::PacketNotAllowedToSend
+                ));
                 if let Some(packet_id) = packet_id_opt {
                     if self.pid_man.is_used_id(packet_id) {
                         self.pid_man.release_id(packet_id);
-                        events.push(GenericEvent::NotifyPacketIdReleased(packet_id));
+                        events.push(GenericEvent::<
+                            PacketIdType,
+                            STRING_BUFFER_SIZE,
+                            BINARY_BUFFER_SIZE,
+                            PAYLOAD_BUFFER_SIZE,
+                        >::NotifyPacketIdReleased(packet_id));
                     }
                 }
                 return events;
@@ -1726,11 +2079,25 @@ where
         if packet.qos() == Qos::AtLeastOnce || packet.qos() == Qos::ExactlyOnce {
             if let Some(max) = self.publish_send_max {
                 if self.publish_send_count == max {
-                    events.push(GenericEvent::NotifyError(MqttError::ReceiveMaximumExceeded));
+                    events.push(GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::NotifyError(
+                        MqttError::ReceiveMaximumExceeded
+                    ));
                     if let Some(packet_id) = packet_id_opt {
                         if self.pid_man.is_used_id(packet_id) {
                             self.pid_man.release_id(packet_id);
-                            events.push(GenericEvent::NotifyPacketIdReleased(packet_id));
+                            events.push(GenericEvent::<
+                                PacketIdType,
+                                STRING_BUFFER_SIZE,
+                                BINARY_BUFFER_SIZE,
+                                PAYLOAD_BUFFER_SIZE,
+                            >::NotifyPacketIdReleased(
+                                packet_id
+                            ));
                         }
                     }
                     return events;
@@ -1740,7 +2107,12 @@ where
         }
 
         if self.status == ConnectionStatus::Connected {
-            events.push(GenericEvent::RequestSendPacket {
+            events.push(GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::RequestSendPacket {
                 packet: packet.into(),
                 release_packet_id_if_send_error,
             });
@@ -1756,11 +2128,21 @@ where
     ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
     {
         if self.status != ConnectionStatus::Connected {
-            return vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)];
+            return vec![GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(MqttError::PacketNotAllowedToSend)];
         }
         let mut events = Vec::new();
 
-        events.push(GenericEvent::RequestSendPacket {
+        events.push(GenericEvent::<
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >::RequestSendPacket {
             packet: packet.into(),
             release_packet_id_if_send_error: None,
         });
@@ -1771,20 +2153,35 @@ where
 
     pub(crate) fn process_send_v5_0_puback(
         &mut self,
-        packet: v5_0::GenericPuback<PacketIdType>,
+        packet: v5_0::GenericPuback<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>,
     ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
     {
         if !self.validate_maximum_packet_size_send(packet.size()) {
-            return vec![GenericEvent::NotifyError(MqttError::PacketTooLarge)];
+            return vec![GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(MqttError::PacketTooLarge)];
         }
         if self.status != ConnectionStatus::Connected {
-            return vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)];
+            return vec![GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(MqttError::PacketNotAllowedToSend)];
         }
 
         let mut events = Vec::new();
         self.publish_recv.remove(&packet.packet_id());
 
-        events.push(GenericEvent::RequestSendPacket {
+        events.push(GenericEvent::<
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >::RequestSendPacket {
             packet: packet.into(),
             release_packet_id_if_send_error: None,
         });
@@ -1799,11 +2196,21 @@ where
     ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
     {
         if self.status != ConnectionStatus::Connected {
-            return vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)];
+            return vec![GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(MqttError::PacketNotAllowedToSend)];
         }
         let mut events = Vec::new();
 
-        events.push(GenericEvent::RequestSendPacket {
+        events.push(GenericEvent::<
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >::RequestSendPacket {
             packet: packet.into(),
             release_packet_id_if_send_error: None,
         });
@@ -1814,14 +2221,24 @@ where
 
     pub(crate) fn process_send_v5_0_pubrec(
         &mut self,
-        packet: v5_0::GenericPubrec<PacketIdType>,
+        packet: v5_0::GenericPubrec<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>,
     ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
     {
         if !self.validate_maximum_packet_size_send(packet.size()) {
-            return vec![GenericEvent::NotifyError(MqttError::PacketTooLarge)];
+            return vec![GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(MqttError::PacketTooLarge)];
         }
         if self.status != ConnectionStatus::Connected {
-            return vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)];
+            return vec![GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(MqttError::PacketNotAllowedToSend)];
         }
 
         let mut events = Vec::new();
@@ -1834,7 +2251,12 @@ where
             }
         }
 
-        events.push(GenericEvent::RequestSendPacket {
+        events.push(GenericEvent::<
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >::RequestSendPacket {
             packet: packet.into(),
             release_packet_id_if_send_error: None,
         });
@@ -1849,14 +2271,24 @@ where
     ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
     {
         if self.status != ConnectionStatus::Connected && !self.need_store {
-            return vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)];
+            return vec![GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(MqttError::PacketNotAllowedToSend)];
         }
         let mut events = Vec::new();
         let packet_id = packet.packet_id();
         if !self.pid_man.is_used_id(packet_id) {
             error!("packet_id {packet_id} must be acquired or registered");
-            events.push(GenericEvent::NotifyError(
-                MqttError::PacketIdentifierInvalid,
+            events.push(GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(
+                MqttError::PacketIdentifierInvalid
             ));
             return events;
         }
@@ -1866,7 +2298,12 @@ where
 
         if self.status == ConnectionStatus::Connected {
             self.pid_pubcomp.insert(packet_id);
-            events.push(GenericEvent::RequestSendPacket {
+            events.push(GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::RequestSendPacket {
                 packet: packet.into(),
                 release_packet_id_if_send_error: None,
             });
@@ -1878,22 +2315,37 @@ where
 
     pub(crate) fn process_send_v5_0_pubrel(
         &mut self,
-        packet: v5_0::GenericPubrel<PacketIdType>,
+        packet: v5_0::GenericPubrel<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>,
     ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
     {
         if !self.validate_maximum_packet_size_send(packet.size()) {
-            return vec![GenericEvent::NotifyError(MqttError::PacketTooLarge)];
+            return vec![GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(MqttError::PacketTooLarge)];
         }
         if self.status != ConnectionStatus::Connected && !self.need_store {
-            return vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)];
+            return vec![GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(MqttError::PacketNotAllowedToSend)];
         }
 
         let mut events = Vec::new();
         let packet_id = packet.packet_id();
         if !self.pid_man.is_used_id(packet_id) {
             error!("packet_id {packet_id} must be acquired or registered");
-            events.push(GenericEvent::NotifyError(
-                MqttError::PacketIdentifierInvalid,
+            events.push(GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(
+                MqttError::PacketIdentifierInvalid
             ));
             return events;
         }
@@ -1903,7 +2355,12 @@ where
 
         if self.status == ConnectionStatus::Connected {
             self.pid_pubcomp.insert(packet_id);
-            events.push(GenericEvent::RequestSendPacket {
+            events.push(GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::RequestSendPacket {
                 packet: packet.into(),
                 release_packet_id_if_send_error: None,
             });
@@ -1919,11 +2376,21 @@ where
     ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
     {
         if self.status != ConnectionStatus::Connected {
-            return vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)];
+            return vec![GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(MqttError::PacketNotAllowedToSend)];
         }
         let mut events = Vec::new();
 
-        events.push(GenericEvent::RequestSendPacket {
+        events.push(GenericEvent::<
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >::RequestSendPacket {
             packet: packet.into(),
             release_packet_id_if_send_error: None,
         });
@@ -1934,20 +2401,35 @@ where
 
     pub(crate) fn process_send_v5_0_pubcomp(
         &mut self,
-        packet: v5_0::GenericPubcomp<PacketIdType>,
+        packet: v5_0::GenericPubcomp<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>,
     ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
     {
         if !self.validate_maximum_packet_size_send(packet.size()) {
-            return vec![GenericEvent::NotifyError(MqttError::PacketTooLarge)];
+            return vec![GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(MqttError::PacketTooLarge)];
         }
         if self.status != ConnectionStatus::Connected {
-            return vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)];
+            return vec![GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(MqttError::PacketNotAllowedToSend)];
         }
 
         let mut events = Vec::new();
         self.publish_recv.remove(&packet.packet_id());
 
-        events.push(GenericEvent::RequestSendPacket {
+        events.push(GenericEvent::<
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >::RequestSendPacket {
             packet: packet.into(),
             release_packet_id_if_send_error: None,
         });
@@ -1964,23 +2446,43 @@ where
         let mut events = Vec::new();
         let packet_id = packet.packet_id();
         if self.status != ConnectionStatus::Connected {
-            events.push(GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend));
+            events.push(GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(MqttError::PacketNotAllowedToSend));
             if self.pid_man.is_used_id(packet_id) {
                 self.pid_man.release_id(packet_id);
-                events.push(GenericEvent::NotifyPacketIdReleased(packet_id));
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyPacketIdReleased(packet_id));
             }
             return events;
         }
         if !self.pid_man.is_used_id(packet_id) {
             error!("packet_id {packet_id} must be acquired or registered");
-            events.push(GenericEvent::NotifyError(
-                MqttError::PacketIdentifierInvalid,
+            events.push(GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(
+                MqttError::PacketIdentifierInvalid
             ));
             return events;
         }
         self.pid_suback.insert(packet_id);
 
-        events.push(GenericEvent::RequestSendPacket {
+        events.push(GenericEvent::<
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >::RequestSendPacket {
             packet: packet.into(),
             release_packet_id_if_send_error: Some(packet_id),
         });
@@ -1991,33 +2493,58 @@ where
 
     pub(crate) fn process_send_v5_0_subscribe(
         &mut self,
-        packet: v5_0::GenericSubscribe<PacketIdType>,
+        packet: v5_0::GenericSubscribe<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>,
     ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
     {
         if !self.validate_maximum_packet_size_send(packet.size()) {
-            return vec![GenericEvent::NotifyError(MqttError::PacketTooLarge)];
+            return vec![GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(MqttError::PacketTooLarge)];
         }
 
         let mut events = Vec::new();
         let packet_id = packet.packet_id();
         if self.status != ConnectionStatus::Connected {
-            events.push(GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend));
+            events.push(GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(MqttError::PacketNotAllowedToSend));
             if self.pid_man.is_used_id(packet_id) {
                 self.pid_man.release_id(packet_id);
-                events.push(GenericEvent::NotifyPacketIdReleased(packet_id));
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyPacketIdReleased(packet_id));
             }
             return events;
         }
         if !self.pid_man.is_used_id(packet_id) {
             error!("packet_id {packet_id} must be acquired or registered");
-            events.push(GenericEvent::NotifyError(
-                MqttError::PacketIdentifierInvalid,
+            events.push(GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(
+                MqttError::PacketIdentifierInvalid
             ));
             return events;
         }
         self.pid_suback.insert(packet_id);
 
-        events.push(GenericEvent::RequestSendPacket {
+        events.push(GenericEvent::<
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >::RequestSendPacket {
             packet: packet.into(),
             release_packet_id_if_send_error: Some(packet_id),
         });
@@ -2032,10 +2559,20 @@ where
     ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
     {
         if self.status != ConnectionStatus::Connected {
-            return vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)];
+            return vec![GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(MqttError::PacketNotAllowedToSend)];
         }
         let mut events = Vec::new();
-        events.push(GenericEvent::RequestSendPacket {
+        events.push(GenericEvent::<
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >::RequestSendPacket {
             packet: packet.into(),
             release_packet_id_if_send_error: None,
         });
@@ -2046,18 +2583,33 @@ where
 
     pub(crate) fn process_send_v5_0_suback(
         &mut self,
-        packet: v5_0::GenericSuback<PacketIdType>,
+        packet: v5_0::GenericSuback<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>,
     ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
     {
         if !self.validate_maximum_packet_size_send(packet.size()) {
-            return vec![GenericEvent::NotifyError(MqttError::PacketTooLarge)];
+            return vec![GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(MqttError::PacketTooLarge)];
         }
         if self.status != ConnectionStatus::Connected {
-            return vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)];
+            return vec![GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(MqttError::PacketNotAllowedToSend)];
         }
 
         let mut events = Vec::new();
-        events.push(GenericEvent::RequestSendPacket {
+        events.push(GenericEvent::<
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >::RequestSendPacket {
             packet: packet.into(),
             release_packet_id_if_send_error: None,
         });
@@ -2074,23 +2626,43 @@ where
         let mut events = Vec::new();
         let packet_id = packet.packet_id();
         if self.status != ConnectionStatus::Connected {
-            events.push(GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend));
+            events.push(GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(MqttError::PacketNotAllowedToSend));
             if self.pid_man.is_used_id(packet_id) {
                 self.pid_man.release_id(packet_id);
-                events.push(GenericEvent::NotifyPacketIdReleased(packet_id));
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyPacketIdReleased(packet_id));
             }
             return events;
         }
         if !self.pid_man.is_used_id(packet_id) {
             error!("packet_id {packet_id} must be acquired or registered");
-            events.push(GenericEvent::NotifyError(
-                MqttError::PacketIdentifierInvalid,
+            events.push(GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(
+                MqttError::PacketIdentifierInvalid
             ));
             return events;
         }
         self.pid_unsuback.insert(packet_id);
 
-        events.push(GenericEvent::RequestSendPacket {
+        events.push(GenericEvent::<
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >::RequestSendPacket {
             packet: packet.into(),
             release_packet_id_if_send_error: Some(packet_id),
         });
@@ -2101,33 +2673,58 @@ where
 
     pub(crate) fn process_send_v5_0_unsubscribe(
         &mut self,
-        packet: v5_0::GenericUnsubscribe<PacketIdType>,
+        packet: v5_0::GenericUnsubscribe<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>,
     ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
     {
         if !self.validate_maximum_packet_size_send(packet.size()) {
-            return vec![GenericEvent::NotifyError(MqttError::PacketTooLarge)];
+            return vec![GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(MqttError::PacketTooLarge)];
         }
 
         let mut events = Vec::new();
         let packet_id = packet.packet_id();
         if self.status != ConnectionStatus::Connected {
-            events.push(GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend));
+            events.push(GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(MqttError::PacketNotAllowedToSend));
             if self.pid_man.is_used_id(packet_id) {
                 self.pid_man.release_id(packet_id);
-                events.push(GenericEvent::NotifyPacketIdReleased(packet_id));
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyPacketIdReleased(packet_id));
             }
             return events;
         }
         if !self.pid_man.is_used_id(packet_id) {
             error!("packet_id {packet_id} must be acquired or registered");
-            events.push(GenericEvent::NotifyError(
-                MqttError::PacketIdentifierInvalid,
+            events.push(GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(
+                MqttError::PacketIdentifierInvalid
             ));
             return events;
         }
         self.pid_unsuback.insert(packet_id);
 
-        events.push(GenericEvent::RequestSendPacket {
+        events.push(GenericEvent::<
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >::RequestSendPacket {
             packet: packet.into(),
             release_packet_id_if_send_error: Some(packet_id),
         });
@@ -2142,10 +2739,20 @@ where
     ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
     {
         if self.status != ConnectionStatus::Connected {
-            return vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)];
+            return vec![GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(MqttError::PacketNotAllowedToSend)];
         }
         let mut events = Vec::new();
-        events.push(GenericEvent::RequestSendPacket {
+        events.push(GenericEvent::<
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >::RequestSendPacket {
             packet: packet.into(),
             release_packet_id_if_send_error: None,
         });
@@ -2156,18 +2763,33 @@ where
 
     pub(crate) fn process_send_v5_0_unsuback(
         &mut self,
-        packet: v5_0::GenericUnsuback<PacketIdType>,
+        packet: v5_0::GenericUnsuback<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>,
     ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
     {
         if !self.validate_maximum_packet_size_send(packet.size()) {
-            return vec![GenericEvent::NotifyError(MqttError::PacketTooLarge)];
+            return vec![GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(MqttError::PacketTooLarge)];
         }
         if self.status != ConnectionStatus::Connected {
-            return vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)];
+            return vec![GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(MqttError::PacketNotAllowedToSend)];
         }
 
         let mut events = Vec::new();
-        events.push(GenericEvent::RequestSendPacket {
+        events.push(GenericEvent::<
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >::RequestSendPacket {
             packet: packet.into(),
             release_packet_id_if_send_error: None,
         });
@@ -2182,16 +2804,31 @@ where
     ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
     {
         if self.status != ConnectionStatus::Connected {
-            return vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)];
+            return vec![GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(MqttError::PacketNotAllowedToSend)];
         }
         let mut events = Vec::new();
-        events.push(GenericEvent::RequestSendPacket {
+        events.push(GenericEvent::<
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >::RequestSendPacket {
             packet: packet.into(),
             release_packet_id_if_send_error: None,
         });
         if let Some(timeout_ms) = self.pingresp_recv_timeout_ms {
             self.pingreq_send_set = true;
-            events.push(GenericEvent::RequestTimerReset {
+            events.push(GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::RequestTimerReset {
                 kind: TimerKind::PingrespRecv,
                 duration_ms: timeout_ms,
             });
@@ -2207,20 +2844,40 @@ where
     ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
     {
         if !self.validate_maximum_packet_size_send(packet.size()) {
-            return vec![GenericEvent::NotifyError(MqttError::PacketTooLarge)];
+            return vec![GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(MqttError::PacketTooLarge)];
         }
         if self.status != ConnectionStatus::Connected {
-            return vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)];
+            return vec![GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(MqttError::PacketNotAllowedToSend)];
         }
 
         let mut events = Vec::new();
-        events.push(GenericEvent::RequestSendPacket {
+        events.push(GenericEvent::<
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >::RequestSendPacket {
             packet: packet.into(),
             release_packet_id_if_send_error: None,
         });
         if let Some(timeout_ms) = self.pingresp_recv_timeout_ms {
             self.pingreq_send_set = true;
-            events.push(GenericEvent::RequestTimerReset {
+            events.push(GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::RequestTimerReset {
                 kind: TimerKind::PingrespRecv,
                 duration_ms: timeout_ms,
             });
@@ -2236,10 +2893,20 @@ where
     ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
     {
         if self.status != ConnectionStatus::Connected {
-            return vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)];
+            return vec![GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(MqttError::PacketNotAllowedToSend)];
         }
         let mut events = Vec::new();
-        events.push(GenericEvent::RequestSendPacket {
+        events.push(GenericEvent::<
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >::RequestSendPacket {
             packet: packet.into(),
             release_packet_id_if_send_error: None,
         });
@@ -2254,14 +2921,29 @@ where
     ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
     {
         if !self.validate_maximum_packet_size_send(packet.size()) {
-            return vec![GenericEvent::NotifyError(MqttError::PacketTooLarge)];
+            return vec![GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(MqttError::PacketTooLarge)];
         }
         if self.status != ConnectionStatus::Connected {
-            return vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)];
+            return vec![GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(MqttError::PacketNotAllowedToSend)];
         }
 
         let mut events = Vec::new();
-        events.push(GenericEvent::RequestSendPacket {
+        events.push(GenericEvent::<
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >::RequestSendPacket {
             packet: packet.into(),
             release_packet_id_if_send_error: None,
         });
@@ -2276,58 +2958,98 @@ where
     ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
     {
         if self.status != ConnectionStatus::Connected {
-            return vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)];
+            return vec![GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(MqttError::PacketNotAllowedToSend)];
         }
         let mut events = Vec::new();
         self.status = ConnectionStatus::Disconnected;
         self.cancel_timers(&mut events);
-        events.push(GenericEvent::RequestSendPacket {
+        events.push(GenericEvent::<
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >::RequestSendPacket {
             packet: packet.into(),
             release_packet_id_if_send_error: None,
         });
-        events.push(GenericEvent::RequestClose);
+        events.push(GenericEvent::<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>::RequestClose);
 
         events
     }
 
     pub(crate) fn process_send_v5_0_disconnect(
         &mut self,
-        packet: v5_0::Disconnect,
+        packet: v5_0::GenericDisconnect<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>,
     ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
     {
         if !self.validate_maximum_packet_size_send(packet.size()) {
-            return vec![GenericEvent::NotifyError(MqttError::PacketTooLarge)];
+            return vec![GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(MqttError::PacketTooLarge)];
         }
         if self.status != ConnectionStatus::Connected {
-            return vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)];
+            return vec![GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(MqttError::PacketNotAllowedToSend)];
         }
 
         let mut events = Vec::new();
         self.status = ConnectionStatus::Disconnected;
         self.cancel_timers(&mut events);
-        events.push(GenericEvent::RequestSendPacket {
+        events.push(GenericEvent::<
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >::RequestSendPacket {
             packet: packet.into(),
             release_packet_id_if_send_error: None,
         });
-        events.push(GenericEvent::RequestClose);
+        events.push(GenericEvent::<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>::RequestClose);
 
         events
     }
 
     pub(crate) fn process_send_v5_0_auth(
         &mut self,
-        packet: v5_0::Auth,
+        packet: v5_0::GenericAuth<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>,
     ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
     {
         if !self.validate_maximum_packet_size_send(packet.size()) {
-            return vec![GenericEvent::NotifyError(MqttError::PacketTooLarge)];
+            return vec![GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(MqttError::PacketTooLarge)];
         }
         if self.status == ConnectionStatus::Disconnected {
-            return vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)];
+            return vec![GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(MqttError::PacketNotAllowedToSend)];
         }
 
         let mut events = Vec::new();
-        events.push(GenericEvent::RequestSendPacket {
+        events.push(GenericEvent::<
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >::RequestSendPacket {
             packet: packet.into(),
             release_packet_id_if_send_error: None,
         });
@@ -2345,7 +3067,12 @@ where
         if self.is_client {
             if let Some(timeout_ms) = self.pingreq_send_interval_ms {
                 self.pingreq_send_set = true;
-                events.push(GenericEvent::RequestTimerReset {
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::RequestTimerReset {
                     kind: TimerKind::PingreqSend,
                     duration_ms: timeout_ms,
                 });
@@ -2376,13 +3103,19 @@ where
             // If the packet size is over 268434555, feed() return an error.
             // maximum_packet_size_recv is set by sending CONNECT or CONNACK packet.
             // So DISCONNECT packet is the right choice to notify the error.
-            let disconnect_packet = v5_0::Disconnect::builder()
-                .reason_code(DisconnectReasonCode::PacketTooLarge)
-                .build()
-                .unwrap();
+            let disconnect_packet =
+                v5_0::GenericDisconnect::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::builder()
+                    .reason_code(DisconnectReasonCode::PacketTooLarge)
+                    .build()
+                    .unwrap();
             // Send disconnect packet directly without generic constraints
             events.extend(self.process_send_v5_0_disconnect(disconnect_packet));
-            events.push(GenericEvent::NotifyError(MqttError::PacketTooLarge));
+            events.push(GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::NotifyError(MqttError::PacketTooLarge));
             return events;
         }
 
@@ -2449,7 +3182,14 @@ where
                     }
                     // invalid packet type
                     _ => {
-                        events.push(GenericEvent::NotifyError(MqttError::MalformedPacket));
+                        events.push(GenericEvent::<
+                            PacketIdType,
+                            STRING_BUFFER_SIZE,
+                            BINARY_BUFFER_SIZE,
+                            PAYLOAD_BUFFER_SIZE,
+                        >::NotifyError(
+                            MqttError::MalformedPacket
+                        ));
                     }
                 }
             }
@@ -2517,7 +3257,14 @@ where
                     }
                     // invalid packet type
                     _ => {
-                        events.push(GenericEvent::NotifyError(MqttError::MalformedPacket));
+                        events.push(GenericEvent::<
+                            PacketIdType,
+                            STRING_BUFFER_SIZE,
+                            BINARY_BUFFER_SIZE,
+                            PAYLOAD_BUFFER_SIZE,
+                        >::NotifyError(
+                            MqttError::MalformedPacket
+                        ));
                     }
                 }
             }
@@ -2526,7 +3273,14 @@ where
                     1 => {
                         // CONNECT
                         if raw_packet.remaining_length() < 7 {
-                            events.push(GenericEvent::NotifyError(MqttError::MalformedPacket));
+                            events.push(GenericEvent::<
+                                PacketIdType,
+                                STRING_BUFFER_SIZE,
+                                BINARY_BUFFER_SIZE,
+                                PAYLOAD_BUFFER_SIZE,
+                            >::NotifyError(
+                                MqttError::MalformedPacket
+                            ));
                             return events;
                         }
                         match raw_packet.data_as_slice()[6] {
@@ -2540,14 +3294,26 @@ where
                                 events.extend(self.process_recv_v5_0_connect(raw_packet));
                             }
                             _ => {
-                                events.push(GenericEvent::NotifyError(
-                                    MqttError::UnsupportedProtocolVersion,
+                                events.push(GenericEvent::<
+                                    PacketIdType,
+                                    STRING_BUFFER_SIZE,
+                                    BINARY_BUFFER_SIZE,
+                                    PAYLOAD_BUFFER_SIZE,
+                                >::NotifyError(
+                                    MqttError::UnsupportedProtocolVersion
                                 ));
                             }
                         }
                     }
                     _ => {
-                        events.push(GenericEvent::NotifyError(MqttError::MalformedPacket));
+                        events.push(GenericEvent::<
+                            PacketIdType,
+                            STRING_BUFFER_SIZE,
+                            BINARY_BUFFER_SIZE,
+                            PAYLOAD_BUFFER_SIZE,
+                        >::NotifyError(
+                            MqttError::MalformedPacket
+                        ));
                     }
                 }
             }
@@ -2567,7 +3333,12 @@ where
         ) {
             Ok((packet, _)) => {
                 if self.status != ConnectionStatus::Disconnected {
-                    events.push(GenericEvent::NotifyError(MqttError::ProtocolError));
+                    events.push(GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::NotifyError(MqttError::ProtocolError));
                     return events;
                 }
                 self.initialize(false);
@@ -2582,7 +3353,12 @@ where
                     self.need_store = true;
                 }
                 events.extend(self.refresh_pingreq_recv());
-                events.push(GenericEvent::NotifyPacketReceived(packet.into()));
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyPacketReceived(packet.into()));
             }
             Err(e) => {
                 if self.status == ConnectionStatus::Disconnected {
@@ -2603,9 +3379,21 @@ where
                     let connack_events = self.process_send_v3_1_1_connack(connack);
                     events.extend(connack_events);
                 } else {
-                    events.push(GenericEvent::RequestClose);
+                    events.push(
+                        GenericEvent::<
+                            PacketIdType,
+                            STRING_BUFFER_SIZE,
+                            BINARY_BUFFER_SIZE,
+                            PAYLOAD_BUFFER_SIZE,
+                        >::RequestClose,
+                    );
                 }
-                events.push(GenericEvent::NotifyError(e));
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyError(e));
             }
         }
 
@@ -2618,10 +3406,17 @@ where
     ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
     {
         let mut events = Vec::new();
-        match v5_0::Connect::parse(raw_packet.data_as_slice()) {
+        match v5_0::GenericConnect::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::parse(
+            raw_packet.data_as_slice(),
+        ) {
             Ok((packet, _)) => {
                 if self.status != ConnectionStatus::Disconnected {
-                    events.push(GenericEvent::NotifyError(MqttError::ProtocolError));
+                    events.push(GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::NotifyError(MqttError::ProtocolError));
                     return events;
                 }
                 self.initialize(false);
@@ -2651,7 +3446,12 @@ where
                     _ => {}
                 });
                 events.extend(self.refresh_pingreq_recv());
-                events.push(GenericEvent::NotifyPacketReceived(packet.into()));
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyPacketReceived(packet.into()));
             }
             Err(e) => {
                 if self.status == ConnectionStatus::Disconnected {
@@ -2668,18 +3468,29 @@ where
                         }
                         _ => ConnectReasonCode::UnspecifiedError,
                     };
-                    let connack = v5_0::Connack::builder().reason_code(rc).build().unwrap();
+                    let connack =
+                        v5_0::GenericConnack::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::builder()
+                            .reason_code(rc)
+                            .build()
+                            .unwrap();
                     let connack_events = self.process_send_v5_0_connack(connack);
                     events.extend(connack_events);
                 } else {
-                    let disconnect = v5_0::Disconnect::builder()
+                    let disconnect =
+                        v5_0::GenericDisconnect::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::builder(
+                        )
                         .reason_code(DisconnectReasonCode::ProtocolError)
                         .build()
                         .unwrap();
                     let disconnect_events = self.process_send_v5_0_disconnect(disconnect);
                     events.extend(disconnect_events);
                 }
-                events.push(GenericEvent::NotifyError(e));
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyError(e));
             }
         }
 
@@ -2703,13 +3514,30 @@ where
                         self.clear_store_related();
                     }
                 }
-                events.push(GenericEvent::NotifyPacketReceived(
-                    GenericPacket::V3_1_1Connack(packet),
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyPacketReceived(
+                    GenericPacket::V3_1_1Connack(packet)
                 ));
             }
             Err(e) => {
-                events.push(GenericEvent::RequestClose);
-                events.push(GenericEvent::NotifyError(e));
+                events.push(
+                    GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::RequestClose,
+                );
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyError(e));
             }
         }
 
@@ -2723,7 +3551,9 @@ where
     {
         let mut events = Vec::new();
 
-        match v5_0::Connack::parse(raw_packet.data_as_slice()) {
+        match v5_0::GenericConnack::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::parse(
+            raw_packet.data_as_slice(),
+        ) {
             Ok((packet, _consumed)) => {
                 if packet.reason_code() == ConnectReasonCode::Success {
                     self.status = ConnectionStatus::Connected;
@@ -2761,20 +3591,30 @@ where
                         self.clear_store_related();
                     }
                 }
-                events.push(GenericEvent::NotifyPacketReceived(
-                    GenericPacket::V5_0Connack(packet),
-                ));
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyPacketReceived(packet.into()));
             }
             Err(e) => {
                 if self.status == ConnectionStatus::Connected {
-                    let disconnect = v5_0::Disconnect::builder()
+                    let disconnect =
+                        v5_0::GenericDisconnect::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::builder(
+                        )
                         .reason_code(e.into())
                         .build()
                         .unwrap();
                     let disconnect_events = self.process_send_v5_0_disconnect(disconnect);
                     events.extend(disconnect_events);
                 }
-                events.push(GenericEvent::NotifyError(e));
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyError(e));
             }
         }
 
@@ -2796,7 +3636,7 @@ where
                         match packet.qos() {
                             Qos::AtMostOnce => {
                                 events.extend(self.refresh_pingreq_recv());
-                                events.push(GenericEvent::NotifyPacketReceived(packet.into()));
+                                events.push(GenericEvent::<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>::NotifyPacketReceived(packet.into()));
                             }
                             Qos::AtLeastOnce => {
                                 let packet_id = packet.packet_id().unwrap();
@@ -2811,7 +3651,7 @@ where
                                     events.extend(self.process_send_v3_1_1_puback(puback));
                                 }
                                 events.extend(self.refresh_pingreq_recv());
-                                events.push(GenericEvent::NotifyPacketReceived(packet.into()));
+                                events.push(GenericEvent::<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>::NotifyPacketReceived(packet.into()));
                             }
                             Qos::ExactlyOnce => {
                                 let packet_id = packet.packet_id().unwrap();
@@ -2828,14 +3668,14 @@ where
                                 }
                                 events.extend(self.refresh_pingreq_recv());
                                 if !already_handled {
-                                    events.push(GenericEvent::NotifyPacketReceived(packet.into()));
+                                    events.push(GenericEvent::<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>::NotifyPacketReceived(packet.into()));
                                 }
                             }
                         }
                     }
                     Err(e) => {
-                        events.push(GenericEvent::RequestClose);
-                        events.push(GenericEvent::NotifyError(e));
+                        events.push(GenericEvent::<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>::RequestClose);
+                        events.push(GenericEvent::<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>::NotifyError(e));
                     }
                 }
             }
@@ -2874,16 +3714,23 @@ where
                                 let packet_id = packet.packet_id().unwrap();
                                 if let Some(max) = self.publish_recv_max {
                                     if self.publish_recv.len() >= max as usize {
-                                        let disconnect = v5_0::Disconnect::builder()
-                                            .reason_code(
-                                                DisconnectReasonCode::ReceiveMaximumExceeded,
-                                            )
-                                            .build()
-                                            .unwrap();
+                                        let disconnect = v5_0::GenericDisconnect::<
+                                            STRING_BUFFER_SIZE,
+                                            BINARY_BUFFER_SIZE,
+                                        >::builder(
+                                        )
+                                        .reason_code(DisconnectReasonCode::ReceiveMaximumExceeded)
+                                        .build()
+                                        .unwrap();
                                         events
                                             .extend(self.process_send_v5_0_disconnect(disconnect));
-                                        events.push(GenericEvent::NotifyError(
-                                            MqttError::ReceiveMaximumExceeded,
+                                        events.push(GenericEvent::<
+                                            PacketIdType,
+                                            STRING_BUFFER_SIZE,
+                                            BINARY_BUFFER_SIZE,
+                                            PAYLOAD_BUFFER_SIZE,
+                                        >::NotifyError(
+                                            MqttError::ReceiveMaximumExceeded
                                         ));
                                         return events;
                                     }
@@ -2899,16 +3746,23 @@ where
                                 let packet_id = packet.packet_id().unwrap();
                                 if let Some(max) = self.publish_recv_max {
                                     if self.publish_recv.len() >= max as usize {
-                                        let disconnect = v5_0::Disconnect::builder()
-                                            .reason_code(
-                                                DisconnectReasonCode::ReceiveMaximumExceeded,
-                                            )
-                                            .build()
-                                            .unwrap();
+                                        let disconnect = v5_0::GenericDisconnect::<
+                                            STRING_BUFFER_SIZE,
+                                            BINARY_BUFFER_SIZE,
+                                        >::builder(
+                                        )
+                                        .reason_code(DisconnectReasonCode::ReceiveMaximumExceeded)
+                                        .build()
+                                        .unwrap();
                                         events
                                             .extend(self.process_send_v5_0_disconnect(disconnect));
-                                        events.push(GenericEvent::NotifyError(
-                                            MqttError::ReceiveMaximumExceeded,
+                                        events.push(GenericEvent::<
+                                            PacketIdType,
+                                            STRING_BUFFER_SIZE,
+                                            BINARY_BUFFER_SIZE,
+                                            PAYLOAD_BUFFER_SIZE,
+                                        >::NotifyError(
+                                            MqttError::ReceiveMaximumExceeded
                                         ));
                                         return events;
                                     }
@@ -2937,27 +3791,45 @@ where
                                     || self.topic_alias_recv.is_none()
                                     || ta > self.topic_alias_recv.as_ref().unwrap().max()
                                 {
-                                    let disconnect = v5_0::Disconnect::builder()
-                                        .reason_code(DisconnectReasonCode::TopicAliasInvalid)
-                                        .build()
-                                        .unwrap();
+                                    let disconnect = v5_0::GenericDisconnect::<
+                                        STRING_BUFFER_SIZE,
+                                        BINARY_BUFFER_SIZE,
+                                    >::builder(
+                                    )
+                                    .reason_code(DisconnectReasonCode::TopicAliasInvalid)
+                                    .build()
+                                    .unwrap();
                                     events.extend(self.process_send_v5_0_disconnect(disconnect));
-                                    events.push(GenericEvent::NotifyError(
-                                        MqttError::TopicAliasInvalid,
+                                    events.push(GenericEvent::<
+                                        PacketIdType,
+                                        STRING_BUFFER_SIZE,
+                                        BINARY_BUFFER_SIZE,
+                                        PAYLOAD_BUFFER_SIZE,
+                                    >::NotifyError(
+                                        MqttError::TopicAliasInvalid
                                     ));
                                     return events;
                                 }
 
                                 if let Some(ref topic_alias_recv) = self.topic_alias_recv {
                                     if topic_alias_recv.get(ta).is_none() {
-                                        let disconnect = v5_0::Disconnect::builder()
-                                            .reason_code(DisconnectReasonCode::TopicAliasInvalid)
-                                            .build()
-                                            .unwrap();
+                                        let disconnect = v5_0::GenericDisconnect::<
+                                            STRING_BUFFER_SIZE,
+                                            BINARY_BUFFER_SIZE,
+                                        >::builder(
+                                        )
+                                        .reason_code(DisconnectReasonCode::TopicAliasInvalid)
+                                        .build()
+                                        .unwrap();
                                         events
                                             .extend(self.process_send_v5_0_disconnect(disconnect));
-                                        events.push(GenericEvent::NotifyError(
-                                            MqttError::TopicAliasInvalid,
+                                        events.push(GenericEvent::<
+                                            PacketIdType,
+                                            STRING_BUFFER_SIZE,
+                                            BINARY_BUFFER_SIZE,
+                                            PAYLOAD_BUFFER_SIZE,
+                                        >::NotifyError(
+                                            MqttError::TopicAliasInvalid
                                         ));
                                         return events;
                                     }
@@ -2965,13 +3837,22 @@ where
                                     // to add the resolved topic. For now, we'll proceed.
                                 }
                             } else {
-                                let disconnect = v5_0::Disconnect::builder()
-                                    .reason_code(DisconnectReasonCode::TopicAliasInvalid)
-                                    .build()
-                                    .unwrap();
+                                let disconnect = v5_0::GenericDisconnect::<
+                                    STRING_BUFFER_SIZE,
+                                    BINARY_BUFFER_SIZE,
+                                >::builder()
+                                .reason_code(DisconnectReasonCode::TopicAliasInvalid)
+                                .build()
+                                .unwrap();
                                 events.extend(self.process_send_v5_0_disconnect(disconnect));
-                                events
-                                    .push(GenericEvent::NotifyError(MqttError::TopicAliasInvalid));
+                                events.push(GenericEvent::<
+                                    PacketIdType,
+                                    STRING_BUFFER_SIZE,
+                                    BINARY_BUFFER_SIZE,
+                                    PAYLOAD_BUFFER_SIZE,
+                                >::NotifyError(
+                                    MqttError::TopicAliasInvalid
+                                ));
                                 return events;
                             }
                         } else {
@@ -2981,13 +3862,22 @@ where
                                     || self.topic_alias_recv.is_none()
                                     || ta > self.topic_alias_recv.as_ref().unwrap().max()
                                 {
-                                    let disconnect = v5_0::Disconnect::builder()
-                                        .reason_code(DisconnectReasonCode::TopicAliasInvalid)
-                                        .build()
-                                        .unwrap();
+                                    let disconnect = v5_0::GenericDisconnect::<
+                                        STRING_BUFFER_SIZE,
+                                        BINARY_BUFFER_SIZE,
+                                    >::builder(
+                                    )
+                                    .reason_code(DisconnectReasonCode::TopicAliasInvalid)
+                                    .build()
+                                    .unwrap();
                                     events.extend(self.process_send_v5_0_disconnect(disconnect));
-                                    events.push(GenericEvent::NotifyError(
-                                        MqttError::TopicAliasInvalid,
+                                    events.push(GenericEvent::<
+                                        PacketIdType,
+                                        STRING_BUFFER_SIZE,
+                                        BINARY_BUFFER_SIZE,
+                                        PAYLOAD_BUFFER_SIZE,
+                                    >::NotifyError(
+                                        MqttError::TopicAliasInvalid
                                     ));
                                     return events;
                                 }
@@ -3018,19 +3908,34 @@ where
 
                         // Notify packet received (only if not already handled)
                         if !already_handled {
-                            events.push(GenericEvent::NotifyPacketReceived(packet.into()));
+                            events.push(GenericEvent::<
+                                PacketIdType,
+                                STRING_BUFFER_SIZE,
+                                BINARY_BUFFER_SIZE,
+                                PAYLOAD_BUFFER_SIZE,
+                            >::NotifyPacketReceived(
+                                packet.into()
+                            ));
                         }
                     }
                     Err(e) => {
                         if self.status == ConnectionStatus::Connected {
-                            let disconnect = v5_0::Disconnect::builder()
-                                .reason_code(e.into())
-                                .build()
-                                .unwrap();
+                            let disconnect = v5_0::GenericDisconnect::<
+                                STRING_BUFFER_SIZE,
+                                BINARY_BUFFER_SIZE,
+                            >::builder()
+                            .reason_code(e.into())
+                            .build()
+                            .unwrap();
                             let disconnect_events = self.process_send_v5_0_disconnect(disconnect);
                             events.extend(disconnect_events);
                         }
-                        events.push(GenericEvent::NotifyError(e));
+                        events.push(GenericEvent::<
+                            PacketIdType,
+                            STRING_BUFFER_SIZE,
+                            BINARY_BUFFER_SIZE,
+                            PAYLOAD_BUFFER_SIZE,
+                        >::NotifyError(e));
                     }
                 }
             }
@@ -3056,18 +3961,52 @@ where
                     self.store.erase(ResponsePacket::V3_1_1Puback, packet_id);
                     if self.pid_man.is_used_id(packet_id) {
                         self.pid_man.release_id(packet_id);
-                        events.push(GenericEvent::NotifyPacketIdReleased(packet_id));
+                        events.push(GenericEvent::<
+                            PacketIdType,
+                            STRING_BUFFER_SIZE,
+                            BINARY_BUFFER_SIZE,
+                            PAYLOAD_BUFFER_SIZE,
+                        >::NotifyPacketIdReleased(packet_id));
                     }
                     events.extend(self.refresh_pingreq_recv());
-                    events.push(GenericEvent::NotifyPacketReceived(packet.into()));
+                    events.push(GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::NotifyPacketReceived(packet.into()));
                 } else {
-                    events.push(GenericEvent::RequestClose);
-                    events.push(GenericEvent::NotifyError(MqttError::ProtocolError));
+                    events.push(
+                        GenericEvent::<
+                            PacketIdType,
+                            STRING_BUFFER_SIZE,
+                            BINARY_BUFFER_SIZE,
+                            PAYLOAD_BUFFER_SIZE,
+                        >::RequestClose,
+                    );
+                    events.push(GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::NotifyError(MqttError::ProtocolError));
                 }
             }
             Err(e) => {
-                events.push(GenericEvent::RequestClose);
-                events.push(GenericEvent::NotifyError(e));
+                events.push(
+                    GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::RequestClose,
+                );
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyError(e));
             }
         }
 
@@ -3081,36 +4020,61 @@ where
     {
         let mut events = Vec::new();
 
-        match v5_0::GenericPuback::<PacketIdType>::parse(raw_packet.data_as_slice()) {
+        match v5_0::GenericPuback::<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::parse(
+            raw_packet.data_as_slice(),
+        ) {
             Ok((packet, _)) => {
                 let packet_id = packet.packet_id();
                 if self.pid_puback.remove(&packet_id) {
                     self.store.erase(ResponsePacket::V5_0Puback, packet_id);
                     if self.pid_man.is_used_id(packet_id) {
                         self.pid_man.release_id(packet_id);
-                        events.push(GenericEvent::NotifyPacketIdReleased(packet_id));
+                        events.push(GenericEvent::<
+                            PacketIdType,
+                            STRING_BUFFER_SIZE,
+                            BINARY_BUFFER_SIZE,
+                            PAYLOAD_BUFFER_SIZE,
+                        >::NotifyPacketIdReleased(packet_id));
                     }
                     if self.publish_send_max.is_some() {
                         self.publish_send_count -= 1;
                     }
                     events.extend(self.refresh_pingreq_recv());
-                    events.push(GenericEvent::NotifyPacketReceived(packet.into()));
+                    events.push(GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::NotifyPacketReceived(packet.into()));
                 } else {
-                    let disconnect = v5_0::Disconnect::builder()
+                    let disconnect =
+                        v5_0::GenericDisconnect::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::builder(
+                        )
                         .reason_code(DisconnectReasonCode::ProtocolError)
                         .build()
                         .unwrap();
                     events.extend(self.process_send_v5_0_disconnect(disconnect));
-                    events.push(GenericEvent::NotifyError(MqttError::ProtocolError));
+                    events.push(GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::NotifyError(MqttError::ProtocolError));
                 }
             }
             Err(e) => {
-                let disconnect = v5_0::Disconnect::builder()
-                    .reason_code(DisconnectReasonCode::ProtocolError)
-                    .build()
-                    .unwrap();
+                let disconnect =
+                    v5_0::GenericDisconnect::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::builder()
+                        .reason_code(DisconnectReasonCode::ProtocolError)
+                        .build()
+                        .unwrap();
                 events.extend(self.process_send_v5_0_disconnect(disconnect));
-                events.push(GenericEvent::NotifyError(e));
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyError(e));
             }
         }
 
@@ -3137,15 +4101,44 @@ where
                         events.extend(self.process_send_v3_1_1_pubrel(pubrel));
                     }
                     events.extend(self.refresh_pingreq_recv());
-                    events.push(GenericEvent::NotifyPacketReceived(packet.into()));
+                    events.push(GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::NotifyPacketReceived(packet.into()));
                 } else {
-                    events.push(GenericEvent::RequestClose);
-                    events.push(GenericEvent::NotifyError(MqttError::ProtocolError));
+                    events.push(
+                        GenericEvent::<
+                            PacketIdType,
+                            STRING_BUFFER_SIZE,
+                            BINARY_BUFFER_SIZE,
+                            PAYLOAD_BUFFER_SIZE,
+                        >::RequestClose,
+                    );
+                    events.push(GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::NotifyError(MqttError::ProtocolError));
                 }
             }
             Err(e) => {
-                events.push(GenericEvent::RequestClose);
-                events.push(GenericEvent::NotifyError(e));
+                events.push(
+                    GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::RequestClose,
+                );
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyError(e));
             }
         }
 
@@ -3159,7 +4152,9 @@ where
     {
         let mut events = Vec::new();
 
-        match v5_0::GenericPubrec::<PacketIdType>::parse(raw_packet.data_as_slice()) {
+        match v5_0::GenericPubrec::<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::parse(
+            raw_packet.data_as_slice(),
+        ) {
             Ok((packet, _)) => {
                 let packet_id = packet.packet_id();
                 if self.pid_pubrec.remove(&packet_id) {
@@ -3168,7 +4163,14 @@ where
                         if reason_code != PubrecReasonCode::Success {
                             if self.pid_man.is_used_id(packet_id) {
                                 self.pid_man.release_id(packet_id);
-                                events.push(GenericEvent::NotifyPacketIdReleased(packet_id));
+                                events.push(GenericEvent::<
+                                    PacketIdType,
+                                    STRING_BUFFER_SIZE,
+                                    BINARY_BUFFER_SIZE,
+                                    PAYLOAD_BUFFER_SIZE,
+                                >::NotifyPacketIdReleased(
+                                    packet_id
+                                ));
                             }
                             self.qos2_publish_processing.remove(&packet_id);
                             if self.publish_send_max.is_some() {
@@ -3177,39 +4179,65 @@ where
                         } else if self.auto_pub_response
                             && self.status == ConnectionStatus::Connected
                         {
-                            let pubrel = v5_0::GenericPubrel::<PacketIdType>::builder()
-                                .packet_id(packet_id)
-                                .build()
-                                .unwrap();
-                            events.extend(self.process_send_v5_0_pubrel(pubrel));
-                        }
-                    } else if self.auto_pub_response && self.status == ConnectionStatus::Connected {
-                        let pubrel = v5_0::GenericPubrel::<PacketIdType>::builder()
+                            let pubrel = v5_0::GenericPubrel::<
+                                PacketIdType,
+                                STRING_BUFFER_SIZE,
+                                BINARY_BUFFER_SIZE,
+                            >::builder()
                             .packet_id(packet_id)
                             .build()
                             .unwrap();
+                            events.extend(self.process_send_v5_0_pubrel(pubrel));
+                        }
+                    } else if self.auto_pub_response && self.status == ConnectionStatus::Connected {
+                        let pubrel = v5_0::GenericPubrel::<
+                            PacketIdType,
+                            STRING_BUFFER_SIZE,
+                            BINARY_BUFFER_SIZE,
+                        >::builder()
+                        .packet_id(packet_id)
+                        .build()
+                        .unwrap();
                         events.extend(self.process_send_v5_0_pubrel(pubrel));
                     }
                     events.extend(self.refresh_pingreq_recv());
-                    events.push(GenericEvent::NotifyPacketReceived(packet.into()));
+                    events.push(GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::NotifyPacketReceived(packet.into()));
                 } else {
-                    let disconnect = v5_0::Disconnect::builder()
+                    let disconnect =
+                        v5_0::GenericDisconnect::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::builder(
+                        )
                         .reason_code(DisconnectReasonCode::ProtocolError)
                         .build()
                         .unwrap();
                     events.extend(self.process_send_v5_0_disconnect(disconnect));
-                    events.push(GenericEvent::NotifyError(MqttError::from(
+                    events.push(GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::NotifyError(MqttError::from(
                         DisconnectReasonCode::ProtocolError,
                     )));
                 }
             }
             Err(e) => {
-                let disconnect = v5_0::Disconnect::builder()
-                    .reason_code(DisconnectReasonCode::ProtocolError)
-                    .build()
-                    .unwrap();
+                let disconnect =
+                    v5_0::GenericDisconnect::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::builder()
+                        .reason_code(DisconnectReasonCode::ProtocolError)
+                        .build()
+                        .unwrap();
                 events.extend(self.process_send_v5_0_disconnect(disconnect));
-                events.push(GenericEvent::NotifyError(e));
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyError(e));
             }
         }
 
@@ -3235,11 +4263,28 @@ where
                     events.extend(self.process_send_v3_1_1_pubcomp(pubcomp));
                 }
                 events.extend(self.refresh_pingreq_recv());
-                events.push(GenericEvent::NotifyPacketReceived(packet.into()));
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyPacketReceived(packet.into()));
             }
             Err(e) => {
-                events.push(GenericEvent::RequestClose);
-                events.push(GenericEvent::NotifyError(e));
+                events.push(
+                    GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::RequestClose,
+                );
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyError(e));
             }
         }
 
@@ -3253,27 +4298,44 @@ where
     {
         let mut events = Vec::new();
 
-        match v5_0::GenericPubrel::<PacketIdType>::parse(raw_packet.data_as_slice()) {
+        match v5_0::GenericPubrel::<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::parse(
+            raw_packet.data_as_slice(),
+        ) {
             Ok((packet, _)) => {
                 let packet_id = packet.packet_id();
                 self.qos2_publish_handled.remove(&packet_id);
                 if self.auto_pub_response && self.status == ConnectionStatus::Connected {
-                    let pubcomp = v5_0::GenericPubcomp::<PacketIdType>::builder()
-                        .packet_id(packet_id)
-                        .build()
-                        .unwrap();
+                    let pubcomp = v5_0::GenericPubcomp::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                    >::builder()
+                    .packet_id(packet_id)
+                    .build()
+                    .unwrap();
                     events.extend(self.process_send_v5_0_pubcomp(pubcomp));
                 }
                 events.extend(self.refresh_pingreq_recv());
-                events.push(GenericEvent::NotifyPacketReceived(packet.into()));
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyPacketReceived(packet.into()));
             }
             Err(e) => {
-                let disconnect = v5_0::Disconnect::builder()
-                    .reason_code(DisconnectReasonCode::ProtocolError)
-                    .build()
-                    .unwrap();
+                let disconnect =
+                    v5_0::GenericDisconnect::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::builder()
+                        .reason_code(DisconnectReasonCode::ProtocolError)
+                        .build()
+                        .unwrap();
                 events.extend(self.process_send_v5_0_disconnect(disconnect));
-                events.push(GenericEvent::NotifyError(e));
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyError(e));
             }
         }
 
@@ -3294,19 +4356,53 @@ where
                     self.store.erase(ResponsePacket::V3_1_1Pubcomp, packet_id);
                     if self.pid_man.is_used_id(packet_id) {
                         self.pid_man.release_id(packet_id);
-                        events.push(GenericEvent::NotifyPacketIdReleased(packet_id));
+                        events.push(GenericEvent::<
+                            PacketIdType,
+                            STRING_BUFFER_SIZE,
+                            BINARY_BUFFER_SIZE,
+                            PAYLOAD_BUFFER_SIZE,
+                        >::NotifyPacketIdReleased(packet_id));
                     }
                     self.qos2_publish_processing.remove(&packet_id);
                     events.extend(self.refresh_pingreq_recv());
-                    events.push(GenericEvent::NotifyPacketReceived(packet.into()));
+                    events.push(GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::NotifyPacketReceived(packet.into()));
                 } else {
-                    events.push(GenericEvent::RequestClose);
-                    events.push(GenericEvent::NotifyError(MqttError::ProtocolError));
+                    events.push(
+                        GenericEvent::<
+                            PacketIdType,
+                            STRING_BUFFER_SIZE,
+                            BINARY_BUFFER_SIZE,
+                            PAYLOAD_BUFFER_SIZE,
+                        >::RequestClose,
+                    );
+                    events.push(GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::NotifyError(MqttError::ProtocolError));
                 }
             }
             Err(e) => {
-                events.push(GenericEvent::RequestClose);
-                events.push(GenericEvent::NotifyError(e));
+                events.push(
+                    GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::RequestClose,
+                );
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyError(e));
             }
         }
 
@@ -3320,37 +4416,62 @@ where
     {
         let mut events = Vec::new();
 
-        match v5_0::GenericPubcomp::<PacketIdType>::parse(raw_packet.data_as_slice()) {
+        match v5_0::GenericPubcomp::<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::parse(
+            raw_packet.data_as_slice(),
+        ) {
             Ok((packet, _)) => {
                 let packet_id = packet.packet_id();
                 if self.pid_pubcomp.remove(&packet_id) {
                     self.store.erase(ResponsePacket::V5_0Pubcomp, packet_id);
                     if self.pid_man.is_used_id(packet_id) {
                         self.pid_man.release_id(packet_id);
-                        events.push(GenericEvent::NotifyPacketIdReleased(packet_id));
+                        events.push(GenericEvent::<
+                            PacketIdType,
+                            STRING_BUFFER_SIZE,
+                            BINARY_BUFFER_SIZE,
+                            PAYLOAD_BUFFER_SIZE,
+                        >::NotifyPacketIdReleased(packet_id));
                     }
                     self.qos2_publish_processing.remove(&packet_id);
                     if self.publish_send_max.is_some() {
                         self.publish_send_count -= 1;
                     }
                     events.extend(self.refresh_pingreq_recv());
-                    events.push(GenericEvent::NotifyPacketReceived(packet.into()));
+                    events.push(GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::NotifyPacketReceived(packet.into()));
                 } else {
-                    let disconnect = v5_0::Disconnect::builder()
+                    let disconnect =
+                        v5_0::GenericDisconnect::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::builder(
+                        )
                         .reason_code(DisconnectReasonCode::ProtocolError)
                         .build()
                         .unwrap();
                     events.extend(self.process_send_v5_0_disconnect(disconnect));
-                    events.push(GenericEvent::NotifyError(MqttError::ProtocolError));
+                    events.push(GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::NotifyError(MqttError::ProtocolError));
                 }
             }
             Err(e) => {
-                let disconnect = v5_0::Disconnect::builder()
-                    .reason_code(DisconnectReasonCode::ProtocolError)
-                    .build()
-                    .unwrap();
+                let disconnect =
+                    v5_0::GenericDisconnect::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::builder()
+                        .reason_code(DisconnectReasonCode::ProtocolError)
+                        .build()
+                        .unwrap();
                 events.extend(self.process_send_v5_0_disconnect(disconnect));
-                events.push(GenericEvent::NotifyError(e));
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyError(e));
             }
         }
 
@@ -3369,11 +4490,28 @@ where
         ) {
             Ok((packet, _)) => {
                 events.extend(self.refresh_pingreq_recv());
-                events.push(GenericEvent::NotifyPacketReceived(packet.into()));
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyPacketReceived(packet.into()));
             }
             Err(e) => {
-                events.push(GenericEvent::RequestClose);
-                events.push(GenericEvent::NotifyError(e));
+                events.push(
+                    GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::RequestClose,
+                );
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyError(e));
             }
         }
 
@@ -3387,18 +4525,31 @@ where
     {
         let mut events = Vec::new();
 
-        match v5_0::GenericSubscribe::<PacketIdType>::parse(raw_packet.data_as_slice()) {
+        match v5_0::GenericSubscribe::<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::parse(
+            raw_packet.data_as_slice(),
+        ) {
             Ok((packet, _)) => {
                 events.extend(self.refresh_pingreq_recv());
-                events.push(GenericEvent::NotifyPacketReceived(packet.into()));
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyPacketReceived(packet.into()));
             }
             Err(e) => {
-                let disconnect = v5_0::Disconnect::builder()
-                    .reason_code(DisconnectReasonCode::ProtocolError)
-                    .build()
-                    .unwrap();
+                let disconnect =
+                    v5_0::GenericDisconnect::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::builder()
+                        .reason_code(DisconnectReasonCode::ProtocolError)
+                        .build()
+                        .unwrap();
                 events.extend(self.process_send_v5_0_disconnect(disconnect));
-                events.push(GenericEvent::NotifyError(e));
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyError(e));
             }
         }
 
@@ -3418,18 +4569,52 @@ where
                 if self.pid_suback.remove(&packet_id) {
                     if self.pid_man.is_used_id(packet_id) {
                         self.pid_man.release_id(packet_id);
-                        events.push(GenericEvent::NotifyPacketIdReleased(packet_id));
+                        events.push(GenericEvent::<
+                            PacketIdType,
+                            STRING_BUFFER_SIZE,
+                            BINARY_BUFFER_SIZE,
+                            PAYLOAD_BUFFER_SIZE,
+                        >::NotifyPacketIdReleased(packet_id));
                     }
                     events.extend(self.refresh_pingreq_recv());
-                    events.push(GenericEvent::NotifyPacketReceived(packet.into()));
+                    events.push(GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::NotifyPacketReceived(packet.into()));
                 } else {
-                    events.push(GenericEvent::RequestClose);
-                    events.push(GenericEvent::NotifyError(MqttError::ProtocolError));
+                    events.push(
+                        GenericEvent::<
+                            PacketIdType,
+                            STRING_BUFFER_SIZE,
+                            BINARY_BUFFER_SIZE,
+                            PAYLOAD_BUFFER_SIZE,
+                        >::RequestClose,
+                    );
+                    events.push(GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::NotifyError(MqttError::ProtocolError));
                 }
             }
             Err(e) => {
-                events.push(GenericEvent::RequestClose);
-                events.push(GenericEvent::NotifyError(e));
+                events.push(
+                    GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::RequestClose,
+                );
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyError(e));
             }
         }
 
@@ -3443,32 +4628,57 @@ where
     {
         let mut events = Vec::new();
 
-        match v5_0::GenericSuback::<PacketIdType>::parse(raw_packet.data_as_slice()) {
+        match v5_0::GenericSuback::<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::parse(
+            raw_packet.data_as_slice(),
+        ) {
             Ok((packet, _)) => {
                 let packet_id = packet.packet_id();
                 if self.pid_suback.remove(&packet_id) {
                     if self.pid_man.is_used_id(packet_id) {
                         self.pid_man.release_id(packet_id);
-                        events.push(GenericEvent::NotifyPacketIdReleased(packet_id));
+                        events.push(GenericEvent::<
+                            PacketIdType,
+                            STRING_BUFFER_SIZE,
+                            BINARY_BUFFER_SIZE,
+                            PAYLOAD_BUFFER_SIZE,
+                        >::NotifyPacketIdReleased(packet_id));
                     }
                     events.extend(self.refresh_pingreq_recv());
-                    events.push(GenericEvent::NotifyPacketReceived(packet.into()));
+                    events.push(GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::NotifyPacketReceived(packet.into()));
                 } else {
-                    let disconnect = v5_0::Disconnect::builder()
+                    let disconnect =
+                        v5_0::GenericDisconnect::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::builder(
+                        )
                         .reason_code(DisconnectReasonCode::ProtocolError)
                         .build()
                         .unwrap();
                     events.extend(self.process_send_v5_0_disconnect(disconnect));
-                    events.push(GenericEvent::NotifyError(MqttError::ProtocolError));
+                    events.push(GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::NotifyError(MqttError::ProtocolError));
                 }
             }
             Err(e) => {
-                let disconnect = v5_0::Disconnect::builder()
-                    .reason_code(DisconnectReasonCode::ProtocolError)
-                    .build()
-                    .unwrap();
+                let disconnect =
+                    v5_0::GenericDisconnect::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::builder()
+                        .reason_code(DisconnectReasonCode::ProtocolError)
+                        .build()
+                        .unwrap();
                 events.extend(self.process_send_v5_0_disconnect(disconnect));
-                events.push(GenericEvent::NotifyError(e));
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyError(e));
             }
         }
 
@@ -3487,11 +4697,28 @@ where
         ) {
             Ok((packet, _)) => {
                 events.extend(self.refresh_pingreq_recv());
-                events.push(GenericEvent::NotifyPacketReceived(packet.into()));
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyPacketReceived(packet.into()));
             }
             Err(e) => {
-                events.push(GenericEvent::RequestClose);
-                events.push(GenericEvent::NotifyError(e));
+                events.push(
+                    GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::RequestClose,
+                );
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyError(e));
             }
         }
 
@@ -3505,18 +4732,29 @@ where
     {
         let mut events = Vec::new();
 
-        match v5_0::GenericUnsubscribe::<PacketIdType>::parse(raw_packet.data_as_slice()) {
+        match v5_0::GenericUnsubscribe::<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::parse(raw_packet.data_as_slice()) {
             Ok((packet, _)) => {
                 events.extend(self.refresh_pingreq_recv());
-                events.push(GenericEvent::NotifyPacketReceived(packet.into()));
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyPacketReceived(packet.into()));
             }
             Err(e) => {
-                let disconnect = v5_0::Disconnect::builder()
-                    .reason_code(DisconnectReasonCode::ProtocolError)
-                    .build()
-                    .unwrap();
+                let disconnect =
+                    v5_0::GenericDisconnect::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::builder()
+                        .reason_code(DisconnectReasonCode::ProtocolError)
+                        .build()
+                        .unwrap();
                 events.extend(self.process_send_v5_0_disconnect(disconnect));
-                events.push(GenericEvent::NotifyError(e));
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyError(e));
             }
         }
 
@@ -3536,18 +4774,52 @@ where
                 if self.pid_unsuback.remove(&packet_id) {
                     if self.pid_man.is_used_id(packet_id) {
                         self.pid_man.release_id(packet_id);
-                        events.push(GenericEvent::NotifyPacketIdReleased(packet_id));
+                        events.push(GenericEvent::<
+                            PacketIdType,
+                            STRING_BUFFER_SIZE,
+                            BINARY_BUFFER_SIZE,
+                            PAYLOAD_BUFFER_SIZE,
+                        >::NotifyPacketIdReleased(packet_id));
                     }
                     events.extend(self.refresh_pingreq_recv());
-                    events.push(GenericEvent::NotifyPacketReceived(packet.into()));
+                    events.push(GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::NotifyPacketReceived(packet.into()));
                 } else {
-                    events.push(GenericEvent::RequestClose);
-                    events.push(GenericEvent::NotifyError(MqttError::ProtocolError));
+                    events.push(
+                        GenericEvent::<
+                            PacketIdType,
+                            STRING_BUFFER_SIZE,
+                            BINARY_BUFFER_SIZE,
+                            PAYLOAD_BUFFER_SIZE,
+                        >::RequestClose,
+                    );
+                    events.push(GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::NotifyError(MqttError::ProtocolError));
                 }
             }
             Err(e) => {
-                events.push(GenericEvent::RequestClose);
-                events.push(GenericEvent::NotifyError(e));
+                events.push(
+                    GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::RequestClose,
+                );
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyError(e));
             }
         }
 
@@ -3561,32 +4833,57 @@ where
     {
         let mut events = Vec::new();
 
-        match v5_0::GenericUnsuback::<PacketIdType>::parse(raw_packet.data_as_slice()) {
+        match v5_0::GenericUnsuback::<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::parse(
+            raw_packet.data_as_slice(),
+        ) {
             Ok((packet, _)) => {
                 let packet_id = packet.packet_id();
                 if self.pid_unsuback.remove(&packet_id) {
                     if self.pid_man.is_used_id(packet_id) {
                         self.pid_man.release_id(packet_id);
-                        events.push(GenericEvent::NotifyPacketIdReleased(packet_id));
+                        events.push(GenericEvent::<
+                            PacketIdType,
+                            STRING_BUFFER_SIZE,
+                            BINARY_BUFFER_SIZE,
+                            PAYLOAD_BUFFER_SIZE,
+                        >::NotifyPacketIdReleased(packet_id));
                     }
                     events.extend(self.refresh_pingreq_recv());
-                    events.push(GenericEvent::NotifyPacketReceived(packet.into()));
+                    events.push(GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::NotifyPacketReceived(packet.into()));
                 } else {
-                    let disconnect = v5_0::Disconnect::builder()
+                    let disconnect =
+                        v5_0::GenericDisconnect::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::builder(
+                        )
                         .reason_code(DisconnectReasonCode::ProtocolError)
                         .build()
                         .unwrap();
                     events.extend(self.process_send_v5_0_disconnect(disconnect));
-                    events.push(GenericEvent::NotifyError(MqttError::ProtocolError));
+                    events.push(GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::NotifyError(MqttError::ProtocolError));
                 }
             }
             Err(e) => {
-                let disconnect = v5_0::Disconnect::builder()
-                    .reason_code(DisconnectReasonCode::ProtocolError)
-                    .build()
-                    .unwrap();
+                let disconnect =
+                    v5_0::GenericDisconnect::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::builder()
+                        .reason_code(DisconnectReasonCode::ProtocolError)
+                        .build()
+                        .unwrap();
                 events.extend(self.process_send_v5_0_disconnect(disconnect));
-                events.push(GenericEvent::NotifyError(e));
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyError(e));
             }
         }
 
@@ -3611,11 +4908,28 @@ where
                     events.extend(self.process_send_v3_1_1_pingresp(pingresp));
                 }
                 events.extend(self.refresh_pingreq_recv());
-                events.push(GenericEvent::NotifyPacketReceived(packet.into()));
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyPacketReceived(packet.into()));
             }
             Err(e) => {
-                events.push(GenericEvent::RequestClose);
-                events.push(GenericEvent::NotifyError(e));
+                events.push(
+                    GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::RequestClose,
+                );
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyError(e));
             }
         }
 
@@ -3640,15 +4954,26 @@ where
                     events.extend(self.process_send_v5_0_pingresp(pingresp));
                 }
                 events.extend(self.refresh_pingreq_recv());
-                events.push(GenericEvent::NotifyPacketReceived(packet.into()));
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyPacketReceived(packet.into()));
             }
             Err(e) => {
-                let disconnect = v5_0::Disconnect::builder()
-                    .reason_code(DisconnectReasonCode::ProtocolError)
-                    .build()
-                    .unwrap();
+                let disconnect =
+                    v5_0::GenericDisconnect::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::builder()
+                        .reason_code(DisconnectReasonCode::ProtocolError)
+                        .build()
+                        .unwrap();
                 events.extend(self.process_send_v5_0_disconnect(disconnect));
-                events.push(GenericEvent::NotifyError(e));
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyError(e));
             }
         }
 
@@ -3665,12 +4990,36 @@ where
         match v3_1_1::Pingresp::parse(raw_packet.data_as_slice()) {
             Ok((packet, _)) => {
                 self.pingresp_recv_set = false;
-                events.push(GenericEvent::RequestTimerCancel(TimerKind::PingrespRecv));
-                events.push(GenericEvent::NotifyPacketReceived(packet.into()));
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::RequestTimerCancel(
+                    TimerKind::PingrespRecv
+                ));
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyPacketReceived(packet.into()));
             }
             Err(e) => {
-                events.push(GenericEvent::RequestClose);
-                events.push(GenericEvent::NotifyError(e));
+                events.push(
+                    GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::RequestClose,
+                );
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyError(e));
             }
         }
 
@@ -3687,16 +5036,34 @@ where
         match v5_0::Pingresp::parse(raw_packet.data_as_slice()) {
             Ok((packet, _)) => {
                 self.pingresp_recv_set = false;
-                events.push(GenericEvent::RequestTimerCancel(TimerKind::PingrespRecv));
-                events.push(GenericEvent::NotifyPacketReceived(packet.into()));
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::RequestTimerCancel(
+                    TimerKind::PingrespRecv
+                ));
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyPacketReceived(packet.into()));
             }
             Err(e) => {
-                let disconnect = v5_0::Disconnect::builder()
-                    .reason_code(DisconnectReasonCode::ProtocolError)
-                    .build()
-                    .unwrap();
+                let disconnect =
+                    v5_0::GenericDisconnect::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::builder()
+                        .reason_code(DisconnectReasonCode::ProtocolError)
+                        .build()
+                        .unwrap();
                 events.extend(self.process_send_v5_0_disconnect(disconnect));
-                events.push(GenericEvent::NotifyError(e));
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyError(e));
             }
         }
 
@@ -3713,11 +5080,28 @@ where
         match v3_1_1::Disconnect::parse(raw_packet.data_as_slice()) {
             Ok((packet, _)) => {
                 self.cancel_timers(&mut events);
-                events.push(GenericEvent::NotifyPacketReceived(packet.into()));
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyPacketReceived(packet.into()));
             }
             Err(e) => {
-                events.push(GenericEvent::RequestClose);
-                events.push(GenericEvent::NotifyError(e));
+                events.push(
+                    GenericEvent::<
+                        PacketIdType,
+                        STRING_BUFFER_SIZE,
+                        BINARY_BUFFER_SIZE,
+                        PAYLOAD_BUFFER_SIZE,
+                    >::RequestClose,
+                );
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyError(e));
             }
         }
 
@@ -3731,18 +5115,31 @@ where
     {
         let mut events = Vec::new();
 
-        match v5_0::Disconnect::parse(raw_packet.data_as_slice()) {
+        match v5_0::GenericDisconnect::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::parse(
+            raw_packet.data_as_slice(),
+        ) {
             Ok((packet, _)) => {
                 self.cancel_timers(&mut events);
-                events.push(GenericEvent::NotifyPacketReceived(packet.into()));
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyPacketReceived(packet.into()));
             }
             Err(e) => {
-                let disconnect = v5_0::Disconnect::builder()
-                    .reason_code(DisconnectReasonCode::ProtocolError)
-                    .build()
-                    .unwrap();
+                let disconnect =
+                    v5_0::GenericDisconnect::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::builder()
+                        .reason_code(DisconnectReasonCode::ProtocolError)
+                        .build()
+                        .unwrap();
                 events.extend(self.process_send_v5_0_disconnect(disconnect));
-                events.push(GenericEvent::NotifyError(e));
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyError(e));
             }
         }
 
@@ -3756,18 +5153,31 @@ where
     {
         let mut events = Vec::new();
 
-        match v5_0::Auth::parse(raw_packet.data_as_slice()) {
+        match v5_0::GenericAuth::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::parse(
+            raw_packet.data_as_slice(),
+        ) {
             Ok((packet, _)) => {
                 events.extend(self.refresh_pingreq_recv());
-                events.push(GenericEvent::NotifyPacketReceived(packet.into()));
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyPacketReceived(packet.into()));
             }
             Err(e) => {
-                let disconnect = v5_0::Disconnect::builder()
-                    .reason_code(DisconnectReasonCode::ProtocolError)
-                    .build()
-                    .unwrap();
+                let disconnect =
+                    v5_0::GenericDisconnect::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::builder()
+                        .reason_code(DisconnectReasonCode::ProtocolError)
+                        .build()
+                        .unwrap();
                 events.extend(self.process_send_v5_0_disconnect(disconnect));
-                events.push(GenericEvent::NotifyError(e));
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::NotifyError(e));
             }
         }
 
@@ -3794,13 +5204,23 @@ where
                 || self.status == ConnectionStatus::Connected
             {
                 self.pingreq_recv_set = true;
-                events.push(GenericEvent::RequestTimerReset {
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::RequestTimerReset {
                     kind: TimerKind::PingreqRecv,
                     duration_ms: timeout_ms,
                 });
             } else {
                 self.pingreq_recv_set = false;
-                events.push(GenericEvent::RequestTimerCancel(TimerKind::PingreqRecv));
+                events.push(GenericEvent::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::RequestTimerCancel(TimerKind::PingreqRecv));
             }
         }
 
@@ -3816,15 +5236,30 @@ where
     ) {
         if self.pingreq_send_set {
             self.pingreq_send_set = false;
-            events.push(GenericEvent::RequestTimerCancel(TimerKind::PingreqSend));
+            events.push(GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::RequestTimerCancel(TimerKind::PingreqSend));
         }
         if self.pingreq_recv_set {
             self.pingreq_recv_set = false;
-            events.push(GenericEvent::RequestTimerCancel(TimerKind::PingreqRecv));
+            events.push(GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::RequestTimerCancel(TimerKind::PingreqRecv));
         }
         if self.pingresp_recv_set {
             self.pingresp_recv_set = false;
-            events.push(GenericEvent::RequestTimerCancel(TimerKind::PingrespRecv));
+            events.push(GenericEvent::<
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            >::RequestTimerCancel(TimerKind::PingrespRecv));
         }
     }
 

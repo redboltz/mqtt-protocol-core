@@ -61,7 +61,7 @@ pub enum GenericStorePacket<
             PAYLOAD_BUFFER_SIZE,
         >,
     ),
-    V5_0Pubrel(v5_0::GenericPubrel<PacketIdType>),
+    V5_0Pubrel(v5_0::GenericPubrel<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>),
 }
 
 // Type alias for commonly used u16 PacketIdType
@@ -328,7 +328,7 @@ impl<
         const STRING_BUFFER_SIZE: usize,
         const BINARY_BUFFER_SIZE: usize,
         const PAYLOAD_BUFFER_SIZE: usize,
-    > TryFrom<v5_0::GenericPubrel<PacketIdType>>
+    > TryFrom<v5_0::GenericPubrel<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>>
     for GenericStorePacket<
         PacketIdType,
         STRING_BUFFER_SIZE,
@@ -340,7 +340,9 @@ where
 {
     type Error = MqttError;
 
-    fn try_from(pubrel: v5_0::GenericPubrel<PacketIdType>) -> Result<Self, Self::Error> {
+    fn try_from(
+        pubrel: v5_0::GenericPubrel<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>,
+    ) -> Result<Self, Self::Error> {
         Ok(GenericStorePacket::V5_0Pubrel(pubrel))
     }
 }
