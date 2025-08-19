@@ -32,8 +32,8 @@ use serde::Serialize;
 use getset::{CopyGetters, Getters};
 
 use crate::mqtt::packet::json_bin_encode::escape_binary_json_string;
-use crate::mqtt::packet::mqtt_binary::MqttBinary;
-use crate::mqtt::packet::mqtt_string::MqttString;
+use crate::mqtt::packet::mqtt_binary::GenericMqttBinary;
+use crate::mqtt::packet::mqtt_string::GenericMqttString;
 use crate::mqtt::packet::packet_type::{FixedHeader, PacketType};
 use crate::mqtt::packet::qos::Qos;
 use crate::mqtt::packet::variable_byte_integer::VariableByteInteger;
@@ -125,7 +125,10 @@ use crate::mqtt::result_code::MqttError;
 /// ```
 #[derive(PartialEq, Eq, Builder, Clone, Getters, CopyGetters)]
 #[builder(no_std, derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
-pub struct Connect {
+pub struct GenericConnect<
+    const STRING_BUFFER_SIZE: usize = 32,
+    const BINARY_BUFFER_SIZE: usize = 32,
+> {
     #[builder(private)]
     fixed_header: [u8; 1],
     #[builder(private)]
@@ -140,20 +143,25 @@ pub struct Connect {
     keep_alive_buf: [u8; 2],
 
     #[builder(private)]
-    client_id_buf: MqttString,
+    client_id_buf: GenericMqttString<STRING_BUFFER_SIZE>,
 
     #[builder(private)]
-    will_topic_buf: MqttString,
+    will_topic_buf: GenericMqttString<STRING_BUFFER_SIZE>,
     #[builder(private)]
-    will_payload_buf: MqttBinary,
+    will_payload_buf: GenericMqttBinary<BINARY_BUFFER_SIZE>,
 
     #[builder(private)]
-    user_name_buf: MqttString,
+    user_name_buf: GenericMqttString<STRING_BUFFER_SIZE>,
     #[builder(private)]
-    password_buf: MqttBinary,
+    password_buf: GenericMqttBinary<BINARY_BUFFER_SIZE>,
 }
 
-impl Connect {
+/// Type alias for CONNECT packet with standard buffer sizes
+pub type Connect = GenericConnect;
+
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
+    GenericConnect<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
     /// Creates a new builder for constructing a CONNECT packet
     ///
     /// # Returns
@@ -170,8 +178,8 @@ impl Connect {
     ///     .build()
     ///     .unwrap();
     /// ```
-    pub fn builder() -> ConnectBuilder {
-        ConnectBuilder::default()
+    pub fn builder() -> GenericConnectBuilder<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE> {
+        GenericConnectBuilder::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::default()
     }
 
     /// Returns the packet type for CONNECT packets
@@ -520,7 +528,15 @@ impl Connect {
     ///     Err(e) => println!("Parse error: {:?}", e),
     /// }
     /// ```
-    pub fn parse(data: &[u8]) -> Result<(Self, usize), MqttError> {
+    pub fn parse(
+        data: &[u8],
+    ) -> Result<
+        (
+            GenericConnect<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>,
+            usize,
+        ),
+        MqttError,
+    > {
         let mut cursor = 0;
 
         // Protocol Name (should be "MQTT")
@@ -568,41 +584,45 @@ impl Connect {
 
         // Client Identifier
         let (client_id_buf, consumed) =
-            MqttString::decode(&data[cursor..]).map_err(|_| MqttError::ClientIdentifierNotValid)?;
+            GenericMqttString::<STRING_BUFFER_SIZE>::decode(&data[cursor..])
+                .map_err(|_| MqttError::ClientIdentifierNotValid)?;
         cursor += consumed;
 
         // Will  Messages (if will flag is set)
         let will_flag = (connect_flags & 0b0000_0100) != 0;
-        let mut will_topic_buf = MqttString::default();
-        let mut will_payload_buf = MqttBinary::default();
+        let mut will_topic_buf = GenericMqttString::<STRING_BUFFER_SIZE>::default();
+        let mut will_payload_buf = GenericMqttBinary::<BINARY_BUFFER_SIZE>::default();
 
         if will_flag {
             // Will Topic
-            let (w_topic, consumed) = MqttString::decode(&data[cursor..])?;
+            let (w_topic, consumed) =
+                GenericMqttString::<STRING_BUFFER_SIZE>::decode(&data[cursor..])?;
             cursor += consumed;
             will_topic_buf = w_topic;
 
             // Will Payload
-            let (w_payload, consumed) = MqttBinary::decode(&data[cursor..])?;
+            let (w_payload, consumed) =
+                GenericMqttBinary::<BINARY_BUFFER_SIZE>::decode(&data[cursor..])?;
             cursor += consumed;
             will_payload_buf = w_payload;
         }
 
         // User Name (if user name flag is set)
         let user_name_flag = (connect_flags & 0b1000_0000) != 0;
-        let mut user_name_buf = MqttString::default();
+        let mut user_name_buf = GenericMqttString::<STRING_BUFFER_SIZE>::default();
         if user_name_flag {
-            let (uname, consumed) = MqttString::decode(&data[cursor..])
-                .map_err(|_| MqttError::BadUserNameOrPassword)?;
+            let (uname, consumed) =
+                GenericMqttString::<STRING_BUFFER_SIZE>::decode(&data[cursor..])
+                    .map_err(|_| MqttError::BadUserNameOrPassword)?;
             cursor += consumed;
             user_name_buf = uname;
         }
 
         // Password (if password flag is set)
         let password_flag = (connect_flags & 0b0100_0000) != 0;
-        let mut password_buf = MqttBinary::default();
+        let mut password_buf = GenericMqttBinary::<BINARY_BUFFER_SIZE>::default();
         if password_flag {
-            let (pwd, consumed) = MqttBinary::decode(&data[cursor..])
+            let (pwd, consumed) = GenericMqttBinary::<BINARY_BUFFER_SIZE>::decode(&data[cursor..])
                 .map_err(|_| MqttError::BadUserNameOrPassword)?;
             cursor += consumed;
             password_buf = pwd;
@@ -613,7 +633,7 @@ impl Connect {
             return Err(MqttError::ProtocolError);
         }
 
-        let connect = Connect {
+        let connect = GenericConnect {
             fixed_header: [FixedHeader::Connect as u8],
             remaining_length: VariableByteInteger::from_u32(cursor as u32).unwrap(),
             protocol_name,
@@ -654,7 +674,9 @@ impl Connect {
 ///     .build()
 ///     .unwrap();
 /// ```
-impl ConnectBuilder {
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
+    GenericConnectBuilder<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
     /// Sets the client identifier
     ///
     /// The client identifier uniquely identifies the client to the server.
@@ -680,7 +702,7 @@ impl ConnectBuilder {
     ///     .unwrap();
     /// ```
     pub fn client_id(mut self, id: impl AsRef<str>) -> Result<Self, MqttError> {
-        let mqtt_str = MqttString::new(id.as_ref())?;
+        let mqtt_str = GenericMqttString::<STRING_BUFFER_SIZE>::new(id.as_ref())?;
         self.client_id_buf = Some(mqtt_str);
         Ok(self)
     }
@@ -773,8 +795,8 @@ impl ConnectBuilder {
         qos: Qos,
         retain: bool,
     ) -> Result<Self, MqttError> {
-        let will_topic = MqttString::new(topic.as_ref())?;
-        let will_payload = MqttBinary::new(payload.as_ref().to_vec())?;
+        let will_topic = GenericMqttString::<STRING_BUFFER_SIZE>::new(topic.as_ref())?;
+        let will_payload = GenericMqttBinary::<BINARY_BUFFER_SIZE>::new(payload.as_ref().to_vec())?;
 
         self.will_topic_buf = Some(will_topic);
         self.will_payload_buf = Some(will_payload);
@@ -816,7 +838,7 @@ impl ConnectBuilder {
     ///     .unwrap();
     /// ```
     pub fn user_name(mut self, name: impl AsRef<str>) -> Result<Self, MqttError> {
-        let mqtt_str = MqttString::new(name.as_ref())?;
+        let mqtt_str = GenericMqttString::<STRING_BUFFER_SIZE>::new(name.as_ref())?;
         self.user_name_buf = Some(mqtt_str);
 
         let mut flags = self.connect_flags_buf.unwrap_or([0b0000_0010])[0];
@@ -863,7 +885,7 @@ impl ConnectBuilder {
     ///     .unwrap();
     /// ```
     pub fn password(mut self, pwd: impl AsRef<[u8]>) -> Result<Self, MqttError> {
-        let mqtt_bin = MqttBinary::new(pwd.as_ref().to_vec())?;
+        let mqtt_bin = GenericMqttBinary::<BINARY_BUFFER_SIZE>::new(pwd.as_ref().to_vec())?;
         self.password_buf = Some(mqtt_bin);
 
         let mut flags = self.connect_flags_buf.unwrap_or([0b0000_0010])[0];
@@ -980,7 +1002,9 @@ impl ConnectBuilder {
     ///     .build()
     ///     .unwrap();
     /// ```
-    pub fn build(self) -> Result<Connect, MqttError> {
+    pub fn build(
+        self,
+    ) -> Result<GenericConnect<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>, MqttError> {
         self.validate()?;
 
         let protocol_name = [0x00, 0x04, b'M', b'Q', b'T', b'T'];
@@ -1021,7 +1045,7 @@ impl ConnectBuilder {
 
         let remaining_length = VariableByteInteger::from_u32(remaining as u32).unwrap();
 
-        Ok(Connect {
+        Ok(GenericConnect {
             fixed_header: [FixedHeader::Connect as u8],
             remaining_length,
             protocol_name,
@@ -1061,7 +1085,9 @@ impl ConnectBuilder {
 /// - `will_retain`: Will retain flag (if will message present)
 /// - `will_topic`: Will topic (if will message present)
 /// - `will_payload`: Will payload as escaped binary string (if will message present)
-impl Serialize for Connect {
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> Serialize
+    for GenericConnect<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -1134,7 +1160,9 @@ impl Serialize for Connect {
 /// println!("{}", connect);
 /// // Output: {"type":"connect","client_id":"device","clean_start":true,"keep_alive":0}
 /// ```
-impl fmt::Display for Connect {
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> fmt::Display
+    for GenericConnect<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match serde_json::to_string(self) {
             Ok(json) => write!(f, "{json}"),
@@ -1161,7 +1189,9 @@ impl fmt::Display for Connect {
 /// println!("{:?}", connect);
 /// // Output: {"type":"connect","client_id":"device","clean_start":true,"keep_alive":0}
 /// ```
-impl fmt::Debug for Connect {
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> fmt::Debug
+    for GenericConnect<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Display::fmt(self, f)
     }
@@ -1173,7 +1203,9 @@ impl fmt::Debug for Connect {
 /// allowing CONNECT packets to be used polymorphically with other packet types.
 ///
 /// The implementation delegates to the specific CONNECT packet methods.
-impl GenericPacketTrait for Connect {
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> GenericPacketTrait
+    for GenericConnect<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
     /// Returns the total size of the packet in bytes
     ///
     /// Delegates to the `Connect::size()` method.
@@ -1197,7 +1229,9 @@ impl GenericPacketTrait for Connect {
 /// allowing CONNECT packets to be formatted uniformly with other packet types.
 ///
 /// The implementation delegates to the standard Debug and Display traits.
-impl GenericPacketDisplay for Connect {
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> GenericPacketDisplay
+    for GenericConnect<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
     /// Formats the packet using the Debug trait
     ///
     /// Delegates to the `Debug::fmt()` implementation.

@@ -32,7 +32,7 @@ use serde::Serialize;
 
 use getset::{CopyGetters, Getters};
 
-use crate::mqtt::packet::mqtt_string::MqttString;
+use crate::mqtt::packet::mqtt_string::GenericMqttString;
 use crate::mqtt::packet::packet_type::{FixedHeader, PacketType};
 use crate::mqtt::packet::variable_byte_integer::VariableByteInteger;
 use crate::mqtt::packet::GenericPacketDisplay;
@@ -130,7 +130,7 @@ use crate::mqtt::result_code::MqttError;
 /// ```
 #[derive(PartialEq, Eq, Builder, Clone, Getters, CopyGetters)]
 #[builder(no_std, derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
-pub struct GenericUnsubscribe<PacketIdType>
+pub struct GenericUnsubscribe<PacketIdType, const STRING_BUFFER_SIZE: usize = 32>
 where
     PacketIdType: IsPacketId,
 {
@@ -147,7 +147,7 @@ where
     /// unsubscribe from. Each entry must exactly match a topic filter from
     /// a previous SUBSCRIBE packet.
     #[builder(default = "Vec::new()", setter(custom))]
-    entry_bufs: Vec<MqttString>,
+    entry_bufs: Vec<GenericMqttString<STRING_BUFFER_SIZE>>,
 }
 
 /// Type alias for UNSUBSCRIBE packet with standard u16 packet identifiers
@@ -169,7 +169,8 @@ where
 /// ```
 pub type Unsubscribe = GenericUnsubscribe<u16>;
 
-impl<PacketIdType> GenericUnsubscribe<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize>
+    GenericUnsubscribe<PacketIdType, STRING_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId,
 {
@@ -195,8 +196,8 @@ where
     ///     .build()
     ///     .unwrap();
     /// ```
-    pub fn builder() -> GenericUnsubscribeBuilder<PacketIdType> {
-        GenericUnsubscribeBuilder::<PacketIdType>::default()
+    pub fn builder() -> GenericUnsubscribeBuilder<PacketIdType, STRING_BUFFER_SIZE> {
+        GenericUnsubscribeBuilder::<PacketIdType, STRING_BUFFER_SIZE>::default()
     }
 
     /// Returns the packet type for UNSUBSCRIBE packets
@@ -276,7 +277,7 @@ where
     /// assert_eq!(entries[0].as_str(), "home/temperature");
     /// assert_eq!(entries[1].as_str(), "sensors/+");
     /// ```
-    pub fn entries(&self) -> &Vec<MqttString> {
+    pub fn entries(&self) -> &Vec<GenericMqttString<STRING_BUFFER_SIZE>> {
         &self.entry_bufs
     }
 
@@ -336,7 +337,8 @@ where
 
         let mut entries = Vec::new();
         while cursor < data.len() {
-            let (mqtt_string, consumed) = MqttString::decode(&data[cursor..])?;
+            let (mqtt_string, consumed) =
+                GenericMqttString::<STRING_BUFFER_SIZE>::decode(&data[cursor..])?;
             entries.push(mqtt_string);
             cursor += consumed;
         }
@@ -445,7 +447,8 @@ where
 /// Provides methods for constructing UNSUBSCRIBE packets with validation.
 /// The builder ensures that all required fields are set and validates the
 /// packet according to MQTT 3.1.1 specifications before building.
-impl<PacketIdType> GenericUnsubscribeBuilder<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize>
+    GenericUnsubscribeBuilder<PacketIdType, STRING_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId,
 {
@@ -513,7 +516,7 @@ where
     pub fn entries<I, T>(mut self, entries: I) -> Result<Self, MqttError>
     where
         I: IntoIterator<Item = T>,
-        T: TryInto<MqttString>,
+        T: TryInto<GenericMqttString<STRING_BUFFER_SIZE>>,
         T::Error: Into<MqttError>,
     {
         let mqtt_strings: Result<Vec<_>, _> = entries
@@ -587,7 +590,7 @@ where
     ///     .build()
     ///     .unwrap();
     /// ```
-    pub fn build(self) -> Result<GenericUnsubscribe<PacketIdType>, MqttError> {
+    pub fn build(self) -> Result<GenericUnsubscribe<PacketIdType, STRING_BUFFER_SIZE>, MqttError> {
         self.validate()?;
 
         let packet_id_buf = self.packet_id_buf.unwrap();
@@ -620,7 +623,8 @@ where
 /// - `type`: Always "unsubscribe"
 /// - `packet_id`: The packet identifier
 /// - `entries`: Array of topic filter strings (only included if not empty)
-impl<PacketIdType> Serialize for GenericUnsubscribe<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize> Serialize
+    for GenericUnsubscribe<PacketIdType, STRING_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId + Serialize,
 {
@@ -666,7 +670,8 @@ where
 ///
 /// println!("UNSUBSCRIBE packet: {}", unsubscribe);
 /// ```
-impl<PacketIdType> fmt::Display for GenericUnsubscribe<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize> fmt::Display
+    for GenericUnsubscribe<PacketIdType, STRING_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId + Serialize,
 {
@@ -682,7 +687,8 @@ where
 ///
 /// Provides the same output as the Display implementation for consistent
 /// formatting across different contexts.
-impl<PacketIdType> fmt::Debug for GenericUnsubscribe<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize> fmt::Debug
+    for GenericUnsubscribe<PacketIdType, STRING_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId + Serialize,
 {
@@ -696,7 +702,8 @@ where
 /// Provides common packet operations required by the MQTT protocol framework.
 /// This trait allows UNSUBSCRIBE packets to be used polymorphically with other
 /// packet types in the protocol implementation.
-impl<PacketIdType> GenericPacketTrait for GenericUnsubscribe<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize> GenericPacketTrait
+    for GenericUnsubscribe<PacketIdType, STRING_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId,
 {
@@ -718,7 +725,8 @@ where
 ///
 /// Provides display formatting methods for consistent packet output across
 /// the MQTT protocol framework.
-impl<PacketIdType> GenericPacketDisplay for GenericUnsubscribe<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize> GenericPacketDisplay
+    for GenericUnsubscribe<PacketIdType, STRING_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId + Serialize,
 {

@@ -150,7 +150,7 @@ use crate::mqtt::result_code::MqttError;
 /// ```
 #[derive(PartialEq, Eq, Builder, Clone, Getters, CopyGetters)]
 #[builder(no_std, derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
-pub struct GenericSubscribe<PacketIdType>
+pub struct GenericSubscribe<PacketIdType, const STRING_BUFFER_SIZE: usize = 32>
 where
     PacketIdType: IsPacketId,
 {
@@ -192,7 +192,8 @@ where
 /// ```
 pub type Subscribe = GenericSubscribe<u16>;
 
-impl<PacketIdType> GenericSubscribe<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize>
+    GenericSubscribe<PacketIdType, STRING_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId,
 {
@@ -226,8 +227,8 @@ where
     ///     .build()
     ///     .unwrap();
     /// ```
-    pub fn builder() -> GenericSubscribeBuilder<PacketIdType> {
-        GenericSubscribeBuilder::<PacketIdType>::default()
+    pub fn builder() -> GenericSubscribeBuilder<PacketIdType, STRING_BUFFER_SIZE> {
+        GenericSubscribeBuilder::<PacketIdType, STRING_BUFFER_SIZE>::default()
     }
 
     /// Returns the packet type for SUBSCRIBE packets
@@ -462,7 +463,8 @@ where
 /// The builder provides a fluent interface for constructing SUBSCRIBE packets with
 /// validation of required fields and protocol compliance. It ensures that all
 /// SUBSCRIBE packets have a valid packet identifier and at least one subscription entry.
-impl<PacketIdType> GenericSubscribeBuilder<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize>
+    GenericSubscribeBuilder<PacketIdType, STRING_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId,
 {
@@ -562,7 +564,7 @@ where
     ///     .build()
     ///     .unwrap();
     /// ```
-    pub fn build(self) -> Result<GenericSubscribe<PacketIdType>, MqttError> {
+    pub fn build(self) -> Result<GenericSubscribe<PacketIdType, STRING_BUFFER_SIZE>, MqttError> {
         self.validate()?;
 
         let packet_id_buf = self.packet_id_buf.unwrap();
@@ -612,7 +614,8 @@ where
 /// println!("{}", subscribe);
 /// // Output: {"type":"subscribe","packet_id":42,"entries":[...]}
 /// ```
-impl<PacketIdType> fmt::Display for GenericSubscribe<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize> fmt::Display
+    for GenericSubscribe<PacketIdType, STRING_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId + Serialize,
 {
@@ -651,7 +654,8 @@ where
 ///
 /// println!("{:?}", subscribe);
 /// ```
-impl<PacketIdType> fmt::Debug for GenericSubscribe<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize> fmt::Debug
+    for GenericSubscribe<PacketIdType, STRING_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId + Serialize,
 {
@@ -695,7 +699,8 @@ where
 /// let json = serde_json::to_string(&subscribe).unwrap();
 /// // json contains: {"type":"subscribe","packet_id":123,"entries":[...]}
 /// ```
-impl<PacketIdType> Serialize for GenericSubscribe<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize> Serialize
+    for GenericSubscribe<PacketIdType, STRING_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId + Serialize,
 {
@@ -732,7 +737,8 @@ where
 ///
 /// - `size()`: Returns the total packet size in bytes
 /// - `to_buffers()`: Returns I/O slices for efficient transmission
-impl<PacketIdType> GenericPacketTrait for GenericSubscribe<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize> GenericPacketTrait
+    for GenericSubscribe<PacketIdType, STRING_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId,
 {
@@ -755,7 +761,8 @@ where
 /// Provides unified display formatting for packet types, supporting both
 /// debug and display formatting through a common interface. This is used
 /// by the packet handling infrastructure for consistent logging and debugging.
-impl<PacketIdType> GenericPacketDisplay for GenericSubscribe<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize> GenericPacketDisplay
+    for GenericSubscribe<PacketIdType, STRING_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId + Serialize,
 {
