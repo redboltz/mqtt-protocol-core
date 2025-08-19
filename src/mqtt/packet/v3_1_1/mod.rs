@@ -20,18 +20,16 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 mod connect;
-pub use self::connect::Connect;
+pub use self::connect::{Connect, GenericConnect};
 mod connack;
 pub use self::connack::Connack;
 mod subscribe;
-pub use self::subscribe::GenericSubscribe;
-pub use self::subscribe::Subscribe;
+pub use self::subscribe::{GenericSubscribe, Subscribe};
 mod suback;
 pub use self::suback::GenericSuback;
 pub use self::suback::Suback;
 mod unsubscribe;
-pub use self::unsubscribe::GenericUnsubscribe;
-pub use self::unsubscribe::Unsubscribe;
+pub use self::unsubscribe::{GenericUnsubscribe, Unsubscribe};
 mod unsuback;
 pub use self::unsuback::GenericUnsuback;
 pub use self::unsuback::Unsuback;

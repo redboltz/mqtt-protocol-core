@@ -67,11 +67,11 @@ pub enum GenericPacket<
 > where
     PacketIdType: IsPacketId + Serialize,
 {
-    V3_1_1Connect(v3_1_1::Connect),
+    V3_1_1Connect(v3_1_1::GenericConnect<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>),
     V3_1_1Connack(v3_1_1::Connack),
-    V3_1_1Subscribe(v3_1_1::GenericSubscribe<PacketIdType>),
+    V3_1_1Subscribe(v3_1_1::GenericSubscribe<PacketIdType, STRING_BUFFER_SIZE>),
     V3_1_1Suback(v3_1_1::GenericSuback<PacketIdType>),
-    V3_1_1Unsubscribe(v3_1_1::GenericUnsubscribe<PacketIdType>),
+    V3_1_1Unsubscribe(v3_1_1::GenericUnsubscribe<PacketIdType, STRING_BUFFER_SIZE>),
     V3_1_1Unsuback(v3_1_1::GenericUnsuback<PacketIdType>),
     V3_1_1Publish(v3_1_1::GenericPublish<PacketIdType, STRING_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>),
     V3_1_1Puback(v3_1_1::GenericPuback<PacketIdType>),

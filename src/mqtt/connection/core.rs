@@ -1329,7 +1329,7 @@ where
     /// Process v3.1.1 CONNECT packet - C++ constexpr if implementation
     pub(crate) fn process_send_v3_1_1_connect(
         &mut self,
-        packet: v3_1_1::Connect,
+        packet: v3_1_1::GenericConnect<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>,
     ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
     {
         info!("send connect v3.1.1: {packet}");
@@ -1958,7 +1958,7 @@ where
 
     pub(crate) fn process_send_v3_1_1_subscribe(
         &mut self,
-        packet: v3_1_1::GenericSubscribe<PacketIdType>,
+        packet: v3_1_1::GenericSubscribe<PacketIdType, STRING_BUFFER_SIZE>,
     ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
     {
         let mut events = Vec::new();
@@ -2068,7 +2068,7 @@ where
 
     pub(crate) fn process_send_v3_1_1_unsubscribe(
         &mut self,
-        packet: v3_1_1::GenericUnsubscribe<PacketIdType>,
+        packet: v3_1_1::GenericUnsubscribe<PacketIdType, STRING_BUFFER_SIZE>,
     ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
     {
         let mut events = Vec::new();
