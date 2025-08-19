@@ -87,12 +87,6 @@ fn remaining_length_to_total_size(remaining_length: u32) -> u32 {
     1 + remaining_length_bytes + remaining_length
 }
 
-/// Type alias for Event with u16 packet ID (most common case)
-///
-/// This is a convenience type alias that most applications will use.
-/// It uses `u16` for packet IDs, which is the standard MQTT packet ID type.
-pub type Event = GenericEvent<u16>;
-
 /// Generic MQTT Connection - Core Sans-I/O MQTT protocol implementation
 ///
 /// This struct represents the core MQTT protocol logic in a Sans-I/O (synchronous I/O-independent) design.
@@ -135,8 +129,13 @@ pub type Event = GenericEvent<u16>;
 /// let events = connection.recv(&mut cursor);
 /// // Process events...
 /// ```
-pub struct GenericConnection<Role, PacketIdType>
-where
+pub struct GenericConnection<
+    Role,
+    PacketIdType,
+    const STRING_BUFFER_SIZE: usize = 32,
+    const BINARY_BUFFER_SIZE: usize = 32,
+    const PAYLOAD_BUFFER_SIZE: usize = 32,
+> where
     Role: RoleType,
     PacketIdType: IsPacketId,
 {
@@ -222,7 +221,20 @@ where
 /// * `Role` - The connection role (typically `role::Client` or `role::Server`)
 pub type Connection<Role> = GenericConnection<Role, u16>;
 
-impl<Role, PacketIdType> GenericConnection<Role, PacketIdType>
+impl<
+        Role,
+        PacketIdType,
+        const STRING_BUFFER_SIZE: usize,
+        const BINARY_BUFFER_SIZE: usize,
+        const PAYLOAD_BUFFER_SIZE: usize,
+    >
+    GenericConnection<
+        Role,
+        PacketIdType,
+        STRING_BUFFER_SIZE,
+        BINARY_BUFFER_SIZE,
+        PAYLOAD_BUFFER_SIZE,
+    >
 where
     Role: RoleType,
     PacketIdType: IsPacketId,
@@ -328,7 +340,10 @@ where
     /// // This would cause a compile error
     /// // let events = client.checked_send(connack_packet); // Error - clients cannot send CONNACK
     /// ```
-    pub fn checked_send<T>(&mut self, packet: T) -> Vec<GenericEvent<PacketIdType>>
+    pub fn checked_send<T>(
+        &mut self,
+        packet: T,
+    ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>>
     where
         T: Sendable<Role, PacketIdType>,
     {
@@ -2663,7 +2678,7 @@ where
         let flags = raw_packet.flags();
         match &raw_packet.data {
             PacketData::Publish(arc) => {
-                match v3_1_1::GenericPublish::<PacketIdType>::parse(flags, arc.clone()) {
+                match v3_1_1::GenericPublish::<PacketIdType, STRING_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>::parse(flags, arc.clone()) {
                     Ok((packet, _consumed)) => {
                         match packet.qos() {
                             Qos::AtMostOnce => {
@@ -2728,7 +2743,13 @@ where
         let flags = raw_packet.flags();
         match &raw_packet.data {
             PacketData::Publish(arc) => {
-                match v5_0::GenericPublish::parse(flags, arc.clone()) {
+                match v5_0::GenericPublish::<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >::parse(flags, arc.clone())
+                {
                     Ok((packet, _consumed)) => {
                         let mut already_handled = false;
                         let mut puback_send = false;

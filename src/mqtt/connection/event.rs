@@ -91,8 +91,12 @@ pub enum TimerKind {
 /// }
 /// ```
 #[derive(Clone)]
-pub enum GenericEvent<PacketIdType>
-where
+pub enum GenericEvent<
+    PacketIdType,
+    const STRING_BUFFER_SIZE: usize = 32,
+    const BINARY_BUFFER_SIZE: usize = 32,
+    const PAYLOAD_BUFFER_SIZE: usize = 32,
+> where
     PacketIdType: IsPacketId + Serialize + 'static,
 {
     /// Notification that a packet was received and parsed successfully
@@ -104,7 +108,9 @@ where
     /// # Parameters
     ///
     /// * `GenericPacket<PacketIdType>` - The parsed MQTT packet
-    NotifyPacketReceived(GenericPacket<PacketIdType>),
+    NotifyPacketReceived(
+        GenericPacket<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>,
+    ),
 
     /// Request to send a packet via the underlying transport
     ///
@@ -200,14 +206,20 @@ where
 ///
 /// For extended scenarios where larger packet ID ranges are needed
 /// (such as broker clusters), use `GenericEvent<u32>` directly.
-pub type Event = GenericEvent<u16>;
+pub type Event = GenericEvent<u16, 32, 32, 32>;
 
 /// Serialization implementation for GenericEvent
 ///
 /// This implementation allows GenericEvent to be serialized to JSON format,
 /// which can be useful for logging, debugging, or inter-process communication.
 /// Each event variant is serialized with a "type" field indicating the event type.
-impl<PacketIdType> Serialize for GenericEvent<PacketIdType>
+impl<
+        PacketIdType,
+        const STRING_BUFFER_SIZE: usize,
+        const BINARY_BUFFER_SIZE: usize,
+        const PAYLOAD_BUFFER_SIZE: usize,
+    > Serialize
+    for GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId + Serialize + 'static,
 {
@@ -274,7 +286,13 @@ where
 /// Formats the event as a JSON string for human-readable output.
 /// This is particularly useful for logging and debugging purposes.
 /// If serialization fails, an error message is displayed instead.
-impl<PacketIdType> fmt::Display for GenericEvent<PacketIdType>
+impl<
+        PacketIdType,
+        const STRING_BUFFER_SIZE: usize,
+        const BINARY_BUFFER_SIZE: usize,
+        const PAYLOAD_BUFFER_SIZE: usize,
+    > fmt::Display
+    for GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId + Serialize + 'static,
 {
@@ -290,7 +308,13 @@ where
 ///
 /// Uses the same JSON formatting as Display for consistent debug output.
 /// This ensures that debug output is structured and easily parseable.
-impl<PacketIdType> fmt::Debug for GenericEvent<PacketIdType>
+impl<
+        PacketIdType,
+        const STRING_BUFFER_SIZE: usize,
+        const BINARY_BUFFER_SIZE: usize,
+        const PAYLOAD_BUFFER_SIZE: usize,
+    > fmt::Debug
+    for GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId + Serialize + 'static,
 {
