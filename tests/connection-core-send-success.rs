@@ -23,7 +23,6 @@
  */
 use mqtt_protocol_core::mqtt;
 mod common;
-use common::*;
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -33,6 +32,7 @@ use common::*;
 
 #[test]
 fn v3_1_1_client_send_connect() {
+    common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
     let send_packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Connect::builder()
         .client_id("cid1")

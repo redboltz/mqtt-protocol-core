@@ -22,9 +22,11 @@
  * SOFTWARE.
  */
 use mqtt_protocol_core::mqtt;
+mod common;
 
 #[test]
 fn test_recv_basic_functionality() {
+    common::init_tracing();
     let mut tar = mqtt::packet::TopicAliasRecv::new(5);
 
     // Test max() method
@@ -61,6 +63,7 @@ fn test_recv_basic_functionality() {
 
 #[test]
 fn test_recv_functionality() {
+    common::init_tracing();
     let mut tar = mqtt::packet::TopicAliasRecv::new(5);
 
     tar.insert_or_update("topic1", 1);
@@ -85,6 +88,7 @@ fn test_recv_functionality() {
 
 #[test]
 fn test_boundary_conditions() {
+    common::init_tracing();
     let mut tar = mqtt::packet::TopicAliasRecv::new(2);
 
     // Test MIN_ALIAS boundary (should be 1)
@@ -104,6 +108,7 @@ fn test_boundary_conditions() {
 
 #[test]
 fn test_empty_container() {
+    common::init_tracing();
     let tar = mqtt::packet::TopicAliasRecv::new(5);
 
     // Test operations on empty container
@@ -113,6 +118,7 @@ fn test_empty_container() {
 
 #[test]
 fn test_duplicate_operations() {
+    common::init_tracing();
     let mut tar = mqtt::packet::TopicAliasRecv::new(3);
 
     // Insert same topic-alias pair multiple times
@@ -125,6 +131,7 @@ fn test_duplicate_operations() {
 
 #[test]
 fn test_large_max_alias() {
+    common::init_tracing();
     let mut tar = mqtt::packet::TopicAliasRecv::new(1000);
 
     assert_eq!(tar.max(), 1000);
@@ -142,6 +149,7 @@ fn test_large_max_alias() {
 #[test]
 #[should_panic(expected = "assertion failed")]
 fn test_insert_empty_topic_panic() {
+    common::init_tracing();
     let mut tar = mqtt::packet::TopicAliasRecv::new(10);
     tar.insert_or_update("", 1); // Should panic
 }
@@ -149,6 +157,7 @@ fn test_insert_empty_topic_panic() {
 #[test]
 #[should_panic(expected = "assertion failed")]
 fn test_insert_invalid_alias_zero_panic() {
+    common::init_tracing();
     let mut tar = mqtt::packet::TopicAliasRecv::new(10);
     tar.insert_or_update("test", 0); // Should panic
 }
@@ -156,12 +165,14 @@ fn test_insert_invalid_alias_zero_panic() {
 #[test]
 #[should_panic(expected = "assertion failed")]
 fn test_insert_invalid_alias_too_high_panic() {
+    common::init_tracing();
     let mut tar = mqtt::packet::TopicAliasRecv::new(10);
     tar.insert_or_update("test", 11); // Should panic
 }
 
 #[test]
 fn test_special_characters_in_topics() {
+    common::init_tracing();
     let mut tar = mqtt::packet::TopicAliasRecv::new(5);
 
     // Test topics with special characters
@@ -180,6 +191,7 @@ fn test_special_characters_in_topics() {
 
 #[test]
 fn test_long_topic_names() {
+    common::init_tracing();
     let mut tar = mqtt::packet::TopicAliasRecv::new(3);
 
     let long_topic = "a".repeat(1000);
@@ -194,6 +206,7 @@ fn test_long_topic_names() {
 
 #[test]
 fn test_unicode_topics() {
+    common::init_tracing();
     let mut tar = mqtt::packet::TopicAliasRecv::new(5);
 
     tar.insert_or_update("トピック1", 1);
@@ -211,6 +224,7 @@ fn test_unicode_topics() {
 
 #[test]
 fn test_topic_update_behavior() {
+    common::init_tracing();
     let mut tar = mqtt::packet::TopicAliasRecv::new(3);
 
     tar.insert_or_update("topic1", 1);
@@ -230,6 +244,7 @@ fn test_topic_update_behavior() {
 
 #[test]
 fn test_alias_overwrite_behavior() {
+    common::init_tracing();
     let mut tar = mqtt::packet::TopicAliasRecv::new(3);
 
     tar.insert_or_update("topic1", 1);

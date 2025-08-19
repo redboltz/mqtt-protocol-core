@@ -26,7 +26,7 @@ use crate::mqtt::common::HashMap;
  */
 use alloc::string::String;
 
-use tracing::trace;
+use crate::mqtt::common::tracing::trace;
 
 /// Type alias for topic alias values
 pub type TopicAliasType = u16;

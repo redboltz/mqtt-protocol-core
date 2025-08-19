@@ -22,9 +22,11 @@
  * SOFTWARE.
  */
 use mqtt_protocol_core::mqtt;
+mod common;
 
 #[test]
 fn test_cursor_new() {
+    common::init_tracing();
     let data = &b"hello"[..];
     let cursor = mqtt::common::Cursor::new(data);
     assert_eq!(cursor.position(), 0);
@@ -33,6 +35,7 @@ fn test_cursor_new() {
 
 #[test]
 fn test_cursor_position_and_set_position() {
+    common::init_tracing();
     let mut cursor = mqtt::common::Cursor::new(&b"hello world"[..]);
 
     // Initial position should be 0
@@ -49,6 +52,7 @@ fn test_cursor_position_and_set_position() {
 
 #[test]
 fn test_cursor_get_ref() {
+    common::init_tracing();
     let data = &b"test data"[..];
     let cursor = mqtt::common::Cursor::new(data);
     assert_eq!(cursor.get_ref(), &data);
@@ -56,6 +60,7 @@ fn test_cursor_get_ref() {
 
 #[test]
 fn test_remaining_slice() {
+    common::init_tracing();
     let mut cursor = mqtt::common::Cursor::new(&b"hello world"[..]);
 
     // Initially should return entire slice
@@ -76,6 +81,7 @@ fn test_remaining_slice() {
 
 #[test]
 fn test_read_u8() {
+    common::init_tracing();
     let mut cursor = mqtt::common::Cursor::new(&b"abc"[..]);
 
     // Read each byte
@@ -95,6 +101,7 @@ fn test_read_u8() {
 
 #[test]
 fn test_read_bytes() {
+    common::init_tracing();
     let mut cursor = mqtt::common::Cursor::new(&b"hello world"[..]);
 
     // Read first 5 bytes
@@ -120,6 +127,7 @@ fn test_read_bytes() {
 
 #[test]
 fn test_read_bytes_zero_length() {
+    common::init_tracing();
     let mut cursor = mqtt::common::Cursor::new(&b"hello"[..]);
 
     // Read zero bytes should succeed and return empty slice
@@ -130,6 +138,7 @@ fn test_read_bytes_zero_length() {
 
 #[test]
 fn test_read_bytes_exact_length() {
+    common::init_tracing();
     let mut cursor = mqtt::common::Cursor::new(&b"test"[..]);
 
     // Read exactly the length of the data
@@ -144,6 +153,7 @@ fn test_read_bytes_exact_length() {
 
 #[test]
 fn test_read() {
+    common::init_tracing();
     let mut cursor = mqtt::common::Cursor::new(&b"hello world"[..]);
     let mut buf = [0u8; 5];
 
@@ -175,6 +185,7 @@ fn test_read() {
 
 #[test]
 fn test_read_exact() {
+    common::init_tracing();
     let mut cursor = mqtt::common::Cursor::new(&b"hello world"[..]);
     let mut buf = [0u8; 5];
 
@@ -198,6 +209,7 @@ fn test_read_exact() {
 
 #[test]
 fn test_read_exact_zero_length() {
+    common::init_tracing();
     let mut cursor = mqtt::common::Cursor::new(&b"hello"[..]);
     let mut buf = [0u8; 0];
 
@@ -208,6 +220,7 @@ fn test_read_exact_zero_length() {
 
 #[test]
 fn test_read_exact_at_end() {
+    common::init_tracing();
     let mut cursor = mqtt::common::Cursor::new(&b"ab"[..]);
     cursor.set_position(2);
 
@@ -218,6 +231,7 @@ fn test_read_exact_at_end() {
 
 #[test]
 fn test_cursor_with_different_types() {
+    common::init_tracing();
     // Test with Vec<u8>
     let data_vec = vec![1, 2, 3, 4, 5];
     let mut cursor_vec = mqtt::common::Cursor::new(data_vec);
@@ -235,6 +249,7 @@ fn test_cursor_with_different_types() {
 
 #[test]
 fn test_cursor_error_debug() {
+    common::init_tracing();
     let error = mqtt::common::CursorError::UnexpectedEof;
     let debug_str = format!("{error:?}");
     assert_eq!(debug_str, "UnexpectedEof");
@@ -242,6 +257,7 @@ fn test_cursor_error_debug() {
 
 #[test]
 fn test_cursor_error_equality() {
+    common::init_tracing();
     let error1 = mqtt::common::CursorError::UnexpectedEof;
     let error2 = mqtt::common::CursorError::UnexpectedEof;
     assert_eq!(error1, error2);
@@ -250,6 +266,7 @@ fn test_cursor_error_equality() {
 
 #[test]
 fn test_mixed_operations() {
+    common::init_tracing();
     let mut cursor = mqtt::common::Cursor::new(&b"abcdefghij"[..]);
 
     // Mix different read operations
@@ -276,6 +293,7 @@ fn test_mixed_operations() {
 
 #[test]
 fn test_position_overflow_safety() {
+    common::init_tracing();
     let mut cursor = mqtt::common::Cursor::new(&b"hello"[..]);
 
     // Set position to very large value

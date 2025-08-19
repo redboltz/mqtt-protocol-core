@@ -22,9 +22,11 @@
  * SOFTWARE.
  */
 use mqtt_protocol_core::mqtt;
+mod common;
 
 #[test]
 fn test_get_receive_maximum_vacancy_for_send() {
+    common::init_tracing();
     let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
 
     // Initially no limit is set
@@ -141,6 +143,7 @@ fn test_get_receive_maximum_vacancy_for_send() {
 
 #[test]
 fn test_offline_publish_v3_1_1() {
+    common::init_tracing();
     let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
 
     // Enable offline publishing
@@ -225,6 +228,7 @@ fn test_offline_publish_v3_1_1() {
 
 #[test]
 fn test_offline_publish_v5_0() {
+    common::init_tracing();
     let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
 
     // Enable offline publishing
@@ -309,6 +313,7 @@ fn test_offline_publish_v5_0() {
 
 #[test]
 fn test_auto_pub_response_v3_1_1() {
+    common::init_tracing();
     let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
 
     // Enable automatic publish response
@@ -441,6 +446,7 @@ fn test_auto_pub_response_v3_1_1() {
 
 #[test]
 fn test_auto_pub_response_v5_0() {
+    common::init_tracing();
     let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
 
     // Enable automatic publish response
@@ -575,6 +581,7 @@ fn test_auto_pub_response_v5_0() {
 
 #[test]
 fn test_qos2_pubrel_send_request_v3_1_1() {
+    common::init_tracing();
     let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
 
     // Enable automatic publish response
@@ -644,6 +651,7 @@ fn test_qos2_pubrel_send_request_v3_1_1() {
 
 #[test]
 fn test_qos2_pubrel_send_request_v5_0() {
+    common::init_tracing();
     let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
 
     // Enable automatic publish response
@@ -714,6 +722,7 @@ fn test_qos2_pubrel_send_request_v5_0() {
 
 #[test]
 fn test_auto_ping_response_server_v3_1_1() {
+    common::init_tracing();
     let mut connection = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V3_1_1);
 
     // Enable automatic ping response
@@ -761,6 +770,7 @@ fn test_auto_ping_response_server_v3_1_1() {
 
 #[test]
 fn test_auto_ping_response_server_v5_0() {
+    common::init_tracing();
     let mut connection = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
 
     // Enable automatic ping response
@@ -808,6 +818,7 @@ fn test_auto_ping_response_server_v5_0() {
 
 #[test]
 fn test_packet_id_management_v3_1_1() {
+    common::init_tracing();
     let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
 
     connection.register_packet_id(1).unwrap();
@@ -835,6 +846,7 @@ fn test_packet_id_management_v3_1_1() {
 
 #[test]
 fn test_qos2_publish_handled_v3_1_1() {
+    common::init_tracing();
     let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
 
     // Send CONNECT
@@ -916,6 +928,7 @@ fn test_qos2_publish_handled_v3_1_1() {
 
 #[test]
 fn test_qos2_publish_handled_restore_v5_0() {
+    common::init_tracing();
     let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
 
     // Send CONNECT
@@ -972,6 +985,7 @@ fn test_qos2_publish_handled_restore_v5_0() {
 
 #[test]
 fn test_restore_packets_v3_1_1() {
+    common::init_tracing();
     let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
 
     // Create packets to restore
@@ -1114,6 +1128,7 @@ fn test_restore_packets_v3_1_1() {
 
 #[test]
 fn test_restore_packets_v5_0_server() {
+    common::init_tracing();
     let mut connection = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
 
     // Create packets to restore
@@ -1256,6 +1271,7 @@ fn test_restore_packets_v5_0_server() {
 
 #[test]
 fn test_v3_1_1_client_qos2_publish_processing_state() {
+    common::init_tracing();
     // Test v3.1.1 Client QoS2 publish processing state through the complete flow
     let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
 

@@ -24,10 +24,13 @@
 // tests/connection-pingreq-interval.rs
 // Tests for set_pingreq_send_interval functionality
 use mqtt_protocol_core::mqtt;
+
+mod common;
 use mqtt_protocol_core::mqtt::connection::event::{GenericEvent, TimerKind};
 
 #[test]
 fn test_set_pingreq_send_interval_enable() {
+    common::init_tracing();
     let mut connection =
         mqtt::GenericConnection::<mqtt::role::Client, u16>::new(mqtt::Version::V5_0);
 
@@ -47,6 +50,7 @@ fn test_set_pingreq_send_interval_enable() {
 
 #[test]
 fn test_set_pingreq_send_interval_disable() {
+    common::init_tracing();
     let mut connection =
         mqtt::GenericConnection::<mqtt::role::Client, u16>::new(mqtt::Version::V5_0);
 
@@ -68,6 +72,7 @@ fn test_set_pingreq_send_interval_disable() {
 
 #[test]
 fn test_set_pingreq_send_interval_update() {
+    common::init_tracing();
     let mut connection =
         mqtt::GenericConnection::<mqtt::role::Client, u16>::new(mqtt::Version::V5_0);
 
@@ -89,6 +94,7 @@ fn test_set_pingreq_send_interval_update() {
 
 #[test]
 fn test_set_pingreq_send_interval_server_role() {
+    common::init_tracing();
     let mut connection =
         mqtt::GenericConnection::<mqtt::role::Server, u32>::new(mqtt::Version::V3_1_1);
 

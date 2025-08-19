@@ -22,6 +22,8 @@
  * SOFTWARE.
  */
 use mqtt_protocol_core::mqtt;
+
+mod common;
 use std::fmt::Write;
 use std::sync::Arc;
 
@@ -29,12 +31,14 @@ use std::sync::Arc;
 
 #[test]
 fn build_fail_no_topic() {
+    common::init_tracing();
     let err = mqtt::packet::v5_0::Publish::builder().build().unwrap_err();
     assert_eq!(err, mqtt::result_code::MqttError::MalformedPacket);
 }
 
 #[test]
 fn build_fail_empty_topic_no_alias() {
+    common::init_tracing();
     let err = mqtt::packet::v5_0::Publish::builder()
         .topic_name("")
         .unwrap()
@@ -45,6 +49,7 @@ fn build_fail_empty_topic_no_alias() {
 
 #[test]
 fn build_fail_topic_too_long() {
+    common::init_tracing();
     let long_topic = "a".repeat(65536);
     let err = mqtt::packet::v5_0::Publish::builder()
         .topic_name(long_topic.as_str())
@@ -54,6 +59,7 @@ fn build_fail_topic_too_long() {
 
 #[test]
 fn build_fail_topic_with_wildcard() {
+    common::init_tracing();
     let err = mqtt::packet::v5_0::Publish::builder()
         .topic_name("bad+topic")
         .unwrap_err();
@@ -62,6 +68,7 @@ fn build_fail_topic_with_wildcard() {
 
 #[test]
 fn build_fail_qos1_no_packet_id() {
+    common::init_tracing();
     let err = mqtt::packet::v5_0::Publish::builder()
         .topic_name("test")
         .unwrap()
@@ -73,6 +80,7 @@ fn build_fail_qos1_no_packet_id() {
 
 #[test]
 fn build_fail_qos0_with_packet_id() {
+    common::init_tracing();
     let err = mqtt::packet::v5_0::Publish::builder()
         .topic_name("test")
         .unwrap()
@@ -84,6 +92,7 @@ fn build_fail_qos0_with_packet_id() {
 
 #[test]
 fn build_fail_duplicate_property() {
+    common::init_tracing();
     let mut props = mqtt::packet::Properties::new();
     props.push(
         mqtt::packet::PayloadFormatIndicator::new(mqtt::packet::PayloadFormat::Binary)
@@ -107,6 +116,7 @@ fn build_fail_duplicate_property() {
 
 #[test]
 fn build_fail_qos0_with_packet_id_validation() {
+    common::init_tracing();
     // This tests line 306: QoS 0 with packet ID validation in validate() method
     let err = mqtt::packet::v5_0::Publish::builder()
         .topic_name("test")
@@ -120,6 +130,7 @@ fn build_fail_qos0_with_packet_id_validation() {
 
 #[test]
 fn build_fail_qos1_packet_id_zero() {
+    common::init_tracing();
     // This tests line 315: packet ID zero validation
     let err = mqtt::packet::v5_0::Publish::builder()
         .topic_name("test")
@@ -133,6 +144,7 @@ fn build_fail_qos1_packet_id_zero() {
 
 #[test]
 fn build_fail_payload_too_large() {
+    common::init_tracing();
     // This tests line 327: payload size limit validation (268435455 bytes)
     let large_payload = vec![0u8; 268435456]; // 1 byte over limit
     let err = mqtt::packet::v5_0::Publish::builder()
@@ -148,6 +160,7 @@ fn build_fail_payload_too_large() {
 
 #[test]
 fn build_success_empty_topic_with_alias() {
+    common::init_tracing();
     let mut props = mqtt::packet::Properties::new();
     props.push(mqtt::packet::TopicAlias::new(1).unwrap().into());
 
@@ -163,6 +176,7 @@ fn build_success_empty_topic_with_alias() {
 
 #[test]
 fn build_success_qos2() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Publish::builder()
         .topic_name("test")
         .unwrap()
@@ -178,6 +192,7 @@ fn build_success_qos2() {
 
 #[test]
 fn build_success_empty_payload() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Publish::builder()
         .topic_name("test")
         .unwrap()
@@ -192,6 +207,7 @@ fn build_success_empty_payload() {
 
 #[test]
 fn display_qos0() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Publish::builder()
         .topic_name("test/topic")
         .unwrap()
@@ -209,6 +225,7 @@ fn display_qos0() {
 
 #[test]
 fn display_qos1_with_packet_id() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Publish::builder()
         .topic_name("test/topic")
         .unwrap()
@@ -229,6 +246,7 @@ fn display_qos1_with_packet_id() {
 
 #[test]
 fn display_with_flags() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Publish::builder()
         .topic_name("test/topic")
         .unwrap()
@@ -246,6 +264,7 @@ fn display_with_flags() {
 
 #[test]
 fn display_binary_payload() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Publish::builder()
         .topic_name("test/topic")
         .unwrap()
@@ -260,6 +279,7 @@ fn display_binary_payload() {
 
 #[test]
 fn display_binary_payload_array() {
+    common::init_tracing();
     // Test payload with invalid UTF-8 bytes that should be serialized as array
     // This tests line 404: None => state.serialize_field("payload", &payload_data)?
     let packet = mqtt::packet::v5_0::Publish::builder()
@@ -276,6 +296,7 @@ fn display_binary_payload_array() {
 
 #[test]
 fn display_with_props() {
+    common::init_tracing();
     // This tests lines 388, 400: props field serialization
     let props = vec![
         mqtt::packet::ContentType::new("application/json")
@@ -318,6 +339,7 @@ fn display_with_props() {
 
 #[test]
 fn debug_qos0() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Publish::builder()
         .topic_name("test/topic")
         .unwrap()
@@ -337,6 +359,7 @@ fn debug_qos0() {
 
 #[test]
 fn getter_qos0() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Publish::builder()
         .topic_name("test/topic")
         .unwrap()
@@ -355,6 +378,7 @@ fn getter_qos0() {
 
 #[test]
 fn getter_qos1_with_packet_id() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Publish::builder()
         .topic_name("test/topic")
         .unwrap()
@@ -374,6 +398,7 @@ fn getter_qos1_with_packet_id() {
 
 #[test]
 fn getter_with_flags() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Publish::builder()
         .topic_name("test/topic")
         .unwrap()
@@ -389,6 +414,7 @@ fn getter_with_flags() {
 
 #[test]
 fn getter_with_props() {
+    common::init_tracing();
     let mut props = mqtt::packet::Properties::new();
     props.push(
         mqtt::packet::MessageExpiryInterval::new(300)
@@ -418,6 +444,7 @@ fn getter_with_props() {
 
 #[test]
 fn to_buffers_qos0() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Publish::builder()
         .topic_name("test")
         .unwrap()
@@ -444,6 +471,7 @@ fn to_buffers_qos0() {
 
 #[test]
 fn to_buffers_qos1() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Publish::builder()
         .topic_name("test")
         .unwrap()
@@ -472,6 +500,7 @@ fn to_buffers_qos1() {
 
 #[test]
 fn to_buffers_with_flags() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Publish::builder()
         .topic_name("test")
         .unwrap()
@@ -497,6 +526,7 @@ fn to_buffers_with_flags() {
 
 #[test]
 fn to_buffers_with_props() {
+    common::init_tracing();
     let mut props = mqtt::packet::Properties::new();
     props.push(mqtt::packet::Property::MessageExpiryInterval(
         mqtt::packet::MessageExpiryInterval::new(300).unwrap(),
@@ -530,6 +560,7 @@ fn to_buffers_with_props() {
 
 #[test]
 fn parse_empty() {
+    common::init_tracing();
     let empty_arc: Arc<[u8]> = Arc::from(Vec::new().into_boxed_slice());
     let err = mqtt::packet::v5_0::Publish::parse(0, empty_arc).unwrap_err();
     assert_eq!(err, mqtt::result_code::MqttError::MalformedPacket);
@@ -537,6 +568,7 @@ fn parse_empty() {
 
 #[test]
 fn parse_topic_incomplete() {
+    common::init_tracing();
     let raw = vec![0x00]; // incomplete topic length
     let data_arc: Arc<[u8]> = Arc::from(raw.into_boxed_slice());
     let err = mqtt::packet::v5_0::Publish::parse(0, data_arc).unwrap_err();
@@ -545,6 +577,7 @@ fn parse_topic_incomplete() {
 
 #[test]
 fn parse_invalid_qos() {
+    common::init_tracing();
     let mut raw = Vec::new();
     raw.extend_from_slice(&(0u16).to_be_bytes()); // empty topic
     raw.push(0x00); // property length 0
@@ -556,6 +589,7 @@ fn parse_invalid_qos() {
 
 #[test]
 fn parse_qos0() {
+    common::init_tracing();
     let mut raw = Vec::new();
     raw.extend_from_slice(&(4u16).to_be_bytes()); // topic length
     raw.extend_from_slice(b"test"); // topic
@@ -574,6 +608,7 @@ fn parse_qos0() {
 
 #[test]
 fn parse_qos1() {
+    common::init_tracing();
     let mut raw = Vec::new();
     raw.extend_from_slice(&(4u16).to_be_bytes()); // topic length
     raw.extend_from_slice(b"test"); // topic
@@ -594,6 +629,7 @@ fn parse_qos1() {
 
 #[test]
 fn parse_qos2() {
+    common::init_tracing();
     let mut raw = Vec::new();
     raw.extend_from_slice(&(4u16).to_be_bytes()); // topic length
     raw.extend_from_slice(b"test"); // topic
@@ -614,6 +650,7 @@ fn parse_qos2() {
 
 #[test]
 fn parse_qos1_packet_id_incomplete() {
+    common::init_tracing();
     let mut raw = Vec::new();
     raw.extend_from_slice(&(4u16).to_be_bytes()); // topic length
     raw.extend_from_slice(b"test"); // topic
@@ -628,6 +665,7 @@ fn parse_qos1_packet_id_incomplete() {
 
 #[test]
 fn parse_empty_payload() {
+    common::init_tracing();
     let mut raw = Vec::new();
     raw.extend_from_slice(&(4u16).to_be_bytes()); // topic length
     raw.extend_from_slice(b"test"); // topic
@@ -644,6 +682,7 @@ fn parse_empty_payload() {
 
 #[test]
 fn parse_no_properties() {
+    common::init_tracing();
     let mut raw = Vec::new();
     raw.extend_from_slice(&(4u16).to_be_bytes()); // topic length
     raw.extend_from_slice(b"test"); // topic
@@ -660,6 +699,7 @@ fn parse_no_properties() {
 
 #[test]
 fn parse_with_flags() {
+    common::init_tracing();
     let mut raw = Vec::new();
     raw.extend_from_slice(&(4u16).to_be_bytes()); // topic length
     raw.extend_from_slice(b"test"); // topic
@@ -676,6 +716,7 @@ fn parse_with_flags() {
 
 #[test]
 fn parse_with_props() {
+    common::init_tracing();
     let mut raw = Vec::new();
     raw.extend_from_slice(&(4u16).to_be_bytes()); // topic length
     raw.extend_from_slice(b"test"); // topic
@@ -700,6 +741,7 @@ fn parse_with_props() {
 
 #[test]
 fn parse_prop_length_over() {
+    common::init_tracing();
     let mut raw = Vec::new();
     raw.extend_from_slice(&(4u16).to_be_bytes()); // topic length
     raw.extend_from_slice(b"test"); // topic
@@ -712,6 +754,7 @@ fn parse_prop_length_over() {
 
 #[test]
 fn parse_invalid_property() {
+    common::init_tracing();
     let mut raw = Vec::new();
     raw.extend_from_slice(&(4u16).to_be_bytes()); // topic length
     raw.extend_from_slice(b"test"); // topic
@@ -726,6 +769,7 @@ fn parse_invalid_property() {
 
 #[test]
 fn parse_invalid_property_validation() {
+    common::init_tracing();
     // This tests lines 465-467: property validation in validate_publish_properties
     let mut raw = Vec::new();
     raw.extend_from_slice(&(4u16).to_be_bytes()); // topic length
@@ -752,6 +796,7 @@ fn parse_invalid_property_validation() {
 
 #[test]
 fn size_qos0() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Publish::builder()
         .topic_name("test")
         .unwrap()
@@ -765,6 +810,7 @@ fn size_qos0() {
 
 #[test]
 fn size_qos1() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Publish::builder()
         .topic_name("test")
         .unwrap()
@@ -782,6 +828,7 @@ fn size_qos1() {
 
 #[test]
 fn test_remove_topic_alias_add_topic_basic() {
+    common::init_tracing();
     // Create a publish packet with empty topic name and TopicAlias property
     let mut props = mqtt::packet::Properties::new();
     props.push(mqtt::packet::TopicAlias::new(1).unwrap().into());
@@ -833,6 +880,7 @@ fn test_remove_topic_alias_add_topic_basic() {
 
 #[test]
 fn test_remove_topic_alias_add_topic_with_topic_alias() {
+    common::init_tracing();
     // Create a publish packet with empty topic name and TopicAlias property
     let mut props = mqtt::packet::Properties::new();
     props.push(mqtt::packet::TopicAlias::new(1).unwrap().into());
@@ -865,6 +913,7 @@ fn test_remove_topic_alias_add_topic_with_topic_alias() {
 
 #[test]
 fn test_remove_topic_alias_add_topic_invalid_topic() {
+    common::init_tracing();
     // Create a publish packet with TopicAlias to allow empty topic name
     let mut props = mqtt::packet::Properties::new();
     props.push(mqtt::packet::TopicAlias::new(1).unwrap().into());
@@ -889,6 +938,7 @@ fn test_remove_topic_alias_add_topic_invalid_topic() {
 
 #[test]
 fn test_remove_topic_alias_add_topic_non_empty_topic_error() {
+    common::init_tracing();
     // Create a publish packet with existing topic name
     let publish = mqtt::packet::v5_0::Publish::builder()
         .topic_name("existing/topic")
@@ -909,6 +959,7 @@ fn test_remove_topic_alias_add_topic_non_empty_topic_error() {
 
 #[test]
 fn test_remove_topic_alias_basic() {
+    common::init_tracing();
     // Create a publish packet with TopicAlias property
     let mut props = mqtt::packet::Properties::new();
     props.push(mqtt::packet::TopicAlias::new(5).unwrap().into());
@@ -961,6 +1012,7 @@ fn test_remove_topic_alias_basic() {
 
 #[test]
 fn test_remove_topic_alias_no_topic_alias() {
+    common::init_tracing();
     // Create a publish packet without TopicAlias property
     let mut props = mqtt::packet::Properties::new();
     props.push(
@@ -1004,6 +1056,7 @@ fn test_remove_topic_alias_no_topic_alias() {
 
 #[test]
 fn test_remove_topic_alias_no_properties() {
+    common::init_tracing();
     // Create a publish packet without properties
     let publish = mqtt::packet::v5_0::Publish::builder()
         .topic_name("test/topic")
@@ -1034,6 +1087,7 @@ fn test_remove_topic_alias_no_properties() {
 
 #[test]
 fn test_length_recalculation_with_qos1() {
+    common::init_tracing();
     // Create a QoS1 publish packet with properties
     let mut props = mqtt::packet::Properties::new();
     props.push(mqtt::packet::TopicAlias::new(10).unwrap().into());
@@ -1075,6 +1129,7 @@ fn test_length_recalculation_with_qos1() {
 
 #[test]
 fn test_length_recalculation_property_length_changes() {
+    common::init_tracing();
     // Create packet with multiple properties including TopicAlias
     let mut props = mqtt::packet::Properties::new();
     props.push(mqtt::packet::TopicAlias::new(1).unwrap().into());
@@ -1136,6 +1191,7 @@ fn test_length_recalculation_property_length_changes() {
 
 #[test]
 fn test_empty_properties_after_topic_alias_removal() {
+    common::init_tracing();
     // Create packet with only TopicAlias property
     let mut props = mqtt::packet::Properties::new();
     props.push(mqtt::packet::TopicAlias::new(1).unwrap().into());
@@ -1172,6 +1228,7 @@ fn test_empty_properties_after_topic_alias_removal() {
 
 #[test]
 fn test_roundtrip_serialization_after_modification() {
+    common::init_tracing();
     // Create a packet, modify it, then verify it can be serialized and parsed correctly
     let mut props = mqtt::packet::Properties::new();
     props.push(mqtt::packet::TopicAlias::new(20).unwrap().into());
@@ -1240,6 +1297,7 @@ fn test_roundtrip_serialization_after_modification() {
 
 #[test]
 fn test_set_dup_true() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Publish::builder()
         .topic_name("test/topic")
         .unwrap()
@@ -1264,6 +1322,7 @@ fn test_set_dup_true() {
 
 #[test]
 fn test_set_dup_false() {
+    common::init_tracing();
     let mut props = mqtt::packet::Properties::new();
     props.push(
         mqtt::packet::UserProperty::new("test", "value")
@@ -1307,6 +1366,7 @@ fn test_set_dup_false() {
 
 #[test]
 fn test_set_dup_chaining() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Publish::builder()
         .topic_name("test/topic")
         .unwrap()
@@ -1329,6 +1389,7 @@ fn test_set_dup_chaining() {
 
 #[test]
 fn test_add_extracted_topic_name_success() {
+    common::init_tracing();
     // Create a packet with empty topic name and TopicAlias property
     let mut props = mqtt::packet::Properties::new();
     props.push(mqtt::packet::TopicAlias::new(1).unwrap().into());
@@ -1370,6 +1431,7 @@ fn test_add_extracted_topic_name_success() {
 
 #[test]
 fn test_add_extracted_topic_name_non_empty_topic_error() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Publish::builder()
         .topic_name("existing/topic")
         .unwrap()
@@ -1389,6 +1451,7 @@ fn test_add_extracted_topic_name_non_empty_topic_error() {
 
 #[test]
 fn test_add_extracted_topic_name_invalid_topic_wildcard() {
+    common::init_tracing();
     let mut props = mqtt::packet::Properties::new();
     props.push(mqtt::packet::TopicAlias::new(1).unwrap().into());
 
@@ -1421,6 +1484,7 @@ fn test_add_extracted_topic_name_invalid_topic_wildcard() {
 
 #[test]
 fn test_topic_name_extracted_default_false() {
+    common::init_tracing();
     // Test that topic_name_extracted is false by default for builder
     let packet = mqtt::packet::v5_0::Publish::builder()
         .topic_name("test/topic")
@@ -1435,6 +1499,7 @@ fn test_topic_name_extracted_default_false() {
 
 #[test]
 fn test_topic_name_extracted_parse_default_false() {
+    common::init_tracing();
     // Test that topic_name_extracted is false by default for parsed packets
     let mut raw = Vec::new();
     raw.extend_from_slice(&(10u16).to_be_bytes()); // topic length
@@ -1452,6 +1517,7 @@ fn test_topic_name_extracted_parse_default_false() {
 
 #[test]
 fn test_packet_type() {
+    common::init_tracing();
     let packet_type = mqtt::packet::v5_0::Publish::packet_type();
     assert_eq!(packet_type, mqtt::packet::PacketType::Publish);
 }

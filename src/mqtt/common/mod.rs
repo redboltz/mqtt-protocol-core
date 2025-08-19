@@ -31,6 +31,8 @@ mod cursor;
 pub use cursor::Cursor;
 pub use cursor::CursorError;
 
+pub(crate) mod tracing;
+
 /// Type alias for HashSet to provide a stable API abstraction over the underlying hash set implementation.
 ///
 /// This alias allows the library to use a high-performance hash set implementation

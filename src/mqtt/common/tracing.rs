@@ -21,17 +21,43 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-use once_cell::sync::OnceCell;
-use tracing::Level;
-use tracing_subscriber::{fmt, EnvFilter};
 
-static LOGGER: OnceCell<()> = OnceCell::new();
+/// Feature-conditional tracing macros
+/// When the 'tracing' feature is enabled, these delegate to the real tracing macros.
+/// When disabled, they compile to no-ops.
 
-pub fn init(default_level: Level) {
-    LOGGER.get_or_init(|| {
-        let env_filter = EnvFilter::try_from_default_env()
-            .unwrap_or_else(|_| EnvFilter::from(default_level.to_string()));
+#[cfg(feature = "tracing")]
+pub use tracing::{debug, error, info, trace, warn};
 
-        fmt().with_env_filter(env_filter).with_target(true).init();
-    });
+#[cfg(not(feature = "tracing"))]
+#[macro_export]
+macro_rules! trace {
+    ($($arg:tt)*) => {};
 }
+
+#[cfg(not(feature = "tracing"))]
+#[macro_export]
+macro_rules! debug {
+    ($($arg:tt)*) => {};
+}
+
+#[cfg(not(feature = "tracing"))]
+#[macro_export]
+macro_rules! info {
+    ($($arg:tt)*) => {};
+}
+
+#[cfg(not(feature = "tracing"))]
+#[macro_export]
+macro_rules! warn {
+    ($($arg:tt)*) => {};
+}
+
+#[cfg(not(feature = "tracing"))]
+#[macro_export]
+macro_rules! error {
+    ($($arg:tt)*) => {};
+}
+
+#[cfg(not(feature = "tracing"))]
+pub use crate::{debug, error, info, trace, warn};

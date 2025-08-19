@@ -22,12 +22,15 @@
  * SOFTWARE.
  */
 use mqtt_protocol_core::mqtt;
+
+mod common;
 use std::fmt::Write;
 
 // Build fail tests
 
 #[test]
 fn build_fail_nosp() {
+    common::init_tracing();
     let err = mqtt::packet::v5_0::Connack::builder()
         .reason_code(mqtt::result_code::ConnectReasonCode::Success)
         .build()
@@ -38,6 +41,7 @@ fn build_fail_nosp() {
 
 #[test]
 fn build_fail_norc() {
+    common::init_tracing();
     let err = mqtt::packet::v5_0::Connack::builder()
         .session_present(true)
         .build()
@@ -48,6 +52,7 @@ fn build_fail_norc() {
 
 #[test]
 fn build_fail_invalid_prop() {
+    common::init_tracing();
     let err = mqtt::packet::v5_0::Connack::builder()
         .session_present(true)
         .reason_code(mqtt::result_code::ConnectReasonCode::Success)
@@ -62,6 +67,7 @@ fn build_fail_invalid_prop() {
 
 #[test]
 fn build_fail_valid_prop_sei_mt() {
+    common::init_tracing();
     let err = mqtt::packet::v5_0::Connack::builder()
         .session_present(true)
         .reason_code(mqtt::result_code::ConnectReasonCode::Success)
@@ -77,6 +83,7 @@ fn build_fail_valid_prop_sei_mt() {
 
 #[test]
 fn build_fail_valid_prop_rm_mt() {
+    common::init_tracing();
     let err = mqtt::packet::v5_0::Connack::builder()
         .session_present(true)
         .reason_code(mqtt::result_code::ConnectReasonCode::Success)
@@ -92,6 +99,7 @@ fn build_fail_valid_prop_rm_mt() {
 
 #[test]
 fn build_fail_valid_prop_mq_mt() {
+    common::init_tracing();
     let err = mqtt::packet::v5_0::Connack::builder()
         .session_present(true)
         .reason_code(mqtt::result_code::ConnectReasonCode::Success)
@@ -107,6 +115,7 @@ fn build_fail_valid_prop_mq_mt() {
 
 #[test]
 fn build_fail_valid_prop_ra_mt() {
+    common::init_tracing();
     let err = mqtt::packet::v5_0::Connack::builder()
         .session_present(true)
         .reason_code(mqtt::result_code::ConnectReasonCode::Success)
@@ -122,6 +131,7 @@ fn build_fail_valid_prop_ra_mt() {
 
 #[test]
 fn build_fail_valid_prop_mps_mt() {
+    common::init_tracing();
     let err = mqtt::packet::v5_0::Connack::builder()
         .session_present(true)
         .reason_code(mqtt::result_code::ConnectReasonCode::Success)
@@ -137,6 +147,7 @@ fn build_fail_valid_prop_mps_mt() {
 
 #[test]
 fn build_fail_valid_prop_aci_mt() {
+    common::init_tracing();
     let err = mqtt::packet::v5_0::Connack::builder()
         .session_present(true)
         .reason_code(mqtt::result_code::ConnectReasonCode::Success)
@@ -156,6 +167,7 @@ fn build_fail_valid_prop_aci_mt() {
 
 #[test]
 fn build_fail_valid_prop_tam_mt() {
+    common::init_tracing();
     let err = mqtt::packet::v5_0::Connack::builder()
         .session_present(true)
         .reason_code(mqtt::result_code::ConnectReasonCode::Success)
@@ -171,6 +183,7 @@ fn build_fail_valid_prop_tam_mt() {
 
 #[test]
 fn build_fail_valid_prop_rs_mt() {
+    common::init_tracing();
     let err = mqtt::packet::v5_0::Connack::builder()
         .session_present(true)
         .reason_code(mqtt::result_code::ConnectReasonCode::Success)
@@ -188,6 +201,7 @@ fn build_fail_valid_prop_rs_mt() {
 
 #[test]
 fn build_succes_svalid_prop() {
+    common::init_tracing();
     mqtt::packet::v5_0::Connack::builder()
         .session_present(true)
         .reason_code(mqtt::result_code::ConnectReasonCode::Success)
@@ -219,6 +233,7 @@ fn build_succes_svalid_prop() {
 
 #[test]
 fn display_sp_rc() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Connack::builder()
         .session_present(true)
         .reason_code(mqtt::result_code::ConnectReasonCode::Success)
@@ -237,6 +252,7 @@ fn display_sp_rc() {
 
 #[test]
 fn debug_sp_rc() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Connack::builder()
         .session_present(true)
         .reason_code(mqtt::result_code::ConnectReasonCode::Success)
@@ -255,6 +271,7 @@ fn debug_sp_rc() {
 
 #[test]
 fn getter_sp_rc() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Connack::builder()
         .session_present(true)
         .reason_code(mqtt::result_code::ConnectReasonCode::Success)
@@ -273,6 +290,7 @@ fn getter_sp_rc() {
 
 #[test]
 fn to_buffers_sp_rc() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Connack::builder()
         .session_present(true)
         .reason_code(mqtt::result_code::ConnectReasonCode::Success)
@@ -301,6 +319,7 @@ fn to_buffers_sp_rc() {
 
 #[test]
 fn to_continuous_sp_rc_prop1() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Connack::builder()
         .session_present(true)
         .reason_code(mqtt::result_code::ConnectReasonCode::Success)
@@ -337,6 +356,7 @@ fn to_continuous_sp_rc_prop1() {
 
 #[test]
 fn parse_no_sp() {
+    common::init_tracing();
     let raw = &[];
     let err = mqtt::packet::v5_0::Connack::parse(raw).unwrap_err();
     assert_eq!(err, mqtt::result_code::MqttError::MalformedPacket);
@@ -344,6 +364,7 @@ fn parse_no_sp() {
 
 #[test]
 fn parse_no_rc() {
+    common::init_tracing();
     let raw = &[0x01];
     let err = mqtt::packet::v5_0::Connack::parse(raw).unwrap_err();
     assert_eq!(err, mqtt::result_code::MqttError::MalformedPacket);
@@ -351,6 +372,7 @@ fn parse_no_rc() {
 
 #[test]
 fn parse_no_prop_len() {
+    common::init_tracing();
     let raw = &[0x01, 0x00];
     let err = mqtt::packet::v5_0::Connack::parse(raw).unwrap_err();
     assert_eq!(err, mqtt::result_code::MqttError::MalformedPacket);
@@ -358,6 +380,7 @@ fn parse_no_prop_len() {
 
 #[test]
 fn parse_no_props() {
+    common::init_tracing();
     let raw = &[0x01, 0x00, 0x00];
     let (packet, _) = mqtt::packet::v5_0::Connack::parse(raw)
         .expect("Failed to parse Connack packet with no properties");
@@ -371,6 +394,7 @@ fn parse_no_props() {
 
 #[test]
 fn test_packet_type() {
+    common::init_tracing();
     let packet_type = mqtt::packet::v5_0::Connack::packet_type();
     assert_eq!(packet_type, mqtt::packet::PacketType::Connack);
 }

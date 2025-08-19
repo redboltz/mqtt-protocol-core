@@ -1,32 +1,34 @@
 /**
- * MIT License
- *
- * Copyright (c) 2025 Takatoshi Kondo
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
+
+* MIT License
+*
+* Copyright (c) 2025 Takatoshi Kondo
+*
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+*
+* The above copyright notice and this permission notice shall be included in all
+* copies or substantial portions of the Software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+* SOFTWARE.
+*/
 // tests/store.rs
 // Integration tests for Store in async-mqtt-rust crate
 use mqtt_protocol_core::mqtt::connection::{GenericStore, Store};
 use mqtt_protocol_core::mqtt::packet::v3_1_1;
 use mqtt_protocol_core::mqtt::packet::Qos;
 use mqtt_protocol_core::mqtt::packet::{GenericStorePacket, ResponsePacket};
+mod common;
 
 /// Helper to create a GenericStorePacket with given id for testing.
 fn make_packet_u32(id: u32, qos: Qos) -> GenericStorePacket<u32> {
@@ -60,6 +62,7 @@ fn make_packet_u16(id: u16, qos: Qos) -> GenericStorePacket<u16> {
 
 #[test]
 fn test_add_and_get_stored_order() {
+    common::init_tracing();
     let mut store = GenericStore::<u32>::new();
     assert!(store.add(make_packet_u32(1, Qos::AtLeastOnce)).is_ok());
     assert!(store.add(make_packet_u32(2, Qos::ExactlyOnce)).is_ok());
@@ -73,6 +76,7 @@ fn test_add_and_get_stored_order() {
 
 #[test]
 fn test_erase_by_response_and_id() {
+    common::init_tracing();
     let mut store = GenericStore::<u32>::new();
     let p1 = make_packet_u32(10, Qos::ExactlyOnce); // Will expect V3_1_1Pubrec response
     let p2 = make_packet_u32(20, Qos::AtLeastOnce); // Will expect V3_1_1Puback response
@@ -93,6 +97,7 @@ fn test_erase_by_response_and_id() {
 
 #[test]
 fn test_erase_publish() {
+    common::init_tracing();
     let mut store = GenericStore::<u32>::new();
     // Only one matching packet
     store.add(make_packet_u32(42, Qos::ExactlyOnce)).unwrap();
@@ -105,6 +110,7 @@ fn test_erase_publish() {
 
 #[test]
 fn test_clear_and_for_each() {
+    common::init_tracing();
     let mut store = GenericStore::<u32>::new();
     for i in 1..6 {
         // Start from 1 instead of 0 (packet ID 0 is invalid)
@@ -129,6 +135,7 @@ fn test_clear_and_for_each() {
 
 #[test]
 fn test_store_type_alias() {
+    common::init_tracing();
     // Test that Store is a type alias for GenericStore<u16>
     let mut store = Store::new();
     let packet = make_packet_u16(100, Qos::AtLeastOnce);

@@ -23,6 +23,51 @@
  */
 use mqtt_protocol_core::mqtt;
 
+#[cfg(feature = "std")]
+use std::sync::Once;
+
+#[cfg(feature = "std")]
+static INIT: Once = Once::new();
+
+/// Automatic tracing initialization for ALL tests in std environments
+///
+/// Environment variables:
+/// - `RUST_LOG`: Standard Rust logging (takes precedence if set)
+/// - `MQTT_LOG_LEVEL`: Set log level (trace, debug, info, warn, error). Default: warn
+///
+/// Usage examples:
+/// - `cargo test --features tracing` (default warn level)
+/// - `MQTT_LOG_LEVEL=trace cargo test --features tracing`
+/// - `RUST_LOG=debug cargo test --features tracing`
+#[cfg(feature = "std")]
+fn auto_init_tracing() {
+    INIT.call_once(|| {
+        // Try RUST_LOG first, then MQTT_LOG_LEVEL, then default to warn
+        let filter = if let Ok(rust_log) = std::env::var("RUST_LOG") {
+            tracing_subscriber::EnvFilter::new(rust_log)
+        } else {
+            let level = std::env::var("MQTT_LOG_LEVEL").unwrap_or_else(|_| "warn".to_string());
+            tracing_subscriber::EnvFilter::new(format!("mqtt_protocol_core={level}"))
+        };
+
+        tracing_subscriber::fmt()
+            .with_env_filter(filter)
+            .with_target(true)
+            .with_test_writer()
+            .init();
+    });
+}
+
+// no-std環境用のstub関数
+#[cfg(not(feature = "std"))]
+fn auto_init_tracing() {
+    // no-op for no-std environments
+}
+
+pub fn init_tracing() {
+    auto_init_tracing();
+}
+
 pub fn v3_1_1_client_connecting(
     con: &mut mqtt::Connection<mqtt::role::Client>,
     clean_session: bool,

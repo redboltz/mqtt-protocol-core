@@ -1,3 +1,4 @@
+use crate::mqtt::common::tracing::trace;
 use crate::mqtt::connection::role;
 use crate::mqtt::connection::role::RoleType;
 use crate::mqtt::connection::sendable_role::SendableRole;
@@ -33,7 +34,6 @@ use crate::mqtt::packet::IsPacketId;
 use crate::mqtt::result_code::MqttError;
 use alloc::vec::Vec;
 use core::fmt::Debug;
-use tracing::trace;
 
 /// Core trait for sendable packets
 pub trait Sendable<Role, PacketIdType>: PacketKind

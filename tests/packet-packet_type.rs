@@ -22,11 +22,13 @@
  * SOFTWARE.
  */
 use mqtt_protocol_core::mqtt;
+mod common;
 
 // PacketType basic functionality tests
 
 #[test]
 fn packet_type_as_u8() {
+    common::init_tracing();
     assert_eq!(mqtt::packet::PacketType::Connect.as_u8(), 1);
     assert_eq!(mqtt::packet::PacketType::Connack.as_u8(), 2);
     assert_eq!(mqtt::packet::PacketType::Publish.as_u8(), 3);
@@ -46,6 +48,7 @@ fn packet_type_as_u8() {
 
 #[test]
 fn packet_type_as_str() {
+    common::init_tracing();
     assert_eq!(mqtt::packet::PacketType::Connect.as_str(), "connect");
     assert_eq!(mqtt::packet::PacketType::Connack.as_str(), "connack");
     assert_eq!(mqtt::packet::PacketType::Publish.as_str(), "publish");
@@ -68,6 +71,7 @@ fn packet_type_as_str() {
 
 #[test]
 fn packet_type_to_fixed_header() {
+    common::init_tracing();
     assert_eq!(
         mqtt::packet::PacketType::Connect.to_fixed_header(),
         mqtt::packet::FixedHeader::Connect
@@ -134,6 +138,7 @@ fn packet_type_to_fixed_header() {
 
 #[test]
 fn fixed_header_as_u8() {
+    common::init_tracing();
     assert_eq!(mqtt::packet::FixedHeader::Connect.as_u8(), 0x10);
     assert_eq!(mqtt::packet::FixedHeader::Connack.as_u8(), 0x20);
     assert_eq!(mqtt::packet::FixedHeader::Publish.as_u8(), 0x30);
@@ -153,6 +158,7 @@ fn fixed_header_as_u8() {
 
 #[test]
 fn fixed_header_packet_type() {
+    common::init_tracing();
     assert_eq!(
         mqtt::packet::FixedHeader::Connect.packet_type(),
         mqtt::packet::PacketType::Connect
@@ -217,6 +223,7 @@ fn fixed_header_packet_type() {
 
 #[test]
 fn fixed_header_as_str() {
+    common::init_tracing();
     assert_eq!(mqtt::packet::FixedHeader::Connect.as_str(), "connect");
     assert_eq!(mqtt::packet::FixedHeader::Connack.as_str(), "connack");
     assert_eq!(mqtt::packet::FixedHeader::Publish.as_str(), "publish");
@@ -241,6 +248,7 @@ fn fixed_header_as_str() {
 
 #[test]
 fn packet_type_try_from_primitive_valid() {
+    common::init_tracing();
     assert_eq!(
         mqtt::packet::PacketType::try_from(1u8).unwrap(),
         mqtt::packet::PacketType::Connect
@@ -305,6 +313,7 @@ fn packet_type_try_from_primitive_valid() {
 
 #[test]
 fn packet_type_try_from_primitive_invalid() {
+    common::init_tracing();
     assert!(mqtt::packet::PacketType::try_from(0u8).is_err());
     assert!(mqtt::packet::PacketType::try_from(16u8).is_err());
     assert!(mqtt::packet::PacketType::try_from(255u8).is_err());
@@ -312,6 +321,7 @@ fn packet_type_try_from_primitive_invalid() {
 
 #[test]
 fn fixed_header_try_from_primitive_valid() {
+    common::init_tracing();
     assert_eq!(
         mqtt::packet::FixedHeader::try_from(0x10u8).unwrap(),
         mqtt::packet::FixedHeader::Connect
@@ -376,6 +386,7 @@ fn fixed_header_try_from_primitive_valid() {
 
 #[test]
 fn fixed_header_try_from_primitive_invalid() {
+    common::init_tracing();
     assert!(mqtt::packet::FixedHeader::try_from(0x00u8).is_err());
     assert!(mqtt::packet::FixedHeader::try_from(0x11u8).is_err());
     assert!(mqtt::packet::FixedHeader::try_from(0x21u8).is_err());
@@ -386,6 +397,7 @@ fn fixed_header_try_from_primitive_invalid() {
 
 #[test]
 fn packet_type_display() {
+    common::init_tracing();
     assert_eq!(
         format!("{}", mqtt::packet::PacketType::Connect),
         "\"connect\""
@@ -447,6 +459,7 @@ fn packet_type_display() {
 
 #[test]
 fn packet_type_debug() {
+    common::init_tracing();
     assert_eq!(
         format!("{:?}", mqtt::packet::PacketType::Connect),
         "\"connect\""
@@ -508,6 +521,7 @@ fn packet_type_debug() {
 
 #[test]
 fn fixed_header_display() {
+    common::init_tracing();
     assert_eq!(
         format!("{}", mqtt::packet::FixedHeader::Connect),
         "\"connect\""
@@ -569,6 +583,7 @@ fn fixed_header_display() {
 
 #[test]
 fn fixed_header_debug() {
+    common::init_tracing();
     assert_eq!(
         format!("{:?}", mqtt::packet::FixedHeader::Connect),
         "\"connect\""
@@ -632,6 +647,7 @@ fn fixed_header_debug() {
 
 #[test]
 fn packet_type_serialize() {
+    common::init_tracing();
     assert_eq!(
         serde_json::to_string(&mqtt::packet::PacketType::Connect).unwrap(),
         "\"connect\""
@@ -696,6 +712,7 @@ fn packet_type_serialize() {
 
 #[test]
 fn fixed_header_serialize() {
+    common::init_tracing();
     assert_eq!(
         serde_json::to_string(&mqtt::packet::FixedHeader::Connect).unwrap(),
         "\"connect\""
@@ -760,6 +777,7 @@ fn fixed_header_serialize() {
 
 #[test]
 fn packet_type_deserialize() {
+    common::init_tracing();
     assert_eq!(
         serde_json::from_str::<mqtt::packet::PacketType>("\"Connect\"").unwrap(),
         mqtt::packet::PacketType::Connect
@@ -824,6 +842,7 @@ fn packet_type_deserialize() {
 
 #[test]
 fn fixed_header_deserialize() {
+    common::init_tracing();
     assert_eq!(
         serde_json::from_str::<mqtt::packet::FixedHeader>("\"Connect\"").unwrap(),
         mqtt::packet::FixedHeader::Connect
@@ -890,6 +909,7 @@ fn fixed_header_deserialize() {
 
 #[test]
 fn packet_type_equality() {
+    common::init_tracing();
     let connect1 = mqtt::packet::PacketType::Connect;
     let connect2 = mqtt::packet::PacketType::Connect;
     let connack = mqtt::packet::PacketType::Connack;
@@ -900,6 +920,7 @@ fn packet_type_equality() {
 
 #[test]
 fn fixed_header_equality() {
+    common::init_tracing();
     let connect1 = mqtt::packet::FixedHeader::Connect;
     let connect2 = mqtt::packet::FixedHeader::Connect;
     let connack = mqtt::packet::FixedHeader::Connack;
@@ -912,6 +933,7 @@ fn fixed_header_equality() {
 
 #[test]
 fn fixed_header_packet_type_extraction_edge_cases() {
+    common::init_tracing();
     // Test with type bits only (no additional flags)
     let type_bits = 0x10u8; // Connect
     let header = mqtt::packet::FixedHeader::try_from(type_bits).unwrap();
@@ -924,6 +946,7 @@ fn fixed_header_packet_type_extraction_edge_cases() {
 
 #[test]
 fn round_trip_conversion() {
+    common::init_tracing();
     // Test PacketType -> FixedHeader -> PacketType
     for &packet_type in &[
         mqtt::packet::PacketType::Connect,

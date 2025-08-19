@@ -22,12 +22,15 @@
  * SOFTWARE.
  */
 use mqtt_protocol_core::mqtt;
+
+mod common;
 use std::fmt::Write;
 
 // Build fail tests
 
 #[test]
 fn build_fail_nopid() {
+    common::init_tracing();
     let err = mqtt::packet::v5_0::Pubcomp::builder().build().unwrap_err();
 
     assert_eq!(err, mqtt::result_code::MqttError::MalformedPacket);
@@ -35,6 +38,7 @@ fn build_fail_nopid() {
 
 #[test]
 fn build_fail_pid0() {
+    common::init_tracing();
     let err = mqtt::packet::v5_0::Pubcomp::builder()
         .packet_id(0)
         .build()
@@ -45,6 +49,7 @@ fn build_fail_pid0() {
 
 #[test]
 fn build_fail_props_without_rc() {
+    common::init_tracing();
     let err = mqtt::packet::v5_0::Pubcomp::builder()
         .packet_id(1234)
         .props(mqtt::packet::Properties::new())
@@ -56,6 +61,7 @@ fn build_fail_props_without_rc() {
 
 #[test]
 fn build_fail_invalid_prop() {
+    common::init_tracing();
     let err = mqtt::packet::v5_0::Pubcomp::builder()
         .packet_id(1234)
         .reason_code(mqtt::result_code::PubcompReasonCode::Success)
@@ -70,6 +76,7 @@ fn build_fail_invalid_prop() {
 
 #[test]
 fn build_fail_valid_prop_mt() {
+    common::init_tracing();
     let err = mqtt::packet::v5_0::Pubcomp::builder()
         .packet_id(1234)
         .reason_code(mqtt::result_code::PubcompReasonCode::Success)
@@ -87,6 +94,7 @@ fn build_fail_valid_prop_mt() {
 
 #[test]
 fn display_pid() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Pubcomp::builder()
         .packet_id(1234)
         .build()
@@ -99,6 +107,7 @@ fn display_pid() {
 
 #[test]
 fn display_pid_rc() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Pubcomp::builder()
         .packet_id(1234)
         .reason_code(mqtt::result_code::PubcompReasonCode::Success)
@@ -117,6 +126,7 @@ fn display_pid_rc() {
 
 #[test]
 fn debug_pid() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Pubcomp::builder()
         .packet_id(1234)
         .build()
@@ -129,6 +139,7 @@ fn debug_pid() {
 
 #[test]
 fn debug_pid_rc() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Pubcomp::builder()
         .packet_id(1234)
         .reason_code(mqtt::result_code::PubcompReasonCode::Success)
@@ -145,6 +156,7 @@ fn debug_pid_rc() {
 
 #[test]
 fn debug_pid_rc_prop0() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Pubcomp::builder()
         .packet_id(1234)
         .reason_code(mqtt::result_code::PubcompReasonCode::Success)
@@ -164,6 +176,7 @@ fn debug_pid_rc_prop0() {
 
 #[test]
 fn getter_pid() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Pubcomp::builder()
         .packet_id(1234)
         .build()
@@ -176,6 +189,7 @@ fn getter_pid() {
 
 #[test]
 fn getter_pid_rc() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Pubcomp::builder()
         .packet_id(1234)
         .reason_code(mqtt::result_code::PubcompReasonCode::Success)
@@ -193,6 +207,7 @@ fn getter_pid_rc() {
 
 #[test]
 fn getter_pid_rc_prop0() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Pubcomp::builder()
         .packet_id(1234)
         .reason_code(mqtt::result_code::PubcompReasonCode::Success)
@@ -212,6 +227,7 @@ fn getter_pid_rc_prop0() {
 
 #[test]
 fn getter_pid_rc_prop_mt() {
+    common::init_tracing();
     let props = vec![
         mqtt::packet::UserProperty::new("key1", "value1")
             .unwrap()
@@ -240,6 +256,7 @@ fn getter_pid_rc_prop_mt() {
 
 #[test]
 fn to_buffers_pid() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Pubcomp::builder()
         .packet_id(1234)
         .build()
@@ -266,6 +283,7 @@ fn to_buffers_pid() {
 
 #[test]
 fn to_buffers_pid_rc() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Pubcomp::builder()
         .packet_id(1234)
         .reason_code(mqtt::result_code::PubcompReasonCode::Success)
@@ -294,6 +312,7 @@ fn to_buffers_pid_rc() {
 
 #[test]
 fn to_buffers_pid_rc_prop0() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Pubcomp::builder()
         .packet_id(1234)
         .reason_code(mqtt::result_code::PubcompReasonCode::Success)
@@ -326,6 +345,7 @@ fn to_buffers_pid_rc_prop0() {
 
 #[test]
 fn parse_empty() {
+    common::init_tracing();
     let raw = &[];
     let err = mqtt::packet::v5_0::Pubcomp::parse(raw).unwrap_err();
     assert_eq!(err, mqtt::result_code::MqttError::MalformedPacket);
@@ -333,6 +353,7 @@ fn parse_empty() {
 
 #[test]
 fn parse_pid_incomplete() {
+    common::init_tracing();
     let raw = &[0x00];
     let err = mqtt::packet::v5_0::Pubcomp::parse(raw).unwrap_err();
     assert_eq!(err, mqtt::result_code::MqttError::MalformedPacket);
@@ -340,6 +361,7 @@ fn parse_pid_incomplete() {
 
 #[test]
 fn parse_pid0() {
+    common::init_tracing();
     let raw = &[0x00, 0x00];
     let err = mqtt::packet::v5_0::Pubcomp::parse(raw).unwrap_err();
     assert_eq!(err, mqtt::result_code::MqttError::MalformedPacket);
@@ -347,6 +369,7 @@ fn parse_pid0() {
 
 #[test]
 fn parse_pid() {
+    common::init_tracing();
     let raw = &1234u16.to_be_bytes();
     let (packet, consumed) = mqtt::packet::v5_0::Pubcomp::parse(raw).unwrap();
     assert_eq!(consumed, 2);
@@ -359,6 +382,7 @@ fn parse_pid() {
 
 #[test]
 fn parse_pid_rc() {
+    common::init_tracing();
     let mut raw = Vec::from(1234u16.to_be_bytes());
     raw.push(0x92); // reason code: PacketIdentifierNotFound
     let (packet, consumed) = mqtt::packet::v5_0::Pubcomp::parse(&raw).unwrap();
@@ -373,6 +397,7 @@ fn parse_pid_rc() {
 
 #[test]
 fn parse_pid_bad_rc() {
+    common::init_tracing();
     let mut raw = Vec::from(1234u16.to_be_bytes());
     raw.push(0xA2); // reason code: WildcardSubscriptionsNotSupported (0xA2)
     let err = mqtt::packet::v5_0::Pubcomp::parse(&raw).unwrap_err();
@@ -381,6 +406,7 @@ fn parse_pid_bad_rc() {
 
 #[test]
 fn parse_pid_rc_prop0() {
+    common::init_tracing();
     let mut raw = Vec::from(1234u16.to_be_bytes());
     raw.push(0x92); // reason code: PacketIdentifierNotFound
     raw.push(0x00); // property length 0
@@ -397,6 +423,7 @@ fn parse_pid_rc_prop0() {
 
 #[test]
 fn parse_pid_rc_proplen_over() {
+    common::init_tracing();
     let mut raw = Vec::from(1234u16.to_be_bytes());
     raw.push(0x92); // reason code: PacketIdentifierNotFound
     raw.push(0x01); // property length 0
@@ -406,6 +433,7 @@ fn parse_pid_rc_proplen_over() {
 
 #[test]
 fn parse_pid_rc_prop_reason_string() {
+    common::init_tracing();
     let mut raw = Vec::from(1234u16.to_be_bytes());
     raw.push(0x92); // reason code: PacketIdentifierNotFound
     raw.push(0x07); // property length
@@ -430,6 +458,7 @@ fn parse_pid_rc_prop_reason_string() {
 
 #[test]
 fn parse_pid_rc_prop_reason_string_twice() {
+    common::init_tracing();
     let mut raw = Vec::from(1234u16.to_be_bytes());
     raw.push(0x92); // reason code: PacketIdentifierNotFound
     raw.push(0x0E); // property length
@@ -448,6 +477,7 @@ fn parse_pid_rc_prop_reason_string_twice() {
 
 #[test]
 fn parse_pid_rc_prop_unmatched() {
+    common::init_tracing();
     let mut raw = Vec::from(1234u16.to_be_bytes());
     raw.push(0x92); // reason code: PacketIdentifierNotFound
     raw.push(0x07); // property length
@@ -462,6 +492,7 @@ fn parse_pid_rc_prop_unmatched() {
 
 #[test]
 fn parse_pid_rc_prop_user_property_twice() {
+    common::init_tracing();
     let mut raw = Vec::from(1234u16.to_be_bytes());
     raw.push(0x92); // reason code: PacketIdentifierNotFound
     raw.push(0x1E); // property length
@@ -505,6 +536,7 @@ fn parse_pid_rc_prop_user_property_twice() {
 
 #[test]
 fn parse_pidu32_rc_prop_user_property_twice() {
+    common::init_tracing();
     let mut raw = Vec::from(1234u32.to_be_bytes());
     raw.push(0x92); // reason code: PacketIdentifierNotFound
     raw.push(0x1E); // property length
@@ -548,6 +580,7 @@ fn parse_pidu32_rc_prop_user_property_twice() {
 
 #[test]
 fn test_packet_type() {
+    common::init_tracing();
     let packet_type = mqtt::packet::v5_0::Pubcomp::packet_type();
     assert_eq!(packet_type, mqtt::packet::PacketType::Pubcomp);
 }

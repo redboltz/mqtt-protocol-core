@@ -22,6 +22,7 @@
  * SOFTWARE.
  */
 use mqtt_protocol_core::mqtt;
+mod common;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Runtime check for packet not allowed to send
@@ -30,6 +31,7 @@ use mqtt_protocol_core::mqtt;
 
 #[test]
 fn v3_1_1_client_not_allowed_to_send_v3_1_1_connack() {
+    common::init_tracing();
     let mut con_v3_1_1 = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Connack::builder()
         .session_present(false)
@@ -53,6 +55,7 @@ fn v3_1_1_client_not_allowed_to_send_v3_1_1_connack() {
 
 #[test]
 fn v3_1_1_client_not_allowed_to_send_v3_1_1_suback() {
+    common::init_tracing();
     let mut con_v3_1_1 = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Suback::builder()
         .packet_id(1)
@@ -78,6 +81,7 @@ fn v3_1_1_client_not_allowed_to_send_v3_1_1_suback() {
 
 #[test]
 fn v3_1_1_client_not_allowed_to_send_v3_1_1_unsuback() {
+    common::init_tracing();
     let mut con_v3_1_1 = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Unsuback::builder()
         .packet_id(1)
@@ -100,6 +104,7 @@ fn v3_1_1_client_not_allowed_to_send_v3_1_1_unsuback() {
 
 #[test]
 fn v3_1_1_client_not_allowed_to_send_v3_1_1_pingresp() {
+    common::init_tracing();
     let mut con_v3_1_1 = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Pingresp::builder()
         .build()
@@ -123,6 +128,7 @@ fn v3_1_1_client_not_allowed_to_send_v3_1_1_pingresp() {
 
 #[test]
 fn v3_1_1_client_not_allowed_to_send_v5_0_connect() {
+    common::init_tracing();
     let mut con_v3_1_1 = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Connect::builder()
         .client_id("cid1")
@@ -150,6 +156,7 @@ fn v3_1_1_client_not_allowed_to_send_v5_0_connect() {
 
 #[test]
 fn v3_1_1_server_not_allowed_to_send_v3_1_1_connect() {
+    common::init_tracing();
     let mut con_v3_1_1 = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V3_1_1);
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Connect::builder()
         .client_id("cid1")
@@ -173,6 +180,7 @@ fn v3_1_1_server_not_allowed_to_send_v3_1_1_connect() {
 
 #[test]
 fn v3_1_1_server_not_allowed_to_send_v3_1_1_subscribe() {
+    common::init_tracing();
     let mut con_v3_1_1 = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V3_1_1);
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Subscribe::builder()
         .packet_id(1)
@@ -200,6 +208,7 @@ fn v3_1_1_server_not_allowed_to_send_v3_1_1_subscribe() {
 
 #[test]
 fn v3_1_1_server_not_allowed_to_send_v3_1_1_unsubscribe() {
+    common::init_tracing();
     let mut con_v3_1_1 = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V3_1_1);
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Unsubscribe::builder()
         .packet_id(1)
@@ -224,6 +233,7 @@ fn v3_1_1_server_not_allowed_to_send_v3_1_1_unsubscribe() {
 
 #[test]
 fn v3_1_1_server_not_allowed_to_send_v3_1_1_pingresq() {
+    common::init_tracing();
     let mut con_v3_1_1 = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V3_1_1);
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Pingreq::builder()
         .build()
@@ -245,6 +255,7 @@ fn v3_1_1_server_not_allowed_to_send_v3_1_1_pingresq() {
 
 #[test]
 fn v3_1_1_server_not_allowed_to_send_v3_1_1_disconnect() {
+    common::init_tracing();
     let mut con_v3_1_1 = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V3_1_1);
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Disconnect::builder()
         .build()
@@ -268,6 +279,7 @@ fn v3_1_1_server_not_allowed_to_send_v3_1_1_disconnect() {
 
 #[test]
 fn v3_1_1_server_not_allowed_to_send_v5_0_connack() {
+    common::init_tracing();
     let mut con_v3_1_1 = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V3_1_1);
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Connack::builder()
         .session_present(false)
@@ -295,6 +307,7 @@ fn v3_1_1_server_not_allowed_to_send_v5_0_connack() {
 
 #[test]
 fn v5_0_client_not_allowed_to_send_v5_0_connack() {
+    common::init_tracing();
     let mut con_v5_0 = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Connack::builder()
         .session_present(false)
@@ -318,6 +331,7 @@ fn v5_0_client_not_allowed_to_send_v5_0_connack() {
 
 #[test]
 fn v5_0_client_not_allowed_to_send_v5_0_suback() {
+    common::init_tracing();
     let mut con_v5_0 = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Suback::builder()
         .packet_id(1)
@@ -341,6 +355,7 @@ fn v5_0_client_not_allowed_to_send_v5_0_suback() {
 
 #[test]
 fn v5_0_client_not_allowed_to_send_v5_0_unsuback() {
+    common::init_tracing();
     let mut con_v5_0 = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Unsuback::builder()
         .packet_id(1)
@@ -364,6 +379,7 @@ fn v5_0_client_not_allowed_to_send_v5_0_unsuback() {
 
 #[test]
 fn v5_0_client_not_allowed_to_send_v5_0_pingresp() {
+    common::init_tracing();
     let mut con_v5_0 = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Pingresp::builder()
         .build()
@@ -389,6 +405,7 @@ fn v5_0_client_not_allowed_to_send_v5_0_pingresp() {
 
 #[test]
 fn v5_0_client_not_allowed_to_send_v3_1_1_connect() {
+    common::init_tracing();
     let mut con_v5_0 = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Connect::builder()
         .client_id("cid1")
@@ -416,6 +433,7 @@ fn v5_0_client_not_allowed_to_send_v3_1_1_connect() {
 
 #[test]
 fn v5_0_server_not_allowed_to_send_v5_0_connect() {
+    common::init_tracing();
     let mut con_v5_0 = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Connect::builder()
         .client_id("cid1")
@@ -439,6 +457,7 @@ fn v5_0_server_not_allowed_to_send_v5_0_connect() {
 
 #[test]
 fn v5_0_server_not_allowed_to_send_v5_0_subscribe() {
+    common::init_tracing();
     let mut con_v5_0 = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Subscribe::builder()
         .packet_id(1)
@@ -466,6 +485,7 @@ fn v5_0_server_not_allowed_to_send_v5_0_subscribe() {
 
 #[test]
 fn v5_0_server_not_allowed_to_send_v5_0_unsubscribe() {
+    common::init_tracing();
     let mut con_v5_0 = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Unsubscribe::builder()
         .packet_id(1)
@@ -490,6 +510,7 @@ fn v5_0_server_not_allowed_to_send_v5_0_unsubscribe() {
 
 #[test]
 fn v5_0_server_not_allowed_to_send_v5_0_pingresq() {
+    common::init_tracing();
     let mut con_v5_0 = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Pingreq::builder()
         .build()
@@ -515,6 +536,7 @@ fn v5_0_server_not_allowed_to_send_v5_0_pingresq() {
 
 #[test]
 fn v5_0_server_not_allowed_to_send_v3_1_1_connack() {
+    common::init_tracing();
     let mut con_v5_0 = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Connack::builder()
         .session_present(false)

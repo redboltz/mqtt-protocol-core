@@ -23,6 +23,8 @@
  */
 use mqtt_protocol_core::mqtt;
 
+mod common;
+
 #[cfg(feature = "std")]
 use std::fmt::Write;
 
@@ -30,6 +32,7 @@ use std::fmt::Write;
 
 #[test]
 fn build_success() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Pingresp::builder().build().unwrap();
 
     // PINGRESP has no fields to check
@@ -41,6 +44,7 @@ fn build_success() {
 #[test]
 #[cfg(feature = "std")]
 fn display() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Pingresp::builder().build().unwrap();
 
     let mut output = String::new();
@@ -53,6 +57,7 @@ fn display() {
 #[test]
 #[cfg(feature = "std")]
 fn debug() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Pingresp::builder().build().unwrap();
 
     let mut output = String::new();
@@ -65,6 +70,7 @@ fn debug() {
 #[test]
 #[cfg(feature = "std")]
 fn to_buffers() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Pingresp::builder().build().unwrap();
 
     // Test to_continuous_buffer (no-std compatible)
@@ -88,6 +94,7 @@ fn to_buffers() {
 #[test]
 #[cfg(not(feature = "std"))]
 fn to_continuous_buffer() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Pingresp::builder().build().unwrap();
 
     let continuous = packet.to_continuous_buffer();
@@ -99,6 +106,7 @@ fn to_continuous_buffer() {
 
 #[test]
 fn parse_empty() {
+    common::init_tracing();
     let raw = &[];
     let (packet, consumed) = mqtt::packet::v5_0::Pingresp::parse(raw).unwrap();
     assert_eq!(consumed, 0);
@@ -108,6 +116,7 @@ fn parse_empty() {
 
 #[test]
 fn parse_extra_data() {
+    common::init_tracing();
     // PINGRESP should parse successfully even if there's extra data
     // The extra data is ignored as PINGRESP has no variable header or payload
     let raw = &[0x01, 0x02, 0x03];
@@ -121,6 +130,7 @@ fn parse_extra_data() {
 
 #[test]
 fn size() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Pingresp::builder().build().unwrap();
 
     // PINGRESP packet size is always 2 bytes:
@@ -133,6 +143,7 @@ fn size() {
 
 #[test]
 fn equality() {
+    common::init_tracing();
     let packet1 = mqtt::packet::v5_0::Pingresp::builder().build().unwrap();
 
     let packet2 = mqtt::packet::v5_0::Pingresp::builder().build().unwrap();
@@ -144,6 +155,7 @@ fn equality() {
 
 #[test]
 fn clone() {
+    common::init_tracing();
     let packet1 = mqtt::packet::v5_0::Pingresp::builder().build().unwrap();
 
     let packet2 = packet1.clone();
@@ -153,6 +165,7 @@ fn clone() {
 
 #[test]
 fn test_packet_type() {
+    common::init_tracing();
     let packet_type = mqtt::packet::v5_0::Pingresp::packet_type();
     assert_eq!(packet_type, mqtt::packet::PacketType::Pingresp);
 }

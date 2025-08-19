@@ -22,12 +22,15 @@
  * SOFTWARE.
  */
 use mqtt_protocol_core::mqtt;
+
+mod common;
 use std::fmt::Write;
 
 // Build tests
 
 #[test]
 fn build_success() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Pingreq::builder().build().unwrap();
 
     // PINGREQ has no fields to check
@@ -38,6 +41,7 @@ fn build_success() {
 
 #[test]
 fn display() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Pingreq::builder().build().unwrap();
 
     let mut output = String::new();
@@ -49,6 +53,7 @@ fn display() {
 
 #[test]
 fn debug() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Pingreq::builder().build().unwrap();
 
     let mut output = String::new();
@@ -61,6 +66,7 @@ fn debug() {
 #[test]
 #[cfg(feature = "std")]
 fn to_buffers() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Pingreq::builder().build().unwrap();
 
     let buffers = packet.to_buffers();
@@ -82,6 +88,7 @@ fn to_buffers() {
 
 #[test]
 fn parse_empty() {
+    common::init_tracing();
     let raw = &[];
     let (packet, consumed) = mqtt::packet::v5_0::Pingreq::parse(raw).unwrap();
     assert_eq!(consumed, 0);
@@ -91,6 +98,7 @@ fn parse_empty() {
 
 #[test]
 fn parse_extra_data() {
+    common::init_tracing();
     // PINGREQ should parse successfully even if there's extra data
     // The extra data is ignored as PINGREQ has no variable header or payload
     let raw = &[0x01, 0x02, 0x03];
@@ -104,6 +112,7 @@ fn parse_extra_data() {
 
 #[test]
 fn size() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Pingreq::builder().build().unwrap();
 
     // PINGREQ packet size is always 2 bytes:
@@ -116,6 +125,7 @@ fn size() {
 
 #[test]
 fn equality() {
+    common::init_tracing();
     let packet1 = mqtt::packet::v5_0::Pingreq::builder().build().unwrap();
 
     let packet2 = mqtt::packet::v5_0::Pingreq::builder().build().unwrap();
@@ -127,6 +137,7 @@ fn equality() {
 
 #[test]
 fn clone() {
+    common::init_tracing();
     let packet1 = mqtt::packet::v5_0::Pingreq::builder().build().unwrap();
 
     let packet2 = packet1.clone();
@@ -136,6 +147,7 @@ fn clone() {
 
 #[test]
 fn test_packet_type() {
+    common::init_tracing();
     let packet_type = mqtt::packet::v5_0::Pingreq::packet_type();
     assert_eq!(packet_type, mqtt::packet::PacketType::Pingreq);
 }

@@ -21,6 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+mod common;
 
 /// Compile-time constraint verification tests
 ///
@@ -29,7 +30,9 @@
 /// by changes in error messages, line numbers, or compiler versions.
 #[test]
 fn verify_sendable_constraints() {
+    common::init_tracing();
     use mqtt_protocol_core::mqtt;
+
     use static_assertions::{assert_impl_all, assert_not_impl_any};
 
     // Type alias for convenience

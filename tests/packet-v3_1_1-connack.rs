@@ -23,11 +23,13 @@
  */
 use core::fmt::Write;
 use mqtt_protocol_core::mqtt;
+mod common;
 
 // Build fail tests
 
 #[test]
 fn build_fail_nosp() {
+    common::init_tracing();
     let err = mqtt::packet::v3_1_1::Connack::builder()
         .return_code(mqtt::result_code::ConnectReturnCode::Accepted)
         .build()
@@ -38,6 +40,7 @@ fn build_fail_nosp() {
 
 #[test]
 fn build_fail_norc() {
+    common::init_tracing();
     let err = mqtt::packet::v3_1_1::Connack::builder()
         .session_present(true)
         .build()
@@ -50,6 +53,7 @@ fn build_fail_norc() {
 
 #[test]
 fn build_success_sp_rc() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Connack::builder()
         .session_present(true)
         .return_code(mqtt::result_code::ConnectReturnCode::Accepted)
@@ -65,6 +69,7 @@ fn build_success_sp_rc() {
 
 #[test]
 fn build_success_no_sp() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Connack::builder()
         .session_present(false)
         .return_code(mqtt::result_code::ConnectReturnCode::Accepted)
@@ -80,6 +85,7 @@ fn build_success_no_sp() {
 
 #[test]
 fn build_success_different_return_codes() {
+    common::init_tracing();
     let return_codes = [
         mqtt::result_code::ConnectReturnCode::Accepted,
         mqtt::result_code::ConnectReturnCode::UnacceptableProtocolVersion,
@@ -105,6 +111,7 @@ fn build_success_different_return_codes() {
 #[test]
 #[cfg(feature = "std")]
 fn display_sp_rc() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Connack::builder()
         .session_present(true)
         .return_code(mqtt::result_code::ConnectReturnCode::Accepted)
@@ -121,6 +128,7 @@ fn display_sp_rc() {
 #[test]
 #[cfg(feature = "std")]
 fn display_no_sp() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Connack::builder()
         .session_present(false)
         .return_code(mqtt::result_code::ConnectReturnCode::NotAuthorized)
@@ -139,6 +147,7 @@ fn display_no_sp() {
 #[test]
 #[cfg(feature = "std")]
 fn debug_sp_rc() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Connack::builder()
         .session_present(true)
         .return_code(mqtt::result_code::ConnectReturnCode::Accepted)
@@ -156,6 +165,7 @@ fn debug_sp_rc() {
 
 #[test]
 fn getter_sp_rc() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Connack::builder()
         .session_present(true)
         .return_code(mqtt::result_code::ConnectReturnCode::Accepted)
@@ -171,6 +181,7 @@ fn getter_sp_rc() {
 
 #[test]
 fn getter_no_sp() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Connack::builder()
         .session_present(false)
         .return_code(mqtt::result_code::ConnectReturnCode::ServerUnavailable)
@@ -189,6 +200,7 @@ fn getter_no_sp() {
 #[test]
 #[cfg(feature = "std")]
 fn to_buffers_sp_rc() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Connack::builder()
         .session_present(true)
         .return_code(mqtt::result_code::ConnectReturnCode::Accepted)
@@ -215,6 +227,7 @@ fn to_buffers_sp_rc() {
 #[test]
 #[cfg(feature = "std")]
 fn to_buffers_no_sp() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Connack::builder()
         .session_present(false)
         .return_code(mqtt::result_code::ConnectReturnCode::NotAuthorized)
@@ -241,6 +254,7 @@ fn to_buffers_no_sp() {
 #[test]
 #[cfg(feature = "std")]
 fn to_buffers_different_return_codes() {
+    common::init_tracing();
     let test_cases = [
         (mqtt::result_code::ConnectReturnCode::Accepted, 0x00),
         (
@@ -278,6 +292,7 @@ fn to_buffers_different_return_codes() {
 
 #[test]
 fn parse_incomplete_data() {
+    common::init_tracing();
     let raw = &[];
     let err = mqtt::packet::v3_1_1::Connack::parse(raw).unwrap_err();
     assert_eq!(err, mqtt::result_code::MqttError::MalformedPacket);
@@ -285,6 +300,7 @@ fn parse_incomplete_data() {
 
 #[test]
 fn parse_missing_return_code() {
+    common::init_tracing();
     let raw = &[0x01]; // only ack_flags, missing return_code
     let err = mqtt::packet::v3_1_1::Connack::parse(raw).unwrap_err();
     assert_eq!(err, mqtt::result_code::MqttError::MalformedPacket);
@@ -292,6 +308,7 @@ fn parse_missing_return_code() {
 
 #[test]
 fn parse_sp_accepted() {
+    common::init_tracing();
     let raw = &[0x01, 0x00]; // session_present=true, return_code=Accepted
     let (packet, consumed) =
         mqtt::packet::v3_1_1::Connack::parse(raw).expect("Failed to parse Connack packet");
@@ -306,6 +323,7 @@ fn parse_sp_accepted() {
 
 #[test]
 fn parse_no_sp_accepted() {
+    common::init_tracing();
     let raw = &[0x00, 0x00]; // session_present=false, return_code=Accepted
     let (packet, consumed) =
         mqtt::packet::v3_1_1::Connack::parse(raw).expect("Failed to parse Connack packet");
@@ -320,6 +338,7 @@ fn parse_no_sp_accepted() {
 
 #[test]
 fn parse_different_return_codes() {
+    common::init_tracing();
     let test_cases = [
         (0x00, mqtt::result_code::ConnectReturnCode::Accepted),
         (
@@ -354,6 +373,7 @@ fn parse_different_return_codes() {
 
 #[test]
 fn parse_invalid_return_code() {
+    common::init_tracing();
     let raw = &[0x00, 0xFF]; // session_present=false, invalid return_code=255
     let err = mqtt::packet::v3_1_1::Connack::parse(raw).unwrap_err();
     assert_eq!(err, mqtt::result_code::MqttError::MalformedPacket);
@@ -361,6 +381,7 @@ fn parse_invalid_return_code() {
 
 #[test]
 fn parse_sp_with_error_codes() {
+    common::init_tracing();
     let error_codes = [
         (
             0x01,
@@ -396,6 +417,7 @@ fn parse_sp_with_error_codes() {
 
 #[test]
 fn size_calculation() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Connack::builder()
         .session_present(true)
         .return_code(mqtt::result_code::ConnectReturnCode::Accepted)
@@ -408,6 +430,7 @@ fn size_calculation() {
 
 #[test]
 fn size_different_values() {
+    common::init_tracing();
     let test_cases = [
         (true, mqtt::result_code::ConnectReturnCode::Accepted),
         (false, mqtt::result_code::ConnectReturnCode::Accepted),
@@ -434,6 +457,7 @@ fn size_different_values() {
 
 #[test]
 fn roundtrip_sp_accepted() {
+    common::init_tracing();
     let original = mqtt::packet::v3_1_1::Connack::builder()
         .session_present(true)
         .return_code(mqtt::result_code::ConnectReturnCode::Accepted)
@@ -464,6 +488,7 @@ fn roundtrip_sp_accepted() {
 
 #[test]
 fn roundtrip_no_sp_error() {
+    common::init_tracing();
     let original = mqtt::packet::v3_1_1::Connack::builder()
         .session_present(false)
         .return_code(mqtt::result_code::ConnectReturnCode::NotAuthorized)
@@ -494,12 +519,14 @@ fn roundtrip_no_sp_error() {
 
 #[test]
 fn test_packet_type() {
+    common::init_tracing();
     let packet_type = mqtt::packet::v3_1_1::Connack::packet_type();
     assert_eq!(packet_type, mqtt::packet::PacketType::Connack);
 }
 
 #[test]
 fn test_connack_buffers_equivalence() {
+    common::init_tracing();
     let connack = mqtt::packet::v3_1_1::Connack::builder()
         .session_present(true)
         .return_code(mqtt::result_code::ConnectReturnCode::Accepted)

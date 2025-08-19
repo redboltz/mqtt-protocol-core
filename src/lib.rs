@@ -121,7 +121,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! mqtt-protocol-core = { version = "0.3.0", default-features = false }
+//! mqtt-protocol-core = { version = "0.3.1", default-features = false }
 //! ```
 //!
 //! **No-std usage example:**
@@ -163,10 +163,32 @@
 //! }
 //! ```
 //!
+//! ## Optional Features
+//!
+//! The library supports several optional features:
+//!
+//! - **`std`** (default): Enables standard library support, including `std::io::IoSlice` for vectored I/O
+//! - **`tracing`**: Enables logging support via the `tracing` crate. When disabled, trace statements compile to no-ops with zero overhead
+//!
+//! ```toml
+//! # Enable tracing support (independent of std)
+//! [dependencies]
+//! mqtt-protocol-core = { version = "0.3.1", default-features = false, features = ["tracing"] }
+//!
+//! # Use with std but without tracing overhead
+//! [dependencies]
+//! mqtt-protocol-core = { version = "0.3.1", default-features = false, features = ["std"] }
+//!
+//! # Full-featured (std + tracing)
+//! [dependencies]
+//! mqtt-protocol-core = { version = "0.3.1", features = ["tracing"] }
+//! ```
+//!
 //! **Key points for no-std usage:**
 //! - Use `extern crate alloc;` to enable heap allocations
 //! - Import types from `alloc` crate instead of `std`
 //! - `IoSlice` functionality is not available in `no_std` mode
+//! - Tracing can be enabled independently of `std` for embedded debugging
 
 /**
  * MIT License
@@ -204,6 +226,4 @@ pub mod prelude {
     pub use std::io::IoSlice;
 }
 
-#[cfg(feature = "std")]
-pub mod logger;
 pub mod mqtt;

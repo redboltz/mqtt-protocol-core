@@ -22,6 +22,8 @@
  * SOFTWARE.
  */
 use mqtt_protocol_core::mqtt;
+
+mod common;
 use std::fmt::Write;
 use std::sync::Arc;
 
@@ -29,6 +31,7 @@ use std::sync::Arc;
 
 #[test]
 fn build_fail_no_topic() {
+    common::init_tracing();
     let err = mqtt::packet::v3_1_1::Publish::builder()
         .build()
         .unwrap_err();
@@ -37,6 +40,7 @@ fn build_fail_no_topic() {
 
 #[test]
 fn build_fail_empty_topic() {
+    common::init_tracing();
     let err = mqtt::packet::v3_1_1::Publish::builder()
         .topic_name("")
         .unwrap()
@@ -47,6 +51,7 @@ fn build_fail_empty_topic() {
 
 #[test]
 fn build_fail_topic_too_long() {
+    common::init_tracing();
     let long_topic = "a".repeat(65536);
     let err = mqtt::packet::v3_1_1::Publish::builder()
         .topic_name(long_topic.as_str())
@@ -56,6 +61,7 @@ fn build_fail_topic_too_long() {
 
 #[test]
 fn build_fail_topic_with_wildcard() {
+    common::init_tracing();
     let err = mqtt::packet::v3_1_1::Publish::builder()
         .topic_name("bad+topic")
         .unwrap_err();
@@ -64,6 +70,7 @@ fn build_fail_topic_with_wildcard() {
 
 #[test]
 fn build_fail_qos1_no_packet_id() {
+    common::init_tracing();
     let err = mqtt::packet::v3_1_1::Publish::builder()
         .topic_name("test")
         .unwrap()
@@ -75,6 +82,7 @@ fn build_fail_qos1_no_packet_id() {
 
 #[test]
 fn build_fail_qos0_with_packet_id() {
+    common::init_tracing();
     let err = mqtt::packet::v3_1_1::Publish::builder()
         .topic_name("test")
         .unwrap()
@@ -86,6 +94,7 @@ fn build_fail_qos0_with_packet_id() {
 
 #[test]
 fn build_fail_qos0_with_packet_id_validation() {
+    common::init_tracing();
     // This tests QoS 0 with packet ID validation in validate() method
     let err = mqtt::packet::v3_1_1::Publish::builder()
         .topic_name("test")
@@ -99,6 +108,7 @@ fn build_fail_qos0_with_packet_id_validation() {
 
 #[test]
 fn build_fail_qos1_packet_id_zero() {
+    common::init_tracing();
     // This tests packet ID zero validation
     let err = mqtt::packet::v3_1_1::Publish::builder()
         .topic_name("test")
@@ -112,6 +122,7 @@ fn build_fail_qos1_packet_id_zero() {
 
 #[test]
 fn build_fail_payload_too_large() {
+    common::init_tracing();
     // This tests payload size limit validation (268435455 bytes)
     let large_payload = vec![0u8; 268435456]; // 1 byte over limit
     let err = mqtt::packet::v3_1_1::Publish::builder()
@@ -127,6 +138,7 @@ fn build_fail_payload_too_large() {
 
 #[test]
 fn build_success_qos2() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Publish::builder()
         .topic_name("test")
         .unwrap()
@@ -142,6 +154,7 @@ fn build_success_qos2() {
 
 #[test]
 fn build_success_empty_payload() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Publish::builder()
         .topic_name("test")
         .unwrap()
@@ -156,6 +169,7 @@ fn build_success_empty_payload() {
 
 #[test]
 fn display_qos0() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Publish::builder()
         .topic_name("test/topic")
         .unwrap()
@@ -173,6 +187,7 @@ fn display_qos0() {
 
 #[test]
 fn display_qos1_with_packet_id() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Publish::builder()
         .topic_name("test/topic")
         .unwrap()
@@ -193,6 +208,7 @@ fn display_qos1_with_packet_id() {
 
 #[test]
 fn display_with_flags() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Publish::builder()
         .topic_name("test/topic")
         .unwrap()
@@ -210,6 +226,7 @@ fn display_with_flags() {
 
 #[test]
 fn display_binary_payload() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Publish::builder()
         .topic_name("test/topic")
         .unwrap()
@@ -224,6 +241,7 @@ fn display_binary_payload() {
 
 #[test]
 fn display_binary_payload_array() {
+    common::init_tracing();
     // Test payload with invalid UTF-8 bytes that should be serialized as array
     // This tests line 333: None => state.serialize_field("payload", &payload_data)?
     let packet = mqtt::packet::v3_1_1::Publish::builder()
@@ -242,6 +260,7 @@ fn display_binary_payload_array() {
 
 #[test]
 fn debug_qos0() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Publish::builder()
         .topic_name("test/topic")
         .unwrap()
@@ -261,6 +280,7 @@ fn debug_qos0() {
 
 #[test]
 fn getter_qos0() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Publish::builder()
         .topic_name("test/topic")
         .unwrap()
@@ -278,6 +298,7 @@ fn getter_qos0() {
 
 #[test]
 fn getter_qos1_with_packet_id() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Publish::builder()
         .topic_name("test/topic")
         .unwrap()
@@ -297,6 +318,7 @@ fn getter_qos1_with_packet_id() {
 
 #[test]
 fn getter_with_flags() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Publish::builder()
         .topic_name("test/topic")
         .unwrap()
@@ -314,6 +336,7 @@ fn getter_with_flags() {
 
 #[test]
 fn to_buffers_qos0() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Publish::builder()
         .topic_name("test")
         .unwrap()
@@ -341,6 +364,7 @@ fn to_buffers_qos0() {
 
 #[test]
 fn to_buffers_qos1() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Publish::builder()
         .topic_name("test")
         .unwrap()
@@ -371,6 +395,7 @@ fn to_buffers_qos1() {
 
 #[test]
 fn to_buffers_with_flags() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Publish::builder()
         .topic_name("test")
         .unwrap()
@@ -400,6 +425,7 @@ fn to_buffers_with_flags() {
 
 #[test]
 fn parse_empty() {
+    common::init_tracing();
     let empty_arc: Arc<[u8]> = Arc::from(Vec::new().into_boxed_slice());
     let err = mqtt::packet::v3_1_1::Publish::parse(0, empty_arc).unwrap_err();
     assert_eq!(err, mqtt::result_code::MqttError::MalformedPacket);
@@ -407,6 +433,7 @@ fn parse_empty() {
 
 #[test]
 fn parse_topic_incomplete() {
+    common::init_tracing();
     let raw = vec![0x00]; // incomplete topic length
     let data_arc: Arc<[u8]> = Arc::from(raw.into_boxed_slice());
     let err = mqtt::packet::v3_1_1::Publish::parse(0, data_arc).unwrap_err();
@@ -415,6 +442,7 @@ fn parse_topic_incomplete() {
 
 #[test]
 fn parse_invalid_qos() {
+    common::init_tracing();
     let mut raw = Vec::new();
     raw.extend_from_slice(&(0u16).to_be_bytes()); // empty topic
     let data_arc: Arc<[u8]> = Arc::from(raw.into_boxed_slice());
@@ -425,6 +453,7 @@ fn parse_invalid_qos() {
 
 #[test]
 fn parse_qos0() {
+    common::init_tracing();
     let mut raw = Vec::new();
     raw.extend_from_slice(&(4u16).to_be_bytes()); // topic length
     raw.extend_from_slice(b"test"); // topic
@@ -442,6 +471,7 @@ fn parse_qos0() {
 
 #[test]
 fn parse_qos1() {
+    common::init_tracing();
     let mut raw = Vec::new();
     raw.extend_from_slice(&(4u16).to_be_bytes()); // topic length
     raw.extend_from_slice(b"test"); // topic
@@ -461,6 +491,7 @@ fn parse_qos1() {
 
 #[test]
 fn parse_qos2() {
+    common::init_tracing();
     let mut raw = Vec::new();
     raw.extend_from_slice(&(4u16).to_be_bytes()); // topic length
     raw.extend_from_slice(b"test"); // topic
@@ -480,6 +511,7 @@ fn parse_qos2() {
 
 #[test]
 fn parse_qos1_packet_id_incomplete() {
+    common::init_tracing();
     let mut raw = Vec::new();
     raw.extend_from_slice(&(4u16).to_be_bytes()); // topic length
     raw.extend_from_slice(b"test"); // topic
@@ -494,6 +526,7 @@ fn parse_qos1_packet_id_incomplete() {
 
 #[test]
 fn parse_empty_payload() {
+    common::init_tracing();
     let mut raw = Vec::new();
     raw.extend_from_slice(&(4u16).to_be_bytes()); // topic length
     raw.extend_from_slice(b"test"); // topic
@@ -509,6 +542,7 @@ fn parse_empty_payload() {
 
 #[test]
 fn parse_with_flags() {
+    common::init_tracing();
     let mut raw = Vec::new();
     raw.extend_from_slice(&(4u16).to_be_bytes()); // topic length
     raw.extend_from_slice(b"test"); // topic
@@ -526,6 +560,7 @@ fn parse_with_flags() {
 
 #[test]
 fn size_qos0() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Publish::builder()
         .topic_name("test")
         .unwrap()
@@ -539,6 +574,7 @@ fn size_qos0() {
 
 #[test]
 fn size_qos1() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Publish::builder()
         .topic_name("test")
         .unwrap()
@@ -556,6 +592,7 @@ fn size_qos1() {
 
 #[test]
 fn test_set_dup_true() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Publish::builder()
         .topic_name("test/topic")
         .unwrap()
@@ -580,6 +617,7 @@ fn test_set_dup_true() {
 
 #[test]
 fn test_set_dup_false() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Publish::builder()
         .topic_name("test/topic")
         .unwrap()
@@ -607,6 +645,7 @@ fn test_set_dup_false() {
 
 #[test]
 fn test_set_dup_chaining() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Publish::builder()
         .topic_name("test/topic")
         .unwrap()
@@ -627,6 +666,7 @@ fn test_set_dup_chaining() {
 
 #[test]
 fn test_packet_type() {
+    common::init_tracing();
     let packet_type = mqtt::packet::v3_1_1::Publish::packet_type();
     assert_eq!(packet_type, mqtt::packet::PacketType::Publish);
 }

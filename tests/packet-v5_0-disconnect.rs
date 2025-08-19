@@ -22,12 +22,15 @@
  * SOFTWARE.
  */
 use mqtt_protocol_core::mqtt;
+
+mod common;
 use std::fmt::Write;
 
 // Build fail tests
 
 #[test]
 fn build_fail_props_without_rc() {
+    common::init_tracing();
     let err = mqtt::packet::v5_0::Disconnect::builder()
         .props(mqtt::packet::Properties::new())
         .build()
@@ -38,6 +41,7 @@ fn build_fail_props_without_rc() {
 
 #[test]
 fn build_fail_invalid_prop() {
+    common::init_tracing();
     let err = mqtt::packet::v5_0::Disconnect::builder()
         .reason_code(mqtt::result_code::DisconnectReasonCode::NormalDisconnection)
         .props(vec![mqtt::packet::ContentType::new("application/json")
@@ -51,6 +55,7 @@ fn build_fail_invalid_prop() {
 
 #[test]
 fn build_fail_valid_prop_session_expiry_twice() {
+    common::init_tracing();
     let err = mqtt::packet::v5_0::Disconnect::builder()
         .reason_code(mqtt::result_code::DisconnectReasonCode::NormalDisconnection)
         .props(vec![
@@ -65,6 +70,7 @@ fn build_fail_valid_prop_session_expiry_twice() {
 
 #[test]
 fn build_fail_valid_prop_reason_string_twice() {
+    common::init_tracing();
     let err = mqtt::packet::v5_0::Disconnect::builder()
         .reason_code(mqtt::result_code::DisconnectReasonCode::NormalDisconnection)
         .props(vec![
@@ -79,6 +85,7 @@ fn build_fail_valid_prop_reason_string_twice() {
 
 #[test]
 fn build_fail_valid_prop_server_reference_twice() {
+    common::init_tracing();
     let err = mqtt::packet::v5_0::Disconnect::builder()
         .reason_code(mqtt::result_code::DisconnectReasonCode::NormalDisconnection)
         .props(vec![
@@ -99,6 +106,7 @@ fn build_fail_valid_prop_server_reference_twice() {
 
 #[test]
 fn display_empty() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Disconnect::builder().build().unwrap();
 
     let mut output = String::new();
@@ -108,6 +116,7 @@ fn display_empty() {
 
 #[test]
 fn display_rc() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Disconnect::builder()
         .reason_code(mqtt::result_code::DisconnectReasonCode::NormalDisconnection)
         .build()
@@ -123,6 +132,7 @@ fn display_rc() {
 
 #[test]
 fn display_rc_props() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Disconnect::builder()
         .reason_code(mqtt::result_code::DisconnectReasonCode::ServerShuttingDown)
         .props(vec![mqtt::packet::ReasonString::new("Server maintenance")
@@ -143,6 +153,7 @@ fn display_rc_props() {
 
 #[test]
 fn debug_empty() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Disconnect::builder().build().unwrap();
 
     let mut output = String::new();
@@ -152,6 +163,7 @@ fn debug_empty() {
 
 #[test]
 fn debug_rc() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Disconnect::builder()
         .reason_code(mqtt::result_code::DisconnectReasonCode::NormalDisconnection)
         .build()
@@ -167,6 +179,7 @@ fn debug_rc() {
 
 #[test]
 fn debug_rc_prop0() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Disconnect::builder()
         .reason_code(mqtt::result_code::DisconnectReasonCode::NormalDisconnection)
         .props(mqtt::packet::Properties::new())
@@ -185,6 +198,7 @@ fn debug_rc_prop0() {
 
 #[test]
 fn getter_empty() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Disconnect::builder().build().unwrap();
 
     assert!(packet.reason_code().is_none());
@@ -193,6 +207,7 @@ fn getter_empty() {
 
 #[test]
 fn getter_rc() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Disconnect::builder()
         .reason_code(mqtt::result_code::DisconnectReasonCode::NormalDisconnection)
         .build()
@@ -208,6 +223,7 @@ fn getter_rc() {
 
 #[test]
 fn getter_rc_prop0() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Disconnect::builder()
         .reason_code(mqtt::result_code::DisconnectReasonCode::NormalDisconnection)
         .props(mqtt::packet::Properties::new())
@@ -225,6 +241,7 @@ fn getter_rc_prop0() {
 
 #[test]
 fn getter_rc_props_session_expiry() {
+    common::init_tracing();
     let props = vec![mqtt::packet::SessionExpiryInterval::new(300)
         .unwrap()
         .into()];
@@ -244,6 +261,7 @@ fn getter_rc_props_session_expiry() {
 
 #[test]
 fn getter_rc_props_mixed() {
+    common::init_tracing();
     let props = vec![
         mqtt::packet::SessionExpiryInterval::new(300)
             .unwrap()
@@ -276,6 +294,7 @@ fn getter_rc_props_mixed() {
 
 #[test]
 fn to_buffers_empty() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Disconnect::builder().build().unwrap();
 
     let continuous = packet.to_continuous_buffer();
@@ -298,6 +317,7 @@ fn to_buffers_empty() {
 
 #[test]
 fn to_buffers_rc() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Disconnect::builder()
         .reason_code(mqtt::result_code::DisconnectReasonCode::NormalDisconnection)
         .build()
@@ -324,6 +344,7 @@ fn to_buffers_rc() {
 
 #[test]
 fn to_buffers_rc_prop0() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Disconnect::builder()
         .reason_code(mqtt::result_code::DisconnectReasonCode::NormalDisconnection)
         .props(mqtt::packet::Properties::new())
@@ -352,6 +373,7 @@ fn to_buffers_rc_prop0() {
 
 #[test]
 fn to_buffers_rc_props_session_expiry() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Disconnect::builder()
         .reason_code(mqtt::result_code::DisconnectReasonCode::NormalDisconnection)
         .props(vec![mqtt::packet::SessionExpiryInterval::new(300)
@@ -386,6 +408,7 @@ fn to_buffers_rc_props_session_expiry() {
 
 #[test]
 fn parse_empty() {
+    common::init_tracing();
     let raw = &[];
     let (packet, consumed) = mqtt::packet::v5_0::Disconnect::parse(raw).unwrap();
     assert_eq!(consumed, 0);
@@ -395,6 +418,7 @@ fn parse_empty() {
 
 #[test]
 fn parse_rc() {
+    common::init_tracing();
     let raw = &[0x00]; // reason code: NormalDisconnection
     let (packet, consumed) = mqtt::packet::v5_0::Disconnect::parse(raw).unwrap();
     assert_eq!(consumed, 1);
@@ -407,6 +431,7 @@ fn parse_rc() {
 
 #[test]
 fn parse_rc_server_busy() {
+    common::init_tracing();
     let raw = &[0x89]; // reason code: ServerBusy
     let (packet, consumed) = mqtt::packet::v5_0::Disconnect::parse(raw).unwrap();
     assert_eq!(consumed, 1);
@@ -419,6 +444,7 @@ fn parse_rc_server_busy() {
 
 #[test]
 fn parse_bad_rc() {
+    common::init_tracing();
     let raw = &[0xFF]; // invalid reason code
     let err = mqtt::packet::v5_0::Disconnect::parse(raw).unwrap_err();
     assert_eq!(err, mqtt::result_code::MqttError::MalformedPacket);
@@ -426,6 +452,7 @@ fn parse_bad_rc() {
 
 #[test]
 fn parse_rc_prop0() {
+    common::init_tracing();
     let raw = &[0x00, 0x00]; // reason code + property length 0
     let (packet, consumed) = mqtt::packet::v5_0::Disconnect::parse(raw).unwrap();
     assert_eq!(consumed, 2);
@@ -439,6 +466,7 @@ fn parse_rc_prop0() {
 
 #[test]
 fn parse_rc_proplen_over() {
+    common::init_tracing();
     let raw = &[0x00, 0x01]; // reason code + property length 1 but no property data
     let err = mqtt::packet::v5_0::Disconnect::parse(raw).unwrap_err();
     assert_eq!(err, mqtt::result_code::MqttError::MalformedPacket);
@@ -446,6 +474,7 @@ fn parse_rc_proplen_over() {
 
 #[test]
 fn parse_rc_prop_session_expiry() {
+    common::init_tracing();
     let mut raw = vec![0x00]; // reason code: NormalDisconnection
     raw.push(0x05); // property length
     raw.push(0x11); // property ID: Session Expiry Interval (0x11)
@@ -466,6 +495,7 @@ fn parse_rc_prop_session_expiry() {
 
 #[test]
 fn parse_rc_prop_session_expiry_twice() {
+    common::init_tracing();
     let mut raw = vec![0x00]; // reason code: NormalDisconnection
     raw.push(0x0A); // property length
     raw.push(0x11); // property ID: Session Expiry Interval (0x11)
@@ -479,6 +509,7 @@ fn parse_rc_prop_session_expiry_twice() {
 
 #[test]
 fn parse_rc_prop_reason_string() {
+    common::init_tracing();
     let mut raw = vec![0x8B]; // reason code: ServerShuttingDown
     raw.push(0x15); // property length
     raw.push(0x1F); // property ID: Reason String (0x1F)
@@ -501,6 +532,7 @@ fn parse_rc_prop_reason_string() {
 
 #[test]
 fn parse_rc_prop_reason_string_twice() {
+    common::init_tracing();
     let mut raw = vec![0x00]; // reason code: NormalDisconnection
     raw.push(0x0E); // property length
     raw.push(0x1F); // property ID: Reason String (0x1F)
@@ -518,6 +550,7 @@ fn parse_rc_prop_reason_string_twice() {
 
 #[test]
 fn parse_rc_prop_server_reference() {
+    common::init_tracing();
     let mut raw = vec![0x9D]; // reason code: ServerMoved
     raw.push(0x12); // property length (1 + 2 + 15)
     raw.push(0x1C); // property ID: Server Reference (0x1C)
@@ -540,6 +573,7 @@ fn parse_rc_prop_server_reference() {
 
 #[test]
 fn parse_rc_prop_server_reference_twice() {
+    common::init_tracing();
     let mut raw = vec![0x00]; // reason code: NormalDisconnection
     raw.push(0x14); // property length
     raw.push(0x1C); // property ID: Server Reference (0x1C)
@@ -557,6 +591,7 @@ fn parse_rc_prop_server_reference_twice() {
 
 #[test]
 fn parse_rc_prop_unmatched() {
+    common::init_tracing();
     let mut raw = vec![0x00]; // reason code: NormalDisconnection
     raw.push(0x07); // property length
     raw.push(0x03); // property ID: Content Type (0x03) - not allowed in DISCONNECT
@@ -570,6 +605,7 @@ fn parse_rc_prop_unmatched() {
 
 #[test]
 fn parse_rc_prop_user_property_twice() {
+    common::init_tracing();
     let mut raw = vec![0x00]; // reason code: NormalDisconnection
     raw.push(0x1E); // property length
 
@@ -611,6 +647,7 @@ fn parse_rc_prop_user_property_twice() {
 
 #[test]
 fn test_packet_type() {
+    common::init_tracing();
     let packet_type = mqtt::packet::v5_0::Disconnect::packet_type();
     assert_eq!(packet_type, mqtt::packet::PacketType::Disconnect);
 }

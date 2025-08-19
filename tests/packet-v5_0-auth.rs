@@ -22,12 +22,15 @@
  * SOFTWARE.
  */
 use mqtt_protocol_core::mqtt;
+
+mod common;
 use std::fmt::Write;
 
 // Build fail tests
 
 #[test]
 fn build_fail_props_without_rc() {
+    common::init_tracing();
     // AUTH packets cannot have props without reason_code
     let err = mqtt::packet::v5_0::Auth::builder()
         .props(mqtt::packet::Properties::new())
@@ -39,6 +42,7 @@ fn build_fail_props_without_rc() {
 
 #[test]
 fn build_fail_invalid_prop() {
+    common::init_tracing();
     let err = mqtt::packet::v5_0::Auth::builder()
         .reason_code(mqtt::result_code::AuthReasonCode::Success)
         .props(vec![mqtt::packet::ContentType::new("application/json")
@@ -52,6 +56,7 @@ fn build_fail_invalid_prop() {
 
 #[test]
 fn build_fail_auth_data_without_method() {
+    common::init_tracing();
     let err = mqtt::packet::v5_0::Auth::builder()
         .reason_code(mqtt::result_code::AuthReasonCode::Success)
         .props(vec![mqtt::packet::AuthenticationData::new(vec![
@@ -67,6 +72,7 @@ fn build_fail_auth_data_without_method() {
 
 #[test]
 fn build_fail_valid_prop_auth_method_twice() {
+    common::init_tracing();
     let err = mqtt::packet::v5_0::Auth::builder()
         .reason_code(mqtt::result_code::AuthReasonCode::Success)
         .props(vec![
@@ -85,6 +91,7 @@ fn build_fail_valid_prop_auth_method_twice() {
 
 #[test]
 fn build_fail_valid_prop_reason_string_twice() {
+    common::init_tracing();
     let err = mqtt::packet::v5_0::Auth::builder()
         .reason_code(mqtt::result_code::AuthReasonCode::Success)
         .props(vec![
@@ -99,6 +106,7 @@ fn build_fail_valid_prop_reason_string_twice() {
 
 #[test]
 fn build_fail_continue_auth_without_auth_method() {
+    common::init_tracing();
     // ContinueAuthentication reason code without Authentication Method should fail
     let err = mqtt::packet::v5_0::Auth::builder()
         .reason_code(mqtt::result_code::AuthReasonCode::ContinueAuthentication)
@@ -115,6 +123,7 @@ fn build_fail_continue_auth_without_auth_method() {
 
 #[test]
 fn build_fail_reauth_without_auth_method() {
+    common::init_tracing();
     // ReAuthenticate reason code without Authentication Method should fail
     let err = mqtt::packet::v5_0::Auth::builder()
         .reason_code(mqtt::result_code::AuthReasonCode::ReAuthenticate)
@@ -129,6 +138,7 @@ fn build_fail_reauth_without_auth_method() {
 
 #[test]
 fn build_fail_continue_auth_no_props() {
+    common::init_tracing();
     // ContinueAuthentication reason code without any properties should fail
     let err = mqtt::packet::v5_0::Auth::builder()
         .reason_code(mqtt::result_code::AuthReasonCode::ContinueAuthentication)
@@ -140,6 +150,7 @@ fn build_fail_continue_auth_no_props() {
 
 #[test]
 fn build_fail_auth_data_twice() {
+    common::init_tracing();
     // Authentication Data property can only appear once
     let err = mqtt::packet::v5_0::Auth::builder()
         .reason_code(mqtt::result_code::AuthReasonCode::ContinueAuthentication)
@@ -164,6 +175,7 @@ fn build_fail_auth_data_twice() {
 
 #[test]
 fn display_empty() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Auth::builder().build().unwrap();
 
     let mut output = String::new();
@@ -173,6 +185,7 @@ fn display_empty() {
 
 #[test]
 fn display_rc() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Auth::builder()
         .reason_code(mqtt::result_code::AuthReasonCode::Success)
         .build()
@@ -188,6 +201,7 @@ fn display_rc() {
 
 #[test]
 fn display_rc_props() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Auth::builder()
         .reason_code(mqtt::result_code::AuthReasonCode::ContinueAuthentication)
         .props(vec![mqtt::packet::AuthenticationMethod::new(
@@ -210,6 +224,7 @@ fn display_rc_props() {
 
 #[test]
 fn debug_empty() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Auth::builder().build().unwrap();
 
     let mut output = String::new();
@@ -219,6 +234,7 @@ fn debug_empty() {
 
 #[test]
 fn debug_rc() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Auth::builder()
         .reason_code(mqtt::result_code::AuthReasonCode::Success)
         .build()
@@ -234,6 +250,7 @@ fn debug_rc() {
 
 #[test]
 fn debug_rc_prop0() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Auth::builder()
         .reason_code(mqtt::result_code::AuthReasonCode::Success)
         .build()
@@ -251,6 +268,7 @@ fn debug_rc_prop0() {
 
 #[test]
 fn getter_empty() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Auth::builder().build().unwrap();
 
     assert!(packet.reason_code().is_none());
@@ -259,6 +277,7 @@ fn getter_empty() {
 
 #[test]
 fn getter_rc() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Auth::builder()
         .reason_code(mqtt::result_code::AuthReasonCode::Success)
         .build()
@@ -275,6 +294,7 @@ fn getter_rc() {
 
 #[test]
 fn getter_rc_props_auth_method() {
+    common::init_tracing();
     let props = vec![mqtt::packet::AuthenticationMethod::new("SCRAM-SHA-256")
         .unwrap()
         .into()];
@@ -294,6 +314,7 @@ fn getter_rc_props_auth_method() {
 
 #[test]
 fn getter_rc_props_mixed() {
+    common::init_tracing();
     let props = vec![
         mqtt::packet::AuthenticationMethod::new("SCRAM-SHA-256")
             .unwrap()
@@ -326,6 +347,7 @@ fn getter_rc_props_mixed() {
 
 #[test]
 fn to_buffers_empty() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Auth::builder().build().unwrap();
 
     let continuous = packet.to_continuous_buffer();
@@ -348,6 +370,7 @@ fn to_buffers_empty() {
 
 #[test]
 fn to_buffers_rc() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Auth::builder()
         .reason_code(mqtt::result_code::AuthReasonCode::Success)
         .build()
@@ -375,6 +398,7 @@ fn to_buffers_rc() {
 
 #[test]
 fn to_buffers_rc_props_auth_method() {
+    common::init_tracing();
     let packet = mqtt::packet::v5_0::Auth::builder()
         .reason_code(mqtt::result_code::AuthReasonCode::ContinueAuthentication)
         .props(vec![mqtt::packet::AuthenticationMethod::new(
@@ -417,6 +441,7 @@ fn to_buffers_rc_props_auth_method() {
 
 #[test]
 fn parse_empty() {
+    common::init_tracing();
     let raw = &[];
     let (packet, consumed) = mqtt::packet::v5_0::Auth::parse(raw).unwrap();
     assert_eq!(consumed, 0);
@@ -426,6 +451,7 @@ fn parse_empty() {
 
 #[test]
 fn parse_rc() {
+    common::init_tracing();
     let raw = &[0x00, 0x00]; // reason code: Success + property length 0
     let (packet, consumed) = mqtt::packet::v5_0::Auth::parse(raw).unwrap();
     assert_eq!(consumed, 2);
@@ -438,6 +464,7 @@ fn parse_rc() {
 
 #[test]
 fn parse_fail_continue_auth_no_auth_method() {
+    common::init_tracing();
     let raw = &[0x18, 0x00]; // reason code: ContinueAuthentication + property length 0
     let err = mqtt::packet::v5_0::Auth::parse(raw).unwrap_err();
     assert_eq!(err, mqtt::result_code::MqttError::ProtocolError);
@@ -445,6 +472,7 @@ fn parse_fail_continue_auth_no_auth_method() {
 
 #[test]
 fn parse_bad_rc() {
+    common::init_tracing();
     let raw = &[0xFF, 0x00]; // invalid reason code
     let err = mqtt::packet::v5_0::Auth::parse(raw).unwrap_err();
     assert_eq!(err, mqtt::result_code::MqttError::MalformedPacket);
@@ -452,6 +480,7 @@ fn parse_bad_rc() {
 
 #[test]
 fn parse_rc_proplen_over() {
+    common::init_tracing();
     let raw = &[0x00, 0x01]; // reason code + property length 1 but no property data
     let err = mqtt::packet::v5_0::Auth::parse(raw).unwrap_err();
     assert_eq!(err, mqtt::result_code::MqttError::MalformedPacket);
@@ -459,6 +488,7 @@ fn parse_rc_proplen_over() {
 
 #[test]
 fn parse_rc_prop_auth_method() {
+    common::init_tracing();
     let mut raw = vec![0x18]; // reason code: ContinueAuthentication
     raw.push(0x10); // property length
     raw.push(0x15); // property ID: Authentication Method (0x15)
@@ -483,6 +513,7 @@ fn parse_rc_prop_auth_method() {
 
 #[test]
 fn parse_rc_prop_auth_method_twice() {
+    common::init_tracing();
     let mut raw = vec![0x00]; // reason code: Success
     raw.push(0x14); // property length
     raw.push(0x15); // property ID: Authentication Method (0x15)
@@ -500,6 +531,7 @@ fn parse_rc_prop_auth_method_twice() {
 
 #[test]
 fn parse_rc_prop_auth_data() {
+    common::init_tracing();
     let mut raw = vec![0x18]; // reason code: ContinueAuthentication
     raw.push(0x0E); // property length
     raw.push(0x15); // property ID: Authentication Method (0x15)
@@ -531,6 +563,7 @@ fn parse_rc_prop_auth_data() {
 
 #[test]
 fn parse_rc_prop_auth_data_without_method() {
+    common::init_tracing();
     let mut raw = vec![0x00]; // reason code: Success
     raw.push(0x07); // property length
     raw.push(0x16); // property ID: Authentication Data (0x16) - not allowed without method
@@ -544,6 +577,7 @@ fn parse_rc_prop_auth_data_without_method() {
 
 #[test]
 fn parse_rc_prop_reason_string() {
+    common::init_tracing();
     let mut raw = vec![0x00]; // reason code: Success
     raw.push(0x14); // property length
     raw.push(0x1F); // property ID: Reason String (0x1F)
@@ -566,6 +600,7 @@ fn parse_rc_prop_reason_string() {
 
 #[test]
 fn parse_rc_prop_reason_string_twice() {
+    common::init_tracing();
     let mut raw = vec![0x00]; // reason code: Success
     raw.push(0x0e); // property length
     raw.push(0x1F); // property ID: Reason String (0x1F)
@@ -583,6 +618,7 @@ fn parse_rc_prop_reason_string_twice() {
 
 #[test]
 fn parse_rc_prop_unmatched() {
+    common::init_tracing();
     let mut raw = vec![0x00]; // reason code: Success
     raw.push(0x07); // property length
     raw.push(0x03); // property ID: Content Type (0x03) - not allowed in AUTH
@@ -596,6 +632,7 @@ fn parse_rc_prop_unmatched() {
 
 #[test]
 fn parse_rc_prop_user_property_twice() {
+    common::init_tracing();
     let mut raw = vec![0x00]; // reason code: Success
     raw.push(0x1e); // property length
 
@@ -639,6 +676,7 @@ fn parse_rc_prop_user_property_twice() {
 
 #[test]
 fn build_success_continue_auth_with_auth_method() {
+    common::init_tracing();
     // ContinueAuthentication reason code with Authentication Method should succeed
     let packet = mqtt::packet::v5_0::Auth::builder()
         .reason_code(mqtt::result_code::AuthReasonCode::ContinueAuthentication)
@@ -659,6 +697,7 @@ fn build_success_continue_auth_with_auth_method() {
 
 #[test]
 fn build_success_reauth_with_auth_method() {
+    common::init_tracing();
     // ReAuthenticate reason code with Authentication Method should succeed
     let packet = mqtt::packet::v5_0::Auth::builder()
         .reason_code(mqtt::result_code::AuthReasonCode::ReAuthenticate)
@@ -683,6 +722,7 @@ fn build_success_reauth_with_auth_method() {
 
 #[test]
 fn build_success_auth_method_omitted() {
+    common::init_tracing();
     // AUTH packet with no reason code and no properties (Authentication Method can be omitted)
     let packet = mqtt::packet::v5_0::Auth::builder().build().unwrap();
 
@@ -692,6 +732,7 @@ fn build_success_auth_method_omitted() {
 
 #[test]
 fn parse_fail_continue_auth_without_auth_method() {
+    common::init_tracing();
     // ContinueAuthentication without Authentication Method should fail
     let mut raw = vec![0x18]; // reason code: ContinueAuthentication
     raw.push(0x0a); // property length
@@ -706,6 +747,7 @@ fn parse_fail_continue_auth_without_auth_method() {
 
 #[test]
 fn parse_fail_reauth_without_auth_method() {
+    common::init_tracing();
     // ReAuthenticate without Authentication Method should fail
     let mut raw = vec![0x19]; // reason code: ReAuthenticate
     raw.push(0x0e); // property length
@@ -725,6 +767,7 @@ fn parse_fail_reauth_without_auth_method() {
 
 #[test]
 fn parse_success_continue_auth_with_auth_method() {
+    common::init_tracing();
     // ContinueAuthentication with Authentication Method should succeed
     let mut raw = vec![0x18]; // reason code: ContinueAuthentication
     raw.push(0x10); // property length
@@ -750,6 +793,7 @@ fn parse_success_continue_auth_with_auth_method() {
 
 #[test]
 fn parse_continue_auth_with_auth_method() {
+    common::init_tracing();
     // Raw data: reason code (0x18) + property length + auth method property
     let auth_method = "SCRAM-SHA-256";
     let mut raw = Vec::new();
@@ -775,6 +819,7 @@ fn parse_continue_auth_with_auth_method() {
 
 #[test]
 fn parse_fail_auth_data_twice() {
+    common::init_tracing();
     // Authentication Data property should not appear twice
     let mut raw = vec![0x18]; // reason code: ContinueAuthentication
     raw.push(0x13); // property length (1+2+13) + (1+2+4) + (1+2+4) + (1+2+4) = 19
@@ -803,6 +848,7 @@ fn parse_fail_auth_data_twice() {
 
 #[test]
 fn parse_fail_non_success_no_props() {
+    common::init_tracing();
     // ContinueAuthentication with no properties should fail
     let raw = [0x18]; // reason code: ContinueAuthentication, no property length
     let err = mqtt::packet::v5_0::Auth::parse(&raw).unwrap_err();
@@ -811,6 +857,7 @@ fn parse_fail_non_success_no_props() {
 
 #[test]
 fn parse_fail_reauth_no_props() {
+    common::init_tracing();
     // ReAuthenticate with no properties should fail
     let raw = [0x19]; // reason code: ReAuthenticate, no property length
     let err = mqtt::packet::v5_0::Auth::parse(&raw).unwrap_err();
@@ -819,6 +866,7 @@ fn parse_fail_reauth_no_props() {
 
 #[test]
 fn test_packet_type() {
+    common::init_tracing();
     let packet_type = mqtt::packet::v5_0::Auth::packet_type();
     assert_eq!(packet_type, mqtt::packet::PacketType::Auth);
 }

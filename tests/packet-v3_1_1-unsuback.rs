@@ -22,10 +22,12 @@
  * SOFTWARE.
  */
 use mqtt_protocol_core::mqtt;
+mod common;
 
 // Build fail tests
 #[test]
 fn build_fail_no_packet_id() {
+    common::init_tracing();
     let err = mqtt::packet::v3_1_1::Unsuback::builder()
         .build()
         .unwrap_err();
@@ -34,6 +36,7 @@ fn build_fail_no_packet_id() {
 
 #[test]
 fn build_fail_pid0() {
+    common::init_tracing();
     let err = mqtt::packet::v3_1_1::Unsuback::builder()
         .packet_id(0)
         .build()
@@ -44,6 +47,7 @@ fn build_fail_pid0() {
 // Build success tests
 #[test]
 fn build_success_minimal() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Unsuback::builder()
         .packet_id(1u16)
         .build()
@@ -53,6 +57,7 @@ fn build_success_minimal() {
 
 #[test]
 fn build_success_various_packet_ids() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Unsuback::builder()
         .packet_id(65535u16)
         .build()
@@ -63,6 +68,7 @@ fn build_success_various_packet_ids() {
 // Display tests
 #[test]
 fn display_minimal() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Unsuback::builder()
         .packet_id(1u16)
         .build()
@@ -75,6 +81,7 @@ fn display_minimal() {
 // Debug tests
 #[test]
 fn debug_minimal() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Unsuback::builder()
         .packet_id(42u16)
         .build()
@@ -87,6 +94,7 @@ fn debug_minimal() {
 // Getter tests
 #[test]
 fn getter_packet_id() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Unsuback::builder()
         .packet_id(12345u16)
         .build()
@@ -99,6 +107,7 @@ fn getter_packet_id() {
 #[test]
 #[cfg(feature = "std")]
 fn to_buffers_minimal() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Unsuback::builder()
         .packet_id(1u16)
         .build()
@@ -127,6 +136,7 @@ fn to_buffers_minimal() {
 // Parse tests
 #[test]
 fn parse_minimal() {
+    common::init_tracing();
     let original = mqtt::packet::v3_1_1::Unsuback::builder()
         .packet_id(1u16)
         .build()
@@ -143,6 +153,7 @@ fn parse_minimal() {
 
 #[test]
 fn parse_various_packet_ids() {
+    common::init_tracing();
     let original = mqtt::packet::v3_1_1::Unsuback::builder()
         .packet_id(65535u16)
         .build()
@@ -159,6 +170,7 @@ fn parse_various_packet_ids() {
 
 #[test]
 fn parse_invalid_too_short() {
+    common::init_tracing();
     let data = [0x00]; // Too short for packet ID
     let err = mqtt::packet::v3_1_1::Unsuback::parse(&data).unwrap_err();
     assert_eq!(err, mqtt::result_code::MqttError::MalformedPacket);
@@ -167,6 +179,7 @@ fn parse_invalid_too_short() {
 // Size tests
 #[test]
 fn size_minimal() {
+    common::init_tracing();
     let packet = mqtt::packet::v3_1_1::Unsuback::builder()
         .packet_id(1u16)
         .build()
@@ -198,6 +211,7 @@ fn size_minimal() {
 // Parse/serialize roundtrip tests
 #[test]
 fn roundtrip_minimal() {
+    common::init_tracing();
     let original = mqtt::packet::v3_1_1::Unsuback::builder()
         .packet_id(1u16)
         .build()
@@ -213,6 +227,7 @@ fn roundtrip_minimal() {
 
 #[test]
 fn roundtrip_various_packet_ids() {
+    common::init_tracing();
     for packet_id in [1u16, 100u16, 32767u16, 65535u16] {
         let original = mqtt::packet::v3_1_1::Unsuback::builder()
             .packet_id(packet_id)
@@ -230,6 +245,7 @@ fn roundtrip_various_packet_ids() {
 
 #[test]
 fn test_packet_type() {
+    common::init_tracing();
     let packet_type = mqtt::packet::v3_1_1::Unsuback::packet_type();
     assert_eq!(packet_type, mqtt::packet::PacketType::Unsuback);
 }

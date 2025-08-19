@@ -1,3 +1,4 @@
+use crate::mqtt::common::tracing::trace;
 use crate::mqtt::packet::GenericStorePacket;
 use crate::mqtt::packet::IsPacketId;
 use crate::mqtt::packet::ResponsePacket;
@@ -102,7 +103,7 @@ impl<PacketIdType: IsPacketId> GenericStore<PacketIdType> {
         }
         for id in to_remove {
             self.map.shift_remove(&id);
-            tracing::trace!("[store] removed pid: {id:?}");
+            trace!("[store] removed pid: {id:?}");
         }
     }
 

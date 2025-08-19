@@ -24,9 +24,11 @@
 use mqtt_protocol_core::mqtt::common::Cursor as MqttCursor;
 use std::io::{Cursor as StdCursor, Read};
 use std::time::Instant;
+mod common;
 
 #[test]
 fn analyze_memory_access_patterns() {
+    common::init_tracing();
     const ITERATIONS: usize = 1000000;
     let data = vec![0xAAu8; 1024];
 
@@ -119,6 +121,7 @@ fn analyze_memory_access_patterns() {
 
 #[test]
 fn analyze_copy_overhead() {
+    common::init_tracing();
     const ITERATIONS: usize = 100000;
     const SIZE: usize = 4096;
     let data = vec![0xAAu8; SIZE];
@@ -192,6 +195,7 @@ fn analyze_copy_overhead() {
 
 #[test]
 fn analyze_inlining_effectiveness() {
+    common::init_tracing();
     const ITERATIONS: usize = 10000000;
     let data = vec![0xAAu8; 64];
 

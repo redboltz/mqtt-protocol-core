@@ -1,8 +1,11 @@
 use mqtt_protocol_core::mqtt;
+
+mod common;
 use mqtt_protocol_core::mqtt::packet::GenericPacketTrait;
 
 #[test]
 fn test_generic_packet_v3_1_1_connect_size() {
+    common::init_tracing();
     let connect = mqtt::packet::v3_1_1::Connect::builder()
         .clean_start(true)
         .build()
@@ -16,6 +19,7 @@ fn test_generic_packet_v3_1_1_connect_size() {
 #[test]
 #[cfg(feature = "std")]
 fn test_generic_packet_v3_1_1_connect_to_buffers() {
+    common::init_tracing();
     let connect = mqtt::packet::v3_1_1::Connect::builder()
         .clean_start(true)
         .build()
@@ -35,6 +39,7 @@ fn test_generic_packet_v3_1_1_connect_to_buffers() {
 
 #[test]
 fn test_generic_packet_v3_1_1_connect_debug() {
+    common::init_tracing();
     let connect = mqtt::packet::v3_1_1::Connect::builder()
         .client_id("test-client")
         .unwrap()
@@ -50,6 +55,7 @@ fn test_generic_packet_v3_1_1_connect_debug() {
 
 #[test]
 fn test_generic_packet_v3_1_1_connect_display() {
+    common::init_tracing();
     let connect = mqtt::packet::v3_1_1::Connect::builder()
         .client_id("test-client")
         .unwrap()
@@ -65,6 +71,7 @@ fn test_generic_packet_v3_1_1_connect_display() {
 
 #[test]
 fn test_generic_packet_v3_1_1_connack() {
+    common::init_tracing();
     let connack = mqtt::packet::v3_1_1::Connack::builder()
         .session_present(false)
         .return_code(mqtt::result_code::ConnectReturnCode::Accepted)
@@ -91,6 +98,7 @@ fn test_generic_packet_v3_1_1_connack() {
 
 #[test]
 fn test_generic_packet_v3_1_1_publish() {
+    common::init_tracing();
     let publish = mqtt::packet::v3_1_1::Publish::builder()
         .topic_name("test/topic")
         .unwrap()
@@ -119,6 +127,7 @@ fn test_generic_packet_v3_1_1_publish() {
 
 #[test]
 fn test_generic_packet_v3_1_1_puback() {
+    common::init_tracing();
     let puback = mqtt::packet::v3_1_1::Puback::builder()
         .packet_id(123)
         .build()
@@ -137,6 +146,7 @@ fn test_generic_packet_v3_1_1_puback() {
 
 #[test]
 fn test_generic_packet_v3_1_1_disconnect() {
+    common::init_tracing();
     let disconnect = mqtt::packet::v3_1_1::Disconnect::builder().build().unwrap();
     let packet = mqtt::packet::Packet::V3_1_1Disconnect(disconnect.clone());
 
@@ -152,6 +162,7 @@ fn test_generic_packet_v3_1_1_disconnect() {
 
 #[test]
 fn test_generic_packet_v3_1_1_pingreq() {
+    common::init_tracing();
     let pingreq = mqtt::packet::v3_1_1::Pingreq::builder().build().unwrap();
     let packet = mqtt::packet::Packet::V3_1_1Pingreq(pingreq.clone());
 
@@ -167,6 +178,7 @@ fn test_generic_packet_v3_1_1_pingreq() {
 
 #[test]
 fn test_generic_packet_v3_1_1_pingresp() {
+    common::init_tracing();
     let pingresp = mqtt::packet::v3_1_1::Pingresp::builder().build().unwrap();
     let packet = mqtt::packet::Packet::V3_1_1Pingresp(pingresp.clone());
 
@@ -182,6 +194,7 @@ fn test_generic_packet_v3_1_1_pingresp() {
 
 #[test]
 fn test_generic_packet_v5_0_connect() {
+    common::init_tracing();
     let connect = mqtt::packet::v5_0::Connect::builder()
         .clean_start(true)
         .build()
@@ -200,6 +213,7 @@ fn test_generic_packet_v5_0_connect() {
 
 #[test]
 fn test_generic_packet_v5_0_auth() {
+    common::init_tracing();
     let auth = mqtt::packet::v5_0::Auth::builder()
         .reason_code(mqtt::result_code::AuthReasonCode::Success)
         .build()
@@ -219,6 +233,7 @@ fn test_generic_packet_v5_0_auth() {
 // GenericPacket packet_type() tests
 #[test]
 fn test_generic_packet_packet_type_v3_1_1() {
+    common::init_tracing();
     // V3.1.1 Connect
     let connect = mqtt::packet::v3_1_1::Connect::builder()
         .clean_start(true)
@@ -350,6 +365,7 @@ fn test_generic_packet_packet_type_v3_1_1() {
 
 #[test]
 fn test_generic_packet_packet_type_v5_0() {
+    common::init_tracing();
     // V5.0 Connect
     let connect = mqtt::packet::v5_0::Connect::builder()
         .clean_start(true)
