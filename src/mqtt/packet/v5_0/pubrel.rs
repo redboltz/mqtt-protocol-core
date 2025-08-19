@@ -123,8 +123,11 @@ use crate::mqtt::result_code::PubrelReasonCode;
 /// ```
 #[derive(PartialEq, Eq, Builder, Clone, Getters, CopyGetters)]
 #[builder(no_std, derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
-pub struct GenericPubrel<PacketIdType>
-where
+pub struct GenericPubrel<
+    PacketIdType,
+    const STRING_BUFFER_SIZE: usize = 32,
+    const BINARY_BUFFER_SIZE: usize = 32,
+> where
     PacketIdType: IsPacketId,
 {
     #[builder(private)]
@@ -148,7 +151,7 @@ where
     /// Properties can only be included if a reason code is also present.
     #[builder(setter(into, strip_option))]
     #[getset(get = "pub")]
-    pub props: Option<GenericProperties>,
+    pub props: Option<GenericProperties<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>>,
 }
 
 /// Type alias for PUBREL packet with standard u16 packet identifiers.
@@ -168,7 +171,8 @@ where
 /// ```
 pub type Pubrel = GenericPubrel<u16>;
 
-impl<PacketIdType> GenericPubrel<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
+    GenericPubrel<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId,
 {
@@ -189,8 +193,8 @@ where
     ///     .build()
     ///     .unwrap();
     /// ```
-    pub fn builder() -> GenericPubrelBuilder<PacketIdType> {
-        GenericPubrelBuilder::<PacketIdType>::default()
+    pub fn builder() -> GenericPubrelBuilder<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE> {
+        GenericPubrelBuilder::<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::default()
     }
 
     /// Returns the packet type for PUBREL packets.
@@ -456,7 +460,10 @@ where
 
         // properties
         let (property_length, props) = if reason_code_buf.is_some() && cursor < data.len() {
-            let (props, consumed) = GenericProperties::parse(&data[cursor..])?;
+            let (props, consumed) =
+                GenericProperties::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::parse(
+                    &data[cursor..],
+                )?;
             cursor += consumed;
             validate_pubrel_properties(&props)?;
             let prop_len = VariableByteInteger::from_u32(props.size() as u32).unwrap();
@@ -488,7 +495,8 @@ where
 ///
 /// This implementation provides methods for setting packet-specific fields
 /// during the construction process using the builder pattern.
-impl<PacketIdType> GenericPubrelBuilder<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
+    GenericPubrelBuilder<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId,
 {
@@ -632,7 +640,10 @@ where
     ///
     /// assert!(result.is_err());
     /// ```
-    pub fn build(self) -> Result<GenericPubrel<PacketIdType>, MqttError> {
+    pub fn build(
+        self,
+    ) -> Result<GenericPubrel<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>, MqttError>
+    {
         self.validate()?;
 
         let packet_id_buf = self.packet_id_buf.unwrap();
@@ -696,7 +707,8 @@ where
 /// let json = serde_json::to_string(&pubrel).unwrap();
 /// // Result: {"type":"pubrel","packet_id":123,"reason_code":"Success"}
 /// ```
-impl<PacketIdType> Serialize for GenericPubrel<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> Serialize
+    for GenericPubrel<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId + Serialize,
 {
@@ -757,7 +769,8 @@ where
 /// println!("{}", pubrel);
 /// // Output: {"type":"pubrel","packet_id":42}
 /// ```
-impl<PacketIdType> fmt::Display for GenericPubrel<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> fmt::Display
+    for GenericPubrel<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId + Serialize,
 {
@@ -788,7 +801,8 @@ where
 /// println!("{:?}", pubrel);
 /// // Output: {"type":"pubrel","packet_id":123}
 /// ```
-impl<PacketIdType> fmt::Debug for GenericPubrel<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> fmt::Debug
+    for GenericPubrel<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId + Serialize,
 {
@@ -807,7 +821,8 @@ where
 ///
 /// - `size()`: Returns the total packet size in bytes
 /// - `to_buffers()`: Returns I/O slices for efficient transmission
-impl<PacketIdType> GenericPacketTrait for GenericPubrel<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
+    GenericPacketTrait for GenericPubrel<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId,
 {
@@ -835,7 +850,8 @@ where
 ///
 /// - `fmt_debug()`: Provides debug formatting via the Debug trait
 /// - `fmt_display()`: Provides display formatting via the Display trait
-impl<PacketIdType> GenericPacketDisplay for GenericPubrel<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
+    GenericPacketDisplay for GenericPubrel<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId + Serialize,
 {
@@ -888,7 +904,9 @@ where
 /// // This would pass validation
 /// // validate_pubrel_properties(&valid_props).unwrap();
 /// ```
-fn validate_pubrel_properties(props: &[GenericProperty]) -> Result<(), MqttError> {
+fn validate_pubrel_properties<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>(
+    props: &GenericProperties<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>,
+) -> Result<(), MqttError> {
     let mut count_reason_string = 0;
     for prop in props {
         match prop {

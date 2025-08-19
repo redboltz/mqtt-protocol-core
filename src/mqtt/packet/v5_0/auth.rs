@@ -103,7 +103,7 @@ use crate::mqtt::result_code::MqttError;
 /// ```
 #[derive(PartialEq, Eq, Builder, Clone, Getters, CopyGetters)]
 #[builder(no_std, derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
-pub struct Auth {
+pub struct GenericAuth<const STRING_BUFFER_SIZE: usize = 32, const BINARY_BUFFER_SIZE: usize = 32> {
     /// Fixed header containing packet type and flags
     #[builder(private)]
     fixed_header: [u8; 1],
@@ -126,10 +126,15 @@ pub struct Auth {
     /// - User Property: Application-specific key-value pairs
     #[builder(setter(into, strip_option))]
     #[getset(get = "pub")]
-    pub props: Option<GenericProperties>,
+    pub props: Option<GenericProperties<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>>,
 }
 
-impl Auth {
+/// Type alias for AUTH packet with standard buffer sizes
+pub type Auth = GenericAuth;
+
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
+    GenericAuth<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
     /// Create a new AuthBuilder for constructing AUTH packets
     ///
     /// Returns a builder instance that can be used to configure and construct
@@ -150,8 +155,8 @@ impl Auth {
     ///     .build()
     ///     .unwrap();
     /// ```
-    pub fn builder() -> AuthBuilder {
-        AuthBuilder::default()
+    pub fn builder() -> GenericAuthBuilder<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE> {
+        GenericAuthBuilder::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::default()
     }
 
     /// Get the packet type for AUTH packets
@@ -348,7 +353,10 @@ impl Auth {
 
         // properties
         let (property_length, props) = if reason_code_buf.is_some() && cursor < data.len() {
-            let (props, consumed) = GenericProperties::parse(&data[cursor..])?;
+            let (props, consumed) =
+                GenericProperties::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::parse(
+                    &data[cursor..],
+                )?;
             cursor += consumed;
             let prop_len = VariableByteInteger::from_u32(props.size() as u32).unwrap();
 
@@ -367,7 +375,7 @@ impl Auth {
             + property_length.as_ref().map_or(0, |pl| pl.size())
             + props.as_ref().map_or(0, |ps| ps.size());
 
-        let auth = Auth {
+        let auth = GenericAuth {
             fixed_header: [FixedHeader::Auth.as_u8()],
             remaining_length: VariableByteInteger::from_u32(remaining_size as u32).unwrap(),
             reason_code_buf,
@@ -383,7 +391,9 @@ impl Auth {
 ///
 /// The `AuthBuilder` provides a fluent interface for constructing AUTH packets
 /// with proper validation of MQTT v5.0 protocol requirements.
-impl AuthBuilder {
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
+    GenericAuthBuilder<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
     /// Validate the current builder state against MQTT protocol rules
     ///
     /// Performs comprehensive validation of the AUTH packet configuration to ensure
@@ -457,7 +467,10 @@ impl AuthBuilder {
         self.reason_code_buf = Some(Some([rc as u8]));
         // For AUTH packets, if reason_code is set and props is not already set, set empty props
         if self.props.is_none() {
-            self.props = Some(Some(GenericProperties::new()));
+            self.props = Some(Some(GenericProperties::<
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+            >::new()));
         }
         self
     }
@@ -498,7 +511,7 @@ impl AuthBuilder {
     ///     ]))
     ///     .build()?;
     /// ```
-    pub fn build(self) -> Result<Auth, MqttError> {
+    pub fn build(self) -> Result<GenericAuth<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>, MqttError> {
         self.validate()?;
 
         let reason_code_buf = self.reason_code_buf.flatten();
@@ -522,7 +535,7 @@ impl AuthBuilder {
         }
         let remaining_length = VariableByteInteger::from_u32(remaining as u32).unwrap();
 
-        Ok(Auth {
+        Ok(GenericAuth {
             fixed_header: [FixedHeader::Auth.as_u8()],
             remaining_length,
             reason_code_buf,
@@ -557,7 +570,9 @@ impl AuthBuilder {
 /// let json = serde_json::to_string(&auth).unwrap();
 /// // Results in: {"type":"AUTH","reason_code":"Success","props":{}}
 /// ```
-impl Serialize for Auth {
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> Serialize
+    for GenericAuth<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -609,7 +624,9 @@ impl Serialize for Auth {
 /// println!("{}", auth);
 /// // Outputs: {"type":"AUTH","reason_code":"ContinueAuthentication","props":{}}
 /// ```
-impl fmt::Display for Auth {
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> fmt::Display
+    for GenericAuth<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match serde_json::to_string(self) {
             Ok(json) => write!(f, "{json}"),
@@ -641,7 +658,9 @@ impl fmt::Display for Auth {
 /// println!("{:?}", auth);
 /// // Outputs: {"type":"AUTH","reason_code":"Success","props":{}}
 /// ```
-impl fmt::Debug for Auth {
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> fmt::Debug
+    for GenericAuth<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Display::fmt(self, f)
     }
@@ -652,7 +671,9 @@ impl fmt::Debug for Auth {
 /// Implements the common packet interface that allows AUTH packets to be used
 /// polymorphically with other MQTT packet types. This trait provides standardized
 /// methods for packet size calculation and buffer generation.
-impl GenericPacketTrait for Auth {
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> GenericPacketTrait
+    for GenericAuth<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
     fn size(&self) -> usize {
         self.size()
     }
@@ -672,7 +693,9 @@ impl GenericPacketTrait for Auth {
 /// Implements the generic packet display interface that provides standardized
 /// formatting capabilities for AUTH packets. This trait enables consistent
 /// display and debug output across different packet types.
-impl GenericPacketDisplay for Auth {
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> GenericPacketDisplay
+    for GenericAuth<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
     fn fmt_debug(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         core::fmt::Debug::fmt(self, f)
     }
@@ -737,9 +760,9 @@ impl GenericPacketDisplay for Auth {
 /// // Invalid: Continue authentication without method
 /// validate_auth_packet(Some(AuthReasonCode::ContinueAuthentication), &None); // Error
 /// ```
-fn validate_auth_packet(
+fn validate_auth_packet<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>(
     reason_code: Option<AuthReasonCode>,
-    props: &Option<GenericProperties>,
+    props: &Option<GenericProperties<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>>,
 ) -> Result<(), MqttError> {
     // Validate properties if present
     if let Some(properties) = props {

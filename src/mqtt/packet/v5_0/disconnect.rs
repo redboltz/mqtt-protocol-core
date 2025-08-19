@@ -137,7 +137,10 @@ use crate::mqtt::result_code::MqttError;
 /// ```
 #[derive(PartialEq, Eq, Builder, Clone, Getters, CopyGetters)]
 #[builder(no_std, derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
-pub struct Disconnect {
+pub struct GenericDisconnect<
+    const STRING_BUFFER_SIZE: usize = 32,
+    const BINARY_BUFFER_SIZE: usize = 32,
+> {
     #[builder(private)]
     fixed_header: [u8; 1],
     #[builder(private)]
@@ -157,10 +160,15 @@ pub struct Disconnect {
     /// - Server Reference
     #[builder(setter(into, strip_option))]
     #[getset(get = "pub")]
-    pub props: Option<GenericProperties>,
+    pub props: Option<GenericProperties<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>>,
 }
 
-impl Disconnect {
+/// Type alias for DISCONNECT packet with standard buffer sizes
+pub type Disconnect = GenericDisconnect;
+
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
+    GenericDisconnect<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
     /// Creates a new builder for constructing a DISCONNECT packet
     ///
     /// The builder pattern allows for flexible construction of DISCONNECT packets
@@ -179,8 +187,8 @@ impl Disconnect {
     ///     .build()
     ///     .unwrap();
     /// ```
-    pub fn builder() -> DisconnectBuilder {
-        DisconnectBuilder::default()
+    pub fn builder() -> GenericDisconnectBuilder<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE> {
+        GenericDisconnectBuilder::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::default()
     }
 
     /// Returns the packet type for DISCONNECT packets
@@ -406,7 +414,10 @@ impl Disconnect {
 
         // properties
         let (property_length, props) = if reason_code_buf.is_some() && cursor < data.len() {
-            let (props, consumed) = GenericProperties::parse(&data[cursor..])?;
+            let (props, consumed) =
+                GenericProperties::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::parse(
+                    &data[cursor..],
+                )?;
             cursor += consumed;
             validate_disconnect_properties(&props)?;
             let prop_len = VariableByteInteger::from_u32(props.size() as u32).unwrap();
@@ -420,7 +431,7 @@ impl Disconnect {
             + property_length.as_ref().map_or(0, |pl| pl.size())
             + props.as_ref().map_or(0, |ps| ps.size());
 
-        let disconnect = Disconnect {
+        let disconnect = GenericDisconnect {
             fixed_header: [FixedHeader::Disconnect.as_u8()],
             remaining_length: VariableByteInteger::from_u32(remaining_size as u32).unwrap(),
             reason_code_buf,
@@ -457,7 +468,9 @@ impl Disconnect {
 ///     .build()
 ///     .unwrap();
 /// ```
-impl DisconnectBuilder {
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
+    GenericDisconnectBuilder<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
     /// Sets the reason code for the DISCONNECT packet
     ///
     /// The reason code indicates why the connection is being terminated.
@@ -547,7 +560,9 @@ impl DisconnectBuilder {
     ///     Err(e) => println!("Build failed: {:?}", e),
     /// }
     /// ```
-    pub fn build(self) -> Result<Disconnect, MqttError> {
+    pub fn build(
+        self,
+    ) -> Result<GenericDisconnect<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>, MqttError> {
         self.validate()?;
 
         let reason_code_buf = self.reason_code_buf.flatten();
@@ -571,7 +586,7 @@ impl DisconnectBuilder {
         }
         let remaining_length = VariableByteInteger::from_u32(remaining as u32).unwrap();
 
-        Ok(Disconnect {
+        Ok(GenericDisconnect {
             fixed_header: [FixedHeader::Disconnect.as_u8()],
             remaining_length,
             reason_code_buf,
@@ -611,7 +626,9 @@ impl DisconnectBuilder {
 /// let json = serde_json::to_string(&disconnect).unwrap();
 /// println!("DISCONNECT packet: {}", json);
 /// ```
-impl Serialize for Disconnect {
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> Serialize
+    for GenericDisconnect<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -658,7 +675,9 @@ impl Serialize for Disconnect {
 /// println!("Packet: {}", disconnect);
 /// // Output: {"type":"disconnect","reason_code":"NormalDisconnection"}
 /// ```
-impl fmt::Display for Disconnect {
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> fmt::Display
+    for GenericDisconnect<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match serde_json::to_string(self) {
             Ok(json) => write!(f, "{json}"),
@@ -684,7 +703,9 @@ impl fmt::Display for Disconnect {
 /// println!("{:?}", disconnect);
 /// // Output: {"type":"disconnect"}
 /// ```
-impl fmt::Debug for Disconnect {
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> fmt::Debug
+    for GenericDisconnect<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Display::fmt(self, f)
     }
@@ -709,7 +730,9 @@ impl fmt::Debug for Disconnect {
 /// let size = disconnect.size();
 /// let buffers = disconnect.to_buffers();
 /// ```
-impl GenericPacketTrait for Disconnect {
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> GenericPacketTrait
+    for GenericDisconnect<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
     fn size(&self) -> usize {
         self.size()
     }
@@ -742,7 +765,9 @@ impl GenericPacketTrait for Disconnect {
 /// // Format through the generic trait
 /// println!("{}", disconnect);
 /// ```
-impl GenericPacketDisplay for Disconnect {
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> GenericPacketDisplay
+    for GenericDisconnect<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
     fn fmt_debug(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         core::fmt::Debug::fmt(self, f)
     }
@@ -790,7 +815,12 @@ impl GenericPacketDisplay for Disconnect {
 /// // This is called internally during packet construction
 /// // validate_disconnect_properties(&props).unwrap();
 /// ```
-fn validate_disconnect_properties(props: &[GenericProperty]) -> Result<(), MqttError> {
+fn validate_disconnect_properties<
+    const STRING_BUFFER_SIZE: usize,
+    const BINARY_BUFFER_SIZE: usize,
+>(
+    props: &GenericProperties<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>,
+) -> Result<(), MqttError> {
     let mut count_session_expiry_interval = 0;
     let mut count_reason_string = 0;
     let mut count_server_reference = 0;

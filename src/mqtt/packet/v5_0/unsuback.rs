@@ -146,8 +146,11 @@ use crate::mqtt::result_code::UnsubackReasonCode;
 /// ```
 #[derive(PartialEq, Eq, Builder, Clone, Getters, CopyGetters)]
 #[builder(no_std, derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
-pub struct GenericUnsuback<PacketIdType>
-where
+pub struct GenericUnsuback<
+    PacketIdType,
+    const STRING_BUFFER_SIZE: usize = 32,
+    const BINARY_BUFFER_SIZE: usize = 32,
+> where
     PacketIdType: IsPacketId,
 {
     #[builder(private)]
@@ -165,7 +168,7 @@ where
     /// The properties are validated to ensure only allowed properties are included.
     #[builder(setter(into, strip_option))]
     #[getset(get = "pub")]
-    pub props: GenericProperties,
+    pub props: GenericProperties<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>,
 
     #[builder(private)]
     reason_codes_buf: Vec<u8>,
@@ -194,7 +197,8 @@ where
 /// ```
 pub type Unsuback = GenericUnsuback<u16>;
 
-impl<PacketIdType> GenericUnsuback<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
+    GenericUnsuback<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId,
 {
@@ -220,8 +224,9 @@ where
     ///     .build()
     ///     .unwrap();
     /// ```
-    pub fn builder() -> GenericUnsubackBuilder<PacketIdType> {
-        GenericUnsubackBuilder::<PacketIdType>::default()
+    pub fn builder() -> GenericUnsubackBuilder<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+    {
+        GenericUnsubackBuilder::<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::default()
     }
 
     /// Get the packet type for UNSUBACK packets
@@ -364,7 +369,8 @@ where
         let packet_id_buf = packet_id.to_buffer();
         cursor += buffer_size;
 
-        let (props, property_length) = GenericProperties::parse(&data[cursor..])?;
+        let (props, property_length) =
+            GenericProperties::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::parse(&data[cursor..])?;
         cursor += property_length;
         validate_unsuback_properties(&props)?;
         let prop_len = VariableByteInteger::from_u32(props.size() as u32).unwrap();
@@ -518,7 +524,8 @@ where
 /// Provides a fluent interface for constructing UNSUBACK packets with proper validation.
 /// The builder ensures all required fields are set and validates the packet structure
 /// before creating the final packet instance.
-impl<PacketIdType> GenericUnsubackBuilder<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
+    GenericUnsubackBuilder<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId,
 {
@@ -668,13 +675,18 @@ where
     ///
     /// assert_eq!(unsuback.packet_id(), 42);
     /// ```
-    pub fn build(self) -> Result<GenericUnsuback<PacketIdType>, MqttError> {
+    pub fn build(
+        self,
+    ) -> Result<GenericUnsuback<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>, MqttError>
+    {
         self.validate()?;
 
         let packet_id_buf = self.packet_id_buf.unwrap();
         let reason_codes_buf = self.reason_codes_buf.unwrap_or_default();
 
-        let props = self.props.unwrap_or_else(GenericProperties::new);
+        let props = self
+            .props
+            .unwrap_or_else(|| GenericProperties::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::new());
         let props_size = props.size();
         let property_length = VariableByteInteger::from_u32(props_size as u32).unwrap();
 
@@ -716,7 +728,8 @@ where
 ///
 /// println!("{}", unsuback); // Prints JSON representation
 /// ```
-impl<PacketIdType> fmt::Display for GenericUnsuback<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> fmt::Display
+    for GenericUnsuback<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId + Serialize,
 {
@@ -747,7 +760,8 @@ where
 ///
 /// println!("{:?}", unsuback); // Prints JSON representation
 /// ```
-impl<PacketIdType> fmt::Debug for GenericUnsuback<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> fmt::Debug
+    for GenericUnsuback<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId + Serialize,
 {
@@ -782,7 +796,8 @@ where
 /// let json = serde_json::to_string(&unsuback).unwrap();
 /// // json contains: {"type":"unsuback","packet_id":42,"reason_codes":["Success"]}
 /// ```
-impl<PacketIdType> Serialize for GenericUnsuback<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> Serialize
+    for GenericUnsuback<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId + Serialize,
 {
@@ -840,7 +855,8 @@ where
 /// let size = unsuback.size();
 /// let buffers = unsuback.to_buffers();
 /// ```
-impl<PacketIdType> GenericPacketTrait for GenericUnsuback<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
+    GenericPacketTrait for GenericUnsuback<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId,
 {
@@ -880,7 +896,8 @@ where
 /// // Use trait methods for consistent formatting
 /// println!("{}", format_args!("{}", unsuback));
 /// ```
-impl<PacketIdType> GenericPacketDisplay for GenericUnsuback<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
+    GenericPacketDisplay for GenericUnsuback<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId + Serialize,
 {
@@ -931,7 +948,12 @@ where
 /// // This would be called internally during packet validation
 /// // validate_unsuback_properties(&props).unwrap();
 /// ```
-fn validate_unsuback_properties(props: &GenericProperties) -> Result<(), MqttError> {
+fn validate_unsuback_properties<
+    const STRING_BUFFER_SIZE: usize,
+    const BINARY_BUFFER_SIZE: usize,
+>(
+    props: &GenericProperties<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>,
+) -> Result<(), MqttError> {
     let mut count_reason_string = 0;
     for prop in props {
         match prop {

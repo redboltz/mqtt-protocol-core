@@ -107,8 +107,11 @@ use crate::mqtt::result_code::PubcompReasonCode;
 /// ```
 #[derive(PartialEq, Eq, Builder, Clone, Getters, CopyGetters)]
 #[builder(no_std, derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
-pub struct GenericPubcomp<PacketIdType>
-where
+pub struct GenericPubcomp<
+    PacketIdType,
+    const STRING_BUFFER_SIZE: usize = 32,
+    const BINARY_BUFFER_SIZE: usize = 32,
+> where
     PacketIdType: IsPacketId,
 {
     #[builder(private)]
@@ -131,7 +134,7 @@ where
     /// Only one `ReasonString` property is allowed per packet.
     #[builder(setter(into, strip_option))]
     #[getset(get = "pub")]
-    pub props: Option<GenericProperties>,
+    pub props: Option<GenericProperties<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>>,
 }
 
 /// Type alias for PUBCOMP packet with standard u16 packet identifiers.
@@ -151,7 +154,8 @@ where
 /// ```
 pub type Pubcomp = GenericPubcomp<u16>;
 
-impl<PacketIdType> GenericPubcomp<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
+    GenericPubcomp<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId,
 {
@@ -172,8 +176,9 @@ where
     ///     .build()
     ///     .unwrap();
     /// ```
-    pub fn builder() -> GenericPubcompBuilder<PacketIdType> {
-        GenericPubcompBuilder::<PacketIdType>::default()
+    pub fn builder() -> GenericPubcompBuilder<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+    {
+        GenericPubcompBuilder::<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::default()
     }
 
     /// Returns the packet type for PUBCOMP packets.
@@ -447,7 +452,10 @@ where
 
         // properties
         let (property_length, props) = if reason_code_buf.is_some() && cursor < data.len() {
-            let (props, consumed) = GenericProperties::parse(&data[cursor..])?;
+            let (props, consumed) =
+                GenericProperties::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::parse(
+                    &data[cursor..],
+                )?;
             cursor += consumed;
             validate_pubcomp_properties(&props)?;
             let prop_len = VariableByteInteger::from_u32(props.size() as u32).unwrap();
@@ -480,7 +488,8 @@ where
 /// The builder provides a fluent interface for creating PUBCOMP packets with
 /// optional components like reason codes and properties. All PUBCOMP packets
 /// require a packet identifier.
-impl<PacketIdType> GenericPubcompBuilder<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
+    GenericPubcompBuilder<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId,
 {
@@ -609,7 +618,10 @@ where
     ///     .build()
     ///     .unwrap();
     /// ```
-    pub fn build(self) -> Result<GenericPubcomp<PacketIdType>, MqttError> {
+    pub fn build(
+        self,
+    ) -> Result<GenericPubcomp<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>, MqttError>
+    {
         self.validate()?;
 
         let packet_id_buf = self.packet_id_buf.unwrap();
@@ -673,7 +685,8 @@ where
 /// let json = serde_json::to_string(&pubcomp).unwrap();
 /// // JSON: {"type":"pubcomp","packet_id":123}
 /// ```
-impl<PacketIdType> Serialize for GenericPubcomp<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> Serialize
+    for GenericPubcomp<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId + Serialize,
 {
@@ -723,7 +736,8 @@ where
 /// println!("{}", pubcomp);
 /// // Output: {"type":"pubcomp","packet_id":42}
 /// ```
-impl<PacketIdType> fmt::Display for GenericPubcomp<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> fmt::Display
+    for GenericPubcomp<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId + Serialize,
 {
@@ -753,7 +767,8 @@ where
 /// println!("{:?}", pubcomp);
 /// // Output: {"type":"pubcomp","packet_id":42}
 /// ```
-impl<PacketIdType> fmt::Debug for GenericPubcomp<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> fmt::Debug
+    for GenericPubcomp<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId + Serialize,
 {
@@ -782,7 +797,8 @@ where
 /// let packet_size = pubcomp.size();
 /// let buffers = pubcomp.to_buffers();
 /// ```
-impl<PacketIdType> GenericPacketTrait for GenericPubcomp<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
+    GenericPacketTrait for GenericPubcomp<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId,
 {
@@ -820,7 +836,8 @@ where
 /// println!("{}", pubcomp); // Uses fmt_display
 /// println!("{:?}", pubcomp); // Uses fmt_debug
 /// ```
-impl<PacketIdType> GenericPacketDisplay for GenericPubcomp<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
+    GenericPacketDisplay for GenericPubcomp<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
 where
     PacketIdType: IsPacketId + Serialize,
 {
@@ -875,7 +892,9 @@ where
 /// // This would pass validation
 /// // validate_pubcomp_properties(&valid_props).unwrap();
 /// ```
-fn validate_pubcomp_properties(props: &[GenericProperty]) -> Result<(), MqttError> {
+fn validate_pubcomp_properties<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>(
+    props: &GenericProperties<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>,
+) -> Result<(), MqttError> {
     let mut count_reason_string = 0;
     for prop in props {
         match prop {

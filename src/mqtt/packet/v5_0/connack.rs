@@ -138,7 +138,10 @@ use crate::mqtt::result_code::MqttError;
 /// ```
 #[derive(PartialEq, Eq, Builder, Clone, Getters, CopyGetters)]
 #[builder(no_std, derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
-pub struct Connack {
+pub struct GenericConnack<
+    const STRING_BUFFER_SIZE: usize = 32,
+    const BINARY_BUFFER_SIZE: usize = 32,
+> {
     #[builder(private)]
     fixed_header: [u8; 1],
     #[builder(private)]
@@ -152,10 +155,15 @@ pub struct Connack {
 
     #[builder(setter(into, strip_option))]
     #[getset(get = "pub")]
-    pub props: GenericProperties,
+    pub props: GenericProperties<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>,
 }
 
-impl Connack {
+/// Type alias for CONNACK packet with standard buffer sizes
+pub type Connack = GenericConnack;
+
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
+    GenericConnack<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
     /// Create a new ConnackBuilder for constructing CONNACK packets
     ///
     /// Returns a builder instance that allows setting the various fields of a CONNACK packet
@@ -178,8 +186,8 @@ impl Connack {
     ///     .build()
     ///     .unwrap();
     /// ```
-    pub fn builder() -> ConnackBuilder {
-        ConnackBuilder::default()
+    pub fn builder() -> GenericConnackBuilder<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE> {
+        GenericConnackBuilder::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::default()
     }
 
     /// Get the packet type for CONNACK packets
@@ -416,12 +424,13 @@ impl Connack {
         let _reason = ConnectReasonCode::try_from(code).map_err(|_| MqttError::MalformedPacket)?;
 
         // properties
-        let (props, consumed) = GenericProperties::parse(&data[cursor..])?;
+        let (props, consumed) =
+            GenericProperties::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::parse(&data[cursor..])?;
         cursor += consumed;
         validate_connack_properties(&props)?;
         let prop_len = VariableByteInteger::from_u32(props.size() as u32).unwrap();
 
-        let connack = Connack {
+        let connack = GenericConnack {
             fixed_header: [FixedHeader::Connack.as_u8()],
             remaining_length: VariableByteInteger::from_u32(cursor as u32).unwrap(),
             ack_flags: [flags],
@@ -473,7 +482,9 @@ impl Connack {
 ///     .build()
 ///     .unwrap();
 /// ```
-impl ConnackBuilder {
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
+    GenericConnackBuilder<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
     /// Set the session present flag
     ///
     /// This method sets whether the server has stored session state for the client
@@ -587,12 +598,16 @@ impl ConnackBuilder {
     ///     .build()
     ///     .unwrap();
     /// ```
-    pub fn build(self) -> Result<Connack, MqttError> {
+    pub fn build(
+        self,
+    ) -> Result<GenericConnack<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>, MqttError> {
         self.validate()?;
 
         let ack_flags = self.ack_flags.unwrap_or([0]);
         let reason_code_buf = self.reason_code_buf.unwrap_or([0]);
-        let props = self.props.unwrap_or_else(GenericProperties::new);
+        let props = self
+            .props
+            .unwrap_or_else(|| GenericProperties::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::new());
         let props_size: usize = props.size();
         let property_length = VariableByteInteger::from_u32(props_size as u32).unwrap();
 
@@ -600,7 +615,7 @@ impl ConnackBuilder {
         let remaining = 1 + 1 + property_length.size() + props_size;
         let remaining_length = VariableByteInteger::from_u32(remaining as u32).unwrap();
 
-        Ok(Connack {
+        Ok(GenericConnack {
             fixed_header: [FixedHeader::Connack.as_u8()],
             remaining_length,
             ack_flags,
@@ -634,7 +649,9 @@ impl ConnackBuilder {
 /// let json = serde_json::to_string(&connack).unwrap();
 /// // Produces: {"type":"CONNACK","session_present":false,"reason_code":"Success","props":{}}
 /// ```
-impl Serialize for Connack {
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> Serialize
+    for GenericConnack<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -675,7 +692,9 @@ impl Serialize for Connack {
 /// println!("{}", connack);
 /// // Output: {"type":"CONNACK","session_present":true,"reason_code":"Success","props":{}}
 /// ```
-impl fmt::Display for Connack {
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> fmt::Display
+    for GenericConnack<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match serde_json::to_string(self) {
             Ok(json) => write!(f, "{json}"),
@@ -704,7 +723,9 @@ impl fmt::Display for Connack {
 /// println!("{:?}", connack);
 /// // Output: {"type":"CONNACK","session_present":false,"reason_code":"BadUserNameOrPassword","props":{}}
 /// ```
-impl fmt::Debug for Connack {
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> fmt::Debug
+    for GenericConnack<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Display::fmt(self, f)
     }
@@ -738,7 +759,9 @@ impl fmt::Debug for Connack {
 /// let size = connack.size();
 /// let buffers = connack.to_buffers();
 /// ```
-impl GenericPacketTrait for Connack {
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> GenericPacketTrait
+    for GenericConnack<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
     fn size(&self) -> usize {
         self.size()
     }
@@ -780,7 +803,9 @@ impl GenericPacketTrait for Connack {
 /// // Use generic display methods
 /// println!("{}", format_args!("{}", connack)); // Uses fmt_display
 /// ```
-impl GenericPacketDisplay for Connack {
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> GenericPacketDisplay
+    for GenericConnack<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
     fn fmt_debug(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         core::fmt::Debug::fmt(self, f)
     }
@@ -835,7 +860,9 @@ impl GenericPacketDisplay for Connack {
 /// // This validation is automatically called during packet construction
 /// // validate_connack_properties(&props).unwrap();
 /// ```
-fn validate_connack_properties(props: &[GenericProperty]) -> Result<(), MqttError> {
+fn validate_connack_properties<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>(
+    props: &GenericProperties<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>,
+) -> Result<(), MqttError> {
     let mut count_session_expiry_interval = 0;
     let mut count_receive_maximum = 0;
     let mut count_maximum_qos = 0;
