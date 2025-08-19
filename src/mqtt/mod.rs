@@ -33,3 +33,6 @@ pub mod common;
 pub use common::{ArcPayload, IntoPayload, ValueAllocator};
 
 pub mod result_code;
+
+pub mod type_aliases;
+pub use type_aliases::{make_size_aliases, make_type_size_aliases};

@@ -21,8 +21,10 @@
 // SOFTWARE.
 mod connect;
 pub use self::connect::Connect;
+pub use self::connect::GenericConnect;
 mod connack;
 pub use self::connack::Connack;
+pub use self::connack::GenericConnack;
 mod subscribe;
 pub use self::subscribe::GenericSubscribe;
 pub use self::subscribe::Subscribe;
@@ -56,5 +58,7 @@ mod pingresp;
 pub use self::pingresp::Pingresp;
 mod disconnect;
 pub use self::disconnect::Disconnect;
+pub use self::disconnect::GenericDisconnect;
 mod auth;
 pub use self::auth::Auth;
+pub use self::auth::GenericAuth;

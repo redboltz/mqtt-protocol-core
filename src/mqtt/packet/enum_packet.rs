@@ -82,12 +82,12 @@ pub enum GenericPacket<
     V3_1_1Pingreq(v3_1_1::Pingreq),
     V3_1_1Pingresp(v3_1_1::Pingresp),
 
-    V5_0Connect(v5_0::Connect),
-    V5_0Connack(v5_0::Connack),
-    V5_0Subscribe(v5_0::GenericSubscribe<PacketIdType>),
-    V5_0Suback(v5_0::GenericSuback<PacketIdType>),
-    V5_0Unsubscribe(v5_0::GenericUnsubscribe<PacketIdType>),
-    V5_0Unsuback(v5_0::GenericUnsuback<PacketIdType>),
+    V5_0Connect(v5_0::GenericConnect<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>),
+    V5_0Connack(v5_0::GenericConnack<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>),
+    V5_0Subscribe(v5_0::GenericSubscribe<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>),
+    V5_0Suback(v5_0::GenericSuback<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>),
+    V5_0Unsubscribe(v5_0::GenericUnsubscribe<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>),
+    V5_0Unsuback(v5_0::GenericUnsuback<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>),
     V5_0Publish(
         v5_0::GenericPublish<
             PacketIdType,
@@ -96,14 +96,14 @@ pub enum GenericPacket<
             PAYLOAD_BUFFER_SIZE,
         >,
     ),
-    V5_0Puback(v5_0::GenericPuback<PacketIdType>),
-    V5_0Pubrec(v5_0::GenericPubrec<PacketIdType>),
-    V5_0Pubrel(v5_0::GenericPubrel<PacketIdType>),
-    V5_0Pubcomp(v5_0::GenericPubcomp<PacketIdType>),
-    V5_0Disconnect(v5_0::Disconnect),
+    V5_0Puback(v5_0::GenericPuback<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>),
+    V5_0Pubrec(v5_0::GenericPubrec<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>),
+    V5_0Pubrel(v5_0::GenericPubrel<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>),
+    V5_0Pubcomp(v5_0::GenericPubcomp<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>),
+    V5_0Disconnect(v5_0::GenericDisconnect<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>),
     V5_0Pingreq(v5_0::Pingreq),
     V5_0Pingresp(v5_0::Pingresp),
-    V5_0Auth(v5_0::Auth),
+    V5_0Auth(v5_0::GenericAuth<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>),
 }
 
 // Type alias for commonly used u16 PacketIdType
