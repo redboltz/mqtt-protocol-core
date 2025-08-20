@@ -55,13 +55,13 @@ mod json_bin_encode;
 pub use self::property::PropertiesToBuffers;
 pub use self::property::{
     AssignedClientIdentifier, AuthenticationData, AuthenticationMethod, ContentType,
-    CorrelationData, GenericProperties, GenericProperty, MaximumPacketSize, MaximumQos,
-    MessageExpiryInterval, PayloadFormatIndicator, PropertiesParse, PropertiesSize, PropertyId,
-    ReasonString, ReceiveMaximum, RequestProblemInformation, RequestResponseInformation,
-    ResponseInformation, ResponseTopic, RetainAvailable, ServerKeepAlive, ServerReference,
-    SessionExpiryInterval, SharedSubscriptionAvailable, SubscriptionIdentifier,
-    SubscriptionIdentifierAvailable, TopicAlias, TopicAliasMaximum, UserProperty,
-    WildcardSubscriptionAvailable, WillDelayInterval,
+    CorrelationData, GenericContentType, GenericProperties, GenericProperty, MaximumPacketSize,
+    MaximumQos, MessageExpiryInterval, PayloadFormatIndicator, Properties, PropertiesParse,
+    PropertiesSize, Property, PropertyId, ReasonString, ReceiveMaximum, RequestProblemInformation,
+    RequestResponseInformation, ResponseInformation, ResponseTopic, RetainAvailable,
+    ServerKeepAlive, ServerReference, SessionExpiryInterval, SharedSubscriptionAvailable,
+    SubscriptionIdentifier, SubscriptionIdentifierAvailable, TopicAlias, TopicAliasMaximum,
+    UserProperty, WildcardSubscriptionAvailable, WillDelayInterval,
 };
 pub use json_bin_encode::escape_binary_json_string;
 

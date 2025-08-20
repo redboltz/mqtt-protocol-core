@@ -431,7 +431,7 @@ fn getter_with_props() {
     assert!(packet.props().is_some());
     assert_eq!(packet.props().as_ref().unwrap().len(), 1);
     match &packet.props().as_ref().unwrap()[0] {
-        mqtt::packet::GenericProperty::MessageExpiryInterval(m) => {
+        mqtt::packet::Property::MessageExpiryInterval(m) => {
             assert_eq!(m.val(), 300);
         }
         _ => panic!("unexpected property variant"),
@@ -526,7 +526,7 @@ fn to_buffers_with_flags() {
 fn to_buffers_with_props() {
     common::init_tracing();
     let mut props = mqtt::packet::GenericProperties::new();
-    props.push(mqtt::packet::GenericProperty::MessageExpiryInterval(
+    props.push(mqtt::packet::Property::MessageExpiryInterval(
         mqtt::packet::MessageExpiryInterval::new(300).unwrap(),
     ));
 
@@ -730,7 +730,7 @@ fn parse_with_props() {
     assert!(packet.props().is_some());
     assert_eq!(packet.props().as_ref().unwrap().len(), 1);
     match &packet.props().as_ref().unwrap()[0] {
-        mqtt::packet::GenericProperty::MessageExpiryInterval(m) => {
+        mqtt::packet::Property::MessageExpiryInterval(m) => {
             assert_eq!(m.val(), 300);
         }
         _ => panic!("unexpected property variant"),
@@ -783,7 +783,7 @@ fn parse_invalid_property_validation() {
     assert!(packet.props().is_some());
     assert_eq!(packet.props().as_ref().unwrap().len(), 1);
     match &packet.props().as_ref().unwrap()[0] {
-        mqtt::packet::GenericProperty::PayloadFormatIndicator(p) => {
+        mqtt::packet::Property::PayloadFormatIndicator(p) => {
             assert_eq!(p.val(), 1u8); // PayloadFormat::String = 1
         }
         _ => panic!("unexpected property variant"),
@@ -859,13 +859,13 @@ fn test_remove_topic_alias_add_topic_basic() {
     if let Some(props) = publish.props() {
         let has_topic_alias = props
             .iter()
-            .any(|prop| matches!(prop, mqtt::packet::GenericProperty::TopicAlias(_)));
+            .any(|prop| matches!(prop, mqtt::packet::Property::TopicAlias(_)));
         assert!(!has_topic_alias, "TopicAlias property should be removed");
 
         // Verify other properties remain
         let has_user_property = props
             .iter()
-            .any(|prop| matches!(prop, mqtt::packet::GenericProperty::UserProperty(_)));
+            .any(|prop| matches!(prop, mqtt::packet::Property::UserProperty(_)));
         assert!(has_user_property, "UserProperty should remain");
     } else {
         panic!("Properties should not be None");
@@ -904,7 +904,7 @@ fn test_remove_topic_alias_add_topic_with_topic_alias() {
     if let Some(props) = publish.props() {
         let has_topic_alias = props
             .iter()
-            .any(|prop| matches!(prop, mqtt::packet::GenericProperty::TopicAlias(_)));
+            .any(|prop| matches!(prop, mqtt::packet::Property::TopicAlias(_)));
         assert!(!has_topic_alias, "TopicAlias property should be removed");
     }
 }
@@ -988,16 +988,13 @@ fn test_remove_topic_alias_basic() {
     if let Some(props) = publish.props() {
         let has_topic_alias = props
             .iter()
-            .any(|prop| matches!(prop, mqtt::packet::GenericProperty::TopicAlias(_)));
+            .any(|prop| matches!(prop, mqtt::packet::Property::TopicAlias(_)));
         assert!(!has_topic_alias, "TopicAlias property should be removed");
 
         // Verify other properties remain
-        let has_expiry = props.iter().any(|prop| {
-            matches!(
-                prop,
-                mqtt::packet::GenericProperty::MessageExpiryInterval(_)
-            )
-        });
+        let has_expiry = props
+            .iter()
+            .any(|prop| matches!(prop, mqtt::packet::Property::MessageExpiryInterval(_)));
         assert!(has_expiry, "MessageExpiryInterval should remain");
     } else {
         panic!("Properties should not be None");
@@ -1041,12 +1038,9 @@ fn test_remove_topic_alias_no_topic_alias() {
 
     // Verify properties remain unchanged
     if let Some(props) = publish.props() {
-        let has_expiry = props.iter().any(|prop| {
-            matches!(
-                prop,
-                mqtt::packet::GenericProperty::MessageExpiryInterval(_)
-            )
-        });
+        let has_expiry = props
+            .iter()
+            .any(|prop| matches!(prop, mqtt::packet::Property::MessageExpiryInterval(_)));
         assert!(has_expiry, "MessageExpiryInterval should remain");
     }
 
@@ -1179,12 +1173,12 @@ fn test_length_recalculation_property_length_changes() {
     if let Some(props) = publish.props() {
         let has_content_type = props
             .iter()
-            .any(|prop| matches!(prop, mqtt::packet::GenericProperty::ContentType(_)));
+            .any(|prop| matches!(prop, mqtt::packet::Property::ContentType(_)));
         assert!(has_content_type, "ContentType should be preserved");
 
         let user_prop_count = props
             .iter()
-            .filter(|prop| matches!(prop, mqtt::packet::GenericProperty::UserProperty(_)))
+            .filter(|prop| matches!(prop, mqtt::packet::Property::UserProperty(_)))
             .count();
         assert_eq!(
             user_prop_count, 2,
@@ -1267,15 +1261,12 @@ fn test_roundtrip_serialization_after_modification() {
     if let Some(props) = publish.props() {
         let has_topic_alias = props
             .iter()
-            .any(|prop| matches!(prop, mqtt::packet::GenericProperty::TopicAlias(_)));
+            .any(|prop| matches!(prop, mqtt::packet::Property::TopicAlias(_)));
         assert!(!has_topic_alias, "TopicAlias should be removed");
 
-        let has_payload_format = props.iter().any(|prop| {
-            matches!(
-                prop,
-                mqtt::packet::GenericProperty::PayloadFormatIndicator(_)
-            )
-        });
+        let has_payload_format = props
+            .iter()
+            .any(|prop| matches!(prop, mqtt::packet::Property::PayloadFormatIndicator(_)));
         assert!(
             has_payload_format,
             "PayloadFormatIndicator should be preserved"
@@ -1366,7 +1357,7 @@ fn test_set_dup_false() {
     if let Some(props) = packet_without_dup.props() {
         let has_user_property = props
             .iter()
-            .any(|prop| matches!(prop, mqtt::packet::GenericProperty::UserProperty(_)));
+            .any(|prop| matches!(prop, mqtt::packet::Property::UserProperty(_)));
         assert!(has_user_property, "UserProperty should remain");
     }
 }
@@ -1427,7 +1418,7 @@ fn test_add_extracted_topic_name_success() {
     if let Some(props) = packet_with_topic.props() {
         let has_topic_alias = props
             .iter()
-            .any(|prop| matches!(prop, mqtt::packet::GenericProperty::TopicAlias(_)));
+            .any(|prop| matches!(prop, mqtt::packet::Property::TopicAlias(_)));
         assert!(has_topic_alias, "TopicAlias property should remain");
     }
 

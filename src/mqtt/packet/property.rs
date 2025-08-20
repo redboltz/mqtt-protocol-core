@@ -1668,7 +1668,9 @@ mqtt_property_u32!(
     PropertyId::MessageExpiryInterval,
     None::<U32Validator>
 );
-mqtt_property_string!(ContentType, PropertyId::ContentType);
+mqtt_property_string!(GenericContentType, PropertyId::ContentType);
+pub type ContentType = GenericContentType;
+
 mqtt_property_string!(ResponseTopic, PropertyId::ResponseTopic);
 mqtt_property_binary!(CorrelationData, PropertyId::CorrelationData);
 mqtt_property_variable_integer!(
@@ -1855,7 +1857,7 @@ pub enum GenericProperty<const STRING_BUFFER_SIZE: usize = 32, const BINARY_BUFF
 {
     PayloadFormatIndicator(PayloadFormatIndicator),
     MessageExpiryInterval(MessageExpiryInterval),
-    ContentType(ContentType<STRING_BUFFER_SIZE>),
+    GenericContentType(GenericContentType<STRING_BUFFER_SIZE>),
     ResponseTopic(ResponseTopic<STRING_BUFFER_SIZE>),
     CorrelationData(CorrelationData<BINARY_BUFFER_SIZE>),
     SubscriptionIdentifier(SubscriptionIdentifier),
@@ -1882,6 +1884,8 @@ pub enum GenericProperty<const STRING_BUFFER_SIZE: usize = 32, const BINARY_BUFF
     SharedSubscriptionAvailable(SharedSubscriptionAvailable),
 }
 
+pub type Property = GenericProperty;
+
 impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> fmt::Display
     for GenericProperty<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
 {
@@ -1889,7 +1893,7 @@ impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> fmt::Disp
         match self {
             GenericProperty::PayloadFormatIndicator(p) => write!(f, "{p}"),
             GenericProperty::MessageExpiryInterval(p) => write!(f, "{p}"),
-            GenericProperty::ContentType(p) => write!(f, "{p}"),
+            GenericProperty::GenericContentType(p) => write!(f, "{p}"),
             GenericProperty::ResponseTopic(p) => write!(f, "{p}"),
             GenericProperty::CorrelationData(p) => write!(f, "{p}"),
             GenericProperty::SubscriptionIdentifier(p) => write!(f, "{p}"),
@@ -2019,7 +2023,7 @@ impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> PropertyV
     fn as_str(&self) -> Option<&str> {
         match self {
             // All property types that return strings
-            GenericProperty::ContentType(p) => Some(p.val()),
+            GenericProperty::GenericContentType(p) => Some(p.val()),
             GenericProperty::ResponseTopic(p) => Some(p.val()),
             GenericProperty::AssignedClientIdentifier(p) => Some(p.val()),
             GenericProperty::AuthenticationMethod(p) => Some(p.val()),
@@ -2075,7 +2079,7 @@ impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::MessageExpiryInterval(p) => {
                 p.id()
             }
-            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ContentType(p) => p.id(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::GenericContentType(p) => p.id(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ResponseTopic(p) => p.id(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::CorrelationData(p) => p.id(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::SubscriptionIdentifier(
@@ -2131,7 +2135,7 @@ impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
         match self {
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::PayloadFormatIndicator(p) => p.size(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::MessageExpiryInterval(p) => p.size(),
-            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ContentType(p) => p.size(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::GenericContentType(p) => p.size(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ResponseTopic(p) => p.size(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::CorrelationData(p) => p.size(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::SubscriptionIdentifier(p) => p.size(),
@@ -2182,7 +2186,7 @@ impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
         match self {
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::PayloadFormatIndicator(p) => p.to_buffers(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::MessageExpiryInterval(p) => p.to_buffers(),
-            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ContentType(p) => p.to_buffers(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::GenericContentType(p) => p.to_buffers(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ResponseTopic(p) => p.to_buffers(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::CorrelationData(p) => p.to_buffers(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::SubscriptionIdentifier(p) => p.to_buffers(),
@@ -2235,7 +2239,7 @@ impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
         match self {
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::PayloadFormatIndicator(p) => p.to_continuous_buffer(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::MessageExpiryInterval(p) => p.to_continuous_buffer(),
-            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ContentType(p) => p.to_continuous_buffer(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::GenericContentType(p) => p.to_continuous_buffer(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ResponseTopic(p) => p.to_continuous_buffer(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::CorrelationData(p) => p.to_continuous_buffer(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::SubscriptionIdentifier(p) => p.to_continuous_buffer(),
@@ -2312,8 +2316,8 @@ impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
                 (Self::MessageExpiryInterval(p), l + 1)
             }
             PropertyId::ContentType => {
-                let (p, l) = ContentType::parse(&bytes[1..])?;
-                (Self::ContentType(p), l + 1)
+                let (p, l) = GenericContentType::<STRING_BUFFER_SIZE>::parse(&bytes[1..])?;
+                (Self::GenericContentType(p), l + 1)
             }
             PropertyId::ResponseTopic => {
                 let (p, l) = ResponseTopic::parse(&bytes[1..])?;
@@ -2442,6 +2446,8 @@ pub type GenericProperties<
     const STRING_BUFFER_SIZE: usize = 32,
     const BINARY_BUFFER_SIZE: usize = 32,
 > = Vec<GenericProperty<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>>;
+
+pub type Properties = GenericProperties;
 
 /// Trait for converting properties collection to continuous buffer
 ///

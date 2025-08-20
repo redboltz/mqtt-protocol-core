@@ -1488,7 +1488,7 @@ fn validate_will_properties<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER
             GenericProperty::WillDelayInterval(_) => count_will_delay_interval += 1,
             GenericProperty::PayloadFormatIndicator(_) => count_payload_format_indicator += 1,
             GenericProperty::MessageExpiryInterval(_) => count_message_expiry_interval += 1,
-            GenericProperty::ContentType(_) => count_content_type += 1,
+            GenericProperty::GenericContentType(_) => count_content_type += 1,
             GenericProperty::ResponseTopic(_) => count_response_topic += 1,
             GenericProperty::CorrelationData(_) => count_correlation_data += 1,
             GenericProperty::UserProperty(_) => {}

@@ -76,7 +76,7 @@ fn test_auto_map_topic_alias_send_v5_0() {
                 // Check for TopicAlias property with value 1
                 if let Some(props) = p.props() {
                     for prop in props.iter() {
-                        if let mqtt::packet::GenericProperty::TopicAlias(ta) = prop {
+                        if let mqtt::packet::Property::TopicAlias(ta) = prop {
                             if ta.val() == 1 {
                                 publish_a_mapped = true;
                                 break;
@@ -116,7 +116,7 @@ fn test_auto_map_topic_alias_send_v5_0() {
                 // Check for TopicAlias property with value 2
                 if let Some(props) = p.props() {
                     for prop in props.iter() {
-                        if let mqtt::packet::GenericProperty::TopicAlias(ta) = prop {
+                        if let mqtt::packet::Property::TopicAlias(ta) = prop {
                             if ta.val() == 2 {
                                 publish_b_mapped = true;
                                 break;
@@ -188,7 +188,7 @@ fn test_auto_replace_topic_alias_send_v5_0() {
                 let has_topic_alias = if let Some(props) = p.props() {
                     props
                         .iter()
-                        .any(|prop| matches!(prop, mqtt::packet::GenericProperty::TopicAlias(_)))
+                        .any(|prop| matches!(prop, mqtt::packet::Property::TopicAlias(_)))
                 } else {
                     false
                 };
@@ -240,7 +240,7 @@ fn test_auto_replace_topic_alias_send_v5_0() {
                 // Check for TopicAlias property with value 1
                 if let Some(props) = p.props() {
                     for prop in props.iter() {
-                        if let mqtt::packet::GenericProperty::TopicAlias(ta) = prop {
+                        if let mqtt::packet::Property::TopicAlias(ta) = prop {
                             if ta.val() == 1 {
                                 publish_c_replaced = true;
                                 break;
@@ -313,7 +313,7 @@ fn test_regulate_for_store_topic_alias_v5_0() {
     if let Some(props) = regulated.props() {
         assert!(!props
             .iter()
-            .any(|prop| matches!(prop, mqtt::packet::GenericProperty::TopicAlias(_))));
+            .any(|prop| matches!(prop, mqtt::packet::Property::TopicAlias(_))));
     }
 
     let packet_id_3 = connection.acquire_packet_id().unwrap();
@@ -334,7 +334,7 @@ fn test_regulate_for_store_topic_alias_v5_0() {
     if let Some(props) = regulated.props() {
         assert!(!props
             .iter()
-            .any(|prop| matches!(prop, mqtt::packet::GenericProperty::TopicAlias(_))));
+            .any(|prop| matches!(prop, mqtt::packet::Property::TopicAlias(_))));
     }
 
     let packet_id_6 = connection.acquire_packet_id().unwrap();

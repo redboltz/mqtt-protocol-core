@@ -117,7 +117,7 @@ use crate::mqtt::result_code::MqttError;
 /// // For high-throughput applications with larger messages
 /// type LargePublish = GenericPublish<u16, 128, 128, 512>;
 ///
-/// // For memory-constrained environments  
+/// // For memory-constrained environments
 /// type SmallPublish = GenericPublish<u16, 16, 16, 16>;
 ///
 /// // For broker clusters with extended packet IDs
@@ -1681,7 +1681,7 @@ fn validate_publish_properties<const STRING_BUFFER_SIZE: usize, const BINARY_BUF
 
     for prop in props {
         match prop {
-            GenericProperty::ContentType(_) => count_content_type += 1,
+            GenericProperty::GenericContentType(_) => count_content_type += 1,
             GenericProperty::CorrelationData(_) => count_correlation_data += 1,
             GenericProperty::MessageExpiryInterval(_) => count_expiry += 1,
             GenericProperty::PayloadFormatIndicator(_) => count_payload_format += 1,
