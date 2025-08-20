@@ -214,7 +214,7 @@ fn display_rc_props() {
     write!(&mut output, "{packet}").unwrap();
     assert_eq!(
         output,
-        r#"{"type":"auth","reason_code":"ContinueAuthentication","props":[{"GenericAuthenticationMethod":{"id":21,"val":"SCRAM-SHA-256"}}]}"#
+        r#"{"type":"auth","reason_code":"ContinueAuthentication","props":[{"AuthenticationMethod":{"id":21,"val":"SCRAM-SHA-256"}}]}"#
     );
 }
 

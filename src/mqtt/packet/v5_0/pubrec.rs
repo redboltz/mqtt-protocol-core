@@ -1006,8 +1006,8 @@ fn validate_pubrec_properties<const STRING_BUFFER_SIZE: usize, const BINARY_BUFF
     let mut count_reason_string = 0;
     for prop in props {
         match prop {
-            GenericProperty::GenericReasonString(_) => count_reason_string += 1,
-            GenericProperty::GenericUserProperty(_) => {}
+            GenericProperty::ReasonString(_) => count_reason_string += 1,
+            GenericProperty::UserProperty(_) => {}
             _ => return Err(MqttError::ProtocolError),
         }
     }

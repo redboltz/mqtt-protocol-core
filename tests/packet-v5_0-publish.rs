@@ -865,7 +865,7 @@ fn test_remove_topic_alias_add_topic_basic() {
         // Verify other properties remain
         let has_user_property = props
             .iter()
-            .any(|prop| matches!(prop, mqtt::packet::Property::GenericUserProperty(_)));
+            .any(|prop| matches!(prop, mqtt::packet::Property::UserProperty(_)));
         assert!(has_user_property, "UserProperty should remain");
     } else {
         panic!("Properties should not be None");
@@ -1173,12 +1173,12 @@ fn test_length_recalculation_property_length_changes() {
     if let Some(props) = publish.props() {
         let has_content_type = props
             .iter()
-            .any(|prop| matches!(prop, mqtt::packet::Property::GenericContentType(_)));
+            .any(|prop| matches!(prop, mqtt::packet::Property::ContentType(_)));
         assert!(has_content_type, "ContentType should be preserved");
 
         let user_prop_count = props
             .iter()
-            .filter(|prop| matches!(prop, mqtt::packet::Property::GenericUserProperty(_)))
+            .filter(|prop| matches!(prop, mqtt::packet::Property::UserProperty(_)))
             .count();
         assert_eq!(
             user_prop_count, 2,
@@ -1357,7 +1357,7 @@ fn test_set_dup_false() {
     if let Some(props) = packet_without_dup.props() {
         let has_user_property = props
             .iter()
-            .any(|prop| matches!(prop, mqtt::packet::Property::GenericUserProperty(_)));
+            .any(|prop| matches!(prop, mqtt::packet::Property::UserProperty(_)));
         assert!(has_user_property, "UserProperty should remain");
     }
 }

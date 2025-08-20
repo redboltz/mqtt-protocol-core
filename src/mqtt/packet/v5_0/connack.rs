@@ -878,12 +878,10 @@ fn validate_connack_properties<const STRING_BUFFER_SIZE: usize, const BINARY_BUF
             GenericProperty::MaximumQos(_) => count_maximum_qos += 1,
             GenericProperty::RetainAvailable(_) => count_retain_available += 1,
             GenericProperty::MaximumPacketSize(_) => count_maximum_packet_size += 1,
-            GenericProperty::GenericAssignedClientIdentifier(_) => {
-                count_assigned_client_identifier += 1
-            }
+            GenericProperty::AssignedClientIdentifier(_) => count_assigned_client_identifier += 1,
             GenericProperty::TopicAliasMaximum(_) => count_topic_alias_maximum += 1,
-            GenericProperty::GenericReasonString(_) => count_reason_string += 1,
-            GenericProperty::GenericUserProperty(_) => {}
+            GenericProperty::ReasonString(_) => count_reason_string += 1,
+            GenericProperty::UserProperty(_) => {}
             _ => return Err(MqttError::ProtocolError),
         }
     }

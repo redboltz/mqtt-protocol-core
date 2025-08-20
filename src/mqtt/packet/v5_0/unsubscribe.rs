@@ -866,7 +866,7 @@ fn validate_unsubscribe_properties<
 ) -> Result<(), MqttError> {
     for prop in props {
         match prop {
-            GenericProperty::GenericUserProperty(_) => {}
+            GenericProperty::UserProperty(_) => {}
             _ => return Err(MqttError::ProtocolError),
         }
     }

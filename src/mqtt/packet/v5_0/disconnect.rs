@@ -827,9 +827,9 @@ fn validate_disconnect_properties<
     for prop in props {
         match prop {
             GenericProperty::SessionExpiryInterval(_) => count_session_expiry_interval += 1,
-            GenericProperty::GenericReasonString(_) => count_reason_string += 1,
-            GenericProperty::GenericUserProperty(_) => {}
-            GenericProperty::GenericServerReference(_) => count_server_reference += 1,
+            GenericProperty::ReasonString(_) => count_reason_string += 1,
+            GenericProperty::UserProperty(_) => {}
+            GenericProperty::ServerReference(_) => count_server_reference += 1,
             _ => return Err(MqttError::ProtocolError),
         }
     }

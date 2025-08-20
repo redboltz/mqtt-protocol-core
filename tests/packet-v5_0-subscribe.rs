@@ -87,7 +87,7 @@ fn build_success_with_properties() {
     props.push(mqtt::packet::Property::SubscriptionIdentifier(
         mqtt::packet::SubscriptionIdentifier::new(123).unwrap(),
     ));
-    props.push(mqtt::packet::Property::GenericUserProperty(
+    props.push(mqtt::packet::Property::UserProperty(
         mqtt::packet::UserProperty::new("key", "value").unwrap(),
     ));
 
@@ -187,7 +187,7 @@ fn debug_minimal() {
 fn debug_with_properties() {
     common::init_tracing();
     let mut props = mqtt::packet::GenericProperties::new();
-    props.push(mqtt::packet::Property::GenericUserProperty(
+    props.push(mqtt::packet::Property::UserProperty(
         mqtt::packet::UserProperty::new("test", "value").unwrap(),
     ));
 
@@ -254,7 +254,7 @@ fn getter_props_with_values() {
     props.push(mqtt::packet::Property::SubscriptionIdentifier(
         mqtt::packet::SubscriptionIdentifier::new(456).unwrap(),
     ));
-    props.push(mqtt::packet::Property::GenericUserProperty(
+    props.push(mqtt::packet::Property::UserProperty(
         mqtt::packet::UserProperty::new("key", "value").unwrap(),
     ));
 
@@ -537,7 +537,7 @@ fn size_with_properties() {
     props.push(mqtt::packet::Property::SubscriptionIdentifier(
         mqtt::packet::SubscriptionIdentifier::new(123).unwrap(),
     ));
-    props.push(mqtt::packet::Property::GenericUserProperty(
+    props.push(mqtt::packet::Property::UserProperty(
         mqtt::packet::UserProperty::new("key", "value").unwrap(),
     ));
 
@@ -625,10 +625,10 @@ fn roundtrip_with_all_valid_properties() {
     props.push(mqtt::packet::Property::SubscriptionIdentifier(
         mqtt::packet::SubscriptionIdentifier::new(12345).unwrap(),
     ));
-    props.push(mqtt::packet::Property::GenericUserProperty(
+    props.push(mqtt::packet::Property::UserProperty(
         mqtt::packet::UserProperty::new("client", "test").unwrap(),
     ));
-    props.push(mqtt::packet::Property::GenericUserProperty(
+    props.push(mqtt::packet::Property::UserProperty(
         mqtt::packet::UserProperty::new("version", "1.0").unwrap(),
     ));
 

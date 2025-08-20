@@ -336,7 +336,7 @@ macro_rules! mqtt_property_common {
 }
 
 macro_rules! mqtt_property_binary {
-    ($name:ident, $id:expr) => {
+    ($name:ident, $variant:ident, $id:expr) => {
         #[derive(Debug, PartialEq, Eq, Clone)]
         pub struct $name<const BINARY_BUFFER_SIZE: usize = 32> {
             id_bytes: [u8; 1],
@@ -348,7 +348,7 @@ macro_rules! mqtt_property_binary {
             for GenericProperty<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
         {
             fn from(v: $name<BINARY_BUFFER_SIZE>) -> Self {
-                GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::$name(v)
+                GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::$variant(v)
             }
         }
 
@@ -550,7 +550,7 @@ macro_rules! mqtt_property_binary {
 }
 
 macro_rules! mqtt_property_string {
-    ($name:ident, $id:expr) => {
+    ($name:ident, $variant:ident, $id:expr) => {
         #[derive(Debug, PartialEq, Eq, Clone)]
         pub struct $name<const STRING_BUFFER_SIZE: usize = 32> {
             id_bytes: [u8; 1],
@@ -562,7 +562,7 @@ macro_rules! mqtt_property_string {
             for GenericProperty<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
         {
             fn from(v: $name<STRING_BUFFER_SIZE>) -> Self {
-                GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::$name(v)
+                GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::$variant(v)
             }
         }
 
@@ -742,7 +742,7 @@ macro_rules! mqtt_property_string {
 }
 
 macro_rules! mqtt_property_string_pair {
-    ($name:ident, $id:expr) => {
+    ($name:ident, $variant:ident, $id:expr) => {
         #[derive(Debug, PartialEq, Eq, Clone)]
         pub struct $name<const STRING_BUFFER_SIZE: usize = 32> {
             id_bytes: [u8; 1],
@@ -757,7 +757,7 @@ macro_rules! mqtt_property_string_pair {
             for GenericProperty<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
         {
             fn from(v: $name<STRING_BUFFER_SIZE>) -> Self {
-                GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::$name(v)
+                GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::$variant(v)
             }
         }
 
@@ -1668,12 +1668,20 @@ mqtt_property_u32!(
     PropertyId::MessageExpiryInterval,
     None::<U32Validator>
 );
-mqtt_property_string!(GenericContentType, PropertyId::ContentType);
+mqtt_property_string!(GenericContentType, ContentType, PropertyId::ContentType);
 pub type ContentType = GenericContentType;
 
-mqtt_property_string!(GenericResponseTopic, PropertyId::ResponseTopic);
+mqtt_property_string!(
+    GenericResponseTopic,
+    ResponseTopic,
+    PropertyId::ResponseTopic
+);
 pub type ResponseTopic = GenericResponseTopic;
-mqtt_property_binary!(GenericCorrelationData, PropertyId::CorrelationData);
+mqtt_property_binary!(
+    GenericCorrelationData,
+    CorrelationData,
+    PropertyId::CorrelationData
+);
 pub type CorrelationData = GenericCorrelationData;
 mqtt_property_variable_integer!(
     SubscriptionIdentifier,
@@ -1693,6 +1701,7 @@ mqtt_property_u32!(
 );
 mqtt_property_string!(
     GenericAssignedClientIdentifier,
+    AssignedClientIdentifier,
     PropertyId::AssignedClientIdentifier
 );
 pub type AssignedClientIdentifier = GenericAssignedClientIdentifier;
@@ -1703,10 +1712,15 @@ mqtt_property_u16!(
 );
 mqtt_property_string!(
     GenericAuthenticationMethod,
+    AuthenticationMethod,
     PropertyId::AuthenticationMethod
 );
 pub type AuthenticationMethod = GenericAuthenticationMethod;
-mqtt_property_binary!(GenericAuthenticationData, PropertyId::AuthenticationData);
+mqtt_property_binary!(
+    GenericAuthenticationData,
+    AuthenticationData,
+    PropertyId::AuthenticationData
+);
 pub type AuthenticationData = GenericAuthenticationData;
 mqtt_property_u8!(
     RequestProblemInformation,
@@ -1735,11 +1749,19 @@ mqtt_property_u8!(
         }
     })
 );
-mqtt_property_string!(GenericResponseInformation, PropertyId::ResponseInformation);
+mqtt_property_string!(
+    GenericResponseInformation,
+    ResponseInformation,
+    PropertyId::ResponseInformation
+);
 pub type ResponseInformation = GenericResponseInformation;
-mqtt_property_string!(GenericServerReference, PropertyId::ServerReference);
+mqtt_property_string!(
+    GenericServerReference,
+    ServerReference,
+    PropertyId::ServerReference
+);
 pub type ServerReference = GenericServerReference;
-mqtt_property_string!(GenericReasonString, PropertyId::ReasonString);
+mqtt_property_string!(GenericReasonString, ReasonString, PropertyId::ReasonString);
 pub type ReasonString = GenericReasonString;
 mqtt_property_u16!(
     ReceiveMaximum,
@@ -1790,7 +1812,7 @@ mqtt_property_u8!(
         }
     })
 );
-mqtt_property_string_pair!(GenericUserProperty, PropertyId::UserProperty);
+mqtt_property_string_pair!(GenericUserProperty, UserProperty, PropertyId::UserProperty);
 pub type UserProperty = GenericUserProperty;
 mqtt_property_u32!(
     MaximumPacketSize,
@@ -1869,27 +1891,27 @@ pub enum GenericProperty<const STRING_BUFFER_SIZE: usize = 32, const BINARY_BUFF
 {
     PayloadFormatIndicator(PayloadFormatIndicator),
     MessageExpiryInterval(MessageExpiryInterval),
-    GenericContentType(GenericContentType<STRING_BUFFER_SIZE>),
-    GenericResponseTopic(GenericResponseTopic<STRING_BUFFER_SIZE>),
-    GenericCorrelationData(GenericCorrelationData<BINARY_BUFFER_SIZE>),
+    ContentType(GenericContentType<STRING_BUFFER_SIZE>),
+    ResponseTopic(GenericResponseTopic<STRING_BUFFER_SIZE>),
+    CorrelationData(GenericCorrelationData<BINARY_BUFFER_SIZE>),
     SubscriptionIdentifier(SubscriptionIdentifier),
     SessionExpiryInterval(SessionExpiryInterval),
-    GenericAssignedClientIdentifier(GenericAssignedClientIdentifier<STRING_BUFFER_SIZE>),
+    AssignedClientIdentifier(GenericAssignedClientIdentifier<STRING_BUFFER_SIZE>),
     ServerKeepAlive(ServerKeepAlive),
-    GenericAuthenticationMethod(GenericAuthenticationMethod<STRING_BUFFER_SIZE>),
-    GenericAuthenticationData(GenericAuthenticationData<BINARY_BUFFER_SIZE>),
+    AuthenticationMethod(GenericAuthenticationMethod<STRING_BUFFER_SIZE>),
+    AuthenticationData(GenericAuthenticationData<BINARY_BUFFER_SIZE>),
     RequestProblemInformation(RequestProblemInformation),
     WillDelayInterval(WillDelayInterval),
     RequestResponseInformation(RequestResponseInformation),
-    GenericResponseInformation(GenericResponseInformation<STRING_BUFFER_SIZE>),
-    GenericServerReference(GenericServerReference<STRING_BUFFER_SIZE>),
-    GenericReasonString(GenericReasonString<STRING_BUFFER_SIZE>),
+    ResponseInformation(GenericResponseInformation<STRING_BUFFER_SIZE>),
+    ServerReference(GenericServerReference<STRING_BUFFER_SIZE>),
+    ReasonString(GenericReasonString<STRING_BUFFER_SIZE>),
     ReceiveMaximum(ReceiveMaximum),
     TopicAliasMaximum(TopicAliasMaximum),
     TopicAlias(TopicAlias),
     MaximumQos(MaximumQos),
     RetainAvailable(RetainAvailable),
-    GenericUserProperty(GenericUserProperty<STRING_BUFFER_SIZE>),
+    UserProperty(GenericUserProperty<STRING_BUFFER_SIZE>),
     MaximumPacketSize(MaximumPacketSize),
     WildcardSubscriptionAvailable(WildcardSubscriptionAvailable),
     SubscriptionIdentifierAvailable(SubscriptionIdentifierAvailable),
@@ -1905,27 +1927,27 @@ impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> fmt::Disp
         match self {
             GenericProperty::PayloadFormatIndicator(p) => write!(f, "{p}"),
             GenericProperty::MessageExpiryInterval(p) => write!(f, "{p}"),
-            GenericProperty::GenericContentType(p) => write!(f, "{p}"),
-            GenericProperty::GenericResponseTopic(p) => write!(f, "{p}"),
-            GenericProperty::GenericCorrelationData(p) => write!(f, "{p}"),
+            GenericProperty::ContentType(p) => write!(f, "{p}"),
+            GenericProperty::ResponseTopic(p) => write!(f, "{p}"),
+            GenericProperty::CorrelationData(p) => write!(f, "{p}"),
             GenericProperty::SubscriptionIdentifier(p) => write!(f, "{p}"),
             GenericProperty::SessionExpiryInterval(p) => write!(f, "{p}"),
-            GenericProperty::GenericAssignedClientIdentifier(p) => write!(f, "{p}"),
+            GenericProperty::AssignedClientIdentifier(p) => write!(f, "{p}"),
             GenericProperty::ServerKeepAlive(p) => write!(f, "{p}"),
-            GenericProperty::GenericAuthenticationMethod(p) => write!(f, "{p}"),
-            GenericProperty::GenericAuthenticationData(p) => write!(f, "{p}"),
+            GenericProperty::AuthenticationMethod(p) => write!(f, "{p}"),
+            GenericProperty::AuthenticationData(p) => write!(f, "{p}"),
             GenericProperty::RequestProblemInformation(p) => write!(f, "{p}"),
             GenericProperty::WillDelayInterval(p) => write!(f, "{p}"),
             GenericProperty::RequestResponseInformation(p) => write!(f, "{p}"),
-            GenericProperty::GenericResponseInformation(p) => write!(f, "{p}"),
-            GenericProperty::GenericServerReference(p) => write!(f, "{p}"),
-            GenericProperty::GenericReasonString(p) => write!(f, "{p}"),
+            GenericProperty::ResponseInformation(p) => write!(f, "{p}"),
+            GenericProperty::ServerReference(p) => write!(f, "{p}"),
+            GenericProperty::ReasonString(p) => write!(f, "{p}"),
             GenericProperty::ReceiveMaximum(p) => write!(f, "{p}"),
             GenericProperty::TopicAliasMaximum(p) => write!(f, "{p}"),
             GenericProperty::TopicAlias(p) => write!(f, "{p}"),
             GenericProperty::MaximumQos(p) => write!(f, "{p}"),
             GenericProperty::RetainAvailable(p) => write!(f, "{p}"),
-            GenericProperty::GenericUserProperty(p) => write!(f, "{p}"),
+            GenericProperty::UserProperty(p) => write!(f, "{p}"),
             GenericProperty::MaximumPacketSize(p) => write!(f, "{p}"),
             GenericProperty::WildcardSubscriptionAvailable(p) => write!(f, "{p}"),
             GenericProperty::SubscriptionIdentifierAvailable(p) => write!(f, "{p}"),
@@ -2035,13 +2057,13 @@ impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> PropertyV
     fn as_str(&self) -> Option<&str> {
         match self {
             // All property types that return strings
-            GenericProperty::GenericContentType(p) => Some(p.val()),
-            GenericProperty::GenericResponseTopic(p) => Some(p.val()),
-            GenericProperty::GenericAssignedClientIdentifier(p) => Some(p.val()),
-            GenericProperty::GenericAuthenticationMethod(p) => Some(p.val()),
-            GenericProperty::GenericResponseInformation(p) => Some(p.val()),
-            GenericProperty::GenericServerReference(p) => Some(p.val()),
-            GenericProperty::GenericReasonString(p) => Some(p.val()),
+            GenericProperty::ContentType(p) => Some(p.val()),
+            GenericProperty::ResponseTopic(p) => Some(p.val()),
+            GenericProperty::AssignedClientIdentifier(p) => Some(p.val()),
+            GenericProperty::AuthenticationMethod(p) => Some(p.val()),
+            GenericProperty::ResponseInformation(p) => Some(p.val()),
+            GenericProperty::ServerReference(p) => Some(p.val()),
+            GenericProperty::ReasonString(p) => Some(p.val()),
             _ => None,
         }
     }
@@ -2049,8 +2071,8 @@ impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> PropertyV
     fn as_bytes(&self) -> Option<&[u8]> {
         match self {
             // Property types that return binary data
-            GenericProperty::GenericCorrelationData(p) => Some(p.val()),
-            GenericProperty::GenericAuthenticationData(p) => Some(p.val()),
+            GenericProperty::CorrelationData(p) => Some(p.val()),
+            GenericProperty::AuthenticationData(p) => Some(p.val()),
             _ => None,
         }
     }
@@ -2058,7 +2080,7 @@ impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> PropertyV
     fn as_key_value(&self) -> Option<(&str, &str)> {
         match self {
             // Property types that return key-value pairs
-            GenericProperty::GenericUserProperty(p) => Some((p.key(), p.val())),
+            GenericProperty::UserProperty(p) => Some((p.key(), p.val())),
             _ => None,
         }
     }
@@ -2091,35 +2113,35 @@ impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::MessageExpiryInterval(p) => {
                 p.id()
             }
-            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::GenericContentType(p) => p.id(),
-            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::GenericResponseTopic(p) => p.id(),
-            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::GenericCorrelationData(p) => p.id(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ContentType(p) => p.id(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ResponseTopic(p) => p.id(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::CorrelationData(p) => p.id(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::SubscriptionIdentifier(
                 p,
             ) => p.id(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::SessionExpiryInterval(p) => {
                 p.id()
             }
-            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::GenericAssignedClientIdentifier(
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::AssignedClientIdentifier(
                 p,
             ) => p.id(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ServerKeepAlive(p) => p.id(),
-            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::GenericAuthenticationMethod(p) => {
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::AuthenticationMethod(p) => {
                 p.id()
             }
-            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::GenericAuthenticationData(p) => p.id(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::AuthenticationData(p) => p.id(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::RequestProblemInformation(p) => p.id(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::WillDelayInterval(p) => p.id(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::RequestResponseInformation(p) => p.id(),
-            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::GenericResponseInformation(p) => p.id(),
-            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::GenericServerReference(p) => p.id(),
-            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::GenericReasonString(p) => p.id(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ResponseInformation(p) => p.id(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ServerReference(p) => p.id(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ReasonString(p) => p.id(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ReceiveMaximum(p) => p.id(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::TopicAliasMaximum(p) => p.id(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::TopicAlias(p) => p.id(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::MaximumQos(p) => p.id(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::RetainAvailable(p) => p.id(),
-            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::GenericUserProperty(p) => p.id(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::UserProperty(p) => p.id(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::MaximumPacketSize(p) => p.id(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::WildcardSubscriptionAvailable(p) => p.id(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::SubscriptionIdentifierAvailable(p) => p.id(),
@@ -2147,27 +2169,27 @@ impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
         match self {
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::PayloadFormatIndicator(p) => p.size(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::MessageExpiryInterval(p) => p.size(),
-            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::GenericContentType(p) => p.size(),
-            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::GenericResponseTopic(p) => p.size(),
-            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::GenericCorrelationData(p) => p.size(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ContentType(p) => p.size(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ResponseTopic(p) => p.size(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::CorrelationData(p) => p.size(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::SubscriptionIdentifier(p) => p.size(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::SessionExpiryInterval(p) => p.size(),
-            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::GenericAssignedClientIdentifier(p) => p.size(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::AssignedClientIdentifier(p) => p.size(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ServerKeepAlive(p) => p.size(),
-            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::GenericAuthenticationMethod(p) => p.size(),
-            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::GenericAuthenticationData(p) => p.size(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::AuthenticationMethod(p) => p.size(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::AuthenticationData(p) => p.size(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::RequestProblemInformation(p) => p.size(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::WillDelayInterval(p) => p.size(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::RequestResponseInformation(p) => p.size(),
-            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::GenericResponseInformation(p) => p.size(),
-            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::GenericServerReference(p) => p.size(),
-            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::GenericReasonString(p) => p.size(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ResponseInformation(p) => p.size(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ServerReference(p) => p.size(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ReasonString(p) => p.size(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ReceiveMaximum(p) => p.size(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::TopicAliasMaximum(p) => p.size(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::TopicAlias(p) => p.size(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::MaximumQos(p) => p.size(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::RetainAvailable(p) => p.size(),
-            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::GenericUserProperty(p) => p.size(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::UserProperty(p) => p.size(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::MaximumPacketSize(p) => p.size(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::WildcardSubscriptionAvailable(p) => p.size(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::SubscriptionIdentifierAvailable(p) => p.size(),
@@ -2198,27 +2220,27 @@ impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
         match self {
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::PayloadFormatIndicator(p) => p.to_buffers(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::MessageExpiryInterval(p) => p.to_buffers(),
-            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::GenericContentType(p) => p.to_buffers(),
-            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::GenericResponseTopic(p) => p.to_buffers(),
-            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::GenericCorrelationData(p) => p.to_buffers(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ContentType(p) => p.to_buffers(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ResponseTopic(p) => p.to_buffers(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::CorrelationData(p) => p.to_buffers(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::SubscriptionIdentifier(p) => p.to_buffers(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::SessionExpiryInterval(p) => p.to_buffers(),
-            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::GenericAssignedClientIdentifier(p) => p.to_buffers(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::AssignedClientIdentifier(p) => p.to_buffers(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ServerKeepAlive(p) => p.to_buffers(),
-            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::GenericAuthenticationMethod(p) => p.to_buffers(),
-            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::GenericAuthenticationData(p) => p.to_buffers(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::AuthenticationMethod(p) => p.to_buffers(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::AuthenticationData(p) => p.to_buffers(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::RequestProblemInformation(p) => p.to_buffers(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::WillDelayInterval(p) => p.to_buffers(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::RequestResponseInformation(p) => p.to_buffers(),
-            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::GenericResponseInformation(p) => p.to_buffers(),
-            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::GenericServerReference(p) => p.to_buffers(),
-            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::GenericReasonString(p) => p.to_buffers(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ResponseInformation(p) => p.to_buffers(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ServerReference(p) => p.to_buffers(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ReasonString(p) => p.to_buffers(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ReceiveMaximum(p) => p.to_buffers(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::TopicAliasMaximum(p) => p.to_buffers(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::TopicAlias(p) => p.to_buffers(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::MaximumQos(p) => p.to_buffers(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::RetainAvailable(p) => p.to_buffers(),
-            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::GenericUserProperty(p) => p.to_buffers(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::UserProperty(p) => p.to_buffers(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::MaximumPacketSize(p) => p.to_buffers(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::WildcardSubscriptionAvailable(p) => p.to_buffers(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::SubscriptionIdentifierAvailable(p) => p.to_buffers(),
@@ -2251,27 +2273,27 @@ impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
         match self {
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::PayloadFormatIndicator(p) => p.to_continuous_buffer(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::MessageExpiryInterval(p) => p.to_continuous_buffer(),
-            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::GenericContentType(p) => p.to_continuous_buffer(),
-            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::GenericResponseTopic(p) => p.to_continuous_buffer(),
-            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::GenericCorrelationData(p) => p.to_continuous_buffer(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ContentType(p) => p.to_continuous_buffer(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ResponseTopic(p) => p.to_continuous_buffer(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::CorrelationData(p) => p.to_continuous_buffer(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::SubscriptionIdentifier(p) => p.to_continuous_buffer(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::SessionExpiryInterval(p) => p.to_continuous_buffer(),
-            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::GenericAssignedClientIdentifier(p) => p.to_continuous_buffer(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::AssignedClientIdentifier(p) => p.to_continuous_buffer(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ServerKeepAlive(p) => p.to_continuous_buffer(),
-            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::GenericAuthenticationMethod(p) => p.to_continuous_buffer(),
-            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::GenericAuthenticationData(p) => p.to_continuous_buffer(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::AuthenticationMethod(p) => p.to_continuous_buffer(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::AuthenticationData(p) => p.to_continuous_buffer(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::RequestProblemInformation(p) => p.to_continuous_buffer(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::WillDelayInterval(p) => p.to_continuous_buffer(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::RequestResponseInformation(p) => p.to_continuous_buffer(),
-            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::GenericResponseInformation(p) => p.to_continuous_buffer(),
-            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::GenericServerReference(p) => p.to_continuous_buffer(),
-            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::GenericReasonString(p) => p.to_continuous_buffer(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ResponseInformation(p) => p.to_continuous_buffer(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ServerReference(p) => p.to_continuous_buffer(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ReasonString(p) => p.to_continuous_buffer(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::ReceiveMaximum(p) => p.to_continuous_buffer(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::TopicAliasMaximum(p) => p.to_continuous_buffer(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::TopicAlias(p) => p.to_continuous_buffer(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::MaximumQos(p) => p.to_continuous_buffer(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::RetainAvailable(p) => p.to_continuous_buffer(),
-            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::GenericUserProperty(p) => p.to_continuous_buffer(),
+            GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::UserProperty(p) => p.to_continuous_buffer(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::MaximumPacketSize(p) => p.to_continuous_buffer(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::WildcardSubscriptionAvailable(p) => p.to_continuous_buffer(),
             GenericProperty::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::SubscriptionIdentifierAvailable(p) => p.to_continuous_buffer(),
@@ -2329,15 +2351,15 @@ impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
             }
             PropertyId::ContentType => {
                 let (p, l) = GenericContentType::<STRING_BUFFER_SIZE>::parse(&bytes[1..])?;
-                (Self::GenericContentType(p), l + 1)
+                (Self::ContentType(p), l + 1)
             }
             PropertyId::ResponseTopic => {
                 let (p, l) = GenericResponseTopic::<STRING_BUFFER_SIZE>::parse(&bytes[1..])?;
-                (Self::GenericResponseTopic(p), l + 1)
+                (Self::ResponseTopic(p), l + 1)
             }
             PropertyId::CorrelationData => {
                 let (p, l) = GenericCorrelationData::<BINARY_BUFFER_SIZE>::parse(&bytes[1..])?;
-                (Self::GenericCorrelationData(p), l + 1)
+                (Self::CorrelationData(p), l + 1)
             }
             PropertyId::SubscriptionIdentifier => {
                 let (p, l) = SubscriptionIdentifier::parse(&bytes[1..])?;
@@ -2350,7 +2372,7 @@ impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
             PropertyId::AssignedClientIdentifier => {
                 let (p, l) =
                     GenericAssignedClientIdentifier::<STRING_BUFFER_SIZE>::parse(&bytes[1..])?;
-                (Self::GenericAssignedClientIdentifier(p), l + 1)
+                (Self::AssignedClientIdentifier(p), l + 1)
             }
             PropertyId::ServerKeepAlive => {
                 let (p, l) = ServerKeepAlive::parse(&bytes[1..])?;
@@ -2358,11 +2380,11 @@ impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
             }
             PropertyId::AuthenticationMethod => {
                 let (p, l) = GenericAuthenticationMethod::<STRING_BUFFER_SIZE>::parse(&bytes[1..])?;
-                (Self::GenericAuthenticationMethod(p), l + 1)
+                (Self::AuthenticationMethod(p), l + 1)
             }
             PropertyId::AuthenticationData => {
                 let (p, l) = GenericAuthenticationData::<BINARY_BUFFER_SIZE>::parse(&bytes[1..])?;
-                (Self::GenericAuthenticationData(p), l + 1)
+                (Self::AuthenticationData(p), l + 1)
             }
             PropertyId::RequestProblemInformation => {
                 let (p, l) = RequestProblemInformation::parse(&bytes[1..])?;
@@ -2378,15 +2400,15 @@ impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
             }
             PropertyId::ResponseInformation => {
                 let (p, l) = GenericResponseInformation::<STRING_BUFFER_SIZE>::parse(&bytes[1..])?;
-                (Self::GenericResponseInformation(p), l + 1)
+                (Self::ResponseInformation(p), l + 1)
             }
             PropertyId::ServerReference => {
                 let (p, l) = GenericServerReference::<STRING_BUFFER_SIZE>::parse(&bytes[1..])?;
-                (Self::GenericServerReference(p), l + 1)
+                (Self::ServerReference(p), l + 1)
             }
             PropertyId::ReasonString => {
                 let (p, l) = GenericReasonString::<STRING_BUFFER_SIZE>::parse(&bytes[1..])?;
-                (Self::GenericReasonString(p), l + 1)
+                (Self::ReasonString(p), l + 1)
             }
             PropertyId::ReceiveMaximum => {
                 let (p, l) = ReceiveMaximum::parse(&bytes[1..])?;
@@ -2410,7 +2432,7 @@ impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
             }
             PropertyId::UserProperty => {
                 let (p, l) = GenericUserProperty::<STRING_BUFFER_SIZE>::parse(&bytes[1..])?;
-                (Self::GenericUserProperty(p), l + 1)
+                (Self::UserProperty(p), l + 1)
             }
             PropertyId::MaximumPacketSize => {
                 let (p, l) = MaximumPacketSize::parse(&bytes[1..])?;
