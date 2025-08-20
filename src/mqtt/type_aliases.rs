@@ -289,7 +289,11 @@ mod tests {
         // In a real usage scenario, these would be available at the module level
         let _ = || {
             let _auth = v5_0::Auth::builder().build();
-            let _connect = v3_1_1::Connect::builder().client_identifier("test").build();
+            let _connect = v3_1_1::Connect::builder()
+                .client_id("test")
+                .unwrap()
+                .build()
+                .unwrap();
         };
     }
 
@@ -304,7 +308,9 @@ mod tests {
             let _publish = v5_0::Publish::builder()
                 .packet_id(2u32)
                 .topic_name("test")
-                .build();
+                .unwrap()
+                .build()
+                .unwrap();
         };
     }
 }

@@ -607,7 +607,7 @@ impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
         let reason_code_buf = self.reason_code_buf.unwrap_or([0]);
         let props = self
             .props
-            .unwrap_or_else(|| GenericProperties::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::new());
+            .unwrap_or_else(GenericProperties::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::new);
         let props_size: usize = props.size();
         let property_length = VariableByteInteger::from_u32(props_size as u32).unwrap();
 

@@ -1061,7 +1061,7 @@ where
         let packet_id_buf = self.packet_id_buf.flatten();
         let payload = self
             .payload_buf
-            .unwrap_or_else(|| GenericArcPayload::<PAYLOAD_BUFFER_SIZE>::default());
+            .unwrap_or_else(GenericArcPayload::<PAYLOAD_BUFFER_SIZE>::default);
 
         let mut remaining = topic_name_buf.size();
         if (fixed_header[0] >> 1) & 0b0000_0011 != 0 && packet_id_buf.is_some() {

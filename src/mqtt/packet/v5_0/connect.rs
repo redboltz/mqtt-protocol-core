@@ -1069,7 +1069,7 @@ impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
         let keep_alive_buf = self.keep_alive_buf.unwrap_or([0, 0]);
         let props = self
             .props
-            .unwrap_or_else(|| GenericProperties::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::new());
+            .unwrap_or_else(GenericProperties::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::new);
         let property_length = VariableByteInteger::from_u32(props.size() as u32).unwrap();
 
         let client_id_buf = self.client_id_buf.unwrap_or_default();
@@ -1077,7 +1077,7 @@ impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
         let will_flag = (connect_flags & 0b0000_0100) != 0;
         let will_props = self
             .will_props
-            .unwrap_or_else(|| GenericProperties::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::new());
+            .unwrap_or_else(GenericProperties::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::new);
         let will_property_length = VariableByteInteger::from_u32(will_props.size() as u32).unwrap();
         let will_topic_buf = self.will_topic_buf.unwrap_or_default();
         let will_payload_buf = self.will_payload_buf.unwrap_or_default();

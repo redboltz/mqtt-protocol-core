@@ -641,7 +641,7 @@ where
 
         let props = self
             .props
-            .unwrap_or_else(|| GenericProperties::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::new());
+            .unwrap_or_else(GenericProperties::<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>::new);
         let props_size = props.size();
         let property_length = VariableByteInteger::from_u32(props_size as u32).unwrap();
 
