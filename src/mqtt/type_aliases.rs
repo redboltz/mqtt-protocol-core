@@ -49,6 +49,12 @@
 /// * Packets with PacketIdType parameter use the specified packet ID type
 /// * Packets without PacketIdType (like Auth, Connack, Disconnect) use buffer sizes only
 ///
+/// For connections:
+/// * `Connection<Role>` - Generic connection type that accepts any role type parameter
+///   - Use `Connection<mqtt::connection::role::Client>` for client connections
+///   - Use `Connection<mqtt::connection::role::Server>` for server connections
+///   - Use `Connection<mqtt::connection::role::Any>` for flexible connections
+///
 /// # Examples
 ///
 /// ```ignore
@@ -68,6 +74,11 @@
 ///     .payload(b"hello world")
 ///     .build()
 ///     .unwrap();
+///
+/// // Use connection types with specific roles:
+/// type ClientConn = Connection<mqtt::connection::role::Client>;
+/// type ServerConn = Connection<mqtt::connection::role::Server>;
+/// type AnyConn = Connection<mqtt::connection::role::Any>;
 /// ```
 #[macro_export]
 macro_rules! make_type_size_aliases {
@@ -203,23 +214,9 @@ macro_rules! make_type_size_aliases {
             $payload_buffer_size,
         >;
 
-        // Connection types with different roles
-        pub type ClientConnection = $crate::mqtt::connection::GenericConnection<
-            $crate::mqtt::connection::role::Client,
-            $packet_id_type,
-            $string_buffer_size,
-            $binary_buffer_size,
-            $payload_buffer_size,
-        >;
-        pub type ServerConnection = $crate::mqtt::connection::GenericConnection<
-            $crate::mqtt::connection::role::Server,
-            $packet_id_type,
-            $string_buffer_size,
-            $binary_buffer_size,
-            $payload_buffer_size,
-        >;
-        pub type AnyConnection = $crate::mqtt::connection::GenericConnection<
-            $crate::mqtt::connection::role::Any,
+        // Connection type with generic role parameter
+        pub type Connection<Role> = $crate::mqtt::connection::GenericConnection<
+            Role,
             $packet_id_type,
             $string_buffer_size,
             $binary_buffer_size,
@@ -311,6 +308,11 @@ mod tests {
                 .unwrap()
                 .build()
                 .unwrap();
+
+            // Test connection types with different roles
+            let _ = std::marker::PhantomData::<Connection<crate::mqtt::connection::role::Client>>;
+            let _ = std::marker::PhantomData::<Connection<crate::mqtt::connection::role::Server>>;
+            let _ = std::marker::PhantomData::<Connection<crate::mqtt::connection::role::Any>>;
         };
     }
 }

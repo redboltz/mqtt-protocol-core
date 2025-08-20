@@ -112,7 +112,7 @@ pub trait RoleType: 'static {
 /// use mqtt_protocol_core::mqtt;
 ///
 /// // Client role is typically used as a generic parameter
-/// type ClientConnection = mqtt::connection::GenericConnection<mqtt::connection::Client, u16>;
+/// type ClientConn = mqtt::Connection<mqtt::connection::Client>;
 ///
 /// // Role constants can be checked at compile time
 /// assert_eq!(mqtt::connection::Client::IS_CLIENT, true);
@@ -148,7 +148,7 @@ pub struct Client;
 /// use mqtt_protocol_core::mqtt;
 ///
 /// // Server role is typically used as a generic parameter
-/// type ServerConnection = mqtt::connection::GenericConnection<mqtt::connection::Server, u16>;
+/// type ServerConn = mqtt::Connection<mqtt::connection::Server>;
 ///
 /// // Role constants can be checked at compile time
 /// assert_eq!(mqtt::connection::Server::IS_CLIENT, false);
@@ -181,7 +181,7 @@ pub struct Server;
 /// use mqtt_protocol_core::mqtt;
 ///
 /// // Any role can be used for flexible implementations
-/// type FlexibleConnection = mqtt::connection::GenericConnection<mqtt::connection::Any, u16>;
+/// type FlexibleConn = mqtt::Connection<mqtt::connection::Any>;
 ///
 /// // Role constants can be checked at compile time
 /// assert_eq!(mqtt::connection::Any::IS_CLIENT, false);
