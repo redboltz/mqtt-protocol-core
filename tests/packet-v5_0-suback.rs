@@ -48,7 +48,9 @@ fn build_fail_invalid_property() {
     common::init_tracing();
     let mut props = mqtt::packet::GenericProperties::new();
     props.push(mqtt::packet::Property::PayloadFormatIndicator(
-        mqtt::packet::PayloadFormatIndicator::new(mqtt::packet::PayloadFormat::Binary).unwrap(),
+        mqtt::packet::PayloadFormatIndicator::new(mqtt::packet::PayloadFormat::Binary)
+            .unwrap()
+            .into(),
     ));
 
     let err = mqtt::packet::v5_0::Suback::builder()
@@ -65,10 +67,14 @@ fn build_fail_multiple_reason_strings() {
     common::init_tracing();
     let mut props = mqtt::packet::GenericProperties::new();
     props.push(mqtt::packet::Property::ReasonString(
-        mqtt::packet::ReasonString::new("First reason").unwrap(),
+        mqtt::packet::ReasonString::new("First reason")
+            .unwrap()
+            .into(),
     ));
     props.push(mqtt::packet::Property::ReasonString(
-        mqtt::packet::ReasonString::new("Second reason").unwrap(),
+        mqtt::packet::ReasonString::new("Second reason")
+            .unwrap()
+            .into(),
     ));
 
     let err = mqtt::packet::v5_0::Suback::builder()
@@ -99,10 +105,12 @@ fn build_success_with_properties() {
     common::init_tracing();
     let mut props = mqtt::packet::GenericProperties::new();
     props.push(mqtt::packet::Property::ReasonString(
-        mqtt::packet::ReasonString::new("Success").unwrap(),
+        mqtt::packet::ReasonString::new("Success").unwrap().into(),
     ));
     props.push(mqtt::packet::Property::UserProperty(
-        mqtt::packet::UserProperty::new("key", "value").unwrap(),
+        mqtt::packet::UserProperty::new("key", "value")
+            .unwrap()
+            .into(),
     ));
 
     let packet = mqtt::packet::v5_0::Suback::builder()
@@ -166,7 +174,7 @@ fn display_with_properties() {
     common::init_tracing();
     let mut props = mqtt::packet::GenericProperties::new();
     props.push(mqtt::packet::Property::ReasonString(
-        mqtt::packet::ReasonString::new("Success").unwrap(),
+        mqtt::packet::ReasonString::new("Success").unwrap().into(),
     ));
 
     let packet = mqtt::packet::v5_0::Suback::builder()
@@ -201,7 +209,9 @@ fn debug_with_properties() {
     common::init_tracing();
     let mut props = mqtt::packet::GenericProperties::new();
     props.push(mqtt::packet::Property::UserProperty(
-        mqtt::packet::UserProperty::new("test", "value").unwrap(),
+        mqtt::packet::UserProperty::new("test", "value")
+            .unwrap()
+            .into(),
     ));
 
     let packet = mqtt::packet::v5_0::Suback::builder()
@@ -268,10 +278,12 @@ fn getter_props_with_values() {
     common::init_tracing();
     let mut props = mqtt::packet::GenericProperties::new();
     props.push(mqtt::packet::Property::ReasonString(
-        mqtt::packet::ReasonString::new("Success").unwrap(),
+        mqtt::packet::ReasonString::new("Success").unwrap().into(),
     ));
     props.push(mqtt::packet::Property::UserProperty(
-        mqtt::packet::UserProperty::new("key", "value").unwrap(),
+        mqtt::packet::UserProperty::new("key", "value")
+            .unwrap()
+            .into(),
     ));
 
     let packet = mqtt::packet::v5_0::Suback::builder()
@@ -317,7 +329,7 @@ fn to_buffers_with_properties() {
     common::init_tracing();
     let mut props = mqtt::packet::GenericProperties::new();
     props.push(mqtt::packet::Property::ReasonString(
-        mqtt::packet::ReasonString::new("Success").unwrap(),
+        mqtt::packet::ReasonString::new("Success").unwrap().into(),
     ));
 
     let packet = mqtt::packet::v5_0::Suback::builder()
@@ -402,7 +414,7 @@ fn parse_with_properties() {
     common::init_tracing();
     let mut props = mqtt::packet::GenericProperties::new();
     props.push(mqtt::packet::Property::ReasonString(
-        mqtt::packet::ReasonString::new("Success").unwrap(),
+        mqtt::packet::ReasonString::new("Success").unwrap().into(),
     ));
 
     let original = mqtt::packet::v5_0::Suback::builder()
@@ -544,10 +556,12 @@ fn size_with_properties() {
     common::init_tracing();
     let mut props = mqtt::packet::GenericProperties::new();
     props.push(mqtt::packet::Property::ReasonString(
-        mqtt::packet::ReasonString::new("Success").unwrap(),
+        mqtt::packet::ReasonString::new("Success").unwrap().into(),
     ));
     props.push(mqtt::packet::Property::UserProperty(
-        mqtt::packet::UserProperty::new("key", "value").unwrap(),
+        mqtt::packet::UserProperty::new("key", "value")
+            .unwrap()
+            .into(),
     ));
 
     let packet = mqtt::packet::v5_0::Suback::builder()
@@ -629,13 +643,19 @@ fn roundtrip_with_all_valid_properties() {
     common::init_tracing();
     let mut props = mqtt::packet::GenericProperties::new();
     props.push(mqtt::packet::Property::ReasonString(
-        mqtt::packet::ReasonString::new("Operation successful").unwrap(),
+        mqtt::packet::ReasonString::new("Operation successful")
+            .unwrap()
+            .into(),
     ));
     props.push(mqtt::packet::Property::UserProperty(
-        mqtt::packet::UserProperty::new("client", "test").unwrap(),
+        mqtt::packet::UserProperty::new("client", "test")
+            .unwrap()
+            .into(),
     ));
     props.push(mqtt::packet::Property::UserProperty(
-        mqtt::packet::UserProperty::new("version", "1.0").unwrap(),
+        mqtt::packet::UserProperty::new("version", "1.0")
+            .unwrap()
+            .into(),
     ));
 
     let original = mqtt::packet::v5_0::Suback::builder()

@@ -41,10 +41,11 @@ fn v5_0_any_maximum_packet_size_test() {
     // Create CONNACK with small MaximumPacketSize property
     let maximum_packet_size = 50u32; // Small but realistic value
     let mut props = mqtt::packet::GenericProperties::new();
-    props.push(mqtt::packet::Property::MaximumPacketSize(
+    props.push(
         mqtt::packet::MaximumPacketSize::new(maximum_packet_size)
-            .expect("Failed to create MaximumPacketSize property"),
-    ));
+            .expect("Failed to create MaximumPacketSize property")
+            .into(),
+    );
 
     let connack_packet = mqtt::packet::v5_0::Connack::builder()
         .session_present(false)
@@ -97,10 +98,11 @@ fn v5_0_any_maximum_packet_size_test() {
     // Test PUBACK packet that exceeds maximum packet size
     let mut large_props = mqtt::packet::GenericProperties::new();
     for i in 0..20 {
-        large_props.push(mqtt::packet::Property::UserProperty(
+        large_props.push(
             mqtt::packet::UserProperty::new(&format!("key{}", i), &format!("value{}", i))
-                .expect("Failed to create UserProperty"),
-        ));
+                .expect("Failed to create UserProperty")
+                .into(),
+        );
     }
 
     let puback_packet = mqtt::packet::v5_0::Puback::builder()

@@ -49,9 +49,11 @@ fn build_fail_no_packet_id() {
 fn build_fail_invalid_property() {
     common::init_tracing();
     let mut props = mqtt::packet::GenericProperties::new();
-    props.push(mqtt::packet::Property::PayloadFormatIndicator(
-        mqtt::packet::PayloadFormatIndicator::new(mqtt::packet::PayloadFormat::Binary).unwrap(),
-    ));
+    props.push(
+        mqtt::packet::PayloadFormatIndicator::new(mqtt::packet::PayloadFormat::Binary)
+            .unwrap()
+            .into(),
+    );
 
     let entry =
         mqtt::packet::SubEntry::new("test/topic", mqtt::packet::SubOpts::default()).unwrap();
@@ -84,12 +86,16 @@ fn build_success_minimal() {
 fn build_success_with_properties() {
     common::init_tracing();
     let mut props = mqtt::packet::GenericProperties::new();
-    props.push(mqtt::packet::Property::SubscriptionIdentifier(
-        mqtt::packet::SubscriptionIdentifier::new(123).unwrap(),
-    ));
-    props.push(mqtt::packet::Property::UserProperty(
-        mqtt::packet::UserProperty::new("key", "value").unwrap(),
-    ));
+    props.push(
+        mqtt::packet::SubscriptionIdentifier::new(123)
+            .unwrap()
+            .into(),
+    );
+    props.push(
+        mqtt::packet::UserProperty::new("key", "value")
+            .unwrap()
+            .into(),
+    );
 
     let entry =
         mqtt::packet::SubEntry::new("test/topic", mqtt::packet::SubOpts::default()).unwrap();
@@ -147,9 +153,11 @@ fn display_minimal() {
 fn display_with_properties() {
     common::init_tracing();
     let mut props = mqtt::packet::GenericProperties::new();
-    props.push(mqtt::packet::Property::SubscriptionIdentifier(
-        mqtt::packet::SubscriptionIdentifier::new(123).unwrap(),
-    ));
+    props.push(
+        mqtt::packet::SubscriptionIdentifier::new(123)
+            .unwrap()
+            .into(),
+    );
 
     let entry =
         mqtt::packet::SubEntry::new("test/topic", mqtt::packet::SubOpts::default()).unwrap();
@@ -187,9 +195,11 @@ fn debug_minimal() {
 fn debug_with_properties() {
     common::init_tracing();
     let mut props = mqtt::packet::GenericProperties::new();
-    props.push(mqtt::packet::Property::UserProperty(
-        mqtt::packet::UserProperty::new("test", "value").unwrap(),
-    ));
+    props.push(
+        mqtt::packet::UserProperty::new("test", "value")
+            .unwrap()
+            .into(),
+    );
 
     let entry = mqtt::packet::SubEntry::new("test", mqtt::packet::SubOpts::default()).unwrap();
     let packet = mqtt::packet::v5_0::Subscribe::builder()
@@ -251,12 +261,16 @@ fn getter_props_empty() {
 fn getter_props_with_values() {
     common::init_tracing();
     let mut props = mqtt::packet::GenericProperties::new();
-    props.push(mqtt::packet::Property::SubscriptionIdentifier(
-        mqtt::packet::SubscriptionIdentifier::new(456).unwrap(),
-    ));
-    props.push(mqtt::packet::Property::UserProperty(
-        mqtt::packet::UserProperty::new("key", "value").unwrap(),
-    ));
+    props.push(
+        mqtt::packet::SubscriptionIdentifier::new(456)
+            .unwrap()
+            .into(),
+    );
+    props.push(
+        mqtt::packet::UserProperty::new("key", "value")
+            .unwrap()
+            .into(),
+    );
 
     let entry = mqtt::packet::SubEntry::new("test", mqtt::packet::SubOpts::default()).unwrap();
     let packet = mqtt::packet::v5_0::Subscribe::builder()
@@ -302,9 +316,11 @@ fn to_buffers_minimal() {
 fn to_buffers_with_properties() {
     common::init_tracing();
     let mut props = mqtt::packet::GenericProperties::new();
-    props.push(mqtt::packet::Property::SubscriptionIdentifier(
-        mqtt::packet::SubscriptionIdentifier::new(123).unwrap(),
-    ));
+    props.push(
+        mqtt::packet::SubscriptionIdentifier::new(123)
+            .unwrap()
+            .into(),
+    );
 
     let entry =
         mqtt::packet::SubEntry::new("test/topic", mqtt::packet::SubOpts::default()).unwrap();
@@ -401,9 +417,11 @@ fn parse_minimal() {
 fn parse_with_properties() {
     common::init_tracing();
     let mut props = mqtt::packet::GenericProperties::new();
-    props.push(mqtt::packet::Property::SubscriptionIdentifier(
-        mqtt::packet::SubscriptionIdentifier::new(789).unwrap(),
-    ));
+    props.push(
+        mqtt::packet::SubscriptionIdentifier::new(789)
+            .unwrap()
+            .into(),
+    );
 
     let entry =
         mqtt::packet::SubEntry::new("topic/test", mqtt::packet::SubOpts::default()).unwrap();
@@ -534,12 +552,16 @@ fn size_minimal() {
 fn size_with_properties() {
     common::init_tracing();
     let mut props = mqtt::packet::GenericProperties::new();
-    props.push(mqtt::packet::Property::SubscriptionIdentifier(
-        mqtt::packet::SubscriptionIdentifier::new(123).unwrap(),
-    ));
-    props.push(mqtt::packet::Property::UserProperty(
-        mqtt::packet::UserProperty::new("key", "value").unwrap(),
-    ));
+    props.push(
+        mqtt::packet::SubscriptionIdentifier::new(123)
+            .unwrap()
+            .into(),
+    );
+    props.push(
+        mqtt::packet::UserProperty::new("key", "value")
+            .unwrap()
+            .into(),
+    );
 
     let entry =
         mqtt::packet::SubEntry::new("test/topic", mqtt::packet::SubOpts::default()).unwrap();
@@ -622,15 +644,21 @@ fn roundtrip_minimal() {
 fn roundtrip_with_all_valid_properties() {
     common::init_tracing();
     let mut props = mqtt::packet::GenericProperties::new();
-    props.push(mqtt::packet::Property::SubscriptionIdentifier(
-        mqtt::packet::SubscriptionIdentifier::new(12345).unwrap(),
-    ));
-    props.push(mqtt::packet::Property::UserProperty(
-        mqtt::packet::UserProperty::new("client", "test").unwrap(),
-    ));
-    props.push(mqtt::packet::Property::UserProperty(
-        mqtt::packet::UserProperty::new("version", "1.0").unwrap(),
-    ));
+    props.push(
+        mqtt::packet::SubscriptionIdentifier::new(12345)
+            .unwrap()
+            .into(),
+    );
+    props.push(
+        mqtt::packet::UserProperty::new("client", "test")
+            .unwrap()
+            .into(),
+    );
+    props.push(
+        mqtt::packet::UserProperty::new("version", "1.0")
+            .unwrap()
+            .into(),
+    );
 
     let entry1 =
         mqtt::packet::SubEntry::new("sensor/+/temperature", mqtt::packet::SubOpts::default())

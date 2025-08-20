@@ -527,7 +527,9 @@ fn to_buffers_with_props() {
     common::init_tracing();
     let mut props = mqtt::packet::GenericProperties::new();
     props.push(mqtt::packet::Property::MessageExpiryInterval(
-        mqtt::packet::MessageExpiryInterval::new(300).unwrap(),
+        mqtt::packet::MessageExpiryInterval::new(300)
+            .unwrap()
+            .into(),
     ));
 
     let packet = mqtt::packet::v5_0::Publish::builder()

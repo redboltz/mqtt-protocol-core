@@ -455,14 +455,16 @@ fn test_payload_format_display() {
 fn test_property_type_access() {
     common::init_tracing();
     // Test u8 values
-    let max_qos: mqtt::packet::Property =
-        mqtt::packet::Property::MaximumQos(mqtt::packet::MaximumQos::new(1).expect("valid value"));
+    let max_qos: mqtt::packet::Property = mqtt::packet::MaximumQos::new(1)
+        .expect("valid value")
+        .into();
     assert_eq!(max_qos.as_u8(), Some(1));
     assert_eq!(max_qos.as_u16(), None); // Inappropriate type access returns None
 
     // Test u16 values
-    let topic_alias: mqtt::packet::Property =
-        mqtt::packet::Property::TopicAlias(mqtt::packet::TopicAlias::new(5).expect("valid value"));
+    let topic_alias: mqtt::packet::Property = mqtt::packet::TopicAlias::new(5)
+        .expect("valid value")
+        .into();
     assert_eq!(topic_alias.as_u16(), Some(5));
     assert_eq!(topic_alias.as_u8(), None);
     assert_eq!(topic_alias.as_u32(), None);
@@ -606,7 +608,7 @@ fn test_property_display() {
 
     // Test ServerKeepAlive display (line 1098)
     let server_keep_alive: mqtt::packet::Property =
-        mqtt::packet::Property::ServerKeepAlive(mqtt::packet::ServerKeepAlive::new(60).unwrap());
+        mqtt::packet::ServerKeepAlive::new(60).unwrap().into();
     let display_str = format!("{server_keep_alive}");
     assert!(display_str.contains("server_keep_alive"));
 
@@ -663,13 +665,13 @@ fn test_property_display() {
 
     // Test ReasonString display (line 1106)
     let reason_string: mqtt::packet::Property =
-        mqtt::packet::Property::ReasonString(mqtt::packet::ReasonString::new("Success").unwrap());
+        mqtt::packet::ReasonString::new("Success").unwrap().into();
     let display_str = format!("{reason_string}");
     assert!(display_str.contains("reason_string"));
 
     // Test ReceiveMaximum display (line 1107)
     let receive_max: mqtt::packet::Property =
-        mqtt::packet::Property::ReceiveMaximum(mqtt::packet::ReceiveMaximum::new(100).unwrap());
+        mqtt::packet::ReceiveMaximum::new(100).unwrap().into();
     let display_str = format!("{receive_max}");
     assert!(display_str.contains("receive_maximum"));
 
@@ -681,20 +683,18 @@ fn test_property_display() {
     assert!(display_str.contains("topic_alias_maximum"));
 
     // Test TopicAlias display (line 1109)
-    let topic_alias: mqtt::packet::Property =
-        mqtt::packet::Property::TopicAlias(mqtt::packet::TopicAlias::new(10).unwrap());
+    let topic_alias: mqtt::packet::Property = mqtt::packet::TopicAlias::new(10).unwrap().into();
     let display_str = format!("{topic_alias}");
     assert!(display_str.contains("topic_alias"));
 
     // Test MaximumQos display (line 1110)
-    let max_qos: mqtt::packet::Property =
-        mqtt::packet::Property::MaximumQos(mqtt::packet::MaximumQos::new(1).unwrap());
+    let max_qos: mqtt::packet::Property = mqtt::packet::MaximumQos::new(1).unwrap().into();
     let display_str = format!("{max_qos}");
     assert!(display_str.contains("maximum_qos"));
 
     // Test RetainAvailable display (line 1111)
     let retain_available: mqtt::packet::Property =
-        mqtt::packet::Property::RetainAvailable(mqtt::packet::RetainAvailable::new(1).unwrap());
+        mqtt::packet::RetainAvailable::new(1).unwrap().into();
     let display_str = format!("{retain_available}");
     assert!(display_str.contains("retain_available"));
 
@@ -975,7 +975,7 @@ fn test_property_enum_size_methods() {
 
     // Line 1324: ServerKeepAlive size
     let server_keep_alive: mqtt::packet::Property =
-        mqtt::packet::Property::ServerKeepAlive(mqtt::packet::ServerKeepAlive::new(3600).unwrap());
+        mqtt::packet::ServerKeepAlive::new(3600).unwrap().into();
     assert_eq!(server_keep_alive.size(), 3); // 1 byte ID + 2 bytes value
 
     // Line 1330: RequestResponseInformation size
@@ -986,13 +986,12 @@ fn test_property_enum_size_methods() {
     assert_eq!(request_response.size(), 2); // 1 byte ID + 1 byte value
 
     // Line 1340: MaximumQos size
-    let max_qos: mqtt::packet::Property =
-        mqtt::packet::Property::MaximumQos(mqtt::packet::MaximumQos::new(1).unwrap());
+    let max_qos: mqtt::packet::Property = mqtt::packet::MaximumQos::new(1).unwrap().into();
     assert_eq!(max_qos.size(), 2); // 1 byte ID + 1 byte value
 
     // Line 1341: RetainAvailable size
     let retain_available: mqtt::packet::Property =
-        mqtt::packet::Property::RetainAvailable(mqtt::packet::RetainAvailable::new(0).unwrap());
+        mqtt::packet::RetainAvailable::new(0).unwrap().into();
     assert_eq!(retain_available.size(), 2); // 1 byte ID + 1 byte value
 
     // Line 1342: UserProperty size
