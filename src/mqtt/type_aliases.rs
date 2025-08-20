@@ -310,9 +310,9 @@ mod tests {
                 .unwrap();
 
             // Test connection types with different roles
-            let _ = std::marker::PhantomData::<Connection<crate::mqtt::connection::role::Client>>;
-            let _ = std::marker::PhantomData::<Connection<crate::mqtt::connection::role::Server>>;
-            let _ = std::marker::PhantomData::<Connection<crate::mqtt::connection::role::Any>>;
+            let _ = core::marker::PhantomData::<Connection<crate::mqtt::connection::role::Client>>;
+            let _ = core::marker::PhantomData::<Connection<crate::mqtt::connection::role::Server>>;
+            let _ = core::marker::PhantomData::<Connection<crate::mqtt::connection::role::Any>>;
         };
     }
 }
