@@ -224,4 +224,5 @@ pub mod prelude {
     pub use std::io::IoSlice;
 }
 
+pub mod default_alias;
 pub mod mqtt;

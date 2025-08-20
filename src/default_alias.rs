@@ -19,20 +19,29 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-pub mod packet;
-pub mod prelude;
 
-pub mod connection;
-pub use connection::role;
-pub use connection::Connection;
-pub use connection::GenericConnection;
-pub use connection::SendBehavior;
-pub use connection::Version;
+//! Default type aliases for MQTT packet types with standard buffer sizes
+//!
+//! This module provides convenient type aliases for MQTT packet types using the default
+//! buffer sizes specified by the library:
+//! - String buffer size: 32 bytes
+//! - Binary buffer size: 32 bytes  
+//! - Payload buffer size: 128 bytes
+//! - Packet ID type: u16
+//!
+//! # Usage
+//!
+//! ```ignore
+//! use mqtt_protocol_core::mqtt;
+//! use mqtt_protocol_core::default_alias;
+//!
+//! // Now you can use mqtt::packet::v5_0::Publish with default buffer sizes
+//! let publish = mqtt::packet::v5_0::Publish::builder()
+//!     .topic_name("my/topic")
+//!     .payload(b"hello world")
+//!     .build()
+//!     .unwrap();
+//! ```
 
-pub mod common;
-pub use common::{ArcPayload, IntoPayload, ValueAllocator};
-
-pub mod result_code;
-
-pub mod make_alias;
-pub use make_alias::{make_size_aliases, make_type_size_aliases};
+// Generate default type aliases using the standard buffer sizes
+crate::mqtt::make_size_aliases!(32, 32, 128);

@@ -9,10 +9,10 @@ fn main() {
         mqtt_protocol_core::make_size_aliases!(128, 64, 256);
 
         // Test v5.0 packets
-        let auth = v5_0::Auth::builder().build().unwrap();
+        let auth = mqtt::packet::v5_0::Auth::builder().build().unwrap();
         println!("Created Auth packet: size = {}", auth.size());
 
-        let publish = match v5_0::Publish::builder().topic_name("test/topic") {
+        let publish = match mqtt::packet::v5_0::Publish::builder().topic_name("test/topic") {
             Ok(builder) => match builder.payload(b"Hello, MQTT!").build() {
                 Ok(p) => p,
                 Err(e) => {
@@ -27,7 +27,7 @@ fn main() {
         };
         println!("Created Publish packet: size = {}", publish.size());
 
-        let connect = v5_0::Connect::builder()
+        let connect = mqtt::packet::v5_0::Connect::builder()
             .client_id("test_client")
             .unwrap()
             .build()
@@ -35,7 +35,7 @@ fn main() {
         println!("Created Connect packet: size = {}", connect.size());
 
         // Test v3.1.1 packets
-        let connect_v3 = v3_1_1::Connect::builder()
+        let connect_v3 = mqtt::packet::v3_1_1::Connect::builder()
             .client_id("test_client_v3")
             .unwrap()
             .build()
@@ -45,7 +45,7 @@ fn main() {
             connect_v3.size()
         );
 
-        match v3_1_1::Publish::builder().topic_name("v3/topic") {
+        match mqtt::packet::v3_1_1::Publish::builder().topic_name("v3/topic") {
             Ok(builder) => match builder.payload(b"Hello, MQTT v3.1.1!").build() {
                 Ok(publish_v3) => println!(
                     "Created v3.1.1 Publish packet: size = {}",
@@ -61,7 +61,10 @@ fn main() {
     {
         mqtt_protocol_core::make_type_size_aliases!(u32, 64, 64, 128);
 
-        match v5_0::Puback::builder().packet_id(42u32).build() {
+        match mqtt::packet::v5_0::Puback::builder()
+            .packet_id(42u32)
+            .build()
+        {
             Ok(puback) => println!(
                 "Created Puback with u32 packet ID: size = {}",
                 puback.size()
@@ -69,7 +72,7 @@ fn main() {
             Err(e) => eprintln!("Failed to create Puback: {:?}", e),
         }
 
-        match v5_0::Publish::builder().topic_name("u32/topic") {
+        match mqtt::packet::v5_0::Publish::builder().topic_name("u32/topic") {
             Ok(builder) => match builder.build() {
                 Ok(publish_u32) => println!(
                     "Created Publish with u32 packet ID: size = {}",
