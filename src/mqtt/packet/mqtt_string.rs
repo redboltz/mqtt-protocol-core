@@ -79,9 +79,6 @@ pub enum GenericMqttString<const STACK_BUFFER_SIZE: usize = DEFAULT_STACK_BUFFER
     Large(Vec<u8>),
 }
 
-/// Type alias for MqttString with default stack buffer size
-pub type MqttString = GenericMqttString<DEFAULT_STACK_BUFFER_SIZE>;
-
 impl<const STACK_BUFFER_SIZE: usize> GenericMqttString<STACK_BUFFER_SIZE> {
     /// Create a new MqttString from a string
     ///

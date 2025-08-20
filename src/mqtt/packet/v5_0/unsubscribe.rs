@@ -184,7 +184,6 @@ pub struct GenericUnsubscribe<
 ///     .build()
 ///     .unwrap();
 /// ```
-pub type Unsubscribe = GenericUnsubscribe<u16>;
 
 impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
     GenericUnsubscribe<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>

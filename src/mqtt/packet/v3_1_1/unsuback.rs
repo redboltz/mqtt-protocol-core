@@ -131,7 +131,6 @@ where
 ///     .build()
 ///     .unwrap();
 /// ```
-pub type Unsuback = GenericUnsuback<u16>;
 
 impl<PacketIdType> GenericUnsuback<PacketIdType>
 where

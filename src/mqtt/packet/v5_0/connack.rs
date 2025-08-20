@@ -158,9 +158,6 @@ pub struct GenericConnack<
     pub props: GenericProperties<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>,
 }
 
-/// Type alias for CONNACK packet with standard buffer sizes
-pub type Connack = GenericConnack;
-
 impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
     GenericConnack<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
 {

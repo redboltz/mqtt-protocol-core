@@ -106,9 +106,6 @@ pub enum GenericPacket<
     V5_0Auth(v5_0::GenericAuth<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>),
 }
 
-// Type alias for commonly used u16 PacketIdType
-pub type Packet = GenericPacket<u16>;
-
 impl<
         PacketIdType,
         const STRING_BUFFER_SIZE: usize,

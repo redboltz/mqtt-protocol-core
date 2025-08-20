@@ -62,9 +62,6 @@ pub enum GenericArcPayload<const STACK_BUFFER_SIZE: usize = DEFAULT_STACK_BUFFER
     Large(Arc<[u8]>, usize, usize), // data, start, length
 }
 
-/// Type alias for ArcPayload with default stack buffer size
-pub type ArcPayload = GenericArcPayload<DEFAULT_STACK_BUFFER_SIZE>;
-
 impl<const STACK_BUFFER_SIZE: usize> PartialEq for GenericArcPayload<STACK_BUFFER_SIZE> {
     fn eq(&self, other: &Self) -> bool {
         self.as_slice() == other.as_slice()

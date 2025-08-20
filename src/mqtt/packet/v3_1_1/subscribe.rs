@@ -190,7 +190,6 @@ where
 ///     .build()
 ///     .unwrap();
 /// ```
-pub type Subscribe = GenericSubscribe<u16>;
 
 impl<PacketIdType, const STRING_BUFFER_SIZE: usize>
     GenericSubscribe<PacketIdType, STRING_BUFFER_SIZE>

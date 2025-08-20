@@ -20,7 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-use crate::mqtt::packet::MqttString;
+use crate::mqtt::packet::GenericMqttString;
 use crate::mqtt::packet::Qos;
 use crate::mqtt::packet::RetainHandling;
 use crate::mqtt::result_code::MqttError;
@@ -527,7 +527,7 @@ impl Serialize for SubOpts {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct SubEntry {
     /// The topic filter string for this subscription
-    topic_filter: MqttString,
+    topic_filter: GenericMqttString<32>,
     /// The subscription options controlling message delivery
     sub_opts: SubOpts,
 }
@@ -565,7 +565,7 @@ impl SubEntry {
     /// let entry = mqtt::packet::SubEntry::new("home/+/status", opts).unwrap();
     /// ```
     pub fn new(topic_filter: impl AsRef<str>, sub_opts: SubOpts) -> Result<Self, MqttError> {
-        let topic_filter = MqttString::new(topic_filter)?;
+        let topic_filter = GenericMqttString::new(topic_filter)?;
         Ok(Self {
             topic_filter,
             sub_opts,
@@ -642,7 +642,7 @@ impl SubEntry {
     /// assert_eq!(entry.topic_filter(), "new/topic");
     /// ```
     pub fn set_topic_filter(&mut self, topic_filter: String) -> Result<(), MqttError> {
-        self.topic_filter = MqttString::new(topic_filter)?;
+        self.topic_filter = GenericMqttString::new(topic_filter)?;
         Ok(())
     }
 
@@ -793,7 +793,7 @@ impl SubEntry {
         let mut cursor = 0;
 
         // 1. Parse topic filter
-        let (topic_filter, consumed) = MqttString::decode(&data[cursor..])?;
+        let (topic_filter, consumed) = GenericMqttString::decode(&data[cursor..])?;
         cursor += consumed;
 
         // 2. Parse subscription options
@@ -826,7 +826,7 @@ impl SubEntry {
 impl Default for SubEntry {
     fn default() -> Self {
         Self {
-            topic_filter: MqttString::new(String::new()).unwrap(),
+            topic_filter: GenericMqttString::new(String::new()).unwrap(),
             sub_opts: SubOpts::default(),
         }
     }

@@ -144,7 +144,6 @@ where
 ///     .build()
 ///     .unwrap();
 /// ```
-pub type Pubrec = GenericPubrec<u16>;
 
 impl<PacketIdType> GenericPubrec<PacketIdType>
 where

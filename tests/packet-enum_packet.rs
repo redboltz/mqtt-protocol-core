@@ -20,6 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+use mqtt_protocol_core::default_alias;
 use mqtt_protocol_core::mqtt;
 
 mod common;

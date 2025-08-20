@@ -195,7 +195,6 @@ pub struct GenericUnsuback<
 ///     .build()
 ///     .unwrap();
 /// ```
-pub type Unsuback = GenericUnsuback<u16>;
 
 impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
     GenericUnsuback<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>

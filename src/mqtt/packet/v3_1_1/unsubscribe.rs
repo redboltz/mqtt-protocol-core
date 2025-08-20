@@ -167,7 +167,6 @@ where
 ///     .build()
 ///     .unwrap();
 /// ```
-pub type Unsubscribe = GenericUnsubscribe<u16>;
 
 impl<PacketIdType, const STRING_BUFFER_SIZE: usize>
     GenericUnsubscribe<PacketIdType, STRING_BUFFER_SIZE>

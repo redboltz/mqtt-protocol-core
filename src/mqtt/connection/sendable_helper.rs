@@ -48,8 +48,8 @@ macro_rules! impl_sendable_helper {
 mod unformatted {
     use super::*;
     // Client
-    impl_sendable_helper!(role::Client, v3_1_1::Connect,                           send_connect_v3_1_1,         process_send_v3_1_1_connect);
-    impl_sendable_helper!(role::Client, v5_0::Connect,                             send_connect_v5_0,           process_send_v5_0_connect);
+    impl_sendable_helper!(role::Client, v3_1_1::GenericConnect<32>,               send_connect_v3_1_1,         process_send_v3_1_1_connect);
+    impl_sendable_helper!(role::Client, v5_0::GenericConnect<32, 32>,             send_connect_v5_0,           process_send_v5_0_connect);
     impl_sendable_helper!(role::Client, v3_1_1::GenericPublish<PacketIdType>,      send_publish_v3_1_1,         process_send_v3_1_1_publish);
     impl_sendable_helper!(role::Client, v5_0::GenericPublish<PacketIdType>,        send_publish_v5_0,           process_send_v5_0_publish);
     impl_sendable_helper!(role::Client, v3_1_1::GenericPuback<PacketIdType>,       send_puback_v3_1_1,          process_send_v3_1_1_puback);
@@ -67,12 +67,12 @@ mod unformatted {
     impl_sendable_helper!(role::Client, v3_1_1::Pingreq,                           send_pingreq_v3_1_1,         process_send_v3_1_1_pingreq);
     impl_sendable_helper!(role::Client, v5_0::Pingreq,                             send_pingreq_v5_0,           process_send_v5_0_pingreq);
     impl_sendable_helper!(role::Client, v3_1_1::Disconnect,                        send_disconnect_v3_1_1,      process_send_v3_1_1_disconnect);
-    impl_sendable_helper!(role::Client, v5_0::Disconnect,                          send_disconnect_v5_0,        process_send_v5_0_disconnect);
-    impl_sendable_helper!(role::Client, v5_0::Auth,                                send_auth_v5_0,              process_send_v5_0_auth);
+    impl_sendable_helper!(role::Client, v5_0::GenericDisconnect<32, 32>,          send_disconnect_v5_0,        process_send_v5_0_disconnect);
+    impl_sendable_helper!(role::Client, v5_0::GenericAuth<32, 32>,                send_auth_v5_0,              process_send_v5_0_auth);
 
     // Server
     impl_sendable_helper!(role::Server, v3_1_1::Connack,                           send_connack_v3_1_1,         process_send_v3_1_1_connack);
-    impl_sendable_helper!(role::Server, v5_0::Connack,                             send_connack_v5_0,           process_send_v5_0_connack);
+    impl_sendable_helper!(role::Server, v5_0::GenericConnack<32, 32>,             send_connack_v5_0,           process_send_v5_0_connack);
     impl_sendable_helper!(role::Server, v3_1_1::GenericPublish<PacketIdType>,      send_publish_v3_1_1,         process_send_v3_1_1_publish);
     impl_sendable_helper!(role::Server, v5_0::GenericPublish<PacketIdType>,        send_publish_v5_0,           process_send_v5_0_publish);
     impl_sendable_helper!(role::Server, v3_1_1::GenericPuback<PacketIdType>,       send_puback_v3_1_1,          process_send_v3_1_1_puback);
@@ -90,14 +90,14 @@ mod unformatted {
     impl_sendable_helper!(role::Server, v3_1_1::Pingresp,                          send_pingresp_v3_1_1,        process_send_v3_1_1_pingresp);
     impl_sendable_helper!(role::Server, v5_0::Pingresp,                            send_pingresp_v5_0,          process_send_v5_0_pingresp);
     impl_sendable_helper!(role::Server, v3_1_1::Disconnect,                        send_disconnect_v3_1_1,      process_send_v3_1_1_disconnect);
-    impl_sendable_helper!(role::Server, v5_0::Disconnect,                          send_disconnect_v5_0,        process_send_v5_0_disconnect);
-    impl_sendable_helper!(role::Server, v5_0::Auth,                                send_auth_v5_0,              process_send_v5_0_auth);
+    impl_sendable_helper!(role::Server, v5_0::GenericDisconnect<32, 32>,          send_disconnect_v5_0,        process_send_v5_0_disconnect);
+    impl_sendable_helper!(role::Server, v5_0::GenericAuth<32, 32>,                send_auth_v5_0,              process_send_v5_0_auth);
 
     // Any
-    impl_sendable_helper!(role::Any,    v3_1_1::Connect,                           send_connect_v3_1_1,         process_send_v3_1_1_connect);
-    impl_sendable_helper!(role::Any,    v5_0::Connect,                             send_connect_v5_0,           process_send_v5_0_connect);
+    impl_sendable_helper!(role::Any,    v3_1_1::GenericConnect<32>,               send_connect_v3_1_1,         process_send_v3_1_1_connect);
+    impl_sendable_helper!(role::Any,    v5_0::GenericConnect<32, 32>,             send_connect_v5_0,           process_send_v5_0_connect);
     impl_sendable_helper!(role::Any,    v3_1_1::Connack,                           send_connack_v3_1_1,         process_send_v3_1_1_connack);
-    impl_sendable_helper!(role::Any,    v5_0::Connack,                             send_connack_v5_0,           process_send_v5_0_connack);
+    impl_sendable_helper!(role::Any,    v5_0::GenericConnack<32, 32>,             send_connack_v5_0,           process_send_v5_0_connack);
     impl_sendable_helper!(role::Any,    v3_1_1::GenericPublish<PacketIdType>,      send_publish_v3_1_1,         process_send_v3_1_1_publish);
     impl_sendable_helper!(role::Any,    v5_0::GenericPublish<PacketIdType>,        send_publish_v5_0,           process_send_v5_0_publish);
     impl_sendable_helper!(role::Any,    v3_1_1::GenericPuback<PacketIdType>,       send_puback_v3_1_1,          process_send_v3_1_1_puback);
@@ -121,6 +121,6 @@ mod unformatted {
     impl_sendable_helper!(role::Any,    v3_1_1::Pingresp,                          send_pingresp_v3_1_1,        process_send_v3_1_1_pingresp);
     impl_sendable_helper!(role::Any,    v5_0::Pingresp,                            send_pingresp_v5_0,          process_send_v5_0_pingresp);
     impl_sendable_helper!(role::Any,    v3_1_1::Disconnect,                        send_disconnect_v3_1_1,      process_send_v3_1_1_disconnect);
-    impl_sendable_helper!(role::Any,    v5_0::Disconnect,                          send_disconnect_v5_0,        process_send_v5_0_disconnect);
-    impl_sendable_helper!(role::Any,    v5_0::Auth,                                send_auth_v5_0,              process_send_v5_0_auth);
+    impl_sendable_helper!(role::Any,    v5_0::GenericDisconnect<32, 32>,          send_disconnect_v5_0,        process_send_v5_0_disconnect);
+    impl_sendable_helper!(role::Any,    v5_0::GenericAuth<32, 32>,                send_auth_v5_0,              process_send_v5_0_auth);
 }

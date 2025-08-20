@@ -163,9 +163,6 @@ pub struct GenericDisconnect<
     pub props: Option<GenericProperties<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>>,
 }
 
-/// Type alias for DISCONNECT packet with standard buffer sizes
-pub type Disconnect = GenericDisconnect;
-
 impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
     GenericDisconnect<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
 {

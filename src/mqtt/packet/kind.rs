@@ -88,7 +88,9 @@ pub trait PacketKind {
 // MQTT v3.1.1 and v5.0 packet implementations
 
 /// `PacketKind` implementation for v3.1.1 CONNECT packet
-impl PacketKind for crate::mqtt::packet::v3_1_1::Connect {
+impl<const STRING_BUFFER_SIZE: usize> PacketKind
+    for crate::mqtt::packet::v3_1_1::GenericConnect<STRING_BUFFER_SIZE>
+{
     const IS_CONNECT: bool = true;
     const IS_V3_1_1: bool = true;
 }
@@ -100,13 +102,17 @@ impl PacketKind for crate::mqtt::packet::v3_1_1::Connack {
 }
 
 /// `PacketKind` implementation for v5.0 CONNECT packet
-impl PacketKind for crate::mqtt::packet::v5_0::Connect {
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> PacketKind
+    for crate::mqtt::packet::v5_0::GenericConnect<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
     const IS_CONNECT: bool = true;
     const IS_V5_0: bool = true;
 }
 
 /// `PacketKind` implementation for v5.0 CONNACK packet
-impl PacketKind for crate::mqtt::packet::v5_0::Connack {
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> PacketKind
+    for crate::mqtt::packet::v5_0::GenericConnack<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
     const IS_CONNACK: bool = true;
     const IS_V5_0: bool = true;
 }
@@ -144,13 +150,17 @@ impl PacketKind for crate::mqtt::packet::v5_0::Pingresp {
     const IS_V5_0: bool = true;
 }
 
-impl PacketKind for crate::mqtt::packet::v5_0::Disconnect {
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> PacketKind
+    for crate::mqtt::packet::v5_0::GenericDisconnect<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
     const IS_DISCONNECT: bool = true;
     const IS_V5_0: bool = true;
 }
 
 /// `PacketKind` implementation for v5.0 AUTH packet (v5.0 exclusive)
-impl PacketKind for crate::mqtt::packet::v5_0::Auth {
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> PacketKind
+    for crate::mqtt::packet::v5_0::GenericAuth<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
     const IS_AUTH: bool = true;
     const IS_V5_0: bool = true;
 }

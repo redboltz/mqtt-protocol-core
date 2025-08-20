@@ -209,7 +209,6 @@ pub struct GenericSubscribe<
 ///     .build()
 ///     .unwrap();
 /// ```
-pub type Subscribe = GenericSubscribe<u16>;
 
 impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
     GenericSubscribe<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>

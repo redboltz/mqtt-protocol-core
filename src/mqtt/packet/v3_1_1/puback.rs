@@ -145,7 +145,6 @@ where
 ///     .build()
 ///     .unwrap();
 /// ```
-pub type Puback = GenericPuback<u16>;
 
 impl<PacketIdType> GenericPuback<PacketIdType>
 where

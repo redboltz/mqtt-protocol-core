@@ -209,9 +209,6 @@ pub enum GenericEvent<
 /// It uses `u16` for packet IDs, which is the standard MQTT packet ID type
 /// supporting values from 1 to 65535.
 ///
-/// For extended scenarios where larger packet ID ranges are needed
-/// (such as broker clusters), use `GenericEvent<u32>` directly.
-pub type Event = GenericEvent<u16, 32, 32, 32>;
 
 /// Serialization implementation for GenericEvent
 ///

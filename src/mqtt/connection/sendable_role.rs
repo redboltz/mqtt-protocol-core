@@ -27,15 +27,33 @@ pub trait SendableRole<Role> {}
 
 // --- Role-specific implementations ---
 
-impl SendableRole<Client> for v5_0::Connect {}
-impl SendableRole<Client> for v3_1_1::Connect {}
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableRole<Client>
+    for v5_0::GenericConnect<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
+}
+impl<const STRING_BUFFER_SIZE: usize> SendableRole<Client>
+    for v3_1_1::GenericConnect<STRING_BUFFER_SIZE>
+{
+}
 
-impl SendableRole<Server> for v5_0::Connack {}
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableRole<Server>
+    for v5_0::GenericConnack<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
+}
 impl SendableRole<Server> for v3_1_1::Connack {}
 
-impl SendableRole<Any> for v5_0::Connect {}
-impl SendableRole<Any> for v5_0::Connack {}
-impl SendableRole<Any> for v3_1_1::Connect {}
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableRole<Any>
+    for v5_0::GenericConnect<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
+}
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableRole<Any>
+    for v5_0::GenericConnack<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
+}
+impl<const STRING_BUFFER_SIZE: usize> SendableRole<Any>
+    for v3_1_1::GenericConnect<STRING_BUFFER_SIZE>
+{
+}
 impl SendableRole<Any> for v3_1_1::Connack {}
 
 // Client sendable packets
@@ -43,15 +61,27 @@ impl SendableRole<Client> for v3_1_1::Pingreq {}
 impl SendableRole<Client> for v3_1_1::Disconnect {}
 
 impl SendableRole<Client> for v5_0::Pingreq {}
-impl SendableRole<Client> for v5_0::Disconnect {}
-impl SendableRole<Client> for v5_0::Auth {}
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableRole<Client>
+    for v5_0::GenericDisconnect<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
+}
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableRole<Client>
+    for v5_0::GenericAuth<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
+}
 
 // Server sendable packets
 impl SendableRole<Server> for v3_1_1::Pingresp {}
 
 impl SendableRole<Server> for v5_0::Pingresp {}
-impl SendableRole<Server> for v5_0::Disconnect {}
-impl SendableRole<Server> for v5_0::Auth {}
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableRole<Server>
+    for v5_0::GenericDisconnect<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
+}
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableRole<Server>
+    for v5_0::GenericAuth<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
+}
 
 // Any role sendable packets (both client and server)
 impl SendableRole<Any> for v3_1_1::Pingreq {}
@@ -60,8 +90,14 @@ impl SendableRole<Any> for v3_1_1::Disconnect {}
 
 impl SendableRole<Any> for v5_0::Pingreq {}
 impl SendableRole<Any> for v5_0::Pingresp {}
-impl SendableRole<Any> for v5_0::Disconnect {}
-impl SendableRole<Any> for v5_0::Auth {}
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableRole<Any>
+    for v5_0::GenericDisconnect<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
+}
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableRole<Any>
+    for v5_0::GenericAuth<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
+}
 
 // Generic packet implementations for roles
 // Client sendable generic packets

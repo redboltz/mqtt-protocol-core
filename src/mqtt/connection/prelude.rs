@@ -20,5 +20,5 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 pub use crate::mqtt::connection::core::RecvBehavior;
-pub use crate::mqtt::connection::event::{Event, GenericEvent, TimerKind};
+pub use crate::mqtt::connection::event::{GenericEvent, TimerKind};
 pub use crate::mqtt::connection::{SendBehavior, Sendable};

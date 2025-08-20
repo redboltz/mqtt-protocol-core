@@ -169,7 +169,6 @@ pub struct GenericPubrel<
 ///     .build()
 ///     .unwrap();
 /// ```
-pub type Pubrel = GenericPubrel<u16>;
 
 impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
     GenericPubrel<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>

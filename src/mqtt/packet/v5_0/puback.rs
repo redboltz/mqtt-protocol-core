@@ -143,7 +143,6 @@ pub struct GenericPuback<
 ///     .build()
 ///     .unwrap();
 /// ```
-pub type Puback = GenericPuback<u16>;
 
 impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
     GenericPuback<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>

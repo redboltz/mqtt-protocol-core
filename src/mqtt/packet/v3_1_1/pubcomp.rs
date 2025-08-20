@@ -157,7 +157,6 @@ where
 ///     .build()
 ///     .unwrap();
 /// ```
-pub type Pubcomp = GenericPubcomp<u16>;
 
 impl<PacketIdType> GenericPubcomp<PacketIdType>
 where

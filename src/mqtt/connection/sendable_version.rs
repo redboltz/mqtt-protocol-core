@@ -30,7 +30,9 @@ pub trait SendableVersion {
 
 // ---- Implementation for concrete packet types ----
 
-impl SendableVersion for v3_1_1::Connect {
+impl<const STRING_BUFFER_SIZE: usize> SendableVersion
+    for v3_1_1::GenericConnect<STRING_BUFFER_SIZE>
+{
     fn check(version: &Version) -> bool {
         *version == Version::V3_1_1
     }
@@ -42,13 +44,17 @@ impl SendableVersion for v3_1_1::Connack {
     }
 }
 
-impl SendableVersion for v5_0::Connect {
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableVersion
+    for v5_0::GenericConnect<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
     fn check(version: &Version) -> bool {
         *version == Version::V5_0
     }
 }
 
-impl SendableVersion for v5_0::Connack {
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableVersion
+    for v5_0::GenericConnack<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
     fn check(version: &Version) -> bool {
         *version == Version::V5_0
     }
@@ -88,13 +94,17 @@ impl SendableVersion for v5_0::Pingresp {
     }
 }
 
-impl SendableVersion for v5_0::Disconnect {
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableVersion
+    for v5_0::GenericDisconnect<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
     fn check(version: &Version) -> bool {
         *version == Version::V5_0
     }
 }
 
-impl SendableVersion for v5_0::Auth {
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableVersion
+    for v5_0::GenericAuth<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
+{
     fn check(version: &Version) -> bool {
         *version == Version::V5_0
     }

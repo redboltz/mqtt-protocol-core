@@ -1,3 +1,4 @@
+use mqtt_protocol_core::default_alias;
 use mqtt_protocol_core::mqtt;
 
 #[test]

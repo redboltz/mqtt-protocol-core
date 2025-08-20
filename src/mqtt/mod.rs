@@ -30,7 +30,7 @@ pub use connection::SendBehavior;
 pub use connection::Version;
 
 pub mod common;
-pub use common::{ArcPayload, IntoPayload, ValueAllocator};
+pub use common::{IntoPayload, ValueAllocator};
 
 pub mod result_code;
 

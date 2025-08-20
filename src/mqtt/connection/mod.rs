@@ -33,7 +33,6 @@ pub use self::core::GenericConnection;
 pub use self::core::RecvBehavior;
 
 pub mod event;
-pub use self::event::Event;
 pub use self::event::GenericEvent;
 pub use self::event::TimerKind;
 
@@ -45,7 +44,6 @@ pub use self::packet_builder::RawPacket;
 
 mod store;
 pub use self::store::GenericStore;
-pub use self::store::Store;
 
 pub mod prelude;
 mod sendable;

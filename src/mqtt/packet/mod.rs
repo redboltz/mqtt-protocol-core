@@ -20,9 +20,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 mod mqtt_string;
-pub use self::mqtt_string::{GenericMqttString, MqttString};
+pub use self::mqtt_string::GenericMqttString;
 mod mqtt_binary;
-pub use self::mqtt_binary::{GenericMqttBinary, MqttBinary};
+pub use self::mqtt_binary::GenericMqttBinary;
 
 mod optimization;
 pub use self::optimization::{
@@ -47,21 +47,22 @@ mod packet_id;
 pub use self::packet_id::IsPacketId;
 pub mod v3_1_1;
 pub mod v5_0;
-pub use self::enum_packet::{GenericPacket, GenericPacketDisplay, GenericPacketTrait, Packet};
-pub use self::enum_store_packet::{GenericStorePacket, ResponsePacket, StorePacket};
+pub use self::enum_packet::{GenericPacket, GenericPacketDisplay, GenericPacketTrait};
+pub use self::enum_store_packet::{GenericStorePacket, ResponsePacket};
 pub use self::property::PayloadFormat;
 mod json_bin_encode;
 #[cfg(feature = "std")]
 pub use self::property::PropertiesToBuffers;
 pub use self::property::{
-    AssignedClientIdentifier, AuthenticationData, AuthenticationMethod, ContentType,
-    CorrelationData, GenericContentType, GenericProperties, GenericProperty, MaximumPacketSize,
-    MaximumQos, MessageExpiryInterval, PayloadFormatIndicator, Properties, PropertiesParse,
-    PropertiesSize, Property, PropertyId, ReasonString, ReceiveMaximum, RequestProblemInformation,
-    RequestResponseInformation, ResponseInformation, ResponseTopic, RetainAvailable,
-    ServerKeepAlive, ServerReference, SessionExpiryInterval, SharedSubscriptionAvailable,
-    SubscriptionIdentifier, SubscriptionIdentifierAvailable, TopicAlias, TopicAliasMaximum,
-    UserProperty, WildcardSubscriptionAvailable, WillDelayInterval,
+    GenericAssignedClientIdentifier, GenericAuthenticationData, GenericAuthenticationMethod,
+    GenericContentType, GenericCorrelationData, GenericProperties, GenericProperty,
+    GenericReasonString, GenericResponseInformation, GenericResponseTopic, GenericServerReference,
+    GenericUserProperty, MaximumPacketSize, MaximumQos, MessageExpiryInterval,
+    PayloadFormatIndicator, PropertiesParse, PropertiesSize, PropertyId, ReceiveMaximum,
+    RequestProblemInformation, RequestResponseInformation, RetainAvailable, ServerKeepAlive,
+    SessionExpiryInterval, SharedSubscriptionAvailable, SubscriptionIdentifier,
+    SubscriptionIdentifierAvailable, TopicAlias, TopicAliasMaximum, WildcardSubscriptionAvailable,
+    WillDelayInterval,
 };
 pub use json_bin_encode::escape_binary_json_string;
 

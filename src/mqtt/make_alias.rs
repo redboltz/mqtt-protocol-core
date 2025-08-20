@@ -192,9 +192,12 @@ macro_rules! make_type_size_aliases {
 
                     // Re-export common packet types and traits
                     pub use $crate::mqtt::packet::{
+                        GenericAssignedClientIdentifier, GenericAuthenticationData,
+                        GenericAuthenticationMethod, GenericContentType, GenericCorrelationData,
                         GenericMqttBinary, GenericMqttString, GenericPacket, GenericProperties,
-                        GenericProperty, GenericStorePacket, PacketType, Qos, RetainHandling,
-                        SubEntry, SubOpts,
+                        GenericProperty, GenericReasonString, GenericResponseInformation,
+                        GenericResponseTopic, GenericServerReference, GenericStorePacket,
+                        GenericUserProperty, PacketType, Qos, RetainHandling, SubEntry, SubOpts,
                     };
 
                     // Packet base types with custom buffer sizes
@@ -222,6 +225,28 @@ macro_rules! make_type_size_aliases {
                         $crate::mqtt::packet::GenericMqttString<$string_buffer_size>;
                     pub type MqttBinary =
                         $crate::mqtt::packet::GenericMqttBinary<$binary_buffer_size>;
+
+                    // Property type aliases with custom buffer sizes
+                    pub type ContentType =
+                        $crate::mqtt::packet::GenericContentType<$string_buffer_size>;
+                    pub type ResponseTopic =
+                        $crate::mqtt::packet::GenericResponseTopic<$string_buffer_size>;
+                    pub type CorrelationData =
+                        $crate::mqtt::packet::GenericCorrelationData<$binary_buffer_size>;
+                    pub type AssignedClientIdentifier =
+                        $crate::mqtt::packet::GenericAssignedClientIdentifier<$string_buffer_size>;
+                    pub type AuthenticationMethod =
+                        $crate::mqtt::packet::GenericAuthenticationMethod<$string_buffer_size>;
+                    pub type AuthenticationData =
+                        $crate::mqtt::packet::GenericAuthenticationData<$binary_buffer_size>;
+                    pub type ResponseInformation =
+                        $crate::mqtt::packet::GenericResponseInformation<$string_buffer_size>;
+                    pub type ServerReference =
+                        $crate::mqtt::packet::GenericServerReference<$string_buffer_size>;
+                    pub type ReasonString =
+                        $crate::mqtt::packet::GenericReasonString<$string_buffer_size>;
+                    pub type UserProperty =
+                        $crate::mqtt::packet::GenericUserProperty<$string_buffer_size>;
                 }
 
                 // Connection types with custom buffer sizes

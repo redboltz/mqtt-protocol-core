@@ -156,9 +156,6 @@ pub struct GenericConnect<
     password_buf: GenericMqttBinary<BINARY_BUFFER_SIZE>,
 }
 
-/// Type alias for CONNECT packet with standard buffer sizes
-pub type Connect = GenericConnect;
-
 impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
     GenericConnect<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
 {

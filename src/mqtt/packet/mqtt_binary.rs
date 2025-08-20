@@ -106,9 +106,6 @@ impl<const STACK_BUFFER_SIZE: usize> core::fmt::Debug for GenericMqttBinary<STAC
     }
 }
 
-/// Type alias for MqttBinary with default stack buffer size
-pub type MqttBinary = GenericMqttBinary<DEFAULT_STACK_BUFFER_SIZE>;
-
 impl<const STACK_BUFFER_SIZE: usize> GenericMqttBinary<STACK_BUFFER_SIZE> {
     /// Create a new MqttBinary from binary data
     ///

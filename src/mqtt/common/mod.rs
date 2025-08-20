@@ -20,7 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 mod arc_payload;
-pub use arc_payload::{ArcPayload, GenericArcPayload, IntoPayload};
+pub use arc_payload::{GenericArcPayload, IntoPayload};
 
 mod value_allocator;
 pub use value_allocator::ValueAllocator;

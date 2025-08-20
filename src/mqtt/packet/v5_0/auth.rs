@@ -129,9 +129,6 @@ pub struct GenericAuth<const STRING_BUFFER_SIZE: usize = 32, const BINARY_BUFFER
     pub props: Option<GenericProperties<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>>,
 }
 
-/// Type alias for AUTH packet with standard buffer sizes
-pub type Auth = GenericAuth;
-
 impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
     GenericAuth<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
 {

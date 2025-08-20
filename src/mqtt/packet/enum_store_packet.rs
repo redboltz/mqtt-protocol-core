@@ -64,9 +64,6 @@ pub enum GenericStorePacket<
     V5_0Pubrel(v5_0::GenericPubrel<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>),
 }
 
-// Type alias for commonly used u16 PacketIdType
-pub type StorePacket = GenericStorePacket<u16>;
-
 impl<
         PacketIdType,
         const STRING_BUFFER_SIZE: usize,

@@ -1,5 +1,6 @@
 extern crate alloc;
 use alloc::sync::Arc;
+use mqtt_protocol_core::default_alias;
 use mqtt_protocol_core::mqtt;
 use mqtt_protocol_core::mqtt::common::{GenericArcPayload, IntoPayload};
 

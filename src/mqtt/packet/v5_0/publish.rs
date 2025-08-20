@@ -225,7 +225,6 @@ pub struct GenericPublish<
 ///     .build()
 ///     .unwrap();
 /// ```
-pub type Publish = GenericPublish<u16>;
 
 impl<
         PacketIdType,

@@ -46,8 +46,6 @@ pub struct GenericStore<
     >,
 }
 
-pub type Store = GenericStore<u16>;
-
 impl<
         PacketIdType: IsPacketId,
         const STRING_BUFFER_SIZE: usize,

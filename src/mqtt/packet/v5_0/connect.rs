@@ -194,7 +194,6 @@ pub struct GenericConnect<
 ///     .build()
 ///     .unwrap();
 /// ```
-pub type Connect = GenericConnect;
 
 impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
     GenericConnect<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>

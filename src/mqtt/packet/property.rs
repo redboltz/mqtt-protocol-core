@@ -1669,20 +1669,17 @@ mqtt_property_u32!(
     None::<U32Validator>
 );
 mqtt_property_string!(GenericContentType, ContentType, PropertyId::ContentType);
-pub type ContentType = GenericContentType;
 
 mqtt_property_string!(
     GenericResponseTopic,
     ResponseTopic,
     PropertyId::ResponseTopic
 );
-pub type ResponseTopic = GenericResponseTopic;
 mqtt_property_binary!(
     GenericCorrelationData,
     CorrelationData,
     PropertyId::CorrelationData
 );
-pub type CorrelationData = GenericCorrelationData;
 mqtt_property_variable_integer!(
     SubscriptionIdentifier,
     PropertyId::SubscriptionIdentifier,
@@ -1704,7 +1701,6 @@ mqtt_property_string!(
     AssignedClientIdentifier,
     PropertyId::AssignedClientIdentifier
 );
-pub type AssignedClientIdentifier = GenericAssignedClientIdentifier;
 mqtt_property_u16!(
     ServerKeepAlive,
     PropertyId::ServerKeepAlive,
@@ -1715,13 +1711,11 @@ mqtt_property_string!(
     AuthenticationMethod,
     PropertyId::AuthenticationMethod
 );
-pub type AuthenticationMethod = GenericAuthenticationMethod;
 mqtt_property_binary!(
     GenericAuthenticationData,
     AuthenticationData,
     PropertyId::AuthenticationData
 );
-pub type AuthenticationData = GenericAuthenticationData;
 mqtt_property_u8!(
     RequestProblemInformation,
     PropertyId::RequestProblemInformation,
@@ -1754,15 +1748,12 @@ mqtt_property_string!(
     ResponseInformation,
     PropertyId::ResponseInformation
 );
-pub type ResponseInformation = GenericResponseInformation;
 mqtt_property_string!(
     GenericServerReference,
     ServerReference,
     PropertyId::ServerReference
 );
-pub type ServerReference = GenericServerReference;
 mqtt_property_string!(GenericReasonString, ReasonString, PropertyId::ReasonString);
-pub type ReasonString = GenericReasonString;
 mqtt_property_u16!(
     ReceiveMaximum,
     PropertyId::ReceiveMaximum,
@@ -1813,7 +1804,6 @@ mqtt_property_u8!(
     })
 );
 mqtt_property_string_pair!(GenericUserProperty, UserProperty, PropertyId::UserProperty);
-pub type UserProperty = GenericUserProperty;
 mqtt_property_u32!(
     MaximumPacketSize,
     PropertyId::MaximumPacketSize,
@@ -1917,8 +1907,6 @@ pub enum GenericProperty<const STRING_BUFFER_SIZE: usize = 32, const BINARY_BUFF
     SubscriptionIdentifierAvailable(SubscriptionIdentifierAvailable),
     SharedSubscriptionAvailable(SharedSubscriptionAvailable),
 }
-
-pub type Property = GenericProperty;
 
 impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> fmt::Display
     for GenericProperty<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
@@ -2481,8 +2469,6 @@ pub type GenericProperties<
     const STRING_BUFFER_SIZE: usize = 32,
     const BINARY_BUFFER_SIZE: usize = 32,
 > = Vec<GenericProperty<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>>;
-
-pub type Properties = GenericProperties;
 
 /// Trait for converting properties collection to continuous buffer
 ///

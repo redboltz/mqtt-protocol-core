@@ -206,7 +206,6 @@ pub struct GenericPublish<
 ///     .build()
 ///     .unwrap();
 /// ```
-pub type Publish = GenericPublish<u16>;
 
 impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const PAYLOAD_BUFFER_SIZE: usize>
     GenericPublish<PacketIdType, STRING_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>
