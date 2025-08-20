@@ -957,8 +957,8 @@ fn validate_unsuback_properties<
     let mut count_reason_string = 0;
     for prop in props {
         match prop {
-            GenericProperty::ReasonString(_) => count_reason_string += 1,
-            GenericProperty::UserProperty(_) => {}
+            GenericProperty::GenericReasonString(_) => count_reason_string += 1,
+            GenericProperty::GenericUserProperty(_) => {}
             _ => return Err(MqttError::ProtocolError),
         }
     }

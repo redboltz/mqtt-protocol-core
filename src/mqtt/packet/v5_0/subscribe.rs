@@ -898,7 +898,7 @@ fn validate_subscribe_properties<
     for prop in props {
         match prop {
             GenericProperty::SubscriptionIdentifier(_) => {}
-            GenericProperty::UserProperty(_) => {}
+            GenericProperty::GenericUserProperty(_) => {}
             _ => return Err(MqttError::ProtocolError),
         }
     }

@@ -160,10 +160,10 @@ fn build_fail_various_connect_properties() {
 
     // Test AuthenticationMethod property
     let mut props3 = mqtt::packet::GenericProperties::new();
-    props3.push(mqtt::packet::Property::AuthenticationMethod(
+    props3.push(mqtt::packet::Property::GenericAuthenticationMethod(
         mqtt::packet::AuthenticationMethod::new("method1").unwrap(),
     ));
-    props3.push(mqtt::packet::Property::AuthenticationMethod(
+    props3.push(mqtt::packet::Property::GenericAuthenticationMethod(
         mqtt::packet::AuthenticationMethod::new("method2").unwrap(),
     ));
 
@@ -177,10 +177,10 @@ fn build_fail_various_connect_properties() {
 
     // Test AuthenticationData property
     let mut props4 = mqtt::packet::GenericProperties::new();
-    props4.push(mqtt::packet::Property::AuthenticationData(
+    props4.push(mqtt::packet::Property::GenericAuthenticationData(
         mqtt::packet::AuthenticationData::new(b"data1".to_vec()).unwrap(),
     ));
-    props4.push(mqtt::packet::Property::AuthenticationData(
+    props4.push(mqtt::packet::Property::GenericAuthenticationData(
         mqtt::packet::AuthenticationData::new(b"data2".to_vec()).unwrap(),
     ));
 
@@ -219,10 +219,10 @@ fn build_fail_various_will_properties() {
 
     // Test ContentType property
     let mut will_props2 = mqtt::packet::GenericProperties::new();
-    will_props2.push(mqtt::packet::Property::ContentType(
+    will_props2.push(mqtt::packet::Property::GenericContentType(
         mqtt::packet::ContentType::new("type1").unwrap(),
     ));
-    will_props2.push(mqtt::packet::Property::ContentType(
+    will_props2.push(mqtt::packet::Property::GenericContentType(
         mqtt::packet::ContentType::new("type2").unwrap(),
     ));
 
@@ -238,10 +238,10 @@ fn build_fail_various_will_properties() {
 
     // Test ResponseTopic property
     let mut will_props3 = mqtt::packet::GenericProperties::new();
-    will_props3.push(mqtt::packet::Property::ResponseTopic(
+    will_props3.push(mqtt::packet::Property::GenericResponseTopic(
         mqtt::packet::ResponseTopic::new("topic1").unwrap(),
     ));
-    will_props3.push(mqtt::packet::Property::ResponseTopic(
+    will_props3.push(mqtt::packet::Property::GenericResponseTopic(
         mqtt::packet::ResponseTopic::new("topic2").unwrap(),
     ));
 
@@ -257,10 +257,10 @@ fn build_fail_various_will_properties() {
 
     // Test CorrelationData property
     let mut will_props4 = mqtt::packet::GenericProperties::new();
-    will_props4.push(mqtt::packet::Property::CorrelationData(
+    will_props4.push(mqtt::packet::Property::GenericCorrelationData(
         mqtt::packet::CorrelationData::new(b"data1".to_vec()).unwrap(),
     ));
-    will_props4.push(mqtt::packet::Property::CorrelationData(
+    will_props4.push(mqtt::packet::Property::GenericCorrelationData(
         mqtt::packet::CorrelationData::new(b"data2".to_vec()).unwrap(),
     ));
 
@@ -324,7 +324,7 @@ fn build_success_with_properties() {
     props.push(mqtt::packet::Property::SessionExpiryInterval(
         mqtt::packet::SessionExpiryInterval::new(3600).unwrap(),
     ));
-    props.push(mqtt::packet::Property::UserProperty(
+    props.push(mqtt::packet::Property::GenericUserProperty(
         mqtt::packet::UserProperty::new("key", "value").unwrap(),
     ));
 
@@ -419,16 +419,16 @@ fn build_success_all_features_comprehensive() {
     props.push(mqtt::packet::Property::RequestProblemInformation(
         mqtt::packet::RequestProblemInformation::new(1).unwrap(),
     ));
-    props.push(mqtt::packet::Property::AuthenticationMethod(
+    props.push(mqtt::packet::Property::GenericAuthenticationMethod(
         mqtt::packet::AuthenticationMethod::new("SCRAM-SHA-256").unwrap(),
     ));
-    props.push(mqtt::packet::Property::AuthenticationData(
+    props.push(mqtt::packet::Property::GenericAuthenticationData(
         mqtt::packet::AuthenticationData::new(b"auth_data_123".to_vec()).unwrap(),
     ));
-    props.push(mqtt::packet::Property::UserProperty(
+    props.push(mqtt::packet::Property::GenericUserProperty(
         mqtt::packet::UserProperty::new("client_type", "rust_client").unwrap(),
     ));
-    props.push(mqtt::packet::Property::UserProperty(
+    props.push(mqtt::packet::Property::GenericUserProperty(
         mqtt::packet::UserProperty::new("version", "1.0.0").unwrap(),
     ));
 
@@ -443,19 +443,19 @@ fn build_success_all_features_comprehensive() {
     will_props.push(mqtt::packet::Property::MessageExpiryInterval(
         mqtt::packet::MessageExpiryInterval::new(3600).unwrap(),
     ));
-    will_props.push(mqtt::packet::Property::ContentType(
+    will_props.push(mqtt::packet::Property::GenericContentType(
         mqtt::packet::ContentType::new("application/json").unwrap(),
     ));
-    will_props.push(mqtt::packet::Property::ResponseTopic(
+    will_props.push(mqtt::packet::Property::GenericResponseTopic(
         mqtt::packet::ResponseTopic::new("response/topic").unwrap(),
     ));
-    will_props.push(mqtt::packet::Property::CorrelationData(
+    will_props.push(mqtt::packet::Property::GenericCorrelationData(
         mqtt::packet::CorrelationData::new(b"correlation_123".to_vec()).unwrap(),
     ));
-    will_props.push(mqtt::packet::Property::UserProperty(
+    will_props.push(mqtt::packet::Property::GenericUserProperty(
         mqtt::packet::UserProperty::new("will_type", "last_will").unwrap(),
     ));
-    will_props.push(mqtt::packet::Property::UserProperty(
+    will_props.push(mqtt::packet::Property::GenericUserProperty(
         mqtt::packet::UserProperty::new("priority", "high").unwrap(),
     ));
 
@@ -638,7 +638,7 @@ fn debug_minimal() {
 fn debug_with_properties() {
     common::init_tracing();
     let mut props = mqtt::packet::GenericProperties::new();
-    props.push(mqtt::packet::Property::UserProperty(
+    props.push(mqtt::packet::Property::GenericUserProperty(
         mqtt::packet::UserProperty::new("test", "value").unwrap(),
     ));
 
@@ -757,7 +757,7 @@ fn getter_props_with_values() {
     props.push(mqtt::packet::Property::ReceiveMaximum(
         mqtt::packet::ReceiveMaximum::new(100).unwrap(),
     ));
-    props.push(mqtt::packet::Property::UserProperty(
+    props.push(mqtt::packet::Property::GenericUserProperty(
         mqtt::packet::UserProperty::new("key", "value").unwrap(),
     ));
 
@@ -1208,7 +1208,7 @@ fn size_with_properties() {
     props.push(mqtt::packet::Property::SessionExpiryInterval(
         mqtt::packet::SessionExpiryInterval::new(3600).unwrap(),
     ));
-    props.push(mqtt::packet::Property::UserProperty(
+    props.push(mqtt::packet::Property::GenericUserProperty(
         mqtt::packet::UserProperty::new("key", "value").unwrap(),
     ));
 
@@ -1327,7 +1327,7 @@ fn roundtrip_with_all_features() {
     props.push(mqtt::packet::Property::ReceiveMaximum(
         mqtt::packet::ReceiveMaximum::new(100).unwrap(),
     ));
-    props.push(mqtt::packet::Property::UserProperty(
+    props.push(mqtt::packet::Property::GenericUserProperty(
         mqtt::packet::UserProperty::new("client", "test").unwrap(),
     ));
 
@@ -1335,7 +1335,7 @@ fn roundtrip_with_all_features() {
     will_props.push(mqtt::packet::Property::WillDelayInterval(
         mqtt::packet::WillDelayInterval::new(30).unwrap(),
     ));
-    will_props.push(mqtt::packet::Property::UserProperty(
+    will_props.push(mqtt::packet::Property::GenericUserProperty(
         mqtt::packet::UserProperty::new("will", "test").unwrap(),
     ));
 

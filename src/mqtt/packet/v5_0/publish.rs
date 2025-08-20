@@ -1682,13 +1682,13 @@ fn validate_publish_properties<const STRING_BUFFER_SIZE: usize, const BINARY_BUF
     for prop in props {
         match prop {
             GenericProperty::GenericContentType(_) => count_content_type += 1,
-            GenericProperty::CorrelationData(_) => count_correlation_data += 1,
+            GenericProperty::GenericCorrelationData(_) => count_correlation_data += 1,
             GenericProperty::MessageExpiryInterval(_) => count_expiry += 1,
             GenericProperty::PayloadFormatIndicator(_) => count_payload_format += 1,
-            GenericProperty::ResponseTopic(_) => count_response_topic += 1,
+            GenericProperty::GenericResponseTopic(_) => count_response_topic += 1,
             GenericProperty::SubscriptionIdentifier(_) => {}
             GenericProperty::TopicAlias(_) => count_topic_alias += 1,
-            GenericProperty::UserProperty(_) => {}
+            GenericProperty::GenericUserProperty(_) => {}
             _ => return Err(MqttError::ProtocolError),
         }
     }

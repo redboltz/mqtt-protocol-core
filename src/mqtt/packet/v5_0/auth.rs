@@ -772,10 +772,10 @@ fn validate_auth_packet<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZ
 
         for prop in properties {
             match prop {
-                GenericProperty::AuthenticationMethod(_) => count_authentication_method += 1,
-                GenericProperty::AuthenticationData(_) => count_authentication_data += 1,
-                GenericProperty::ReasonString(_) => count_reason_string += 1,
-                GenericProperty::UserProperty(_) => {}
+                GenericProperty::GenericAuthenticationMethod(_) => count_authentication_method += 1,
+                GenericProperty::GenericAuthenticationData(_) => count_authentication_data += 1,
+                GenericProperty::GenericReasonString(_) => count_reason_string += 1,
+                GenericProperty::GenericUserProperty(_) => {}
                 _ => return Err(MqttError::ProtocolError),
             }
         }

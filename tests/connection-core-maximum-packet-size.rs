@@ -97,7 +97,7 @@ fn v5_0_any_maximum_packet_size_test() {
     // Test PUBACK packet that exceeds maximum packet size
     let mut large_props = mqtt::packet::GenericProperties::new();
     for i in 0..20 {
-        large_props.push(mqtt::packet::Property::UserProperty(
+        large_props.push(mqtt::packet::Property::GenericUserProperty(
             mqtt::packet::UserProperty::new(&format!("key{}", i), &format!("value{}", i))
                 .expect("Failed to create UserProperty"),
         ));

@@ -143,7 +143,7 @@ fn display_rc_props() {
     write!(&mut output, "{packet}").unwrap();
     assert_eq!(
         output,
-        r#"{"type":"disconnect","reason_code":"ServerShuttingDown","props":[{"ReasonString":{"id":31,"val":"Server maintenance"}}]}"#
+        r#"{"type":"disconnect","reason_code":"ServerShuttingDown","props":[{"GenericReasonString":{"id":31,"val":"Server maintenance"}}]}"#
     );
 }
 

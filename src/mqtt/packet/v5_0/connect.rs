@@ -1422,9 +1422,9 @@ fn validate_connect_properties<const STRING_BUFFER_SIZE: usize, const BINARY_BUF
                 count_request_response_information += 1
             }
             GenericProperty::RequestProblemInformation(_) => count_request_problem_information += 1,
-            GenericProperty::UserProperty(_) => {}
-            GenericProperty::AuthenticationMethod(_) => count_authentication_method += 1,
-            GenericProperty::AuthenticationData(_) => count_authentication_data += 1,
+            GenericProperty::GenericUserProperty(_) => {}
+            GenericProperty::GenericAuthenticationMethod(_) => count_authentication_method += 1,
+            GenericProperty::GenericAuthenticationData(_) => count_authentication_data += 1,
             _ => return Err(MqttError::ProtocolError),
         }
     }
@@ -1489,9 +1489,9 @@ fn validate_will_properties<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER
             GenericProperty::PayloadFormatIndicator(_) => count_payload_format_indicator += 1,
             GenericProperty::MessageExpiryInterval(_) => count_message_expiry_interval += 1,
             GenericProperty::GenericContentType(_) => count_content_type += 1,
-            GenericProperty::ResponseTopic(_) => count_response_topic += 1,
-            GenericProperty::CorrelationData(_) => count_correlation_data += 1,
-            GenericProperty::UserProperty(_) => {}
+            GenericProperty::GenericResponseTopic(_) => count_response_topic += 1,
+            GenericProperty::GenericCorrelationData(_) => count_correlation_data += 1,
+            GenericProperty::GenericUserProperty(_) => {}
             _ => return Err(MqttError::ProtocolError),
         }
     }
