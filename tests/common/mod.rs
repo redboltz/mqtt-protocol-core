@@ -19,7 +19,12 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
+
+// Generate default type aliases for all tests
 mqtt_protocol_core::make_default_aliases!();
+
+// Re-export the mqtt module for use in tests
+pub use mqtt;
 
 #[cfg(feature = "std")]
 use std::sync::Once;
