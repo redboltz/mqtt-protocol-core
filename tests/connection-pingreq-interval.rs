@@ -23,7 +23,7 @@
 // Tests for set_pingreq_send_interval functionality
 
 mod common;
-use common::mqtt;
+use common::{mqtt, mqtt_pid32};
 use mqtt::connection::{Event, TimerKind};
 
 #[test]
@@ -94,7 +94,7 @@ fn test_set_pingreq_send_interval_update() {
 fn test_set_pingreq_send_interval_server_role() {
     common::init_tracing();
     let mut connection =
-        mqtt_pid32::connection::Connection<mqtt_pid32::role::Server>::new(mqtt::Version::V3_1_1);
+        mqtt_pid32::connection::Connection<mqtt::role::Server>::new(mqtt::Version::V3_1_1);
 
     // Test with server role and u32 packet ID type
     let events = connection.set_pingreq_send_interval(45000);

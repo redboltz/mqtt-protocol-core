@@ -1,5 +1,5 @@
 mod common;
-use common::mqtt;
+use common::{mqtt, mqtt_pid32};
 use mqtt::packet::Qos;
 
 #[test]
@@ -54,8 +54,8 @@ fn test_custom_publish_types() {
 #[test]
 fn test_generic_publish_u32_default_buffers() {
     // Custom packet ID type with default buffer sizes
-    let u32_publish: mqtt::packet::v3_1_1::GenericPublish<u32> =
-        mqtt::packet::v3_1_1::GenericPublish::builder()
+    let u32_publish: mqtt_pid32::packet::v3_1_1::Publish =
+        mqtt_pid32::packet::v3_1_1::Publish::builder()
             .topic_name("cluster/data")
             .unwrap()
             .qos(Qos::AtLeastOnce)

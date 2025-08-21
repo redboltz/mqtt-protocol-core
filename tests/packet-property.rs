@@ -27,7 +27,7 @@ use mqtt_protocol_core::mqtt::prelude::*;
 #[test]
 fn test_all_properties() {
     common::init_tracing();
-    let test_cases: Vec<(mqtt::packet::PropertyId, mqtt::packet::GenericProperty)> = vec![
+    let test_cases: Vec<(mqtt::packet::PropertyId, mqtt::packet::Property)> = vec![
         (
             mqtt::packet::PropertyId::PayloadFormatIndicator,
             mqtt::packet::Property::PayloadFormatIndicator(

@@ -812,7 +812,7 @@ fn convert_to_generic_packet_v3_1_1_publish() {
         .unwrap();
 
     let store_packet: mqtt::packet::StorePacket = publish.try_into().unwrap();
-    let generic_packet: mqtt::packet::GenericPacket<u16> = store_packet.into();
+    let generic_packet: mqtt::packet::Packet = store_packet.into();
 
     match generic_packet {
         mqtt::packet::GenericPacket::V3_1_1Publish(p) => {
@@ -831,7 +831,7 @@ fn convert_to_generic_packet_v3_1_1_pubrel() {
         .unwrap();
 
     let store_packet: mqtt::packet::StorePacket = pubrel.try_into().unwrap();
-    let generic_packet: mqtt::packet::GenericPacket<u16> = store_packet.into();
+    let generic_packet: mqtt::packet::Packet = store_packet.into();
 
     match generic_packet {
         mqtt::packet::GenericPacket::V3_1_1Pubrel(p) => {
@@ -854,7 +854,7 @@ fn convert_to_generic_packet_v5_0_publish() {
         .unwrap();
 
     let store_packet: mqtt::packet::StorePacket = publish.try_into().unwrap();
-    let generic_packet: mqtt::packet::GenericPacket<u16> = store_packet.into();
+    let generic_packet: mqtt::packet::Packet = store_packet.into();
 
     match generic_packet {
         mqtt::packet::GenericPacket::V5_0Publish(p) => {
@@ -874,7 +874,7 @@ fn convert_to_generic_packet_v5_0_pubrel() {
         .unwrap();
 
     let store_packet: mqtt::packet::StorePacket = pubrel.try_into().unwrap();
-    let generic_packet: mqtt::packet::GenericPacket<u16> = store_packet.into();
+    let generic_packet: mqtt::packet::Packet = store_packet.into();
 
     match generic_packet {
         mqtt::packet::GenericPacket::V5_0Pubrel(p) => {

@@ -20,7 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 mod common;
-use common::mqtt;
+use common::{mqtt, mqtt_pid32};
 
 #[test]
 fn test_timer_kind_values() {
@@ -404,7 +404,7 @@ fn test_generic_event_with_u32() {
     common::init_tracing();
     use mqtt_pid32::connection::Event;
 
-    let event: GenericEvent<u32> = Event::NotifyPacketIdReleased(0x12345678);
+    let event: Event = Event::NotifyPacketIdReleased(0x12345678);
 
     match event {
         Event::NotifyPacketIdReleased(packet_id) => {
@@ -419,7 +419,7 @@ fn test_generic_event_serialize_with_u32() {
     common::init_tracing();
     use mqtt_pid32::connection::Event;
 
-    let event: GenericEvent<u32> = Event::NotifyPacketIdReleased(0x87654321);
+    let event: Event = Event::NotifyPacketIdReleased(0x87654321);
 
     let json = serde_json::to_string(&event).unwrap();
     assert!(json.contains("\"type\":\"notify_packet_id_released\""));
