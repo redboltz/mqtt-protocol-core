@@ -41,7 +41,9 @@ use crate::mqtt_internal::packet::IsPacketId;
 #[cfg(feature = "std")]
 use crate::mqtt_internal::packet::PropertiesToBuffers;
 use crate::mqtt_internal::packet::SubEntry;
-use crate::mqtt_internal::packet::{GenericProperties, GenericProperty, PropertiesParse, PropertiesSize};
+use crate::mqtt_internal::packet::{
+    GenericProperties, GenericProperty, PropertiesParse, PropertiesSize,
+};
 use crate::mqtt_internal::result_code::MqttError;
 
 /// MQTT 5.0 SUBSCRIBE packet representation

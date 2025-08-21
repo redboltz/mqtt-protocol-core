@@ -40,7 +40,9 @@ use crate::mqtt_internal::packet::GenericPacketTrait;
 use crate::mqtt_internal::packet::IsPacketId;
 #[cfg(feature = "std")]
 use crate::mqtt_internal::packet::PropertiesToBuffers;
-use crate::mqtt_internal::packet::{GenericProperties, GenericProperty, PropertiesParse, PropertiesSize};
+use crate::mqtt_internal::packet::{
+    GenericProperties, GenericProperty, PropertiesParse, PropertiesSize,
+};
 use crate::mqtt_internal::result_code::MqttError;
 use crate::mqtt_internal::result_code::PubcompReasonCode;
 

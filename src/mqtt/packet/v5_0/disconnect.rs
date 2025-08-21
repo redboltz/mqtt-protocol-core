@@ -38,7 +38,9 @@ use crate::mqtt_internal::packet::GenericPacketDisplay;
 use crate::mqtt_internal::packet::GenericPacketTrait;
 #[cfg(feature = "std")]
 use crate::mqtt_internal::packet::PropertiesToBuffers;
-use crate::mqtt_internal::packet::{GenericProperties, GenericProperty, PropertiesParse, PropertiesSize};
+use crate::mqtt_internal::packet::{
+    GenericProperties, GenericProperty, PropertiesParse, PropertiesSize,
+};
 use crate::mqtt_internal::result_code::DisconnectReasonCode;
 use crate::mqtt_internal::result_code::MqttError;
 

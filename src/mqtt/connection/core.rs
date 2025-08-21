@@ -25,11 +25,11 @@ use alloc::{
 };
 use core::marker::PhantomData;
 
+use super::event::{GenericEvent, TimerKind};
+use super::GenericStore;
 use crate::mqtt_internal::common::tracing::{error, info, trace, warn};
 use crate::mqtt_internal::common::Cursor;
 use crate::mqtt_internal::common::HashSet;
-use super::event::{GenericEvent, TimerKind};
-use super::GenericStore;
 
 use serde::Serialize;
 
@@ -42,9 +42,7 @@ enum ConnectionStatus {
     #[serde(rename = "connected")]
     Connected,
 }
-use super::packet_builder::{
-    PacketBuildResult, PacketBuilder, PacketData, RawPacket,
-};
+use super::packet_builder::{PacketBuildResult, PacketBuilder, PacketData, RawPacket};
 use super::packet_id_manager::PacketIdManager;
 use super::role;
 use super::role::RoleType;

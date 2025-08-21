@@ -43,7 +43,9 @@ use crate::mqtt_internal::packet::qos::Qos;
 use crate::mqtt_internal::packet::variable_byte_integer::VariableByteInteger;
 #[cfg(feature = "std")]
 use crate::mqtt_internal::packet::PropertiesToBuffers;
-use crate::mqtt_internal::packet::{GenericProperties, GenericProperty, PropertiesParse, PropertiesSize};
+use crate::mqtt_internal::packet::{
+    GenericProperties, GenericProperty, PropertiesParse, PropertiesSize,
+};
 use crate::mqtt_internal::result_code::MqttError;
 
 /// MQTT 5.0 CONNECT packet representation
