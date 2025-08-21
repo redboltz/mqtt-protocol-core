@@ -31,8 +31,8 @@ impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableR
     for v5_0::GenericConnect<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
 {
 }
-impl<const STRING_BUFFER_SIZE: usize> SendableRole<Client>
-    for v3_1_1::GenericConnect<STRING_BUFFER_SIZE>
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableRole<Client>
+    for v3_1_1::GenericConnect<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
 {
 }
 
@@ -50,8 +50,8 @@ impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableR
     for v5_0::GenericConnack<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
 {
 }
-impl<const STRING_BUFFER_SIZE: usize> SendableRole<Any>
-    for v3_1_1::GenericConnect<STRING_BUFFER_SIZE>
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableRole<Any>
+    for v3_1_1::GenericConnect<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
 {
 }
 impl SendableRole<Any> for v3_1_1::Connack {}
@@ -101,7 +101,7 @@ impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableR
 
 // Generic packet implementations for roles
 // Client sendable generic packets
-impl<PacketIdType> SendableRole<Client> for v3_1_1::GenericPublish<PacketIdType> where
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const PAYLOAD_BUFFER_SIZE: usize> SendableRole<Client> for v3_1_1::GenericPublish<PacketIdType, STRING_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE> where
     PacketIdType: crate::mqtt::packet::IsPacketId
 {
 }
@@ -121,11 +121,11 @@ impl<PacketIdType> SendableRole<Client> for v3_1_1::GenericPubcomp<PacketIdType>
     PacketIdType: crate::mqtt::packet::IsPacketId
 {
 }
-impl<PacketIdType> SendableRole<Client> for v3_1_1::GenericSubscribe<PacketIdType> where
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize> SendableRole<Client> for v3_1_1::GenericSubscribe<PacketIdType, STRING_BUFFER_SIZE> where
     PacketIdType: crate::mqtt::packet::IsPacketId
 {
 }
-impl<PacketIdType> SendableRole<Client> for v3_1_1::GenericUnsubscribe<PacketIdType> where
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize> SendableRole<Client> for v3_1_1::GenericUnsubscribe<PacketIdType, STRING_BUFFER_SIZE> where
     PacketIdType: crate::mqtt::packet::IsPacketId
 {
 }

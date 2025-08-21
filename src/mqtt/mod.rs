@@ -29,7 +29,8 @@ pub mod prelude;
 
 pub mod connection;
 pub use connection::role;
-pub use connection::Connection;
+// TODO: Re-enable when Connection alias is restored or use macro-generated types
+// pub use connection::Connection;
 pub use connection::GenericConnection;
 pub use connection::SendBehavior;
 pub use connection::Version;

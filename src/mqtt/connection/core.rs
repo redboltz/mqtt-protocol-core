@@ -217,7 +217,8 @@ pub struct GenericConnection<
 /// # Type Parameters
 ///
 /// * `Role` - The connection role (typically `role::Client` or `role::Server`)
-pub type Connection<Role> = GenericConnection<Role, u16>;
+// TODO: Remove this alias in favor of macro-generated types
+// pub type Connection<Role> = GenericConnection<Role, u16>;
 
 impl<
         Role,

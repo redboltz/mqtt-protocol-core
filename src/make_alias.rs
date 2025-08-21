@@ -92,7 +92,7 @@ macro_rules! make_type_size_aliases {
                 pub mod v3_1_1 {
                     // Generic* → * aliases only
                     pub type Connect =
-                        $crate::mqtt_internal::packet::v3_1_1::GenericConnect<$string_buffer_size>;
+                        $crate::mqtt_internal::packet::v3_1_1::GenericConnect<$string_buffer_size, $binary_buffer_size>;
                     pub type Publish = $crate::mqtt_internal::packet::v3_1_1::GenericPublish<
                         $packet_id_type,
                         $string_buffer_size,
