@@ -26,6 +26,11 @@
 //! with customizable buffer sizes. This allows library users to easily create packet types
 //! with different buffer sizes without having to specify all the generic parameters manually.
 
+// Allow unused type aliases since not all generated aliases may be used in every context
+#![allow(dead_code)]
+// Allow unused imports since not all imports may be used in every generated module
+#![allow(unused_imports)]
+
 /// Generate type aliases for all MQTT packet types with custom buffer sizes and packet ID type
 ///
 /// This macro creates type aliases for all Generic* structs in both v3.1.1 and v5.0 MQTT versions,
@@ -121,6 +126,7 @@ macro_rules! make_type_size_aliases {
                         $crate::mqtt_internal::packet::v3_1_1::GenericUnsuback<$packet_id_type>;
 
                     // Re-export everything else from mqtt_internal
+                    #[allow(unused_imports)]
                     pub use $crate::mqtt_internal::packet::v3_1_1::*;
                 }
 
@@ -190,6 +196,7 @@ macro_rules! make_type_size_aliases {
                     >;
 
                     // Re-export everything else from mqtt_internal
+                    #[allow(unused_imports)]
                     pub use $crate::mqtt_internal::packet::v5_0::*;
                 }
 
@@ -244,6 +251,7 @@ macro_rules! make_type_size_aliases {
                     $crate::mqtt_internal::packet::GenericUserProperty<$string_buffer_size>;
 
                 // Re-export everything else from mqtt_internal
+                #[allow(unused_imports)]
                 pub use $crate::mqtt_internal::packet::*;
             }
 
@@ -272,6 +280,7 @@ macro_rules! make_type_size_aliases {
                 >;
 
                 // Re-export everything else from mqtt_internal
+                #[allow(unused_imports)]
                 pub use $crate::mqtt_internal::connection::*;
             }
 
@@ -281,6 +290,7 @@ macro_rules! make_type_size_aliases {
                     $crate::mqtt_internal::common::GenericArcPayload<$payload_buffer_size>;
 
                 // Re-export everything else from mqtt_internal
+                #[allow(unused_imports)]
                 pub use $crate::mqtt_internal::common::*;
             }
 
@@ -301,13 +311,17 @@ macro_rules! make_type_size_aliases {
             >;
 
             // Re-export everything else from mqtt_internal at the top level
+            #[allow(unused_imports)]
             pub use $crate::mqtt_internal::*;
             // Ensure trait is available for packet operations
+            #[allow(unused_imports)]
             pub use $crate::mqtt_internal::packet::GenericPacketTrait;
 
             // Re-export prelude for convenience
             pub mod prelude {
+                #[allow(unused_imports)]
                 pub use $crate::mqtt_internal::connection::prelude::*;
+                #[allow(unused_imports)]
                 pub use $crate::mqtt_internal::packet::prelude::*;
             }
         }

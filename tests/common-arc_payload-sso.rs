@@ -17,32 +17,32 @@ fn test_small_payload_uses_stack() {
 
 #[test]
 fn test_large_payload_uses_heap() {
-    let large_data = "x".repeat(100); // 100 bytes > 32 bytes
+    let large_data = "x".repeat(200); // 200 bytes > 128 bytes
     let payload = mqtt::common::ArcPayload::from(large_data.as_bytes());
 
     assert_eq!(payload.as_slice(), large_data.as_bytes());
-    assert_eq!(payload.len(), 100);
+    assert_eq!(payload.len(), 200);
     assert!(!payload.is_empty());
     assert!(payload.arc_data().is_some()); // Large payload, has Arc
 }
 
 #[test]
-fn test_boundary_exactly_32_bytes() {
-    let boundary_data = "a".repeat(32); // exactly 32 bytes
+fn test_boundary_exactly_128_bytes() {
+    let boundary_data = "a".repeat(128); // exactly 128 bytes
     let payload = mqtt::common::ArcPayload::from(boundary_data.as_bytes());
 
     assert_eq!(payload.as_slice(), boundary_data.as_bytes());
-    assert_eq!(payload.len(), 32);
+    assert_eq!(payload.len(), 128);
     assert!(payload.arc_data().is_none()); // Should use stack at boundary
 }
 
 #[test]
-fn test_boundary_33_bytes() {
-    let boundary_data = "a".repeat(33); // 33 bytes > 32 bytes
+fn test_boundary_129_bytes() {
+    let boundary_data = "a".repeat(129); // 129 bytes > 128 bytes
     let payload = mqtt::common::ArcPayload::from(boundary_data.as_bytes());
 
     assert_eq!(payload.as_slice(), boundary_data.as_bytes());
-    assert_eq!(payload.len(), 33);
+    assert_eq!(payload.len(), 129);
     assert!(payload.arc_data().is_some()); // Should use heap over boundary
 }
 
