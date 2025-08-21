@@ -91,19 +91,17 @@ macro_rules! make_type_size_aliases {
             pub mod packet {
                 pub mod v3_1_1 {
                     // Generic* → * aliases only
-                    pub type Connect = $crate::mqtt_internal::packet::v3_1_1::GenericConnect<
-                        $string_buffer_size,
-                    >;
+                    pub type Connect =
+                        $crate::mqtt_internal::packet::v3_1_1::GenericConnect<$string_buffer_size>;
                     pub type Publish = $crate::mqtt_internal::packet::v3_1_1::GenericPublish<
                         $packet_id_type,
                         $string_buffer_size,
                         $payload_buffer_size,
                     >;
-                    pub type Subscribe =
-                        $crate::mqtt_internal::packet::v3_1_1::GenericSubscribe<
-                            $packet_id_type,
-                            $string_buffer_size,
-                        >;
+                    pub type Subscribe = $crate::mqtt_internal::packet::v3_1_1::GenericSubscribe<
+                        $packet_id_type,
+                        $string_buffer_size,
+                    >;
                     pub type Unsubscribe =
                         $crate::mqtt_internal::packet::v3_1_1::GenericUnsubscribe<
                             $packet_id_type,
@@ -140,11 +138,10 @@ macro_rules! make_type_size_aliases {
                         $string_buffer_size,
                         $binary_buffer_size,
                     >;
-                    pub type Disconnect =
-                        $crate::mqtt_internal::packet::v5_0::GenericDisconnect<
-                            $string_buffer_size,
-                            $binary_buffer_size,
-                        >;
+                    pub type Disconnect = $crate::mqtt_internal::packet::v5_0::GenericDisconnect<
+                        $string_buffer_size,
+                        $binary_buffer_size,
+                    >;
                     pub type Puback = $crate::mqtt_internal::packet::v5_0::GenericPuback<
                         $packet_id_type,
                         $string_buffer_size,
@@ -186,12 +183,11 @@ macro_rules! make_type_size_aliases {
                         $string_buffer_size,
                         $binary_buffer_size,
                     >;
-                    pub type Unsubscribe =
-                        $crate::mqtt_internal::packet::v5_0::GenericUnsubscribe<
-                            $packet_id_type,
-                            $string_buffer_size,
-                            $binary_buffer_size,
-                        >;
+                    pub type Unsubscribe = $crate::mqtt_internal::packet::v5_0::GenericUnsubscribe<
+                        $packet_id_type,
+                        $string_buffer_size,
+                        $binary_buffer_size,
+                    >;
 
                     // Re-export everything else from mqtt_internal
                     pub use $crate::mqtt_internal::packet::v5_0::*;
@@ -235,17 +231,11 @@ macro_rules! make_type_size_aliases {
                         $string_buffer_size,
                     >;
                 pub type AuthenticationMethod =
-                    $crate::mqtt_internal::packet::GenericAuthenticationMethod<
-                        $string_buffer_size,
-                    >;
+                    $crate::mqtt_internal::packet::GenericAuthenticationMethod<$string_buffer_size>;
                 pub type AuthenticationData =
-                    $crate::mqtt_internal::packet::GenericAuthenticationData<
-                        $binary_buffer_size,
-                    >;
+                    $crate::mqtt_internal::packet::GenericAuthenticationData<$binary_buffer_size>;
                 pub type ResponseInformation =
-                    $crate::mqtt_internal::packet::GenericResponseInformation<
-                        $string_buffer_size,
-                    >;
+                    $crate::mqtt_internal::packet::GenericResponseInformation<$string_buffer_size>;
                 pub type ServerReference =
                     $crate::mqtt_internal::packet::GenericServerReference<$string_buffer_size>;
                 pub type ReasonString =
@@ -336,7 +326,13 @@ macro_rules! make_type_size_aliases {
 #[macro_export]
 macro_rules! make_size_aliases {
     ($mod_name:ident, $string_buffer_size:expr, $binary_buffer_size:expr, $payload_buffer_size:expr) => {
-        $crate::make_type_size_aliases!($mod_name, u16, $string_buffer_size, $binary_buffer_size, $payload_buffer_size);
+        $crate::make_type_size_aliases!(
+            $mod_name,
+            u16,
+            $string_buffer_size,
+            $binary_buffer_size,
+            $payload_buffer_size
+        );
     };
 }
 
