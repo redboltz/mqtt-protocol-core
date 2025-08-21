@@ -30,8 +30,8 @@ pub trait SendableVersion {
 
 // ---- Implementation for concrete packet types ----
 
-impl<const STRING_BUFFER_SIZE: usize> SendableVersion
-    for v3_1_1::GenericConnect<STRING_BUFFER_SIZE>
+impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableVersion
+    for v3_1_1::GenericConnect<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
 {
     fn check(version: &Version) -> bool {
         *version == Version::V3_1_1
@@ -112,7 +112,7 @@ impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableV
 
 // Generic packet implementations for versions
 // v3.1.1 Generic packet implementations
-impl<PacketIdType> SendableVersion for v3_1_1::GenericPublish<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const PAYLOAD_BUFFER_SIZE: usize> SendableVersion for v3_1_1::GenericPublish<PacketIdType, STRING_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>
 where
     PacketIdType: crate::mqtt::packet::IsPacketId,
 {
@@ -157,7 +157,7 @@ where
     }
 }
 
-impl<PacketIdType> SendableVersion for v3_1_1::GenericSubscribe<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize> SendableVersion for v3_1_1::GenericSubscribe<PacketIdType, STRING_BUFFER_SIZE>
 where
     PacketIdType: crate::mqtt::packet::IsPacketId,
 {
@@ -175,7 +175,7 @@ where
     }
 }
 
-impl<PacketIdType> SendableVersion for v3_1_1::GenericUnsubscribe<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize> SendableVersion for v3_1_1::GenericUnsubscribe<PacketIdType, STRING_BUFFER_SIZE>
 where
     PacketIdType: crate::mqtt::packet::IsPacketId,
 {
@@ -194,7 +194,7 @@ where
 }
 
 // v5.0 Generic packet implementations
-impl<PacketIdType> SendableVersion for v5_0::GenericPublish<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize, const PAYLOAD_BUFFER_SIZE: usize> SendableVersion for v5_0::GenericPublish<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>
 where
     PacketIdType: crate::mqtt::packet::IsPacketId,
 {
@@ -203,7 +203,7 @@ where
     }
 }
 
-impl<PacketIdType> SendableVersion for v5_0::GenericPuback<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableVersion for v5_0::GenericPuback<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
 where
     PacketIdType: crate::mqtt::packet::IsPacketId,
 {
@@ -212,7 +212,7 @@ where
     }
 }
 
-impl<PacketIdType> SendableVersion for v5_0::GenericPubrec<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableVersion for v5_0::GenericPubrec<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
 where
     PacketIdType: crate::mqtt::packet::IsPacketId,
 {
@@ -221,7 +221,7 @@ where
     }
 }
 
-impl<PacketIdType> SendableVersion for v5_0::GenericPubrel<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableVersion for v5_0::GenericPubrel<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
 where
     PacketIdType: crate::mqtt::packet::IsPacketId,
 {
@@ -230,7 +230,7 @@ where
     }
 }
 
-impl<PacketIdType> SendableVersion for v5_0::GenericPubcomp<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableVersion for v5_0::GenericPubcomp<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
 where
     PacketIdType: crate::mqtt::packet::IsPacketId,
 {
@@ -239,7 +239,7 @@ where
     }
 }
 
-impl<PacketIdType> SendableVersion for v5_0::GenericSubscribe<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableVersion for v5_0::GenericSubscribe<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
 where
     PacketIdType: crate::mqtt::packet::IsPacketId,
 {
@@ -248,7 +248,7 @@ where
     }
 }
 
-impl<PacketIdType> SendableVersion for v5_0::GenericSuback<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableVersion for v5_0::GenericSuback<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
 where
     PacketIdType: crate::mqtt::packet::IsPacketId,
 {
@@ -257,7 +257,7 @@ where
     }
 }
 
-impl<PacketIdType> SendableVersion for v5_0::GenericUnsubscribe<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableVersion for v5_0::GenericUnsubscribe<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
 where
     PacketIdType: crate::mqtt::packet::IsPacketId,
 {
@@ -266,7 +266,7 @@ where
     }
 }
 
-impl<PacketIdType> SendableVersion for v5_0::GenericUnsuback<PacketIdType>
+impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableVersion for v5_0::GenericUnsuback<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>
 where
     PacketIdType: crate::mqtt::packet::IsPacketId,
 {

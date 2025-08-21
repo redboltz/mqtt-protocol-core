@@ -25,9 +25,6 @@ use serde::{Serialize, Serializer};
 #[cfg(feature = "std")]
 use std::io::IoSlice;
 
-// Default stack buffer size for small string optimization
-const DEFAULT_STACK_BUFFER_SIZE: usize = 32;
-
 /// MQTT String representation with Small String Optimization (SSO)
 ///
 /// This struct represents UTF-8 strings as specified in the MQTT protocol specification.
