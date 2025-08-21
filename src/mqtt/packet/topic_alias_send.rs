@@ -20,15 +20,15 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-use crate::mqtt::common::tracing::trace;
-use crate::mqtt::common::HashMap;
+use crate::mqtt::mqtt_internal::common::tracing::trace;
+use crate::mqtt::mqtt_internal::common::HashMap;
 use alloc::{
     string::{String, ToString},
     vec::Vec,
 };
 use indexmap::IndexMap;
 
-use crate::mqtt::ValueAllocator;
+use crate::mqtt::mqtt_internal::ValueAllocator;
 
 /// Type alias for topic alias values
 pub type TopicAliasType = u16;

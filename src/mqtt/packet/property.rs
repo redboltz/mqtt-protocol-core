@@ -20,12 +20,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-use crate::mqtt::packet::escape_binary_json_string;
-use crate::mqtt::packet::mqtt_binary::GenericMqttBinary;
-use crate::mqtt::packet::mqtt_string::GenericMqttString;
-use crate::mqtt::packet::DecodeResult;
-use crate::mqtt::packet::VariableByteInteger;
-use crate::mqtt::result_code::MqttError;
+use super::escape_binary_json_string;
+use super::mqtt_binary::GenericMqttBinary;
+use super::mqtt_string::GenericMqttString;
+use super::DecodeResult;
+use super::VariableByteInteger;
+use crate::mqtt::mqtt_internal::result_code::MqttError;
 use alloc::{string::String, vec::Vec};
 use core::convert::TryFrom;
 use core::fmt;

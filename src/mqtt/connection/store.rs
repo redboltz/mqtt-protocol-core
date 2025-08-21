@@ -20,11 +20,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-use crate::mqtt::common::tracing::trace;
-use crate::mqtt::packet::GenericStorePacket;
-use crate::mqtt::packet::IsPacketId;
-use crate::mqtt::packet::ResponsePacket;
-use crate::mqtt::result_code::MqttError;
+use crate::mqtt::mqtt_internal::common::tracing::trace;
+use crate::mqtt::mqtt_internal::packet::GenericStorePacket;
+use crate::mqtt::mqtt_internal::packet::IsPacketId;
+use crate::mqtt::mqtt_internal::packet::ResponsePacket;
+use crate::mqtt::mqtt_internal::result_code::MqttError;
 use alloc::vec::Vec;
 use indexmap::IndexMap;
 

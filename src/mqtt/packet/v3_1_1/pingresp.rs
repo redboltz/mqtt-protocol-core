@@ -29,11 +29,11 @@ use std::io::IoSlice;
 use serde::ser::{SerializeStruct, Serializer};
 use serde::Serialize;
 
-use crate::mqtt::packet::packet_type::{FixedHeader, PacketType};
-use crate::mqtt::packet::variable_byte_integer::VariableByteInteger;
-use crate::mqtt::packet::GenericPacketDisplay;
-use crate::mqtt::packet::GenericPacketTrait;
-use crate::mqtt::result_code::MqttError;
+use crate::mqtt::mqtt_internal::packet::packet_type::{FixedHeader, PacketType};
+use crate::mqtt::mqtt_internal::packet::variable_byte_integer::VariableByteInteger;
+use crate::mqtt::mqtt_internal::packet::GenericPacketDisplay;
+use crate::mqtt::mqtt_internal::packet::GenericPacketTrait;
+use crate::mqtt::mqtt_internal::result_code::MqttError;
 
 /// MQTT v3.1.1 PINGRESP packet representation
 ///

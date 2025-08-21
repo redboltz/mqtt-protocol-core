@@ -25,11 +25,11 @@ use alloc::{
 };
 use core::marker::PhantomData;
 
-use crate::mqtt::common::tracing::{error, info, trace, warn};
-use crate::mqtt::common::Cursor;
-use crate::mqtt::common::HashSet;
-use crate::mqtt::connection::event::{GenericEvent, TimerKind};
-use crate::mqtt::connection::GenericStore;
+use crate::mqtt_internal::common::tracing::{error, info, trace, warn};
+use crate::mqtt_internal::common::Cursor;
+use crate::mqtt_internal::common::HashSet;
+use super::event::{GenericEvent, TimerKind};
+use super::GenericStore;
 
 use serde::Serialize;
 
@@ -42,24 +42,24 @@ enum ConnectionStatus {
     #[serde(rename = "connected")]
     Connected,
 }
-use crate::mqtt::connection::packet_builder::{
+use super::packet_builder::{
     PacketBuildResult, PacketBuilder, PacketData, RawPacket,
 };
-use crate::mqtt::connection::packet_id_manager::PacketIdManager;
-use crate::mqtt::connection::role;
-use crate::mqtt::connection::role::RoleType;
-use crate::mqtt::connection::sendable::Sendable;
-use crate::mqtt::connection::version::*;
-use crate::mqtt::packet::v3_1_1;
-use crate::mqtt::packet::v5_0;
-use crate::mqtt::packet::GenericPacket;
-use crate::mqtt::packet::GenericStorePacket;
-use crate::mqtt::packet::IsPacketId;
-use crate::mqtt::packet::Qos;
-use crate::mqtt::packet::ResponsePacket;
-use crate::mqtt::packet::{GenericProperty, TopicAliasRecv, TopicAliasSend};
-use crate::mqtt::prelude::GenericPacketTrait;
-use crate::mqtt::result_code::{
+use super::packet_id_manager::PacketIdManager;
+use super::role;
+use super::role::RoleType;
+use super::sendable::Sendable;
+use super::version::*;
+use crate::mqtt_internal::packet::v3_1_1;
+use crate::mqtt_internal::packet::v5_0;
+use crate::mqtt_internal::packet::GenericPacket;
+use crate::mqtt_internal::packet::GenericStorePacket;
+use crate::mqtt_internal::packet::IsPacketId;
+use crate::mqtt_internal::packet::Qos;
+use crate::mqtt_internal::packet::ResponsePacket;
+use crate::mqtt_internal::packet::{GenericProperty, TopicAliasRecv, TopicAliasSend};
+use crate::mqtt_internal::prelude::GenericPacketTrait;
+use crate::mqtt_internal::result_code::{
     ConnectReasonCode, ConnectReturnCode, DisconnectReasonCode, MqttError, PubrecReasonCode,
 };
 
@@ -5400,9 +5400,9 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::mqtt::connection::version::Version;
-    use crate::mqtt::packet::TopicAliasSend;
-    use crate::mqtt::role;
+    use crate::mqtt::mqtt_internal::connection::version::Version;
+    use crate::mqtt::mqtt_internal::packet::TopicAliasSend;
+    use crate::mqtt::mqtt_internal::role;
 
     #[test]
     fn test_initialize_client_mode() {

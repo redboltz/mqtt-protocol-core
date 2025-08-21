@@ -24,9 +24,9 @@ use core::fmt;
 use serde::ser::{SerializeStruct, Serializer};
 use serde::Serialize;
 
-use crate::mqtt::packet::GenericPacket;
-use crate::mqtt::packet::IsPacketId;
-use crate::mqtt::result_code::MqttError;
+use crate::mqtt::mqtt_internal::packet::GenericPacket;
+use crate::mqtt::mqtt_internal::packet::IsPacketId;
+use crate::mqtt::mqtt_internal::result_code::MqttError;
 
 /// Represents different types of MQTT timers
 ///

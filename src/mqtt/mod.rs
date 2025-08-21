@@ -38,11 +38,3 @@ pub mod common;
 pub use common::{IntoPayload, ValueAllocator};
 
 pub mod result_code;
-
-pub mod make_alias;
-pub use make_alias::{make_size_aliases, make_type_size_aliases};
-
-// Re-export everything as mqtt_internal for external access
-pub mod mqtt_internal {
-    pub use super::*;
-}

@@ -32,13 +32,13 @@ use serde::Serialize;
 
 use getset::{CopyGetters, Getters};
 
-use crate::mqtt::packet::packet_type::{FixedHeader, PacketType};
-use crate::mqtt::packet::variable_byte_integer::VariableByteInteger;
-use crate::mqtt::packet::GenericPacketDisplay;
-use crate::mqtt::packet::GenericPacketTrait;
-use crate::mqtt::packet::IsPacketId;
-use crate::mqtt::result_code::MqttError;
-use crate::mqtt::result_code::PubackReasonCode;
+use crate::mqtt::mqtt_internal::packet::packet_type::{FixedHeader, PacketType};
+use crate::mqtt::mqtt_internal::packet::variable_byte_integer::VariableByteInteger;
+use crate::mqtt::mqtt_internal::packet::GenericPacketDisplay;
+use crate::mqtt::mqtt_internal::packet::GenericPacketTrait;
+use crate::mqtt::mqtt_internal::packet::IsPacketId;
+use crate::mqtt::mqtt_internal::result_code::MqttError;
+use crate::mqtt::mqtt_internal::result_code::PubackReasonCode;
 
 /// A PUBACK packet for MQTT v3.1.1 protocol.
 ///

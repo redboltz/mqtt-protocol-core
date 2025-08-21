@@ -19,13 +19,13 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-use crate::mqtt::packet::enum_packet::{GenericPacket, GenericPacketDisplay, GenericPacketTrait};
-use crate::mqtt::packet::qos::Qos;
-use crate::mqtt::packet::v3_1_1;
-use crate::mqtt::packet::v5_0;
-use crate::mqtt::packet::IsPacketId;
-use crate::mqtt::packet::PacketType;
-use crate::mqtt::result_code::MqttError;
+use super::enum_packet::{GenericPacket, GenericPacketDisplay, GenericPacketTrait};
+use super::qos::Qos;
+use super::v3_1_1;
+use super::v5_0;
+use super::IsPacketId;
+use super::PacketType;
+use crate::mqtt::mqtt_internal::result_code::MqttError;
 use alloc::vec::Vec;
 use serde::Serialize;
 #[cfg(feature = "std")]

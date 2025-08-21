@@ -19,7 +19,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-use crate::mqtt::result_code::MqttError;
+use crate::mqtt::mqtt_internal::result_code::MqttError;
 use alloc::{vec, vec::Vec};
 use core::convert::TryFrom;
 use serde::{Serialize, Serializer};

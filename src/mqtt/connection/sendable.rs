@@ -20,17 +20,17 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-use crate::mqtt::common::tracing::trace;
-use crate::mqtt::connection::role;
-use crate::mqtt::connection::role::RoleType;
-use crate::mqtt::connection::sendable_role::SendableRole;
-use crate::mqtt::connection::sendable_version::SendableVersion;
-use crate::mqtt::connection::GenericConnection;
-use crate::mqtt::connection::GenericEvent;
-use crate::mqtt::packet::kind::PacketKind;
-use crate::mqtt::packet::GenericPacket;
-use crate::mqtt::packet::IsPacketId;
-use crate::mqtt::result_code::MqttError;
+use crate::mqtt::mqtt_internal::common::tracing::trace;
+use super::role;
+use super::role::RoleType;
+use super::sendable_role::SendableRole;
+use super::sendable_version::SendableVersion;
+use super::GenericConnection;
+use super::GenericEvent;
+use crate::mqtt::mqtt_internal::packet::kind::PacketKind;
+use crate::mqtt::mqtt_internal::packet::GenericPacket;
+use crate::mqtt::mqtt_internal::packet::IsPacketId;
+use crate::mqtt::mqtt_internal::result_code::MqttError;
 use alloc::vec::Vec;
 use core::fmt::Debug;
 

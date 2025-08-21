@@ -19,8 +19,8 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-use crate::mqtt::connection::role::*;
-use crate::mqtt::packet::*;
+use crate::mqtt::mqtt_internal::connection::role::*;
+use crate::mqtt::mqtt_internal::packet::*;
 
 /// Role-specific trait to validate that a packet can be sent under a given Role.
 pub trait SendableRole<Role> {}

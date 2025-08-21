@@ -19,5 +19,5 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-pub use crate::mqtt::connection::prelude::*;
-pub use crate::mqtt::packet::prelude::*;
+pub use crate::mqtt::mqtt_internal::connection::prelude::*;
+pub use crate::mqtt::mqtt_internal::packet::prelude::*;

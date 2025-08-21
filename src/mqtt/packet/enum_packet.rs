@@ -19,11 +19,11 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-use crate::mqtt::packet::v3_1_1;
-use crate::mqtt::packet::v5_0;
-use crate::mqtt::packet::IsPacketId;
-use crate::mqtt::packet::PacketType;
-use crate::mqtt::Version;
+use crate::mqtt::mqtt_internal::packet::v3_1_1;
+use crate::mqtt::mqtt_internal::packet::v5_0;
+use crate::mqtt::mqtt_internal::packet::IsPacketId;
+use crate::mqtt::mqtt_internal::packet::PacketType;
+use crate::mqtt::mqtt_internal::Version;
 use alloc::vec::Vec;
 use enum_dispatch::enum_dispatch;
 use serde::Serialize;

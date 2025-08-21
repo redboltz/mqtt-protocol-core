@@ -20,10 +20,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-use crate::mqtt::packet::GenericMqttString;
-use crate::mqtt::packet::Qos;
-use crate::mqtt::packet::RetainHandling;
-use crate::mqtt::result_code::MqttError;
+use super::GenericMqttString;
+use super::Qos;
+use super::RetainHandling;
+use crate::mqtt::mqtt_internal::result_code::MqttError;
 use alloc::string::ToString;
 use alloc::{string::String, vec::Vec};
 use core::fmt;
@@ -174,7 +174,7 @@ impl SubOpts {
     ///
     /// The QoS level as a `Qos` enum value:
     /// - `Qos::AtMostOnce` for value 0
-    /// - `Qos::AtLeastOnce` for value 1  
+    /// - `Qos::AtLeastOnce` for value 1
     /// - `Qos::ExactlyOnce` for value 2
     ///
     /// # Examples
