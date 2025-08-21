@@ -237,72 +237,72 @@ fn verify_sendable_constraints() {
     // ===== PUBLISH-RELATED PACKET CONSTRAINTS =====
 
     // ===== PUBLISH packets =====
-    // MQTT v3.1.1 GenericPublish
+    // MQTT v3.1.1 Publish
     // OK Client can send
     assert_impl_all!(
-        mqtt::packet::v3_1_1::GenericPublish<PacketIdType>:
+        mqtt::packet::v3_1_1::Publish:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Client>
     );
     // OK Server can send
     assert_impl_all!(
-        mqtt::packet::v3_1_1::GenericPublish<PacketIdType>:
+        mqtt::packet::v3_1_1::Publish:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Server>
     );
     // OK Any role can send
     assert_impl_all!(
-        mqtt::packet::v3_1_1::GenericPublish<PacketIdType>:
+        mqtt::packet::v3_1_1::Publish:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Any>
     );
 
-    // MQTT v5.0 GenericPublish
+    // MQTT v5.0 Publish
     // OK Client can send
     assert_impl_all!(
-        mqtt::packet::v5_0::GenericPublish<PacketIdType>:
+        mqtt::packet::v5_0::Publish:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Client>
     );
     // OK Server can send
     assert_impl_all!(
-        mqtt::packet::v5_0::GenericPublish<PacketIdType>:
+        mqtt::packet::v5_0::Publish:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Server>
     );
     // OK Any role can send
     assert_impl_all!(
-        mqtt::packet::v5_0::GenericPublish<PacketIdType>:
+        mqtt::packet::v5_0::Publish:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Any>
     );
 
     // ===== PUBACK packets =====
-    // MQTT v3.1.1 GenericPuback
+    // MQTT v3.1.1 Puback
     // OK Client can send
     assert_impl_all!(
-        mqtt::packet::v3_1_1::GenericPuback<PacketIdType>:
+        mqtt::packet::v3_1_1::Puback:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Client>
     );
     // OK Server can send
     assert_impl_all!(
-        mqtt::packet::v3_1_1::GenericPuback<PacketIdType>:
+        mqtt::packet::v3_1_1::Puback:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Server>
     );
     // OK Any role can send
     assert_impl_all!(
-        mqtt::packet::v3_1_1::GenericPuback<PacketIdType>:
+        mqtt::packet::v3_1_1::Puback:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Any>
     );
 
     // MQTT v5.0 GenericPuback
     // OK Client can send
     assert_impl_all!(
-        mqtt::packet::v5_0::GenericPuback<PacketIdType>:
+        mqtt::packet::v5_0::Puback:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Client>
     );
     // OK Server can send
     assert_impl_all!(
-        mqtt::packet::v5_0::GenericPuback<PacketIdType>:
+        mqtt::packet::v5_0::Puback:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Server>
     );
     // OK Any role can send
     assert_impl_all!(
-        mqtt::packet::v5_0::GenericPuback<PacketIdType>:
+        mqtt::packet::v5_0::Puback:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Any>
     );
 
@@ -310,34 +310,34 @@ fn verify_sendable_constraints() {
     // MQTT v3.1.1 GenericPubrec
     // OK Client can send
     assert_impl_all!(
-        mqtt::packet::v3_1_1::GenericPubrec<PacketIdType>:
+        mqtt::packet::v3_1_1::Pubrec:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Client>
     );
     // OK Server can send
     assert_impl_all!(
-        mqtt::packet::v3_1_1::GenericPubrec<PacketIdType>:
+        mqtt::packet::v3_1_1::Pubrec:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Server>
     );
     // OK Any role can send
     assert_impl_all!(
-        mqtt::packet::v3_1_1::GenericPubrec<PacketIdType>:
+        mqtt::packet::v3_1_1::Pubrec:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Any>
     );
 
     // MQTT v5.0 GenericPubrec
     // OK Client can send
     assert_impl_all!(
-        mqtt::packet::v5_0::GenericPubrec<PacketIdType>:
+        mqtt::packet::v5_0::Pubrec:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Client>
     );
     // OK Server can send
     assert_impl_all!(
-        mqtt::packet::v5_0::GenericPubrec<PacketIdType>:
+        mqtt::packet::v5_0::Pubrec:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Server>
     );
     // OK Any role can send
     assert_impl_all!(
-        mqtt::packet::v5_0::GenericPubrec<PacketIdType>:
+        mqtt::packet::v5_0::Pubrec:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Any>
     );
 
@@ -345,34 +345,34 @@ fn verify_sendable_constraints() {
     // MQTT v3.1.1 GenericPubrel
     // OK Client can send
     assert_impl_all!(
-        mqtt::packet::v3_1_1::GenericPubrel<PacketIdType>:
+        mqtt::packet::v3_1_1::Pubrel:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Client>
     );
     // OK Server can send
     assert_impl_all!(
-        mqtt::packet::v3_1_1::GenericPubrel<PacketIdType>:
+        mqtt::packet::v3_1_1::Pubrel:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Server>
     );
     // OK Any role can send
     assert_impl_all!(
-        mqtt::packet::v3_1_1::GenericPubrel<PacketIdType>:
+        mqtt::packet::v3_1_1::Pubrel:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Any>
     );
 
     // MQTT v5.0 GenericPubrel
     // OK Client can send
     assert_impl_all!(
-        mqtt::packet::v5_0::GenericPubrel<PacketIdType>:
+        mqtt::packet::v5_0::Pubrel:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Client>
     );
     // OK Server can send
     assert_impl_all!(
-        mqtt::packet::v5_0::GenericPubrel<PacketIdType>:
+        mqtt::packet::v5_0::Pubrel:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Server>
     );
     // OK Any role can send
     assert_impl_all!(
-        mqtt::packet::v5_0::GenericPubrel<PacketIdType>:
+        mqtt::packet::v5_0::Pubrel:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Any>
     );
 
@@ -380,34 +380,34 @@ fn verify_sendable_constraints() {
     // MQTT v3.1.1 GenericPubcomp
     // OK Client can send
     assert_impl_all!(
-        mqtt::packet::v3_1_1::GenericPubcomp<PacketIdType>:
+        mqtt::packet::v3_1_1::Pubcomp:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Client>
     );
     // OK Server can send
     assert_impl_all!(
-        mqtt::packet::v3_1_1::GenericPubcomp<PacketIdType>:
+        mqtt::packet::v3_1_1::Pubcomp:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Server>
     );
     // OK Any role can send
     assert_impl_all!(
-        mqtt::packet::v3_1_1::GenericPubcomp<PacketIdType>:
+        mqtt::packet::v3_1_1::Pubcomp:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Any>
     );
 
     // MQTT v5.0 GenericPubcomp
     // OK Client can send
     assert_impl_all!(
-        mqtt::packet::v5_0::GenericPubcomp<PacketIdType>:
+        mqtt::packet::v5_0::Pubcomp:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Client>
     );
     // OK Server can send
     assert_impl_all!(
-        mqtt::packet::v5_0::GenericPubcomp<PacketIdType>:
+        mqtt::packet::v5_0::Pubcomp:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Server>
     );
     // OK Any role can send
     assert_impl_all!(
-        mqtt::packet::v5_0::GenericPubcomp<PacketIdType>:
+        mqtt::packet::v5_0::Pubcomp:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Any>
     );
 
@@ -417,34 +417,34 @@ fn verify_sendable_constraints() {
     // MQTT v3.1.1 GenericSubscribe
     // OK Client can send
     assert_impl_all!(
-        mqtt::packet::v3_1_1::GenericSubscribe<PacketIdType>:
+        mqtt::packet::v3_1_1::Subscribe:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Client>
     );
     // NG Server cannot send
     assert_not_impl_any!(
-        mqtt::packet::v3_1_1::GenericSubscribe<PacketIdType>:
+        mqtt::packet::v3_1_1::Subscribe:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Server>
     );
     // OK Any role can send
     assert_impl_all!(
-        mqtt::packet::v3_1_1::GenericSubscribe<PacketIdType>:
+        mqtt::packet::v3_1_1::Subscribe:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Any>
     );
 
     // MQTT v5.0 GenericSubscribe
     // OK Client can send
     assert_impl_all!(
-        mqtt::packet::v5_0::GenericSubscribe<PacketIdType>:
+        mqtt::packet::v5_0::Subscribe:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Client>
     );
     // NG Server cannot send
     assert_not_impl_any!(
-        mqtt::packet::v5_0::GenericSubscribe<PacketIdType>:
+        mqtt::packet::v5_0::Subscribe:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Server>
     );
     // OK Any role can send
     assert_impl_all!(
-        mqtt::packet::v5_0::GenericSubscribe<PacketIdType>:
+        mqtt::packet::v5_0::Subscribe:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Any>
     );
 
@@ -452,34 +452,34 @@ fn verify_sendable_constraints() {
     // MQTT v3.1.1 GenericSuback
     // NG Client cannot send
     assert_not_impl_any!(
-        mqtt::packet::v3_1_1::GenericSuback<PacketIdType>:
+        mqtt::packet::v3_1_1::Suback:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Client>
     );
     // OK Server can send
     assert_impl_all!(
-        mqtt::packet::v3_1_1::GenericSuback<PacketIdType>:
+        mqtt::packet::v3_1_1::Suback:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Server>
     );
     // OK Any role can send
     assert_impl_all!(
-        mqtt::packet::v3_1_1::GenericSuback<PacketIdType>:
+        mqtt::packet::v3_1_1::Suback:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Any>
     );
 
     // MQTT v5.0 GenericSuback
     // NG Client cannot send
     assert_not_impl_any!(
-        mqtt::packet::v5_0::GenericSuback<PacketIdType>:
+        mqtt::packet::v5_0::Suback:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Client>
     );
     // OK Server can send
     assert_impl_all!(
-        mqtt::packet::v5_0::GenericSuback<PacketIdType>:
+        mqtt::packet::v5_0::Suback:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Server>
     );
     // OK Any role can send
     assert_impl_all!(
-        mqtt::packet::v5_0::GenericSuback<PacketIdType>:
+        mqtt::packet::v5_0::Suback:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Any>
     );
 
@@ -487,34 +487,34 @@ fn verify_sendable_constraints() {
     // MQTT v3.1.1 GenericUnsubscribe
     // OK Client can send
     assert_impl_all!(
-        mqtt::packet::v3_1_1::GenericUnsubscribe<PacketIdType>:
+        mqtt::packet::v3_1_1::Unsubscribe:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Client>
     );
     // NG Server cannot send
     assert_not_impl_any!(
-        mqtt::packet::v3_1_1::GenericUnsubscribe<PacketIdType>:
+        mqtt::packet::v3_1_1::Unsubscribe:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Server>
     );
     // OK Any role can send
     assert_impl_all!(
-        mqtt::packet::v3_1_1::GenericUnsubscribe<PacketIdType>:
+        mqtt::packet::v3_1_1::Unsubscribe:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Any>
     );
 
     // MQTT v5.0 GenericUnsubscribe
     // OK Client can send
     assert_impl_all!(
-        mqtt::packet::v5_0::GenericUnsubscribe<PacketIdType>:
+        mqtt::packet::v5_0::Unsubscribe:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Client>
     );
     // NG Server cannot send
     assert_not_impl_any!(
-        mqtt::packet::v5_0::GenericUnsubscribe<PacketIdType>:
+        mqtt::packet::v5_0::Unsubscribe:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Server>
     );
     // OK Any role can send
     assert_impl_all!(
-        mqtt::packet::v5_0::GenericUnsubscribe<PacketIdType>:
+        mqtt::packet::v5_0::Unsubscribe:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Any>
     );
 
@@ -522,34 +522,34 @@ fn verify_sendable_constraints() {
     // MQTT v3.1.1 GenericUnsuback
     // NG Client cannot send
     assert_not_impl_any!(
-        mqtt::packet::v3_1_1::GenericUnsuback<PacketIdType>:
+        mqtt::packet::v3_1_1::Unsuback:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Client>
     );
     // OK Server can send
     assert_impl_all!(
-        mqtt::packet::v3_1_1::GenericUnsuback<PacketIdType>:
+        mqtt::packet::v3_1_1::Unsuback:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Server>
     );
     // OK Any role can send
     assert_impl_all!(
-        mqtt::packet::v3_1_1::GenericUnsuback<PacketIdType>:
+        mqtt::packet::v3_1_1::Unsuback:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Any>
     );
 
     // MQTT v5.0 GenericUnsuback
     // NG Client cannot send
     assert_not_impl_any!(
-        mqtt::packet::v5_0::GenericUnsuback<PacketIdType>:
+        mqtt::packet::v5_0::Unsuback:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Client>
     );
     // OK Server can send
     assert_impl_all!(
-        mqtt::packet::v5_0::GenericUnsuback<PacketIdType>:
+        mqtt::packet::v5_0::Unsuback:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Server>
     );
     // OK Any role can send
     assert_impl_all!(
-        mqtt::packet::v5_0::GenericUnsuback<PacketIdType>:
+        mqtt::packet::v5_0::Unsuback:
         mqtt::connection::sendable_role::SendableRole<mqtt::role::Any>
     );
 
