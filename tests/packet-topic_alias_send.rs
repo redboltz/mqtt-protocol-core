@@ -22,8 +22,7 @@
 use std::thread;
 use std::time::Duration;
 
-use mqtt_protocol_core::default_alias;
-use mqtt_protocol_core::mqtt;
+mqtt_protocol_core::make_default_aliases!();
 mod common;
 
 #[test]

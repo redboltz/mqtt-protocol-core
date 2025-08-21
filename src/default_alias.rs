@@ -44,4 +44,4 @@
 //! ```
 
 // Generate default type aliases using the standard buffer sizes
-crate::mqtt::make_size_aliases!(32, 32, 128);
+crate::make_default_aliases!();

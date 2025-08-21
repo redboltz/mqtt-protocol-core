@@ -29,8 +29,7 @@ mod common;
 #[test]
 fn verify_sendable_constraints() {
     common::init_tracing();
-    use mqtt_protocol_core::default_alias;
-    use mqtt_protocol_core::mqtt;
+    mqtt_protocol_core::make_default_aliases!();
 
     use static_assertions::{assert_impl_all, assert_not_impl_any};
 

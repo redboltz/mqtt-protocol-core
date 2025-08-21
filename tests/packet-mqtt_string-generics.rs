@@ -1,5 +1,4 @@
-use mqtt_protocol_core::default_alias;
-use mqtt_protocol_core::mqtt;
+mqtt_protocol_core::make_default_aliases!();
 
 #[test]
 fn test_generic_mqtt_string_with_different_sizes() {
