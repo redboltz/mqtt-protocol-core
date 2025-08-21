@@ -7,7 +7,7 @@ use mqtt::common::{GenericArcPayload, IntoPayload};
 #[test]
 fn test_small_payload_uses_stack() {
     let small_data = b"hello world"; // 11 bytes
-    let payload = mqtt::ArcPayload::from(small_data);
+    let payload = mqtt::common::ArcPayload::from(small_data);
 
     assert_eq!(payload.as_slice(), small_data);
     assert_eq!(payload.len(), 11);
@@ -18,7 +18,7 @@ fn test_small_payload_uses_stack() {
 #[test]
 fn test_large_payload_uses_heap() {
     let large_data = "x".repeat(100); // 100 bytes > 32 bytes
-    let payload = mqtt::ArcPayload::from(large_data.as_bytes());
+    let payload = mqtt::common::ArcPayload::from(large_data.as_bytes());
 
     assert_eq!(payload.as_slice(), large_data.as_bytes());
     assert_eq!(payload.len(), 100);
@@ -29,7 +29,7 @@ fn test_large_payload_uses_heap() {
 #[test]
 fn test_boundary_exactly_32_bytes() {
     let boundary_data = "a".repeat(32); // exactly 32 bytes
-    let payload = mqtt::ArcPayload::from(boundary_data.as_bytes());
+    let payload = mqtt::common::ArcPayload::from(boundary_data.as_bytes());
 
     assert_eq!(payload.as_slice(), boundary_data.as_bytes());
     assert_eq!(payload.len(), 32);
@@ -39,7 +39,7 @@ fn test_boundary_exactly_32_bytes() {
 #[test]
 fn test_boundary_33_bytes() {
     let boundary_data = "a".repeat(33); // 33 bytes > 32 bytes
-    let payload = mqtt::ArcPayload::from(boundary_data.as_bytes());
+    let payload = mqtt::common::ArcPayload::from(boundary_data.as_bytes());
 
     assert_eq!(payload.as_slice(), boundary_data.as_bytes());
     assert_eq!(payload.len(), 33);
@@ -48,7 +48,7 @@ fn test_boundary_33_bytes() {
 
 #[test]
 fn test_empty_payload() {
-    let empty_payload = mqtt::ArcPayload::from(&[]);
+    let empty_payload = mqtt::common::ArcPayload::from(&[]);
 
     assert_eq!(empty_payload.as_slice(), &[] as &[u8]);
     assert_eq!(empty_payload.len(), 0);
@@ -79,13 +79,13 @@ fn test_generic_payload_with_different_sizes() {
 #[test]
 fn test_arc_new_method() {
     let data: Arc<[u8]> = Arc::from(&b"hello world"[..]);
-    let payload = mqtt::ArcPayload::new(data.clone(), 0, 11);
+    let payload = mqtt::common::ArcPayload::new(data.clone(), 0, 11);
 
     assert_eq!(payload.as_slice(), b"hello world");
     assert_eq!(payload.len(), 11);
 
     // Test slice of Arc data
-    let slice_payload = mqtt::ArcPayload::new(data.clone(), 6, 5); // "world"
+    let slice_payload = mqtt::common::ArcPayload::new(data.clone(), 6, 5); // "world"
     assert_eq!(slice_payload.as_slice(), b"world");
     assert_eq!(slice_payload.len(), 5);
 }
@@ -93,35 +93,35 @@ fn test_arc_new_method() {
 #[test]
 fn test_into_payload_trait() {
     // Test various types using IntoPayload
-    let str_payload: mqtt::ArcPayload = "hello".into_payload();
+    let str_payload: mqtt::common::ArcPayload = "hello".into_payload();
     assert_eq!(str_payload.as_slice(), b"hello");
 
-    let string_payload: mqtt::ArcPayload = String::from("world").into_payload();
+    let string_payload: mqtt::common::ArcPayload = String::from("world").into_payload();
     assert_eq!(string_payload.as_slice(), b"world");
 
-    let bytes_payload: mqtt::ArcPayload = b"test".as_slice().into_payload();
+    let bytes_payload: mqtt::common::ArcPayload = b"test".as_slice().into_payload();
     assert_eq!(bytes_payload.as_slice(), b"test");
 
-    let vec_payload: mqtt::ArcPayload = vec![1, 2, 3, 4].into_payload();
+    let vec_payload: mqtt::common::ArcPayload = vec![1, 2, 3, 4].into_payload();
     assert_eq!(vec_payload.as_slice(), &[1, 2, 3, 4]);
 
-    let array_payload: mqtt::ArcPayload = [5u8, 6, 7][..].into_payload();
+    let array_payload: mqtt::common::ArcPayload = [5u8, 6, 7][..].into_payload();
     assert_eq!(array_payload.as_slice(), &[5, 6, 7]);
 
-    let empty_payload: mqtt::ArcPayload = ().into_payload();
+    let empty_payload: mqtt::common::ArcPayload = ().into_payload();
     assert!(empty_payload.is_empty());
 }
 
 #[test]
 fn test_clone_and_equality() {
     let data = b"test data";
-    let payload1 = mqtt::ArcPayload::from(data);
+    let payload1 = mqtt::common::ArcPayload::from(data);
     let payload2 = payload1.clone();
 
     assert_eq!(payload1, payload2);
     assert_eq!(payload1.as_slice(), payload2.as_slice());
 
-    let different_payload = mqtt::ArcPayload::from(b"different");
+    let different_payload = mqtt::common::ArcPayload::from(b"different");
     assert_ne!(payload1, different_payload);
 }
 
@@ -166,7 +166,7 @@ fn test_stack_size_boundaries() {
 
 #[test]
 fn test_default() {
-    let default_payload = mqtt::ArcPayload::default();
+    let default_payload = mqtt::common::ArcPayload::default();
 
     assert_eq!(default_payload.as_slice(), &[] as &[u8]);
     assert_eq!(default_payload.len(), 0);

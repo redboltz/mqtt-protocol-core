@@ -906,7 +906,7 @@ fn generic_packet_id_type_u32() {
         .build()
         .unwrap();
 
-    let store_packet: mqtt::packet::GenericStorePacket<u32> = pubrel.try_into().unwrap();
+    let store_packet: mqtt_pid32::packet::StorePacket = pubrel.try_into().unwrap();
     assert_eq!(store_packet.packet_id(), 0x12345678u32);
     assert_eq!(store_packet.packet_type(), mqtt::packet::PacketType::Pubrel);
 }

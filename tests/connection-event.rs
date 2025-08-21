@@ -402,12 +402,12 @@ fn test_event_debug() {
 #[test]
 fn test_generic_event_with_u32() {
     common::init_tracing();
-    use mqtt::connection::GenericEvent;
+    use mqtt_pid32::connection::Event;
 
-    let event: GenericEvent<u32> = GenericEvent::NotifyPacketIdReleased(0x12345678);
+    let event: GenericEvent<u32> = Event::NotifyPacketIdReleased(0x12345678);
 
     match event {
-        GenericEvent::NotifyPacketIdReleased(packet_id) => {
+        Event::NotifyPacketIdReleased(packet_id) => {
             assert_eq!(packet_id, 0x12345678);
         }
         _ => panic!("Expected NotifyPacketIdReleased event"),
@@ -417,9 +417,9 @@ fn test_generic_event_with_u32() {
 #[test]
 fn test_generic_event_serialize_with_u32() {
     common::init_tracing();
-    use mqtt::connection::GenericEvent;
+    use mqtt_pid32::connection::Event;
 
-    let event: GenericEvent<u32> = GenericEvent::NotifyPacketIdReleased(0x87654321);
+    let event: GenericEvent<u32> = Event::NotifyPacketIdReleased(0x87654321);
 
     let json = serde_json::to_string(&event).unwrap();
     assert!(json.contains("\"type\":\"notify_packet_id_released\""));
@@ -434,7 +434,7 @@ fn test_event_type_alias() {
 
     // Test that Event is indeed GenericEvent<u16>
     let event: Event = Event::NotifyError(MqttError::MalformedPacket);
-    let _: mqtt::connection::GenericEvent<u16> = event;
+    let _: mqtt::connection::Event = event;
 }
 
 #[test]
