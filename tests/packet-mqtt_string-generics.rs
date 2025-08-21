@@ -2,10 +2,13 @@
 mod common;
 use common::mqtt;
 
+// Custom type aliases for testing different buffer sizes
+type SmallString = mqtt_protocol_core::mqtt_internal::packet::GenericMqttString<16>;
+type LargeString = mqtt_protocol_core::mqtt_internal::packet::GenericMqttString<64>;
+
 #[test]
 fn test_generic_mqtt_string_with_different_sizes() {
     // Test 16-byte stack buffer
-    type SmallString = mqtt::packet::GenericMqttString<16>;
     let small_str = SmallString::new("hello").unwrap();
     assert_eq!(small_str.as_str(), "hello");
     assert_eq!(small_str.size(), 7);
@@ -88,8 +91,8 @@ fn test_compatibility_between_sizes() {
     let content = "test string for compatibility";
 
     let default_str = mqtt::packet::MqttString::new(content).unwrap();
-    let custom64_str = mqtt::packet::GenericMqttString::<64>::new(content).unwrap();
-    let custom16_str = mqtt::packet::GenericMqttString::<16>::new(content).unwrap();
+    let custom64_str = LargeString::new(content).unwrap();
+    let custom16_str = SmallString::new(content).unwrap();
 
     assert_eq!(default_str.as_bytes(), custom64_str.as_bytes());
     assert_eq!(default_str.as_bytes(), custom16_str.as_bytes());
@@ -97,8 +100,8 @@ fn test_compatibility_between_sizes() {
     let encoded = default_str.as_bytes();
 
     let (decoded_default, _) = mqtt::packet::MqttString::decode(encoded).unwrap();
-    let (decoded_64, _) = mqtt::packet::GenericMqttString::<64>::decode(encoded).unwrap();
-    let (decoded_16, _) = mqtt::packet::GenericMqttString::<16>::decode(encoded).unwrap();
+    let (decoded_64, _) = LargeString::decode(encoded).unwrap();
+    let (decoded_16, _) = SmallString::decode(encoded).unwrap();
 
     assert_eq!(decoded_default.as_str(), content);
     assert_eq!(decoded_64.as_str(), content);

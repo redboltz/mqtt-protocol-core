@@ -91,7 +91,7 @@ fn build_fail_qos0_with_packet_id() {
 #[test]
 fn build_fail_duplicate_property() {
     common::init_tracing();
-    let mut props = mqtt::packet::GenericProperties::new();
+    let mut props = mqtt::packet::Properties::new();
     props.push(
         mqtt::packet::PayloadFormatIndicator::new(mqtt::packet::PayloadFormat::Binary)
             .unwrap()
@@ -159,7 +159,7 @@ fn build_fail_payload_too_large() {
 #[test]
 fn build_success_empty_topic_with_alias() {
     common::init_tracing();
-    let mut props = mqtt::packet::GenericProperties::new();
+    let mut props = mqtt::packet::Properties::new();
     props.push(mqtt::packet::TopicAlias::new(1).unwrap().into());
 
     let packet = mqtt::packet::v5_0::Publish::builder()
@@ -413,7 +413,7 @@ fn getter_with_flags() {
 #[test]
 fn getter_with_props() {
     common::init_tracing();
-    let mut props = mqtt::packet::GenericProperties::new();
+    let mut props = mqtt::packet::Properties::new();
     props.push(
         mqtt::packet::MessageExpiryInterval::new(300)
             .unwrap()
@@ -525,7 +525,7 @@ fn to_buffers_with_flags() {
 #[test]
 fn to_buffers_with_props() {
     common::init_tracing();
-    let mut props = mqtt::packet::GenericProperties::new();
+    let mut props = mqtt::packet::Properties::new();
     props.push(
         mqtt::packet::MessageExpiryInterval::new(300)
             .unwrap()
@@ -830,7 +830,7 @@ fn size_qos1() {
 fn test_remove_topic_alias_add_topic_basic() {
     common::init_tracing();
     // Create a publish packet with empty topic name and TopicAlias property
-    let mut props = mqtt::packet::GenericProperties::new();
+    let mut props = mqtt::packet::Properties::new();
     props.push(mqtt::packet::TopicAlias::new(1).unwrap().into());
     props.push(
         mqtt::packet::UserProperty::new("key", "value")
@@ -882,7 +882,7 @@ fn test_remove_topic_alias_add_topic_basic() {
 fn test_remove_topic_alias_add_topic_with_topic_alias() {
     common::init_tracing();
     // Create a publish packet with empty topic name and TopicAlias property
-    let mut props = mqtt::packet::GenericProperties::new();
+    let mut props = mqtt::packet::Properties::new();
     props.push(mqtt::packet::TopicAlias::new(1).unwrap().into());
 
     let publish = mqtt::packet::v5_0::Publish::builder()
@@ -915,7 +915,7 @@ fn test_remove_topic_alias_add_topic_with_topic_alias() {
 fn test_remove_topic_alias_add_topic_invalid_topic() {
     common::init_tracing();
     // Create a publish packet with TopicAlias to allow empty topic name
-    let mut props = mqtt::packet::GenericProperties::new();
+    let mut props = mqtt::packet::Properties::new();
     props.push(mqtt::packet::TopicAlias::new(1).unwrap().into());
 
     let publish = mqtt::packet::v5_0::Publish::builder()
@@ -961,7 +961,7 @@ fn test_remove_topic_alias_add_topic_non_empty_topic_error() {
 fn test_remove_topic_alias_basic() {
     common::init_tracing();
     // Create a publish packet with TopicAlias property
-    let mut props = mqtt::packet::GenericProperties::new();
+    let mut props = mqtt::packet::Properties::new();
     props.push(mqtt::packet::TopicAlias::new(5).unwrap().into());
     props.push(
         mqtt::packet::MessageExpiryInterval::new(256)
@@ -1014,7 +1014,7 @@ fn test_remove_topic_alias_basic() {
 fn test_remove_topic_alias_no_topic_alias() {
     common::init_tracing();
     // Create a publish packet without TopicAlias property
-    let mut props = mqtt::packet::GenericProperties::new();
+    let mut props = mqtt::packet::Properties::new();
     props.push(
         mqtt::packet::MessageExpiryInterval::new(256)
             .unwrap()
@@ -1089,7 +1089,7 @@ fn test_remove_topic_alias_no_properties() {
 fn test_length_recalculation_with_qos1() {
     common::init_tracing();
     // Create a QoS1 publish packet with properties
-    let mut props = mqtt::packet::GenericProperties::new();
+    let mut props = mqtt::packet::Properties::new();
     props.push(mqtt::packet::TopicAlias::new(10).unwrap().into());
     props.push(
         mqtt::packet::MessageExpiryInterval::new(968)
@@ -1131,7 +1131,7 @@ fn test_length_recalculation_with_qos1() {
 fn test_length_recalculation_property_length_changes() {
     common::init_tracing();
     // Create packet with multiple properties including TopicAlias
-    let mut props = mqtt::packet::GenericProperties::new();
+    let mut props = mqtt::packet::Properties::new();
     props.push(mqtt::packet::TopicAlias::new(1).unwrap().into());
     props.push(
         mqtt::packet::ContentType::new("application/json")
@@ -1193,7 +1193,7 @@ fn test_length_recalculation_property_length_changes() {
 fn test_empty_properties_after_topic_alias_removal() {
     common::init_tracing();
     // Create packet with only TopicAlias property
-    let mut props = mqtt::packet::GenericProperties::new();
+    let mut props = mqtt::packet::Properties::new();
     props.push(mqtt::packet::TopicAlias::new(1).unwrap().into());
 
     let publish = mqtt::packet::v5_0::Publish::builder()
@@ -1230,7 +1230,7 @@ fn test_empty_properties_after_topic_alias_removal() {
 fn test_roundtrip_serialization_after_modification() {
     common::init_tracing();
     // Create a packet, modify it, then verify it can be serialized and parsed correctly
-    let mut props = mqtt::packet::GenericProperties::new();
+    let mut props = mqtt::packet::Properties::new();
     props.push(mqtt::packet::TopicAlias::new(20).unwrap().into());
     props.push(
         mqtt::packet::PayloadFormatIndicator::new(mqtt::packet::PayloadFormat::String)
@@ -1323,7 +1323,7 @@ fn test_set_dup_true() {
 #[test]
 fn test_set_dup_false() {
     common::init_tracing();
-    let mut props = mqtt::packet::GenericProperties::new();
+    let mut props = mqtt::packet::Properties::new();
     props.push(
         mqtt::packet::UserProperty::new("test", "value")
             .unwrap()
@@ -1391,7 +1391,7 @@ fn test_set_dup_chaining() {
 fn test_add_extracted_topic_name_success() {
     common::init_tracing();
     // Create a packet with empty topic name and TopicAlias property
-    let mut props = mqtt::packet::GenericProperties::new();
+    let mut props = mqtt::packet::Properties::new();
     props.push(mqtt::packet::TopicAlias::new(1).unwrap().into());
 
     let packet = mqtt::packet::v5_0::Publish::builder()
@@ -1452,7 +1452,7 @@ fn test_add_extracted_topic_name_non_empty_topic_error() {
 #[test]
 fn test_add_extracted_topic_name_invalid_topic_wildcard() {
     common::init_tracing();
-    let mut props = mqtt::packet::GenericProperties::new();
+    let mut props = mqtt::packet::Properties::new();
     props.push(mqtt::packet::TopicAlias::new(1).unwrap().into());
 
     let packet = mqtt::packet::v5_0::Publish::builder()

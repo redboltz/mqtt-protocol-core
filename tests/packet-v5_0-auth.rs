@@ -31,7 +31,7 @@ fn build_fail_props_without_rc() {
     common::init_tracing();
     // AUTH packets cannot have props without reason_code
     let err = mqtt::packet::v5_0::Auth::builder()
-        .props(mqtt::packet::GenericProperties::new())
+        .props(mqtt::packet::Properties::new())
         .build()
         .unwrap_err();
 

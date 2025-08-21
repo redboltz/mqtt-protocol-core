@@ -23,6 +23,9 @@
 // Generate default type aliases for all tests
 mqtt_protocol_core::make_default_aliases!();
 
+// Generate u32 packet ID aliases for testing
+mqtt_protocol_core::make_type_size_aliases!(mqtt_pid32, u32, 32, 32, 128);
+
 #[cfg(feature = "std")]
 use std::sync::Once;
 

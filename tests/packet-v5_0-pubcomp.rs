@@ -21,7 +21,7 @@
 // SOFTWARE.
 
 mod common;
-use common::mqtt;
+use common::{mqtt, mqtt_pid32};
 use std::fmt::Write;
 
 // Build fail tests
@@ -50,7 +50,7 @@ fn build_fail_props_without_rc() {
     common::init_tracing();
     let err = mqtt::packet::v5_0::Pubcomp::builder()
         .packet_id(1234)
-        .props(mqtt::packet::GenericProperties::new())
+        .props(mqtt::packet::Properties::new())
         .build()
         .unwrap_err();
 
@@ -158,7 +158,7 @@ fn debug_pid_rc_prop0() {
     let packet = mqtt::packet::v5_0::Pubcomp::builder()
         .packet_id(1234)
         .reason_code(mqtt::result_code::PubcompReasonCode::Success)
-        .props(mqtt::packet::GenericProperties::new())
+        .props(mqtt::packet::Properties::new())
         .build()
         .unwrap();
 
@@ -209,7 +209,7 @@ fn getter_pid_rc_prop0() {
     let packet = mqtt::packet::v5_0::Pubcomp::builder()
         .packet_id(1234)
         .reason_code(mqtt::result_code::PubcompReasonCode::Success)
-        .props(mqtt::packet::GenericProperties::new())
+        .props(mqtt::packet::Properties::new())
         .build()
         .unwrap();
 
@@ -314,7 +314,7 @@ fn to_buffers_pid_rc_prop0() {
     let packet = mqtt::packet::v5_0::Pubcomp::builder()
         .packet_id(1234)
         .reason_code(mqtt::result_code::PubcompReasonCode::Success)
-        .props(mqtt::packet::GenericProperties::new())
+        .props(mqtt::packet::Properties::new())
         .build()
         .unwrap();
 
@@ -413,7 +413,7 @@ fn parse_pid_rc_prop0() {
     let expected = mqtt::packet::v5_0::Pubcomp::builder()
         .packet_id(1234)
         .reason_code(mqtt::result_code::PubcompReasonCode::PacketIdentifierNotFound)
-        .props(mqtt::packet::GenericProperties::new())
+        .props(mqtt::packet::Properties::new())
         .build()
         .unwrap();
     assert_eq!(packet, expected);
@@ -557,10 +557,10 @@ fn parse_pidu32_rc_prop_user_property_twice() {
     raw.push(0x06); // value string length LSB (6)
     raw.extend_from_slice(b"value2");
 
-    let (packet, consumed) = mqtt::packet::v5_0::GenericPubcomp::<u32>::parse(&raw).unwrap();
+    let (packet, consumed) = mqtt_pid32::packet::v5_0::Pubcomp::parse(&raw).unwrap();
     assert_eq!(consumed, raw.len());
 
-    let expected = mqtt::packet::v5_0::GenericPubcomp::<u32>::builder()
+    let expected = mqtt_pid32::packet::v5_0::Pubcomp::builder()
         .packet_id(1234)
         .reason_code(mqtt::result_code::PubcompReasonCode::PacketIdentifierNotFound)
         .props(vec![

@@ -47,7 +47,7 @@ fn build_fail_no_packet_id() {
 #[test]
 fn build_fail_invalid_property() {
     common::init_tracing();
-    let mut props = mqtt::packet::GenericProperties::new();
+    let mut props = mqtt::packet::Properties::new();
     props.push(
         mqtt::packet::PayloadFormatIndicator::new(mqtt::packet::PayloadFormat::Binary)
             .unwrap()
@@ -82,7 +82,7 @@ fn build_success_minimal() {
 #[test]
 fn build_success_with_properties() {
     common::init_tracing();
-    let mut props = mqtt::packet::GenericProperties::new();
+    let mut props = mqtt::packet::Properties::new();
     props.push(
         mqtt::packet::UserProperty::new("key", "value")
             .unwrap()
@@ -139,7 +139,7 @@ fn display_minimal() {
 #[test]
 fn display_with_properties() {
     common::init_tracing();
-    let mut props = mqtt::packet::GenericProperties::new();
+    let mut props = mqtt::packet::Properties::new();
     props.push(
         mqtt::packet::UserProperty::new("key", "value")
             .unwrap()
@@ -180,7 +180,7 @@ fn debug_minimal() {
 #[test]
 fn debug_with_properties() {
     common::init_tracing();
-    let mut props = mqtt::packet::GenericProperties::new();
+    let mut props = mqtt::packet::Properties::new();
     props.push(
         mqtt::packet::UserProperty::new("test", "value")
             .unwrap()
@@ -244,7 +244,7 @@ fn getter_props_empty() {
 #[test]
 fn getter_props_with_values() {
     common::init_tracing();
-    let mut props = mqtt::packet::GenericProperties::new();
+    let mut props = mqtt::packet::Properties::new();
     props.push(
         mqtt::packet::UserProperty::new("key", "value")
             .unwrap()
@@ -294,7 +294,7 @@ fn to_buffers_minimal() {
 #[test]
 fn to_buffers_with_properties() {
     common::init_tracing();
-    let mut props = mqtt::packet::GenericProperties::new();
+    let mut props = mqtt::packet::Properties::new();
     props.push(
         mqtt::packet::UserProperty::new("key", "value")
             .unwrap()
@@ -377,7 +377,7 @@ fn parse_minimal() {
 #[test]
 fn parse_with_properties() {
     common::init_tracing();
-    let mut props = mqtt::packet::GenericProperties::new();
+    let mut props = mqtt::packet::Properties::new();
     props.push(
         mqtt::packet::UserProperty::new("key", "value")
             .unwrap()
@@ -508,7 +508,7 @@ fn size_minimal() {
 #[test]
 fn size_with_properties() {
     common::init_tracing();
-    let mut props = mqtt::packet::GenericProperties::new();
+    let mut props = mqtt::packet::Properties::new();
     props.push(
         mqtt::packet::UserProperty::new("key", "value")
             .unwrap()
@@ -591,7 +591,7 @@ fn roundtrip_minimal() {
 #[test]
 fn roundtrip_with_all_valid_properties() {
     common::init_tracing();
-    let mut props = mqtt::packet::GenericProperties::new();
+    let mut props = mqtt::packet::Properties::new();
     props.push(
         mqtt::packet::UserProperty::new("client", "test")
             .unwrap()

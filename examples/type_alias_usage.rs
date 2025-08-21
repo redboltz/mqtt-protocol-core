@@ -6,13 +6,13 @@ fn main() {
     // Demonstrate make_size_aliases! (uses u16 packet IDs)
     {
         // Generate type aliases with custom buffer sizes
-        mqtt_protocol_core::make_size_aliases!(128, 64, 256);
+        mqtt_protocol_core::make_size_aliases!(mqtt_custom, 128, 64, 256);
 
         // Test v5.0 packets
-        let auth = mqtt::packet::v5_0::Auth::builder().build().unwrap();
+        let auth = mqtt_custom::packet::v5_0::Auth::builder().build().unwrap();
         println!("Created Auth packet: size = {}", auth.size());
 
-        let publish = match mqtt::packet::v5_0::Publish::builder().topic_name("test/topic") {
+        let publish = match mqtt_custom::packet::v5_0::Publish::builder().topic_name("test/topic") {
             Ok(builder) => match builder.payload(b"Hello, MQTT!").build() {
                 Ok(p) => p,
                 Err(e) => {
@@ -27,7 +27,7 @@ fn main() {
         };
         println!("Created Publish packet: size = {}", publish.size());
 
-        let connect = mqtt::packet::v5_0::Connect::builder()
+        let connect = mqtt_custom::packet::v5_0::Connect::builder()
             .client_id("test_client")
             .unwrap()
             .build()
@@ -35,7 +35,7 @@ fn main() {
         println!("Created Connect packet: size = {}", connect.size());
 
         // Test v3.1.1 packets
-        let connect_v3 = mqtt::packet::v3_1_1::Connect::builder()
+        let connect_v3 = mqtt_custom::packet::v3_1_1::Connect::builder()
             .client_id("test_client_v3")
             .unwrap()
             .build()
@@ -45,7 +45,7 @@ fn main() {
             connect_v3.size()
         );
 
-        match mqtt::packet::v3_1_1::Publish::builder().topic_name("v3/topic") {
+        match mqtt_custom::packet::v3_1_1::Publish::builder().topic_name("v3/topic") {
             Ok(builder) => match builder.payload(b"Hello, MQTT v3.1.1!").build() {
                 Ok(publish_v3) => println!(
                     "Created v3.1.1 Publish packet: size = {}",
@@ -59,9 +59,9 @@ fn main() {
 
     // Demonstrate make_type_size_aliases! with u32 packet IDs in a different scope
     {
-        mqtt_protocol_core::make_type_size_aliases!(u32, 64, 64, 128);
+        mqtt_protocol_core::make_type_size_aliases!(mqtt_u32, u32, 64, 64, 128);
 
-        match mqtt::packet::v5_0::Puback::builder()
+        match mqtt_u32::packet::v5_0::Puback::builder()
             .packet_id(42u32)
             .build()
         {
@@ -72,7 +72,7 @@ fn main() {
             Err(e) => eprintln!("Failed to create Puback: {:?}", e),
         }
 
-        match mqtt::packet::v5_0::Publish::builder().topic_name("u32/topic") {
+        match mqtt_u32::packet::v5_0::Publish::builder().topic_name("u32/topic") {
             Ok(builder) => match builder.build() {
                 Ok(publish_u32) => println!(
                     "Created Publish with u32 packet ID: size = {}",

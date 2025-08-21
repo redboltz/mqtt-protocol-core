@@ -292,7 +292,7 @@ macro_rules! make_type_size_aliases {
                 $binary_buffer_size,
                 $payload_buffer_size,
             >;
-            
+
             pub type Event = $crate::mqtt_internal::connection::GenericEvent<
                 $packet_id_type,
                 $string_buffer_size,
@@ -304,7 +304,7 @@ macro_rules! make_type_size_aliases {
             pub use $crate::mqtt_internal::*;
             // Ensure trait is available for packet operations
             pub use $crate::mqtt_internal::packet::GenericPacketTrait;
-            
+
             // Re-export prelude for convenience
             pub mod prelude {
                 pub use $crate::mqtt_internal::connection::prelude::*;

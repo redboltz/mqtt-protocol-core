@@ -21,7 +21,7 @@
 // SOFTWARE.
 
 mod common;
-use common::mqtt;
+use common::{mqtt, mqtt_pid32};
 use mqtt_protocol_core::mqtt::packet::GenericPacketTrait;
 
 // ResponsePacket enum tests
@@ -901,7 +901,7 @@ fn store_packet_type_alias() {
 #[test]
 fn generic_packet_id_type_u32() {
     common::init_tracing();
-    let pubrel = mqtt::packet::v3_1_1::GenericPubrel::<u32>::builder()
+    let pubrel = mqtt_pid32::packet::v3_1_1::Pubrel::builder()
         .packet_id(0x12345678u32)
         .build()
         .unwrap();

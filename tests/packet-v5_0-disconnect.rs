@@ -30,7 +30,7 @@ use std::fmt::Write;
 fn build_fail_props_without_rc() {
     common::init_tracing();
     let err = mqtt::packet::v5_0::Disconnect::builder()
-        .props(mqtt::packet::GenericProperties::new())
+        .props(mqtt::packet::Properties::new())
         .build()
         .unwrap_err();
 
@@ -180,7 +180,7 @@ fn debug_rc_prop0() {
     common::init_tracing();
     let packet = mqtt::packet::v5_0::Disconnect::builder()
         .reason_code(mqtt::result_code::DisconnectReasonCode::NormalDisconnection)
-        .props(mqtt::packet::GenericProperties::new())
+        .props(mqtt::packet::Properties::new())
         .build()
         .unwrap();
 
@@ -224,7 +224,7 @@ fn getter_rc_prop0() {
     common::init_tracing();
     let packet = mqtt::packet::v5_0::Disconnect::builder()
         .reason_code(mqtt::result_code::DisconnectReasonCode::NormalDisconnection)
-        .props(mqtt::packet::GenericProperties::new())
+        .props(mqtt::packet::Properties::new())
         .build()
         .unwrap();
 
@@ -345,7 +345,7 @@ fn to_buffers_rc_prop0() {
     common::init_tracing();
     let packet = mqtt::packet::v5_0::Disconnect::builder()
         .reason_code(mqtt::result_code::DisconnectReasonCode::NormalDisconnection)
-        .props(mqtt::packet::GenericProperties::new())
+        .props(mqtt::packet::Properties::new())
         .build()
         .unwrap();
 
@@ -456,7 +456,7 @@ fn parse_rc_prop0() {
     assert_eq!(consumed, 2);
     let expected = mqtt::packet::v5_0::Disconnect::builder()
         .reason_code(mqtt::result_code::DisconnectReasonCode::NormalDisconnection)
-        .props(mqtt::packet::GenericProperties::new())
+        .props(mqtt::packet::Properties::new())
         .build()
         .unwrap();
     assert_eq!(packet, expected);

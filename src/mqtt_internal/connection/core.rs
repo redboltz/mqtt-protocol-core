@@ -5405,7 +5405,7 @@ mod tests {
 
     #[test]
     fn test_initialize_client_mode() {
-        let mut connection = GenericConnection::<role::Client, u16>::new(Version::V5_0);
+        let mut connection = GenericConnection::<role::Client, u16, 32, 32, 128>::new(Version::V5_0);
 
         // Initialize in client mode
         connection.initialize(true);
@@ -5420,7 +5420,7 @@ mod tests {
 
     #[test]
     fn test_initialize_server_mode() {
-        let mut connection = GenericConnection::<role::Server, u32>::new(Version::V3_1_1);
+        let mut connection = GenericConnection::<role::Server, u32, 32, 32, 128>::new(Version::V3_1_1);
 
         // Initialize in server mode
         connection.initialize(false);
@@ -5435,7 +5435,7 @@ mod tests {
 
     #[test]
     fn test_validate_topic_alias_no_topic_alias_send() {
-        let mut connection = GenericConnection::<role::Client, u16>::new(Version::V5_0);
+        let mut connection = GenericConnection::<role::Client, u16, 32, 32, 128>::new(Version::V5_0);
 
         // Should return None when topic_alias_send is not configured
         let result = connection.validate_topic_alias(Some(1));
@@ -5444,7 +5444,7 @@ mod tests {
 
     #[test]
     fn test_validate_topic_alias_none_input() {
-        let mut connection = GenericConnection::<role::Client, u16>::new(Version::V5_0);
+        let mut connection = GenericConnection::<role::Client, u16, 32, 32, 128>::new(Version::V5_0);
 
         // Should return None when no topic alias is provided
         let result = connection.validate_topic_alias(None);
@@ -5453,7 +5453,7 @@ mod tests {
 
     #[test]
     fn test_validate_topic_alias_range_no_topic_alias_send() {
-        let connection = GenericConnection::<role::Client, u16>::new(Version::V5_0);
+        let connection = GenericConnection::<role::Client, u16, 32, 32, 128>::new(Version::V5_0);
 
         // Should return false when topic_alias_send is not configured
         let result = connection.validate_topic_alias_range(1);
@@ -5462,7 +5462,7 @@ mod tests {
 
     #[test]
     fn test_validate_topic_alias_range_zero() {
-        let mut connection = GenericConnection::<role::Client, u16>::new(Version::V5_0);
+        let mut connection = GenericConnection::<role::Client, u16, 32, 32, 128>::new(Version::V5_0);
 
         // Set up topic alias send with max 10
         let topic_alias_send = TopicAliasSend::new(10);
@@ -5475,7 +5475,7 @@ mod tests {
 
     #[test]
     fn test_validate_topic_alias_range_over_max() {
-        let mut connection = GenericConnection::<role::Client, u16>::new(Version::V5_0);
+        let mut connection = GenericConnection::<role::Client, u16, 32, 32, 128>::new(Version::V5_0);
 
         // Set up topic alias send with max 5
         let topic_alias_send = TopicAliasSend::new(5);
@@ -5488,7 +5488,7 @@ mod tests {
 
     #[test]
     fn test_validate_topic_alias_range_valid() {
-        let mut connection = GenericConnection::<role::Client, u16>::new(Version::V5_0);
+        let mut connection = GenericConnection::<role::Client, u16, 32, 32, 128>::new(Version::V5_0);
 
         // Set up topic alias send with max 10
         let topic_alias_send = TopicAliasSend::new(10);
@@ -5502,7 +5502,7 @@ mod tests {
 
     #[test]
     fn test_validate_topic_alias_with_registered_alias() {
-        let mut connection = GenericConnection::<role::Client, u16>::new(Version::V5_0);
+        let mut connection = GenericConnection::<role::Client, u16, 32, 32, 128>::new(Version::V5_0);
 
         // Set up topic alias send with max 10
         let mut topic_alias_send = TopicAliasSend::new(10);
@@ -5516,7 +5516,7 @@ mod tests {
 
     #[test]
     fn test_validate_topic_alias_unregistered_alias() {
-        let mut connection = GenericConnection::<role::Client, u16>::new(Version::V5_0);
+        let mut connection = GenericConnection::<role::Client, u16, 32, 32, 128>::new(Version::V5_0);
 
         // Set up topic alias send with max 10 but don't register any aliases
         let topic_alias_send = TopicAliasSend::new(10);
@@ -5529,7 +5529,7 @@ mod tests {
 
     #[test]
     fn test_validate_maximum_packet_size_within_limit() {
-        let connection = GenericConnection::<role::Client, u16>::new(Version::V5_0);
+        let connection = GenericConnection::<role::Client, u16, 32, 32, 128>::new(Version::V5_0);
 
         // Default maximum_packet_size_send is u32::MAX
         let result = connection.validate_maximum_packet_size_send(1000);
@@ -5538,7 +5538,7 @@ mod tests {
 
     #[test]
     fn test_validate_maximum_packet_size_at_limit() {
-        let mut connection = GenericConnection::<role::Client, u16>::new(Version::V5_0);
+        let mut connection = GenericConnection::<role::Client, u16, 32, 32, 128>::new(Version::V5_0);
 
         // Set a specific limit
         connection.maximum_packet_size_send = 1000;
@@ -5550,7 +5550,7 @@ mod tests {
 
     #[test]
     fn test_validate_maximum_packet_size_over_limit() {
-        let mut connection = GenericConnection::<role::Client, u16>::new(Version::V5_0);
+        let mut connection = GenericConnection::<role::Client, u16, 32, 32, 128>::new(Version::V5_0);
 
         // Set a specific limit
         connection.maximum_packet_size_send = 1000;
@@ -5562,7 +5562,7 @@ mod tests {
 
     #[test]
     fn test_validate_maximum_packet_size_zero_limit() {
-        let mut connection = GenericConnection::<role::Client, u16>::new(Version::V5_0);
+        let mut connection = GenericConnection::<role::Client, u16, 32, 32, 128>::new(Version::V5_0);
 
         // Set limit to 0
         connection.maximum_packet_size_send = 0;
@@ -5578,7 +5578,7 @@ mod tests {
 
     #[test]
     fn test_initialize_clears_state() {
-        let mut connection = GenericConnection::<role::Client, u16>::new(Version::V5_0);
+        let mut connection = GenericConnection::<role::Client, u16, 32, 32, 128>::new(Version::V5_0);
 
         // Set up some state that should be cleared
         connection.publish_send_count = 5;

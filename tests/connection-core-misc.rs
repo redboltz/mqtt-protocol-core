@@ -1012,9 +1012,9 @@ fn test_restore_packets_v3_1_1() {
 
     // Restore packets
     let packets = vec![
-        mqtt::packet::GenericStorePacket::V3_1_1Publish(publish_a.clone()),
-        mqtt::packet::GenericStorePacket::V3_1_1Publish(publish_b.clone()),
-        mqtt::packet::GenericStorePacket::V3_1_1Pubrel(pubrel.clone()),
+        mqtt::packet::StorePacket::V3_1_1Publish(publish_a.clone()),
+        mqtt::packet::StorePacket::V3_1_1Publish(publish_b.clone()),
+        mqtt::packet::StorePacket::V3_1_1Pubrel(pubrel.clone()),
     ];
     connection.restore_packets(packets);
 
@@ -1097,14 +1097,14 @@ fn test_restore_packets_v3_1_1() {
 
     for packet in &stored_packets {
         match packet {
-            mqtt::packet::GenericStorePacket::V3_1_1Publish(p) => {
+            mqtt::packet::StorePacket::V3_1_1Publish(p) => {
                 if p.topic_name() == "topic/a" && p.packet_id() == Some(1) {
                     stored_publish_a_found = true;
                 } else if p.topic_name() == "topic/b" && p.packet_id() == Some(2) {
                     stored_publish_b_found = true;
                 }
             }
-            mqtt::packet::GenericStorePacket::V3_1_1Pubrel(p) => {
+            mqtt::packet::StorePacket::V3_1_1Pubrel(p) => {
                 if p.packet_id() == 3 {
                     stored_pubrel_found = true;
                 }
@@ -1155,9 +1155,9 @@ fn test_restore_packets_v5_0_server() {
 
     // Restore packets
     let packets = vec![
-        mqtt::packet::GenericStorePacket::V5_0Publish(publish_a.clone()),
-        mqtt::packet::GenericStorePacket::V5_0Publish(publish_b.clone()),
-        mqtt::packet::GenericStorePacket::V5_0Pubrel(pubrel.clone()),
+        mqtt::packet::StorePacket::V5_0Publish(publish_a.clone()),
+        mqtt::packet::StorePacket::V5_0Publish(publish_b.clone()),
+        mqtt::packet::StorePacket::V5_0Pubrel(pubrel.clone()),
     ];
     connection.restore_packets(packets);
 
@@ -1240,14 +1240,14 @@ fn test_restore_packets_v5_0_server() {
 
     for packet in &stored_packets {
         match packet {
-            mqtt::packet::GenericStorePacket::V5_0Publish(p) => {
+            mqtt::packet::StorePacket::V5_0Publish(p) => {
                 if p.topic_name() == "topic/a" && p.packet_id() == Some(1) {
                     stored_publish_a_found = true;
                 } else if p.topic_name() == "topic/b" && p.packet_id() == Some(2) {
                     stored_publish_b_found = true;
                 }
             }
-            mqtt::packet::GenericStorePacket::V5_0Pubrel(p) => {
+            mqtt::packet::StorePacket::V5_0Pubrel(p) => {
                 if p.packet_id() == 3 {
                     stored_pubrel_found = true;
                 }
