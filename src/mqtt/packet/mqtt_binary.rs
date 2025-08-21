@@ -83,7 +83,7 @@ const DEFAULT_STACK_BUFFER_SIZE: usize = 32;
 /// assert_eq!(encoded.len(), 13); // 2 bytes length + 11 bytes data
 /// ```
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub enum GenericMqttBinary<const STACK_BUFFER_SIZE: usize = DEFAULT_STACK_BUFFER_SIZE> {
+pub enum GenericMqttBinary<const STACK_BUFFER_SIZE: usize> {
     /// Small binary data stored on the stack (encoded size ≤ STACK_BUFFER_SIZE)
     Small([u8; STACK_BUFFER_SIZE], usize), // buffer, actual_encoded_length
     /// Large binary data stored on the heap

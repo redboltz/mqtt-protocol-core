@@ -338,7 +338,7 @@ macro_rules! mqtt_property_common {
 macro_rules! mqtt_property_binary {
     ($name:ident, $variant:ident, $id:expr) => {
         #[derive(Debug, PartialEq, Eq, Clone)]
-        pub struct $name<const BINARY_BUFFER_SIZE: usize = 32> {
+        pub struct $name<const BINARY_BUFFER_SIZE: usize> {
             id_bytes: [u8; 1],
             value: GenericMqttBinary<BINARY_BUFFER_SIZE>,
         }
@@ -552,7 +552,7 @@ macro_rules! mqtt_property_binary {
 macro_rules! mqtt_property_string {
     ($name:ident, $variant:ident, $id:expr) => {
         #[derive(Debug, PartialEq, Eq, Clone)]
-        pub struct $name<const STRING_BUFFER_SIZE: usize = 32> {
+        pub struct $name<const STRING_BUFFER_SIZE: usize> {
             id_bytes: [u8; 1],
             value: GenericMqttString<STRING_BUFFER_SIZE>,
         }
@@ -744,7 +744,7 @@ macro_rules! mqtt_property_string {
 macro_rules! mqtt_property_string_pair {
     ($name:ident, $variant:ident, $id:expr) => {
         #[derive(Debug, PartialEq, Eq, Clone)]
-        pub struct $name<const STRING_BUFFER_SIZE: usize = 32> {
+        pub struct $name<const STRING_BUFFER_SIZE: usize> {
             id_bytes: [u8; 1],
             value: (
                 GenericMqttString<STRING_BUFFER_SIZE>,
@@ -1877,7 +1877,7 @@ mqtt_property_u8!(
 /// let property = mqtt::packet::Property::UserProperty(user_prop);
 /// ```
 #[derive(Debug, Serialize, PartialEq, Eq, Clone)]
-pub enum GenericProperty<const STRING_BUFFER_SIZE: usize = 32, const BINARY_BUFFER_SIZE: usize = 32>
+pub enum GenericProperty<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
 {
     PayloadFormatIndicator(PayloadFormatIndicator),
     MessageExpiryInterval(MessageExpiryInterval),
@@ -2466,8 +2466,8 @@ impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
 /// properties.push(mqtt::packet::Property::UserProperty(user_prop));
 /// ```
 pub type GenericProperties<
-    const STRING_BUFFER_SIZE: usize = 32,
-    const BINARY_BUFFER_SIZE: usize = 32,
+    const STRING_BUFFER_SIZE: usize,
+    const BINARY_BUFFER_SIZE: usize,
 > = Vec<GenericProperty<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>>;
 
 /// Trait for converting properties collection to continuous buffer

@@ -168,8 +168,8 @@ use crate::mqtt_internal::result_code::MqttError;
 #[builder(no_std, derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
 pub struct GenericPublish<
     PacketIdType,
-    const STRING_BUFFER_SIZE: usize = 32,
-    const PAYLOAD_BUFFER_SIZE: usize = 32,
+    const STRING_BUFFER_SIZE: usize,
+    const PAYLOAD_BUFFER_SIZE: usize,
 > where
     PacketIdType: IsPacketId,
 {

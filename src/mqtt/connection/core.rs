@@ -130,9 +130,9 @@ fn remaining_length_to_total_size(remaining_length: u32) -> u32 {
 pub struct GenericConnection<
     Role,
     PacketIdType,
-    const STRING_BUFFER_SIZE: usize = 32,
-    const BINARY_BUFFER_SIZE: usize = 32,
-    const PAYLOAD_BUFFER_SIZE: usize = 32,
+    const STRING_BUFFER_SIZE: usize,
+    const BINARY_BUFFER_SIZE: usize,
+    const PAYLOAD_BUFFER_SIZE: usize,
 > where
     Role: RoleType,
     PacketIdType: IsPacketId,
@@ -5284,9 +5284,9 @@ where
 pub trait RecvBehavior<
     Role,
     PacketIdType,
-    const STRING_BUFFER_SIZE: usize = 32,
-    const BINARY_BUFFER_SIZE: usize = 32,
-    const PAYLOAD_BUFFER_SIZE: usize = 32,
+    const STRING_BUFFER_SIZE: usize,
+    const BINARY_BUFFER_SIZE: usize,
+    const PAYLOAD_BUFFER_SIZE: usize,
 > where
     PacketIdType: IsPacketId,
 {

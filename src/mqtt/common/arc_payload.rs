@@ -23,9 +23,6 @@
 use alloc::{string::String, sync::Arc, vec::Vec};
 use serde::{Serialize, Serializer};
 
-// Default stack buffer size for small payload optimization
-const DEFAULT_STACK_BUFFER_SIZE: usize = 32;
-
 /// A reference-counted byte payload with slice semantics and Small Buffer Optimization (SBO)
 ///
 /// `GenericArcPayload` provides an efficient way to handle byte data with automatic optimization
@@ -55,7 +52,7 @@ const DEFAULT_STACK_BUFFER_SIZE: usize = 32;
 /// let custom_payload = mqtt::GenericArcPayload::<64>::from(&b"hello"[..]);
 /// ```
 #[derive(Clone, Debug)]
-pub enum GenericArcPayload<const STACK_BUFFER_SIZE: usize = DEFAULT_STACK_BUFFER_SIZE> {
+pub enum GenericArcPayload<const STACK_BUFFER_SIZE: usize> {
     /// Small payload stored on the stack (size ≤ STACK_BUFFER_SIZE)
     Small([u8; STACK_BUFFER_SIZE], usize), // buffer, actual_length
     /// Large payload stored with Arc for reference counting
@@ -195,7 +192,7 @@ impl<const STACK_BUFFER_SIZE: usize> Default for GenericArcPayload<STACK_BUFFER_
 }
 
 /// Trait for converting various types into payload
-pub trait IntoPayload<const STACK_BUFFER_SIZE: usize = DEFAULT_STACK_BUFFER_SIZE> {
+pub trait IntoPayload<const STACK_BUFFER_SIZE: usize> {
     /// Convert the value into a payload
     fn into_payload(self) -> GenericArcPayload<STACK_BUFFER_SIZE>;
 }

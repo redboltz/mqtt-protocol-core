@@ -178,9 +178,9 @@ use crate::mqtt_internal::result_code::MqttError;
 #[builder(no_std, derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
 pub struct GenericPublish<
     PacketIdType,
-    const STRING_BUFFER_SIZE: usize = 32,
-    const BINARY_BUFFER_SIZE: usize = 32,
-    const PAYLOAD_BUFFER_SIZE: usize = 32,
+    const STRING_BUFFER_SIZE: usize,
+    const BINARY_BUFFER_SIZE: usize,
+    const PAYLOAD_BUFFER_SIZE: usize,
 > where
     PacketIdType: IsPacketId,
 {
@@ -262,8 +262,8 @@ where
     ///     .build()
     ///     .unwrap();
     /// ```
-    pub fn builder() -> GenericPublishBuilder<PacketIdType> {
-        GenericPublishBuilder::<PacketIdType>::default()
+    pub fn builder() -> GenericPublishBuilder<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE> {
+        GenericPublishBuilder::<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>::default()
     }
 
     /// Returns the packet type for PUBLISH packets

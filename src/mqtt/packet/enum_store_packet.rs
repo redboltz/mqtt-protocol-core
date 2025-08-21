@@ -45,9 +45,9 @@ pub enum ResponsePacket {
 #[derive(Serialize, Clone, PartialEq, Eq)]
 pub enum GenericStorePacket<
     PacketIdType,
-    const STRING_BUFFER_SIZE: usize = 32,
-    const BINARY_BUFFER_SIZE: usize = 32,
-    const PAYLOAD_BUFFER_SIZE: usize = 32,
+    const STRING_BUFFER_SIZE: usize,
+    const BINARY_BUFFER_SIZE: usize,
+    const PAYLOAD_BUFFER_SIZE: usize,
 > where
     PacketIdType: IsPacketId + Serialize,
 {

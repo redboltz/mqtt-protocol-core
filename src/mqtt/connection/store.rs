@@ -31,9 +31,9 @@ use indexmap::IndexMap;
 /// A store that holds packets in insertion order and allows O(1) insert/remove by id.
 pub struct GenericStore<
     PacketIdType: IsPacketId,
-    const STRING_BUFFER_SIZE: usize = 32,
-    const BINARY_BUFFER_SIZE: usize = 32,
-    const PAYLOAD_BUFFER_SIZE: usize = 32,
+    const STRING_BUFFER_SIZE: usize,
+    const BINARY_BUFFER_SIZE: usize,
+    const PAYLOAD_BUFFER_SIZE: usize,
 > {
     map: IndexMap<
         PacketIdType,

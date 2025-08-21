@@ -38,9 +38,9 @@ use core::fmt::Debug;
 pub trait Sendable<
     Role,
     PacketIdType,
-    const STRING_BUFFER_SIZE: usize = 32,
-    const BINARY_BUFFER_SIZE: usize = 32,
-    const PAYLOAD_BUFFER_SIZE: usize = 32,
+    const STRING_BUFFER_SIZE: usize,
+    const BINARY_BUFFER_SIZE: usize,
+    const PAYLOAD_BUFFER_SIZE: usize,
 >: PacketKind where
     Role: RoleType,
     PacketIdType: IsPacketId,
@@ -61,9 +61,9 @@ pub trait Sendable<
 pub trait SendBehavior<
     Role,
     PacketIdType,
-    const STRING_BUFFER_SIZE: usize = 32,
-    const BINARY_BUFFER_SIZE: usize = 32,
-    const PAYLOAD_BUFFER_SIZE: usize = 32,
+    const STRING_BUFFER_SIZE: usize,
+    const BINARY_BUFFER_SIZE: usize,
+    const PAYLOAD_BUFFER_SIZE: usize,
 > where
     Role: RoleType,
     PacketIdType: IsPacketId,
@@ -86,9 +86,9 @@ pub trait SendBehavior<
 pub trait SendableHelper<
     Role,
     PacketIdType,
-    const STRING_BUFFER_SIZE: usize = 32,
-    const BINARY_BUFFER_SIZE: usize = 32,
-    const PAYLOAD_BUFFER_SIZE: usize = 32,
+    const STRING_BUFFER_SIZE: usize,
+    const BINARY_BUFFER_SIZE: usize,
+    const PAYLOAD_BUFFER_SIZE: usize,
 >: PacketKind + Sized where
     Role: RoleType,
     PacketIdType: IsPacketId,

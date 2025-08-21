@@ -72,7 +72,7 @@ const DEFAULT_STACK_BUFFER_SIZE: usize = 32;
 /// let custom_str = mqtt::packet::GenericMqttString::<64>::new("hello").unwrap();
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub enum GenericMqttString<const STACK_BUFFER_SIZE: usize = DEFAULT_STACK_BUFFER_SIZE> {
+pub enum GenericMqttString<const STACK_BUFFER_SIZE: usize> {
     /// Small string stored on the stack (total size ≤ STACK_BUFFER_SIZE)
     Small([u8; STACK_BUFFER_SIZE], usize), // buffer, actual_length
     /// Large string stored on the heap
