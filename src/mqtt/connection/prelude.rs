@@ -19,6 +19,6 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-pub use crate::mqtt::mqtt_internal::connection::core::RecvBehavior;
-pub use crate::mqtt::mqtt_internal::connection::event::{GenericEvent, TimerKind};
-pub use crate::mqtt::mqtt_internal::connection::{SendBehavior, Sendable};
+pub use crate::mqtt_internal::connection::core::RecvBehavior;
+pub use crate::mqtt_internal::connection::event::{GenericEvent, TimerKind};
+pub use crate::mqtt_internal::connection::{SendBehavior, Sendable};

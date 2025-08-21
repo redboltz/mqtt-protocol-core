@@ -5400,9 +5400,9 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::mqtt::mqtt_internal::connection::version::Version;
-    use crate::mqtt::mqtt_internal::packet::TopicAliasSend;
-    use crate::mqtt::mqtt_internal::role;
+    use crate::mqtt_internal::connection::version::Version;
+    use crate::mqtt_internal::packet::TopicAliasSend;
+    use crate::mqtt_internal::role;
 
     #[test]
     fn test_initialize_client_mode() {

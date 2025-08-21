@@ -20,8 +20,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-use crate::mqtt::mqtt_internal::connection::version::*;
-use crate::mqtt::mqtt_internal::packet::*;
+use crate::mqtt_internal::connection::version::*;
+use crate::mqtt_internal::packet::*;
 
 /// Trait to check if a packet is valid for a specific MQTT version.
 pub trait SendableVersion {

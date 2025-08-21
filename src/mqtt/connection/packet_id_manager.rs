@@ -20,9 +20,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-use crate::mqtt::mqtt_internal::packet::IsPacketId;
-use crate::mqtt::mqtt_internal::result_code::MqttError;
-use crate::mqtt::mqtt_internal::ValueAllocator;
+use crate::mqtt_internal::packet::IsPacketId;
+use crate::mqtt_internal::result_code::MqttError;
+use crate::mqtt_internal::ValueAllocator;
 
 pub struct PacketIdManager<T>
 where

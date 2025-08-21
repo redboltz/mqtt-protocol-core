@@ -31,12 +31,12 @@ use serde::Serialize;
 
 use getset::{CopyGetters, Getters};
 
-use crate::mqtt::mqtt_internal::packet::packet_type::{FixedHeader, PacketType};
-use crate::mqtt::mqtt_internal::packet::variable_byte_integer::VariableByteInteger;
-use crate::mqtt::mqtt_internal::packet::GenericPacketDisplay;
-use crate::mqtt::mqtt_internal::packet::GenericPacketTrait;
-use crate::mqtt::mqtt_internal::result_code::ConnectReturnCode;
-use crate::mqtt::mqtt_internal::result_code::MqttError;
+use crate::mqtt_internal::packet::packet_type::{FixedHeader, PacketType};
+use crate::mqtt_internal::packet::variable_byte_integer::VariableByteInteger;
+use crate::mqtt_internal::packet::GenericPacketDisplay;
+use crate::mqtt_internal::packet::GenericPacketTrait;
+use crate::mqtt_internal::result_code::ConnectReturnCode;
+use crate::mqtt_internal::result_code::MqttError;
 
 /// MQTT v3.1.1 CONNACK packet representation
 ///

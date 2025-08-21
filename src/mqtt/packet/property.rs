@@ -25,7 +25,7 @@ use super::mqtt_binary::GenericMqttBinary;
 use super::mqtt_string::GenericMqttString;
 use super::DecodeResult;
 use super::VariableByteInteger;
-use crate::mqtt::mqtt_internal::result_code::MqttError;
+use crate::mqtt_internal::result_code::MqttError;
 use alloc::{string::String, vec::Vec};
 use core::convert::TryFrom;
 use core::fmt;

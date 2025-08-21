@@ -20,12 +20,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-use crate::mqtt::mqtt_internal::connection::role;
-use crate::mqtt::mqtt_internal::connection::sendable::SendableHelper;
-use crate::mqtt::mqtt_internal::connection::GenericConnection;
-use crate::mqtt::mqtt_internal::connection::GenericEvent;
-use crate::mqtt::mqtt_internal::packet::IsPacketId;
-use crate::mqtt::mqtt_internal::packet::{v3_1_1, v5_0};
+use crate::mqtt_internal::connection::role;
+use crate::mqtt_internal::connection::sendable::SendableHelper;
+use crate::mqtt_internal::connection::GenericConnection;
+use crate::mqtt_internal::connection::GenericEvent;
+use crate::mqtt_internal::packet::IsPacketId;
+use crate::mqtt_internal::packet::{v3_1_1, v5_0};
 use alloc::vec::Vec;
 
 macro_rules! impl_sendable_helper {

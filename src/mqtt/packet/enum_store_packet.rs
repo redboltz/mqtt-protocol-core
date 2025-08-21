@@ -25,7 +25,7 @@ use super::v3_1_1;
 use super::v5_0;
 use super::IsPacketId;
 use super::PacketType;
-use crate::mqtt::mqtt_internal::result_code::MqttError;
+use crate::mqtt_internal::result_code::MqttError;
 use alloc::vec::Vec;
 use serde::Serialize;
 #[cfg(feature = "std")]

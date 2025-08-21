@@ -23,7 +23,7 @@
 use super::GenericMqttString;
 use super::Qos;
 use super::RetainHandling;
-use crate::mqtt::mqtt_internal::result_code::MqttError;
+use crate::mqtt_internal::result_code::MqttError;
 use alloc::string::ToString;
 use alloc::{string::String, vec::Vec};
 use core::fmt;

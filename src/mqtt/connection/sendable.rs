@@ -20,17 +20,17 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-use crate::mqtt::mqtt_internal::common::tracing::trace;
+use crate::mqtt_internal::common::tracing::trace;
 use super::role;
 use super::role::RoleType;
 use super::sendable_role::SendableRole;
 use super::sendable_version::SendableVersion;
 use super::GenericConnection;
 use super::GenericEvent;
-use crate::mqtt::mqtt_internal::packet::kind::PacketKind;
-use crate::mqtt::mqtt_internal::packet::GenericPacket;
-use crate::mqtt::mqtt_internal::packet::IsPacketId;
-use crate::mqtt::mqtt_internal::result_code::MqttError;
+use crate::mqtt_internal::packet::kind::PacketKind;
+use crate::mqtt_internal::packet::GenericPacket;
+use crate::mqtt_internal::packet::IsPacketId;
+use crate::mqtt_internal::result_code::MqttError;
 use alloc::vec::Vec;
 use core::fmt::Debug;
 
