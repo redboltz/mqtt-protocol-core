@@ -21,9 +21,9 @@
 // SOFTWARE.
 // tests/connection-pingreq-interval.rs
 // Tests for set_pingreq_send_interval functionality
-mqtt_protocol_core::make_default_aliases!();
 
 mod common;
+use common::mqtt;
 use mqtt_protocol_core::mqtt::connection::event::{GenericEvent, TimerKind};
 
 #[test]

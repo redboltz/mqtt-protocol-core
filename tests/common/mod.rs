@@ -23,9 +23,6 @@
 // Generate default type aliases for all tests
 mqtt_protocol_core::make_default_aliases!();
 
-// Re-export the mqtt module for use in tests
-pub use mqtt;
-
 #[cfg(feature = "std")]
 use std::sync::Once;
 

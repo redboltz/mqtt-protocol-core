@@ -20,6 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 mod common;
+use common::mqtt;
 
 /// Compile-time constraint verification tests
 ///
@@ -29,7 +30,6 @@ mod common;
 #[test]
 fn verify_sendable_constraints() {
     common::init_tracing();
-    mqtt_protocol_core::make_default_aliases!();
 
     use static_assertions::{assert_impl_all, assert_not_impl_any};
 

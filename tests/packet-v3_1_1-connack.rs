@@ -20,8 +20,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 use core::fmt::Write;
-mqtt_protocol_core::make_default_aliases!();
 mod common;
+use common::mqtt;
 
 // Build fail tests
 

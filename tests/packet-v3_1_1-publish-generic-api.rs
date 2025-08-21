@@ -1,5 +1,6 @@
-mqtt_protocol_core::make_default_aliases!();
-use mqtt_protocol_core::mqtt::packet::Qos;
+mod common;
+use common::mqtt;
+use mqtt::packet::Qos;
 
 #[test]
 fn test_publish_default_sizes() {

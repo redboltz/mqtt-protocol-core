@@ -1,7 +1,8 @@
 extern crate alloc;
 use alloc::sync::Arc;
-mqtt_protocol_core::make_default_aliases!();
-use mqtt_protocol_core::mqtt::common::{GenericArcPayload, IntoPayload};
+mod common;
+use common::mqtt;
+use mqtt::common::{GenericArcPayload, IntoPayload};
 
 #[test]
 fn test_small_payload_uses_stack() {

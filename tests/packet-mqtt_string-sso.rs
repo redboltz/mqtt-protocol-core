@@ -1,4 +1,6 @@
-mqtt_protocol_core::make_default_aliases!();
+
+mod common;
+use common::mqtt;
 
 #[test]
 fn test_small_string_uses_stack() {
