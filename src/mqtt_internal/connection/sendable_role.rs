@@ -102,194 +102,194 @@ impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableR
 // Generic packet implementations for roles
 // Client sendable generic packets
 impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const PAYLOAD_BUFFER_SIZE: usize> SendableRole<Client> for v3_1_1::GenericPublish<PacketIdType, STRING_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE> where
-    PacketIdType: crate::mqtt::packet::IsPacketId
+    PacketIdType: crate::mqtt_internal::packet::IsPacketId
 {
 }
 impl<PacketIdType> SendableRole<Client> for v3_1_1::GenericPuback<PacketIdType> where
-    PacketIdType: crate::mqtt::packet::IsPacketId
+    PacketIdType: crate::mqtt_internal::packet::IsPacketId
 {
 }
 impl<PacketIdType> SendableRole<Client> for v3_1_1::GenericPubrec<PacketIdType> where
-    PacketIdType: crate::mqtt::packet::IsPacketId
+    PacketIdType: crate::mqtt_internal::packet::IsPacketId
 {
 }
 impl<PacketIdType> SendableRole<Client> for v3_1_1::GenericPubrel<PacketIdType> where
-    PacketIdType: crate::mqtt::packet::IsPacketId
+    PacketIdType: crate::mqtt_internal::packet::IsPacketId
 {
 }
 impl<PacketIdType> SendableRole<Client> for v3_1_1::GenericPubcomp<PacketIdType> where
-    PacketIdType: crate::mqtt::packet::IsPacketId
+    PacketIdType: crate::mqtt_internal::packet::IsPacketId
 {
 }
 impl<PacketIdType, const STRING_BUFFER_SIZE: usize> SendableRole<Client> for v3_1_1::GenericSubscribe<PacketIdType, STRING_BUFFER_SIZE> where
-    PacketIdType: crate::mqtt::packet::IsPacketId
+    PacketIdType: crate::mqtt_internal::packet::IsPacketId
 {
 }
 impl<PacketIdType, const STRING_BUFFER_SIZE: usize> SendableRole<Client> for v3_1_1::GenericUnsubscribe<PacketIdType, STRING_BUFFER_SIZE> where
-    PacketIdType: crate::mqtt::packet::IsPacketId
+    PacketIdType: crate::mqtt_internal::packet::IsPacketId
 {
 }
 
 impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize, const PAYLOAD_BUFFER_SIZE: usize> SendableRole<Client> for v5_0::GenericPublish<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE> where
-    PacketIdType: crate::mqtt::packet::IsPacketId
+    PacketIdType: crate::mqtt_internal::packet::IsPacketId
 {
 }
 impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableRole<Client> for v5_0::GenericPuback<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE> where
-    PacketIdType: crate::mqtt::packet::IsPacketId
+    PacketIdType: crate::mqtt_internal::packet::IsPacketId
 {
 }
 impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableRole<Client> for v5_0::GenericPubrec<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE> where
-    PacketIdType: crate::mqtt::packet::IsPacketId
+    PacketIdType: crate::mqtt_internal::packet::IsPacketId
 {
 }
 impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableRole<Client> for v5_0::GenericPubrel<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE> where
-    PacketIdType: crate::mqtt::packet::IsPacketId
+    PacketIdType: crate::mqtt_internal::packet::IsPacketId
 {
 }
 impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableRole<Client> for v5_0::GenericPubcomp<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE> where
-    PacketIdType: crate::mqtt::packet::IsPacketId
+    PacketIdType: crate::mqtt_internal::packet::IsPacketId
 {
 }
 impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableRole<Client> for v5_0::GenericSubscribe<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE> where
-    PacketIdType: crate::mqtt::packet::IsPacketId
+    PacketIdType: crate::mqtt_internal::packet::IsPacketId
 {
 }
 impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableRole<Client> for v5_0::GenericUnsubscribe<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE> where
-    PacketIdType: crate::mqtt::packet::IsPacketId
+    PacketIdType: crate::mqtt_internal::packet::IsPacketId
 {
 }
 
 // Server sendable generic packets
 impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const PAYLOAD_BUFFER_SIZE: usize> SendableRole<Server> for v3_1_1::GenericPublish<PacketIdType, STRING_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE> where
-    PacketIdType: crate::mqtt::packet::IsPacketId
+    PacketIdType: crate::mqtt_internal::packet::IsPacketId
 {
 }
 impl<PacketIdType> SendableRole<Server> for v3_1_1::GenericPuback<PacketIdType> where
-    PacketIdType: crate::mqtt::packet::IsPacketId
+    PacketIdType: crate::mqtt_internal::packet::IsPacketId
 {
 }
 impl<PacketIdType> SendableRole<Server> for v3_1_1::GenericPubrec<PacketIdType> where
-    PacketIdType: crate::mqtt::packet::IsPacketId
+    PacketIdType: crate::mqtt_internal::packet::IsPacketId
 {
 }
 impl<PacketIdType> SendableRole<Server> for v3_1_1::GenericPubrel<PacketIdType> where
-    PacketIdType: crate::mqtt::packet::IsPacketId
+    PacketIdType: crate::mqtt_internal::packet::IsPacketId
 {
 }
 impl<PacketIdType> SendableRole<Server> for v3_1_1::GenericPubcomp<PacketIdType> where
-    PacketIdType: crate::mqtt::packet::IsPacketId
+    PacketIdType: crate::mqtt_internal::packet::IsPacketId
 {
 }
 impl<PacketIdType> SendableRole<Server> for v3_1_1::GenericSuback<PacketIdType> where
-    PacketIdType: crate::mqtt::packet::IsPacketId
+    PacketIdType: crate::mqtt_internal::packet::IsPacketId
 {
 }
 impl<PacketIdType> SendableRole<Server> for v3_1_1::GenericUnsuback<PacketIdType> where
-    PacketIdType: crate::mqtt::packet::IsPacketId
+    PacketIdType: crate::mqtt_internal::packet::IsPacketId
 {
 }
 
 impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize, const PAYLOAD_BUFFER_SIZE: usize> SendableRole<Server> for v5_0::GenericPublish<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE> where
-    PacketIdType: crate::mqtt::packet::IsPacketId
+    PacketIdType: crate::mqtt_internal::packet::IsPacketId
 {
 }
 impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableRole<Server> for v5_0::GenericPuback<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE> where
-    PacketIdType: crate::mqtt::packet::IsPacketId
+    PacketIdType: crate::mqtt_internal::packet::IsPacketId
 {
 }
 impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableRole<Server> for v5_0::GenericPubrec<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE> where
-    PacketIdType: crate::mqtt::packet::IsPacketId
+    PacketIdType: crate::mqtt_internal::packet::IsPacketId
 {
 }
 impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableRole<Server> for v5_0::GenericPubrel<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE> where
-    PacketIdType: crate::mqtt::packet::IsPacketId
+    PacketIdType: crate::mqtt_internal::packet::IsPacketId
 {
 }
 impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableRole<Server> for v5_0::GenericPubcomp<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE> where
-    PacketIdType: crate::mqtt::packet::IsPacketId
+    PacketIdType: crate::mqtt_internal::packet::IsPacketId
 {
 }
 impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableRole<Server> for v5_0::GenericSuback<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE> where
-    PacketIdType: crate::mqtt::packet::IsPacketId
+    PacketIdType: crate::mqtt_internal::packet::IsPacketId
 {
 }
 impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableRole<Server> for v5_0::GenericUnsuback<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE> where
-    PacketIdType: crate::mqtt::packet::IsPacketId
+    PacketIdType: crate::mqtt_internal::packet::IsPacketId
 {
 }
 
 // Any role sendable generic packets
 impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const PAYLOAD_BUFFER_SIZE: usize> SendableRole<Any> for v3_1_1::GenericPublish<PacketIdType, STRING_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE> where
-    PacketIdType: crate::mqtt::packet::IsPacketId
+    PacketIdType: crate::mqtt_internal::packet::IsPacketId
 {
 }
 impl<PacketIdType> SendableRole<Any> for v3_1_1::GenericPuback<PacketIdType> where
-    PacketIdType: crate::mqtt::packet::IsPacketId
+    PacketIdType: crate::mqtt_internal::packet::IsPacketId
 {
 }
 impl<PacketIdType> SendableRole<Any> for v3_1_1::GenericPubrec<PacketIdType> where
-    PacketIdType: crate::mqtt::packet::IsPacketId
+    PacketIdType: crate::mqtt_internal::packet::IsPacketId
 {
 }
 impl<PacketIdType> SendableRole<Any> for v3_1_1::GenericPubrel<PacketIdType> where
-    PacketIdType: crate::mqtt::packet::IsPacketId
+    PacketIdType: crate::mqtt_internal::packet::IsPacketId
 {
 }
 impl<PacketIdType> SendableRole<Any> for v3_1_1::GenericPubcomp<PacketIdType> where
-    PacketIdType: crate::mqtt::packet::IsPacketId
+    PacketIdType: crate::mqtt_internal::packet::IsPacketId
 {
 }
 impl<PacketIdType, const STRING_BUFFER_SIZE: usize> SendableRole<Any> for v3_1_1::GenericSubscribe<PacketIdType, STRING_BUFFER_SIZE> where
-    PacketIdType: crate::mqtt::packet::IsPacketId
+    PacketIdType: crate::mqtt_internal::packet::IsPacketId
 {
 }
 impl<PacketIdType> SendableRole<Any> for v3_1_1::GenericSuback<PacketIdType> where
-    PacketIdType: crate::mqtt::packet::IsPacketId
+    PacketIdType: crate::mqtt_internal::packet::IsPacketId
 {
 }
 impl<PacketIdType, const STRING_BUFFER_SIZE: usize> SendableRole<Any> for v3_1_1::GenericUnsubscribe<PacketIdType, STRING_BUFFER_SIZE> where
-    PacketIdType: crate::mqtt::packet::IsPacketId
+    PacketIdType: crate::mqtt_internal::packet::IsPacketId
 {
 }
 impl<PacketIdType> SendableRole<Any> for v3_1_1::GenericUnsuback<PacketIdType> where
-    PacketIdType: crate::mqtt::packet::IsPacketId
+    PacketIdType: crate::mqtt_internal::packet::IsPacketId
 {
 }
 
 impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize, const PAYLOAD_BUFFER_SIZE: usize> SendableRole<Any> for v5_0::GenericPublish<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE> where
-    PacketIdType: crate::mqtt::packet::IsPacketId
+    PacketIdType: crate::mqtt_internal::packet::IsPacketId
 {
 }
 impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableRole<Any> for v5_0::GenericPuback<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE> where
-    PacketIdType: crate::mqtt::packet::IsPacketId
+    PacketIdType: crate::mqtt_internal::packet::IsPacketId
 {
 }
 impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableRole<Any> for v5_0::GenericPubrec<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE> where
-    PacketIdType: crate::mqtt::packet::IsPacketId
+    PacketIdType: crate::mqtt_internal::packet::IsPacketId
 {
 }
 impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableRole<Any> for v5_0::GenericPubrel<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE> where
-    PacketIdType: crate::mqtt::packet::IsPacketId
+    PacketIdType: crate::mqtt_internal::packet::IsPacketId
 {
 }
 impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableRole<Any> for v5_0::GenericPubcomp<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE> where
-    PacketIdType: crate::mqtt::packet::IsPacketId
+    PacketIdType: crate::mqtt_internal::packet::IsPacketId
 {
 }
 impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableRole<Any> for v5_0::GenericSubscribe<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE> where
-    PacketIdType: crate::mqtt::packet::IsPacketId
+    PacketIdType: crate::mqtt_internal::packet::IsPacketId
 {
 }
 impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableRole<Any> for v5_0::GenericSuback<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE> where
-    PacketIdType: crate::mqtt::packet::IsPacketId
+    PacketIdType: crate::mqtt_internal::packet::IsPacketId
 {
 }
 impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableRole<Any> for v5_0::GenericUnsubscribe<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE> where
-    PacketIdType: crate::mqtt::packet::IsPacketId
+    PacketIdType: crate::mqtt_internal::packet::IsPacketId
 {
 }
 impl<PacketIdType, const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> SendableRole<Any> for v5_0::GenericUnsuback<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE> where
-    PacketIdType: crate::mqtt::packet::IsPacketId
+    PacketIdType: crate::mqtt_internal::packet::IsPacketId
 {
 }
 

@@ -584,7 +584,7 @@ where
         // Remove TopicAlias property if present
         if let Some(ref mut props) = self.props {
             props.retain(|prop| {
-                !matches!(prop, crate::mqtt::packet::GenericProperty::TopicAlias(_))
+                !matches!(prop, crate::mqtt_internal::packet::GenericProperty::TopicAlias(_))
             });
         }
 
@@ -625,7 +625,7 @@ where
     pub fn remove_topic_alias(mut self) -> Self {
         if let Some(ref mut props) = self.props {
             props.retain(|prop| {
-                !matches!(prop, crate::mqtt::packet::GenericProperty::TopicAlias(_))
+                !matches!(prop, crate::mqtt_internal::packet::GenericProperty::TopicAlias(_))
             });
         }
 
@@ -739,7 +739,7 @@ where
 
         // Add TopicAlias property to the end of properties
         let topic_alias_property =
-            GenericProperty::TopicAlias(crate::mqtt::packet::TopicAlias::new(topic_alias).unwrap());
+            GenericProperty::TopicAlias(crate::mqtt_internal::packet::TopicAlias::new(topic_alias).unwrap());
 
         match &mut self.props {
             Some(props) => {
@@ -782,7 +782,7 @@ where
         let mut remaining_size = self.topic_name_buf.size();
 
         // Add packet ID size if QoS > 0
-        if self.qos() != crate::mqtt::packet::qos::Qos::AtMostOnce {
+        if self.qos() != crate::mqtt_internal::packet::qos::Qos::AtMostOnce {
             remaining_size += self
                 .packet_id_buf
                 .as_ref()

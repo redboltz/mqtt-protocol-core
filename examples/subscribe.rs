@@ -109,17 +109,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 fn handle_events(
     stream: &mut TcpStream,
     _connection: &mut mqtt::Connection<mqtt::role::Client>,
-    events: Vec<mqtt::connection::Event>,
+    events: Vec<mqtt::Event>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     for event in events {
         match event {
-            mqtt::connection::Event::RequestSendPacket { packet, .. } => {
+            mqtt::Event::RequestSendPacket { packet, .. } => {
                 let buffer = packet.to_continuous_buffer();
                 stream.write_all(&buffer)?;
                 let packet_type = packet.packet_type();
                 println!("Sent packet: {packet_type}");
             }
-            mqtt::connection::Event::NotifyPacketReceived(packet) => match packet {
+            mqtt::Event::NotifyPacketReceived(packet) => match packet {
                 mqtt::packet::Packet::V5_0Connack(connack) => {
                     let reason_code = connack.reason_code();
                     println!("CONNACK received: {reason_code:?}");
@@ -142,20 +142,20 @@ fn handle_events(
                     println!("Received packet: {packet_type}");
                 }
             },
-            mqtt::connection::Event::NotifyPacketIdReleased(packet_id) => {
+            mqtt::Event::NotifyPacketIdReleased(packet_id) => {
                 println!("Packet ID {packet_id} released");
             }
-            mqtt::connection::Event::NotifyError(error) => {
+            mqtt::Event::NotifyError(error) => {
                 eprintln!("MQTT Error: {error:?}");
             }
-            mqtt::connection::Event::RequestClose => {
+            mqtt::Event::RequestClose => {
                 println!("Connection close requested");
                 return Ok(());
             }
-            mqtt::connection::Event::RequestTimerReset { kind, duration_ms } => {
+            mqtt::Event::RequestTimerReset { kind, duration_ms } => {
                 println!("Timer reset requested: {kind:?} for {duration_ms} ms");
             }
-            mqtt::connection::Event::RequestTimerCancel(kind) => {
+            mqtt::Event::RequestTimerCancel(kind) => {
                 println!("Timer cancel requested: {kind:?}");
             }
         }

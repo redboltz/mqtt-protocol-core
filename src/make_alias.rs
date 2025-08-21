@@ -284,8 +284,32 @@ macro_rules! make_type_size_aliases {
                 pub use $crate::mqtt_internal::common::*;
             }
 
+            // Top-level convenience aliases
+            pub type Connection<Role> = $crate::mqtt_internal::connection::GenericConnection<
+                Role,
+                $packet_id_type,
+                $string_buffer_size,
+                $binary_buffer_size,
+                $payload_buffer_size,
+            >;
+            
+            pub type Event = $crate::mqtt_internal::connection::GenericEvent<
+                $packet_id_type,
+                $string_buffer_size,
+                $binary_buffer_size,
+                $payload_buffer_size,
+            >;
+
             // Re-export everything else from mqtt_internal at the top level
             pub use $crate::mqtt_internal::*;
+            // Ensure trait is available for packet operations
+            pub use $crate::mqtt_internal::packet::GenericPacketTrait;
+            
+            // Re-export prelude for convenience
+            pub mod prelude {
+                pub use $crate::mqtt_internal::connection::prelude::*;
+                pub use $crate::mqtt_internal::packet::prelude::*;
+            }
         }
     };
 }
