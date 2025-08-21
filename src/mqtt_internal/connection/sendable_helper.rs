@@ -31,18 +31,38 @@ use alloc::vec::Vec;
 macro_rules! impl_sendable_helper {
     ($role:ty, $packet_type:ty, $method:ident, $process_method:ident) => {
         impl<
-            PacketIdType,
-            const STRING_BUFFER_SIZE: usize,
-            const BINARY_BUFFER_SIZE: usize,
-            const PAYLOAD_BUFFER_SIZE: usize,
-        > SendableHelper<$role, PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE> for $packet_type
+                PacketIdType,
+                const STRING_BUFFER_SIZE: usize,
+                const BINARY_BUFFER_SIZE: usize,
+                const PAYLOAD_BUFFER_SIZE: usize,
+            >
+            SendableHelper<
+                $role,
+                PacketIdType,
+                STRING_BUFFER_SIZE,
+                BINARY_BUFFER_SIZE,
+                PAYLOAD_BUFFER_SIZE,
+            > for $packet_type
         where
             PacketIdType: IsPacketId,
         {
             fn $method(
                 self,
-                connection: &mut GenericConnection<$role, PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>,
-            ) -> Vec<GenericEvent<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>> {
+                connection: &mut GenericConnection<
+                    $role,
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >,
+            ) -> Vec<
+                GenericEvent<
+                    PacketIdType,
+                    STRING_BUFFER_SIZE,
+                    BINARY_BUFFER_SIZE,
+                    PAYLOAD_BUFFER_SIZE,
+                >,
+            > {
                 connection.$process_method(self)
             }
         }

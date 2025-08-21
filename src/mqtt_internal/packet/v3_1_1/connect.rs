@@ -125,10 +125,7 @@ use crate::mqtt_internal::result_code::MqttError;
 /// ```
 #[derive(PartialEq, Eq, Builder, Clone, Getters, CopyGetters)]
 #[builder(no_std, derive(Debug), pattern = "owned", setter(into), build_fn(skip))]
-pub struct GenericConnect<
-    const STRING_BUFFER_SIZE: usize,
-    const BINARY_BUFFER_SIZE: usize,
-> {
+pub struct GenericConnect<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> {
     #[builder(private)]
     fixed_header: [u8; 1],
     #[builder(private)]

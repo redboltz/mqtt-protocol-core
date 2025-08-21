@@ -1877,8 +1877,7 @@ mqtt_property_u8!(
 /// let property = mqtt::packet::Property::UserProperty(user_prop);
 /// ```
 #[derive(Debug, Serialize, PartialEq, Eq, Clone)]
-pub enum GenericProperty<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
-{
+pub enum GenericProperty<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> {
     PayloadFormatIndicator(PayloadFormatIndicator),
     MessageExpiryInterval(MessageExpiryInterval),
     ContentType(GenericContentType<STRING_BUFFER_SIZE>),
@@ -2465,10 +2464,8 @@ impl<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize>
 /// let user_prop = mqtt::packet::UserProperty::new("app", "myapp").unwrap();
 /// properties.push(mqtt::packet::Property::UserProperty(user_prop));
 /// ```
-pub type GenericProperties<
-    const STRING_BUFFER_SIZE: usize,
-    const BINARY_BUFFER_SIZE: usize,
-> = Vec<GenericProperty<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>>;
+pub type GenericProperties<const STRING_BUFFER_SIZE: usize, const BINARY_BUFFER_SIZE: usize> =
+    Vec<GenericProperty<STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE>>;
 
 /// Trait for converting properties collection to continuous buffer
 ///

@@ -58,10 +58,16 @@ fn make_packet_u16(id: u16, qos: mqtt::packet::Qos) -> mqtt::packet::StorePacket
 fn test_add_and_get_stored_order() {
     common::init_tracing();
     let mut store = mqtt_pid32::connection::Store::new();
-    assert!(store.add(make_packet_u32(1, mqtt::packet::Qos::AtLeastOnce)).is_ok());
-    assert!(store.add(make_packet_u32(2, mqtt::packet::Qos::ExactlyOnce)).is_ok());
+    assert!(store
+        .add(make_packet_u32(1, mqtt::packet::Qos::AtLeastOnce))
+        .is_ok());
+    assert!(store
+        .add(make_packet_u32(2, mqtt::packet::Qos::ExactlyOnce))
+        .is_ok());
     // Duplicate id should fail
-    assert!(store.add(make_packet_u32(1, mqtt::packet::Qos::AtLeastOnce)).is_err());
+    assert!(store
+        .add(make_packet_u32(1, mqtt::packet::Qos::AtLeastOnce))
+        .is_err());
 
     let stored = store.get_stored();
     let ids: Vec<u32> = stored.iter().map(|p| p.packet_id()).collect();
@@ -94,7 +100,9 @@ fn test_erase_publish() {
     common::init_tracing();
     let mut store = mqtt_pid32::connection::Store::new();
     // Only one matching packet
-    store.add(make_packet_u32(42, mqtt::packet::Qos::ExactlyOnce)).unwrap();
+    store
+        .add(make_packet_u32(42, mqtt::packet::Qos::ExactlyOnce))
+        .unwrap();
     assert!(store.erase_publish(42));
     assert!(store.get_stored().is_empty());
 

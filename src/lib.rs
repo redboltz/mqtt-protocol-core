@@ -106,12 +106,10 @@
 //! broker clustering, where u32 packet IDs can prevent ID exhaustion:
 //!
 //! ```rust,no_run
-//! use mqtt_protocol_core::mqtt::{GenericConnection, connection::role::Server};
+//! use mqtt_protocol_core::mqtt_pid32::{Connection, Version, connection::role::Server};
 //!
 //! // Use u32 packet IDs instead of standard u16
-//! let mut server = GenericConnection::<Server, u32>::new(
-//!     mqtt_protocol_core::mqtt::Version::V5_0
-//! );
+//! let mut server = Connection::<Server>::new(Version::V5_0);
 //! ```
 //!
 //! ## No-std Support

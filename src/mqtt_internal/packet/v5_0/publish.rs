@@ -262,8 +262,18 @@ where
     ///     .build()
     ///     .unwrap();
     /// ```
-    pub fn builder() -> GenericPublishBuilder<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE> {
-        GenericPublishBuilder::<PacketIdType, STRING_BUFFER_SIZE, BINARY_BUFFER_SIZE, PAYLOAD_BUFFER_SIZE>::default()
+    pub fn builder() -> GenericPublishBuilder<
+        PacketIdType,
+        STRING_BUFFER_SIZE,
+        BINARY_BUFFER_SIZE,
+        PAYLOAD_BUFFER_SIZE,
+    > {
+        GenericPublishBuilder::<
+            PacketIdType,
+            STRING_BUFFER_SIZE,
+            BINARY_BUFFER_SIZE,
+            PAYLOAD_BUFFER_SIZE,
+        >::default()
     }
 
     /// Returns the packet type for PUBLISH packets
@@ -584,7 +594,10 @@ where
         // Remove TopicAlias property if present
         if let Some(ref mut props) = self.props {
             props.retain(|prop| {
-                !matches!(prop, crate::mqtt_internal::packet::GenericProperty::TopicAlias(_))
+                !matches!(
+                    prop,
+                    crate::mqtt_internal::packet::GenericProperty::TopicAlias(_)
+                )
             });
         }
 
@@ -625,7 +638,10 @@ where
     pub fn remove_topic_alias(mut self) -> Self {
         if let Some(ref mut props) = self.props {
             props.retain(|prop| {
-                !matches!(prop, crate::mqtt_internal::packet::GenericProperty::TopicAlias(_))
+                !matches!(
+                    prop,
+                    crate::mqtt_internal::packet::GenericProperty::TopicAlias(_)
+                )
             });
         }
 
@@ -738,8 +754,9 @@ where
         self.topic_name_buf = GenericMqttString::<STRING_BUFFER_SIZE>::new("").unwrap();
 
         // Add TopicAlias property to the end of properties
-        let topic_alias_property =
-            GenericProperty::TopicAlias(crate::mqtt_internal::packet::TopicAlias::new(topic_alias).unwrap());
+        let topic_alias_property = GenericProperty::TopicAlias(
+            crate::mqtt_internal::packet::TopicAlias::new(topic_alias).unwrap(),
+        );
 
         match &mut self.props {
             Some(props) => {

@@ -20,7 +20,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-
 mod common;
 use common::mqtt;
 use mqtt_protocol_core::mqtt::packet::GenericPacketTrait;
@@ -261,8 +260,7 @@ fn test_generic_packet_packet_type_v3_1_1() {
         .clean_start(true)
         .build()
         .unwrap();
-    let packet: mqtt::packet::Packet =
-        mqtt::packet::GenericPacket::V3_1_1Connect(connect);
+    let packet: mqtt::packet::Packet = mqtt::packet::GenericPacket::V3_1_1Connect(connect);
     assert_eq!(packet.packet_type(), mqtt::packet::PacketType::Connect);
 
     // V3.1.1 Connack
@@ -271,8 +269,7 @@ fn test_generic_packet_packet_type_v3_1_1() {
         .return_code(mqtt::result_code::ConnectReturnCode::Accepted)
         .build()
         .unwrap();
-    let packet: mqtt::packet::Packet =
-        mqtt::packet::GenericPacket::V3_1_1Connack(connack);
+    let packet: mqtt::packet::Packet = mqtt::packet::GenericPacket::V3_1_1Connack(connack);
     assert_eq!(packet.packet_type(), mqtt::packet::PacketType::Connack);
 
     // V3.1.1 Publish
@@ -282,8 +279,7 @@ fn test_generic_packet_packet_type_v3_1_1() {
         .qos(mqtt::packet::Qos::AtMostOnce)
         .build()
         .unwrap();
-    let packet: mqtt::packet::Packet =
-        mqtt::packet::GenericPacket::V3_1_1Publish(publish);
+    let packet: mqtt::packet::Packet = mqtt::packet::GenericPacket::V3_1_1Publish(publish);
     assert_eq!(packet.packet_type(), mqtt::packet::PacketType::Publish);
 
     // V3.1.1 Puback
@@ -291,8 +287,7 @@ fn test_generic_packet_packet_type_v3_1_1() {
         .packet_id(123)
         .build()
         .unwrap();
-    let packet: mqtt::packet::Packet =
-        mqtt::packet::GenericPacket::V3_1_1Puback(puback);
+    let packet: mqtt::packet::Packet = mqtt::packet::GenericPacket::V3_1_1Puback(puback);
     assert_eq!(packet.packet_type(), mqtt::packet::PacketType::Puback);
 
     // V3.1.1 Pubrec
@@ -300,8 +295,7 @@ fn test_generic_packet_packet_type_v3_1_1() {
         .packet_id(123)
         .build()
         .unwrap();
-    let packet: mqtt::packet::Packet =
-        mqtt::packet::GenericPacket::V3_1_1Pubrec(pubrec);
+    let packet: mqtt::packet::Packet = mqtt::packet::GenericPacket::V3_1_1Pubrec(pubrec);
     assert_eq!(packet.packet_type(), mqtt::packet::PacketType::Pubrec);
 
     // V3.1.1 Pubrel
@@ -309,8 +303,7 @@ fn test_generic_packet_packet_type_v3_1_1() {
         .packet_id(123)
         .build()
         .unwrap();
-    let packet: mqtt::packet::Packet =
-        mqtt::packet::GenericPacket::V3_1_1Pubrel(pubrel);
+    let packet: mqtt::packet::Packet = mqtt::packet::GenericPacket::V3_1_1Pubrel(pubrel);
     assert_eq!(packet.packet_type(), mqtt::packet::PacketType::Pubrel);
 
     // V3.1.1 Pubcomp
@@ -318,8 +311,7 @@ fn test_generic_packet_packet_type_v3_1_1() {
         .packet_id(123)
         .build()
         .unwrap();
-    let packet: mqtt::packet::Packet =
-        mqtt::packet::GenericPacket::V3_1_1Pubcomp(pubcomp);
+    let packet: mqtt::packet::Packet = mqtt::packet::GenericPacket::V3_1_1Pubcomp(pubcomp);
     assert_eq!(packet.packet_type(), mqtt::packet::PacketType::Pubcomp);
 
     // V3.1.1 Subscribe
@@ -330,8 +322,7 @@ fn test_generic_packet_packet_type_v3_1_1() {
         .entries(vec![entry])
         .build()
         .unwrap();
-    let packet: mqtt::packet::Packet =
-        mqtt::packet::GenericPacket::V3_1_1Subscribe(subscribe);
+    let packet: mqtt::packet::Packet = mqtt::packet::GenericPacket::V3_1_1Subscribe(subscribe);
     assert_eq!(packet.packet_type(), mqtt::packet::PacketType::Subscribe);
 
     // V3.1.1 Suback
@@ -342,8 +333,7 @@ fn test_generic_packet_packet_type_v3_1_1() {
         ])
         .build()
         .unwrap();
-    let packet: mqtt::packet::Packet =
-        mqtt::packet::GenericPacket::V3_1_1Suback(suback);
+    let packet: mqtt::packet::Packet = mqtt::packet::GenericPacket::V3_1_1Suback(suback);
     assert_eq!(packet.packet_type(), mqtt::packet::PacketType::Suback);
 
     // V3.1.1 Unsubscribe
@@ -353,8 +343,7 @@ fn test_generic_packet_packet_type_v3_1_1() {
         .unwrap()
         .build()
         .unwrap();
-    let packet: mqtt::packet::Packet =
-        mqtt::packet::GenericPacket::V3_1_1Unsubscribe(unsubscribe);
+    let packet: mqtt::packet::Packet = mqtt::packet::GenericPacket::V3_1_1Unsubscribe(unsubscribe);
     assert_eq!(packet.packet_type(), mqtt::packet::PacketType::Unsubscribe);
 
     // V3.1.1 Unsuback
@@ -362,26 +351,22 @@ fn test_generic_packet_packet_type_v3_1_1() {
         .packet_id(123)
         .build()
         .unwrap();
-    let packet: mqtt::packet::Packet =
-        mqtt::packet::GenericPacket::V3_1_1Unsuback(unsuback);
+    let packet: mqtt::packet::Packet = mqtt::packet::GenericPacket::V3_1_1Unsuback(unsuback);
     assert_eq!(packet.packet_type(), mqtt::packet::PacketType::Unsuback);
 
     // V3.1.1 Pingreq
     let pingreq = mqtt::packet::v3_1_1::Pingreq::builder().build().unwrap();
-    let packet: mqtt::packet::Packet =
-        mqtt::packet::GenericPacket::V3_1_1Pingreq(pingreq);
+    let packet: mqtt::packet::Packet = mqtt::packet::GenericPacket::V3_1_1Pingreq(pingreq);
     assert_eq!(packet.packet_type(), mqtt::packet::PacketType::Pingreq);
 
     // V3.1.1 Pingresp
     let pingresp = mqtt::packet::v3_1_1::Pingresp::builder().build().unwrap();
-    let packet: mqtt::packet::Packet =
-        mqtt::packet::GenericPacket::V3_1_1Pingresp(pingresp);
+    let packet: mqtt::packet::Packet = mqtt::packet::GenericPacket::V3_1_1Pingresp(pingresp);
     assert_eq!(packet.packet_type(), mqtt::packet::PacketType::Pingresp);
 
     // V3.1.1 Disconnect
     let disconnect = mqtt::packet::v3_1_1::Disconnect::builder().build().unwrap();
-    let packet: mqtt::packet::Packet =
-        mqtt::packet::GenericPacket::V3_1_1Disconnect(disconnect);
+    let packet: mqtt::packet::Packet = mqtt::packet::GenericPacket::V3_1_1Disconnect(disconnect);
     assert_eq!(packet.packet_type(), mqtt::packet::PacketType::Disconnect);
 }
 
@@ -393,8 +378,7 @@ fn test_generic_packet_packet_type_v5_0() {
         .clean_start(true)
         .build()
         .unwrap();
-    let packet: mqtt::packet::Packet =
-        mqtt::packet::GenericPacket::V5_0Connect(connect);
+    let packet: mqtt::packet::Packet = mqtt::packet::GenericPacket::V5_0Connect(connect);
     assert_eq!(packet.packet_type(), mqtt::packet::PacketType::Connect);
 
     // V5.0 Connack
@@ -403,8 +387,7 @@ fn test_generic_packet_packet_type_v5_0() {
         .reason_code(mqtt::result_code::ConnectReasonCode::Success)
         .build()
         .unwrap();
-    let packet: mqtt::packet::Packet =
-        mqtt::packet::GenericPacket::V5_0Connack(connack);
+    let packet: mqtt::packet::Packet = mqtt::packet::GenericPacket::V5_0Connack(connack);
     assert_eq!(packet.packet_type(), mqtt::packet::PacketType::Connack);
 
     // V5.0 Publish
@@ -414,8 +397,7 @@ fn test_generic_packet_packet_type_v5_0() {
         .qos(mqtt::packet::Qos::AtMostOnce)
         .build()
         .unwrap();
-    let packet: mqtt::packet::Packet =
-        mqtt::packet::GenericPacket::V5_0Publish(publish);
+    let packet: mqtt::packet::Packet = mqtt::packet::GenericPacket::V5_0Publish(publish);
     assert_eq!(packet.packet_type(), mqtt::packet::PacketType::Publish);
 
     // V5.0 Puback
@@ -450,8 +432,7 @@ fn test_generic_packet_packet_type_v5_0() {
         .reason_code(mqtt::result_code::PubcompReasonCode::Success)
         .build()
         .unwrap();
-    let packet: mqtt::packet::Packet =
-        mqtt::packet::GenericPacket::V5_0Pubcomp(pubcomp);
+    let packet: mqtt::packet::Packet = mqtt::packet::GenericPacket::V5_0Pubcomp(pubcomp);
     assert_eq!(packet.packet_type(), mqtt::packet::PacketType::Pubcomp);
 
     // V5.0 Subscribe
@@ -462,8 +443,7 @@ fn test_generic_packet_packet_type_v5_0() {
         .entries(vec![entry])
         .build()
         .unwrap();
-    let packet: mqtt::packet::Packet =
-        mqtt::packet::GenericPacket::V5_0Subscribe(subscribe);
+    let packet: mqtt::packet::Packet = mqtt::packet::GenericPacket::V5_0Subscribe(subscribe);
     assert_eq!(packet.packet_type(), mqtt::packet::PacketType::Subscribe);
 
     // V5.0 Suback
@@ -482,8 +462,7 @@ fn test_generic_packet_packet_type_v5_0() {
         .unwrap()
         .build()
         .unwrap();
-    let packet: mqtt::packet::Packet =
-        mqtt::packet::GenericPacket::V5_0Unsubscribe(unsubscribe);
+    let packet: mqtt::packet::Packet = mqtt::packet::GenericPacket::V5_0Unsubscribe(unsubscribe);
     assert_eq!(packet.packet_type(), mqtt::packet::PacketType::Unsubscribe);
 
     // V5.0 Unsuback
@@ -492,20 +471,17 @@ fn test_generic_packet_packet_type_v5_0() {
         .reason_codes(vec![mqtt::result_code::UnsubackReasonCode::Success])
         .build()
         .unwrap();
-    let packet: mqtt::packet::Packet =
-        mqtt::packet::GenericPacket::V5_0Unsuback(unsuback);
+    let packet: mqtt::packet::Packet = mqtt::packet::GenericPacket::V5_0Unsuback(unsuback);
     assert_eq!(packet.packet_type(), mqtt::packet::PacketType::Unsuback);
 
     // V5.0 Pingreq
     let pingreq = mqtt::packet::v5_0::Pingreq::builder().build().unwrap();
-    let packet: mqtt::packet::Packet =
-        mqtt::packet::GenericPacket::V5_0Pingreq(pingreq);
+    let packet: mqtt::packet::Packet = mqtt::packet::GenericPacket::V5_0Pingreq(pingreq);
     assert_eq!(packet.packet_type(), mqtt::packet::PacketType::Pingreq);
 
     // V5.0 Pingresp
     let pingresp = mqtt::packet::v5_0::Pingresp::builder().build().unwrap();
-    let packet: mqtt::packet::Packet =
-        mqtt::packet::GenericPacket::V5_0Pingresp(pingresp);
+    let packet: mqtt::packet::Packet = mqtt::packet::GenericPacket::V5_0Pingresp(pingresp);
     assert_eq!(packet.packet_type(), mqtt::packet::PacketType::Pingresp);
 
     // V5.0 Disconnect
@@ -513,8 +489,7 @@ fn test_generic_packet_packet_type_v5_0() {
         .reason_code(mqtt::result_code::DisconnectReasonCode::NormalDisconnection)
         .build()
         .unwrap();
-    let packet: mqtt::packet::Packet =
-        mqtt::packet::GenericPacket::V5_0Disconnect(disconnect);
+    let packet: mqtt::packet::Packet = mqtt::packet::GenericPacket::V5_0Disconnect(disconnect);
     assert_eq!(packet.packet_type(), mqtt::packet::PacketType::Disconnect);
 
     // V5.0 Auth
