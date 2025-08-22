@@ -20,7 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 mqtt_protocol_core::make_default_aliases!();
-use mqtt_protocol_core::mqtt::prelude::*;
+
 use std::env;
 use std::io::{Read, Write};
 use std::net::TcpStream;
@@ -108,7 +108,7 @@ fn handle_events(
     for event in events {
         match event {
             mqtt::Event::RequestSendPacket { packet, .. } => {
-                let buffer = packet.to_continuous_buffer();
+                let buffer = mqtt::GenericPacketTrait::to_continuous_buffer(&packet);
                 stream.write_all(&buffer)?;
                 let packet_type = packet.packet_type();
                 println!("Sent packet: {packet_type}");

@@ -254,11 +254,7 @@ pub mod prelude {
     pub use std::io::IoSlice;
 }
 
-pub mod default_alias;
 pub mod make_alias; // Make the macro available
-
-// Generate default aliases at crate root level
-crate::make_default_aliases!();
 
 // The internal module for MQTT protocol implementation
 pub mod mqtt_internal;
