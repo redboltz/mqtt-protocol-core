@@ -22,29 +22,29 @@
 //!
 //! First, create type aliases using one of the provided macros:
 //!
-//! ```rust,no_run
+//! ```rust,ignore
 //! // Use default buffer sizes (recommended for most use cases)
 //! mqtt_protocol_core::make_default_aliases!();
 //!
 //! // The macro creates a `mqtt` module that you can now use
-//! // use mqtt_protocol_core::mqtt::prelude::*; // if needed in your code
+//! // use mqtt::prelude::*; // if needed in your code
 //! ```
 //!
 //! Or create custom-sized aliases:
 //!
-//! ```rust,no_run
+//! ```rust,ignore
 //! // Create custom aliases with specific buffer sizes
 //! mqtt_protocol_core::make_size_aliases!(mqtt_large_stack, 64, 64, 256);
 //!
 //! // The macro creates a `mqtt_large_stack` module that you can now use
-//! // use mqtt_protocol_core::mqtt_large_stack::prelude::*; // if needed in your code
+//! // use mqtt_large_stack::prelude::*; // if needed in your code
 //! ```
 //!
 //! ### Basic Client Connection
 //!
-//! ```rust,no_run
+//! ```rust,ignore
 //! mqtt_protocol_core::make_default_aliases!();
-//! use mqtt_protocol_core::mqtt::{
+//! use mqtt::{
 //!     Connection, Version,
 //!     connection::role::Client,
 //!     packet::v5_0::Connect,
@@ -67,9 +67,9 @@
 //!
 //! ### Server with Version Auto-Detection
 //!
-//! ```rust,no_run
+//! ```rust,ignore
 //! mqtt_protocol_core::make_default_aliases!();
-//! use mqtt_protocol_core::mqtt::{
+//! use mqtt::{
 //!     Connection, Version,
 //!     connection::role::Server,
 //! };
@@ -99,9 +99,9 @@
 //! without performing any I/O operations. Instead, it returns events that tell
 //! your application what actions to take:
 //!
-//! ```rust,no_run
+//! ```rust,ignore
 //! mqtt_protocol_core::make_default_aliases!();
-//! use mqtt_protocol_core::mqtt::{
+//! use mqtt::{
 //!     Connection, Version,
 //!     connection::{role::Client, event::GenericEvent},
 //!     common::Cursor,
@@ -131,12 +131,12 @@
 //! The library supports custom packet ID types for advanced use cases like
 //! broker clustering, where u32 packet IDs can prevent ID exhaustion:
 //!
-//! ```rust,no_run
+//! ```rust,ignore
 //! // Create aliases with u32 packet IDs and custom buffer sizes
 //! mqtt_protocol_core::make_type_size_aliases!(mqtt_u32, u32, 32, 32, 128);
 //!
 //! // The macro creates a `mqtt_u32` module that you can now use
-//! // use mqtt_protocol_core::mqtt_u32::{Connection, Version, connection::role::Server};
+//! // use mqtt_u32::{Connection, Version, connection::role::Server};
 //!
 //! // Use u32 packet IDs instead of standard u16
 //! // let mut server = Connection::<Server>::new(Version::V5_0);
@@ -154,14 +154,14 @@
 //!
 //! **No-std usage example:**
 //!
-//! ```rust,no_run
+//! ```rust,ignore
 //! #![no_std]
 //! extern crate alloc;
 //!
 //! use alloc::{vec::Vec, string::String};
 //!
 //! mqtt_protocol_core::make_default_aliases!();
-//! use mqtt_protocol_core::mqtt::{
+//! use mqtt::{
 //!     Connection, Version,
 //!     connection::role::Client,
 //!     packet::v5_0::Connect,

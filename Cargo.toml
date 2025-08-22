@@ -19,7 +19,7 @@ tracing = ["dep:tracing"]
 
 # Stack optimization can be configured via environment variables:
 # MQTT_ARC_PAYLOAD_STACK_SIZE=64 (default)
-# MQTT_STRING_STACK_SIZE=64 (default) 
+# MQTT_STRING_STACK_SIZE=64 (default)
 # MQTT_BINARY_STACK_SIZE=64 (default)
 
 [dependencies]
@@ -57,4 +57,3 @@ lto = true
 codegen-units = 1
 # Strip debug symbols to reduce binary size
 strip = true
-

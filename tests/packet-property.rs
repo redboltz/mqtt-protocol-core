@@ -22,7 +22,7 @@
 
 mod common;
 use common::mqtt;
-use mqtt_protocol_core::mqtt::prelude::*;
+use mqtt::prelude::*;
 
 #[test]
 fn test_all_properties() {
@@ -502,8 +502,8 @@ fn test_property_type_access() {
 #[test]
 fn test_property_size_trait() {
     common::init_tracing();
-    use mqtt_protocol_core::mqtt::packet::VariableByteInteger;
-    use mqtt_protocol_core::mqtt::prelude::PropertySize;
+    use mqtt::packet::VariableByteInteger;
+    use mqtt::prelude::PropertySize;
 
     // Test u8 size (line 257)
     let u8_val: u8 = 42;
@@ -898,7 +898,7 @@ fn test_property_sizes() {
 #[test]
 fn test_vbi_size_edge_cases() {
     common::init_tracing();
-    use mqtt_protocol_core::mqtt::packet::VariableByteInteger;
+    use mqtt::packet::VariableByteInteger;
 
     // Test boundary values for each size category
 

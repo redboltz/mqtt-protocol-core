@@ -22,7 +22,7 @@
 
 mod common;
 use common::mqtt;
-use mqtt_protocol_core::mqtt::packet::GenericPacketTrait;
+use mqtt::packet::GenericPacketTrait;
 
 #[test]
 fn test_generic_packet_v3_1_1_connect_size() {

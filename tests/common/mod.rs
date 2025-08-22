@@ -22,8 +22,14 @@
 
 // Common test utilities
 
+/// Standard MQTT module with default buffer sizes (u16 packet IDs)
 pub mod mqtt {
-    mqtt_protocol_core::make_default_aliases_direct!();
+    mqtt_protocol_core::make_default_aliases!();
+}
+
+/// MQTT module with u32 packet IDs for extended packet ID testing
+pub mod mqtt_pid32 {
+    mqtt_protocol_core::make_type_size_aliases!(u32, 32, 32, 128);
 }
 
 #[cfg(feature = "std")]

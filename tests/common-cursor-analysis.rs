@@ -20,14 +20,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-pub mod mqtt {
-    mqtt_protocol_core::make_default_aliases_direct!();
-}
+mod common;
+use common::mqtt;
 
 use mqtt::common::Cursor as MqttCursor;
 use std::io::{Cursor as StdCursor, Read};
 use std::time::Instant;
-mod common;
 
 #[test]
 fn analyze_memory_access_patterns() {

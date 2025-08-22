@@ -104,11 +104,10 @@ macro_rules! make_type_size_aliases {
                     $packet_id_type,
                     $string_buffer_size,
                 >;
-                pub type Unsubscribe =
-                    $crate::mqtt_internal::packet::v3_1_1::GenericUnsubscribe<
-                        $packet_id_type,
-                        $string_buffer_size,
-                    >;
+                pub type Unsubscribe = $crate::mqtt_internal::packet::v3_1_1::GenericUnsubscribe<
+                    $packet_id_type,
+                    $string_buffer_size,
+                >;
                 pub type Puback =
                     $crate::mqtt_internal::packet::v3_1_1::GenericPuback<$packet_id_type>;
                 pub type Pubrec =
@@ -127,6 +126,18 @@ macro_rules! make_type_size_aliases {
                 pub type Pingreq = $crate::mqtt_internal::packet::v3_1_1::Pingreq;
                 pub type Pingresp = $crate::mqtt_internal::packet::v3_1_1::Pingresp;
                 pub type Disconnect = $crate::mqtt_internal::packet::v3_1_1::Disconnect;
+
+                // Re-export Generic types for advanced usage
+                pub use $crate::mqtt_internal::packet::v3_1_1::GenericConnect;
+                pub use $crate::mqtt_internal::packet::v3_1_1::GenericPuback;
+                pub use $crate::mqtt_internal::packet::v3_1_1::GenericPubcomp;
+                pub use $crate::mqtt_internal::packet::v3_1_1::GenericPublish;
+                pub use $crate::mqtt_internal::packet::v3_1_1::GenericPubrec;
+                pub use $crate::mqtt_internal::packet::v3_1_1::GenericPubrel;
+                pub use $crate::mqtt_internal::packet::v3_1_1::GenericSuback;
+                pub use $crate::mqtt_internal::packet::v3_1_1::GenericSubscribe;
+                pub use $crate::mqtt_internal::packet::v3_1_1::GenericUnsuback;
+                pub use $crate::mqtt_internal::packet::v3_1_1::GenericUnsubscribe;
             }
 
             pub mod v5_0 {
@@ -197,6 +208,21 @@ macro_rules! make_type_size_aliases {
                 // Direct aliases for non-generic types
                 pub type Pingreq = $crate::mqtt_internal::packet::v5_0::Pingreq;
                 pub type Pingresp = $crate::mqtt_internal::packet::v5_0::Pingresp;
+
+                // Re-export Generic types for advanced usage
+                pub use $crate::mqtt_internal::packet::v5_0::GenericAuth;
+                pub use $crate::mqtt_internal::packet::v5_0::GenericConnack;
+                pub use $crate::mqtt_internal::packet::v5_0::GenericConnect;
+                pub use $crate::mqtt_internal::packet::v5_0::GenericDisconnect;
+                pub use $crate::mqtt_internal::packet::v5_0::GenericPuback;
+                pub use $crate::mqtt_internal::packet::v5_0::GenericPubcomp;
+                pub use $crate::mqtt_internal::packet::v5_0::GenericPublish;
+                pub use $crate::mqtt_internal::packet::v5_0::GenericPubrec;
+                pub use $crate::mqtt_internal::packet::v5_0::GenericPubrel;
+                pub use $crate::mqtt_internal::packet::v5_0::GenericSuback;
+                pub use $crate::mqtt_internal::packet::v5_0::GenericSubscribe;
+                pub use $crate::mqtt_internal::packet::v5_0::GenericUnsuback;
+                pub use $crate::mqtt_internal::packet::v5_0::GenericUnsubscribe;
             }
 
             // Generic* → * aliases for packet-level types
@@ -233,9 +259,7 @@ macro_rules! make_type_size_aliases {
             pub type CorrelationData =
                 $crate::mqtt_internal::packet::GenericCorrelationData<$binary_buffer_size>;
             pub type AssignedClientIdentifier =
-                $crate::mqtt_internal::packet::GenericAssignedClientIdentifier<
-                    $string_buffer_size,
-                >;
+                $crate::mqtt_internal::packet::GenericAssignedClientIdentifier<$string_buffer_size>;
             pub type AuthenticationMethod =
                 $crate::mqtt_internal::packet::GenericAuthenticationMethod<$string_buffer_size>;
             pub type AuthenticationData =
@@ -322,6 +346,10 @@ macro_rules! make_type_size_aliases {
             pub use $crate::mqtt_internal::connection::prelude::*;
             #[allow(unused_imports)]
             pub use $crate::mqtt_internal::packet::prelude::*;
+
+            // Explicitly re-export important traits
+            #[allow(unused_imports)]
+            pub use $crate::mqtt_internal::packet::GenericPacketTrait;
         }
     };
 }

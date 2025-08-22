@@ -20,14 +20,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// Include test prelude and setup unique mqtt module
-include!("prelude.rs");
-setup_mqtt_for_test!(mqtt_cursor_performance);
-
+mod common;
+use common::mqtt;
 use mqtt::common::Cursor as MqttCursor;
 use std::io::{Cursor as StdCursor, Read};
 use std::time::Instant;
-mod common;
 
 #[test]
 fn compare_cursor_performance() {

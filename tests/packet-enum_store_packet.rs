@@ -22,7 +22,7 @@
 
 mod common;
 use common::{mqtt, mqtt_pid32};
-use mqtt_protocol_core::mqtt::packet::GenericPacketTrait;
+use mqtt::packet::GenericPacketTrait;
 
 // ResponsePacket enum tests
 #[test]

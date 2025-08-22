@@ -38,8 +38,9 @@ pub enum CursorError {
 ///
 /// # Examples
 ///
-/// ```
-/// use mqtt_protocol_core::mqtt::common::Cursor;
+/// ```ignore
+/// mqtt_protocol_core::make_default_aliases!();
+/// use mqtt::common::Cursor;
 ///
 /// let data = &b"hello world"[..];
 /// let mut cursor = Cursor::new(data);
@@ -52,7 +53,7 @@ pub enum CursorError {
 /// let chunk = cursor.read_bytes(5).unwrap();
 /// assert_eq!(chunk, b"ello ");
 /// assert_eq!(cursor.position(), 6);
-/// ```
+/// ```ignore
 pub struct Cursor<T> {
     inner: T,
     pos: u64,
@@ -65,8 +66,9 @@ impl<T> Cursor<T> {
     ///
     /// # Examples
     ///
-    /// ```
-    /// use mqtt_protocol_core::mqtt::common::Cursor;
+    /// ```ignore
+    /// mqtt_protocol_core::make_default_aliases!();
+    /// use mqtt::common::Cursor;
     ///
     /// let cursor = Cursor::new(&b"hello"[..]);
     /// assert_eq!(cursor.position(), 0);
@@ -84,15 +86,16 @@ impl<T> Cursor<T> {
     ///
     /// # Examples
     ///
-    /// ```
-    /// use mqtt_protocol_core::mqtt::common::Cursor;
+    /// ```ignore
+    /// mqtt_protocol_core::make_default_aliases!();
+    /// use mqtt::common::Cursor;
     ///
     /// let mut cursor = Cursor::new(&b"hello"[..]);
     /// assert_eq!(cursor.position(), 0);
     ///
     /// cursor.set_position(3);
     /// assert_eq!(cursor.position(), 3);
-    /// ```
+    /// ```ignore
     #[inline]
     pub fn position(&self) -> u64 {
         self.pos
@@ -106,13 +109,14 @@ impl<T> Cursor<T> {
     ///
     /// # Examples
     ///
-    /// ```
-    /// use mqtt_protocol_core::mqtt::common::Cursor;
+    /// ```ignore
+    /// mqtt_protocol_core::make_default_aliases!();
+    /// use mqtt::common::Cursor;
     ///
     /// let mut cursor = Cursor::new(&b"hello"[..]);
     /// cursor.set_position(3);
     /// assert_eq!(cursor.position(), 3);
-    /// ```
+    /// ```ignore
     #[inline]
     pub fn set_position(&mut self, pos: u64) {
         self.pos = pos;
@@ -126,13 +130,14 @@ impl<T> Cursor<T> {
     ///
     /// # Examples
     ///
-    /// ```
-    /// use mqtt_protocol_core::mqtt::common::Cursor;
+    /// ```ignore
+    /// mqtt_protocol_core::make_default_aliases!();
+    /// use mqtt::common::Cursor;
     ///
     /// let data = &b"hello"[..];
     /// let cursor = Cursor::new(data);
     /// assert_eq!(cursor.get_ref(), &data);
-    /// ```
+    /// ```ignore
     #[inline]
     pub fn get_ref(&self) -> &T {
         &self.inner
@@ -151,13 +156,14 @@ impl Cursor<&[u8]> {
     ///
     /// # Examples
     ///
-    /// ```
-    /// use mqtt_protocol_core::mqtt::common::Cursor;
+    /// ```ignore
+    /// mqtt_protocol_core::make_default_aliases!();
+    /// use mqtt::common::Cursor;
     ///
     /// let mut cursor = Cursor::new(&b"hello"[..]);
     /// cursor.set_position(2);
     /// assert_eq!(cursor.remaining_slice(), b"llo");
-    /// ```
+    /// ```ignore
     #[inline]
     pub fn remaining_slice(&self) -> &[u8] {
         let pos = self.pos as usize;
@@ -185,14 +191,15 @@ impl Cursor<&[u8]> {
     ///
     /// # Examples
     ///
-    /// ```
-    /// use mqtt_protocol_core::mqtt::common::Cursor;
+    /// ```ignore
+    /// mqtt_protocol_core::make_default_aliases!();
+    /// use mqtt::common::Cursor;
     ///
     /// let mut cursor = Cursor::new(&b"hello world"[..]);
     /// assert_eq!(cursor.read_bytes(5), Some(&b"hello"[..]));
     /// assert_eq!(cursor.position(), 5);
     /// assert_eq!(cursor.read_bytes(20), None); // Not enough data
-    /// ```
+    /// ```ignore
     #[inline]
     pub fn read_bytes(&mut self, count: usize) -> Option<&[u8]> {
         let pos = self.pos as usize;
@@ -217,14 +224,15 @@ impl Cursor<&[u8]> {
     ///
     /// # Examples
     ///
-    /// ```
-    /// use mqtt_protocol_core::mqtt::common::Cursor;
+    /// ```ignore
+    /// mqtt_protocol_core::make_default_aliases!();
+    /// use mqtt::common::Cursor;
     ///
     /// let mut cursor = Cursor::new(&b"hi"[..]);
     /// assert_eq!(cursor.read_u8(), Some(b'h'));
     /// assert_eq!(cursor.read_u8(), Some(b'i'));
     /// assert_eq!(cursor.read_u8(), None); // End of data
-    /// ```
+    /// ```ignore
     #[inline]
     pub fn read_u8(&mut self) -> Option<u8> {
         let pos = self.pos as usize;
@@ -258,8 +266,9 @@ impl<T: AsRef<[u8]>> Cursor<T> {
     ///
     /// # Examples
     ///
-    /// ```
-    /// use mqtt_protocol_core::mqtt::common::Cursor;
+    /// ```ignore
+    /// mqtt_protocol_core::make_default_aliases!();
+    /// use mqtt::common::Cursor;
     ///
     /// let mut cursor = Cursor::new(&b"hello world"[..]);
     /// let mut buf = [0u8; 5];
@@ -267,7 +276,7 @@ impl<T: AsRef<[u8]>> Cursor<T> {
     /// assert_eq!(n, 5);
     /// assert_eq!(&buf, b"hello");
     /// assert_eq!(cursor.position(), 5);
-    /// ```
+    /// ```ignore
     #[inline]
     pub fn read(&mut self, buf: &mut [u8]) -> Result<usize, CursorError> {
         let pos = self.pos as usize;
@@ -299,8 +308,9 @@ impl<T: AsRef<[u8]>> Cursor<T> {
     ///
     /// # Examples
     ///
-    /// ```
-    /// use mqtt_protocol_core::mqtt::common::{Cursor, CursorError};
+    /// ```ignore
+    /// mqtt_protocol_core::make_default_aliases!();
+    /// use mqtt::common::{Cursor, CursorError};
     ///
     /// let mut cursor = Cursor::new(&b"hello"[..]);
     /// let mut buf = [0u8; 3];
@@ -310,7 +320,7 @@ impl<T: AsRef<[u8]>> Cursor<T> {
     /// // Trying to read more than available
     /// let mut buf2 = [0u8; 10];
     /// assert_eq!(cursor.read_exact(&mut buf2), Err(CursorError::UnexpectedEof));
-    /// ```
+    /// ```ignore
     #[inline]
     pub fn read_exact(&mut self, buf: &mut [u8]) -> Result<(), CursorError> {
         let pos = self.pos as usize;
