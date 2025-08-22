@@ -6,7 +6,9 @@ fn main() {
     // Demonstrate make_size_aliases! (uses u16 packet IDs)
     {
         // Generate type aliases with custom buffer sizes
-        mqtt_protocol_core::make_size_aliases!(mqtt_custom, 128, 64, 256);
+        mod mqtt_custom {
+            mqtt_protocol_core::make_size_aliases!(128, 64, 256);
+        }
 
         // Test v5.0 packets
         let auth = mqtt_custom::packet::v5_0::Auth::builder().build().unwrap();
@@ -59,7 +61,9 @@ fn main() {
 
     // Demonstrate make_type_size_aliases! with u32 packet IDs in a different scope
     {
-        mqtt_protocol_core::make_type_size_aliases!(mqtt_u32, u32, 64, 64, 128);
+        mod mqtt_u32 {
+            mqtt_protocol_core::make_type_size_aliases!(u32, 64, 64, 128);
+        }
 
         match mqtt_u32::packet::v5_0::Puback::builder()
             .packet_id(42u32)

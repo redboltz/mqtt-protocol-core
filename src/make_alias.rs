@@ -35,10 +35,10 @@
 ///
 /// This macro creates type aliases for all Generic* structs in both v3.1.1 and v5.0 MQTT versions,
 /// allowing users to specify custom buffer sizes for string, binary, and payload data.
+/// Users control the module creation in their own code.
 ///
 /// # Parameters
 ///
-/// * `$mod_name` - The module name for the generated aliases (e.g., `mqtt`, `mqtt_128`, `mqtt_big`)
 /// * `$packet_id_type` - The packet identifier type (typically `u16` or `u32`)
 /// * `$string_buffer_size` - Buffer size for string data (typically 32, 64, 128, etc.)
 /// * `$binary_buffer_size` - Buffer size for binary data (typically 32, 64, 128, etc.)
@@ -57,20 +57,20 @@
 ///
 /// For connections:
 /// * `Connection<Role>` - Generic connection type that accepts any role type parameter
-///   - Use `Connection<$mod_name::connection::role::Client>` for client connections
-///   - Use `Connection<$mod_name::connection::role::Server>` for server connections
-///   - Use `Connection<$mod_name::connection::role::Any>` for flexible connections
 ///
 /// # Examples
 ///
 /// ```ignore
 /// use mqtt_protocol_core::*;
 ///
-/// // Generate aliases with u16 packet IDs and 128-byte buffers in mqtt_128 module
-/// make_type_size_aliases!(mqtt_128, u16, 128, 128, 128);
+/// // User controls module creation:
+/// pub mod mqtt_128 {
+///     mqtt_protocol_core::make_type_size_aliases!(u16, 128, 128, 128);
+/// }
 ///
-/// // Generate aliases with u32 packet IDs and large buffers in mqtt_big module
-/// make_type_size_aliases!(mqtt_big, u32, 512, 512, 1024);
+/// pub mod mqtt_big {
+///     mqtt_protocol_core::make_type_size_aliases!(u32, 512, 512, 1024);
+/// }
 ///
 /// // Now you can use the convenient aliases:
 /// let connect = mqtt_128::packet::v5_0::Connect::builder()
@@ -84,221 +84,187 @@
 ///     .payload(b"hello world")
 ///     .build()
 ///     .unwrap();
-///
-/// // Use connection types with specific roles:
-/// type ClientConn = mqtt_128::connection::Connection<mqtt_128::connection::role::Client>;
-/// type ServerConn = mqtt_big::connection::Connection<mqtt_big::connection::role::Server>;
 /// ```
 #[macro_export]
 macro_rules! make_type_size_aliases {
-    ($mod_name:ident, $packet_id_type:ty, $string_buffer_size:expr, $binary_buffer_size:expr, $payload_buffer_size:expr) => {
-        pub mod $mod_name {
-            pub mod packet {
-                pub mod v3_1_1 {
-                    // Generic* → * aliases only
-                    pub type Connect = $crate::mqtt_internal::packet::v3_1_1::GenericConnect<
-                        $string_buffer_size,
-                        $binary_buffer_size,
-                    >;
-                    pub type Publish = $crate::mqtt_internal::packet::v3_1_1::GenericPublish<
-                        $packet_id_type,
-                        $string_buffer_size,
-                        $payload_buffer_size,
-                    >;
-                    pub type Subscribe = $crate::mqtt_internal::packet::v3_1_1::GenericSubscribe<
-                        $packet_id_type,
-                        $string_buffer_size,
-                    >;
-                    pub type Unsubscribe =
-                        $crate::mqtt_internal::packet::v3_1_1::GenericUnsubscribe<
-                            $packet_id_type,
-                            $string_buffer_size,
-                        >;
-                    pub type Puback =
-                        $crate::mqtt_internal::packet::v3_1_1::GenericPuback<$packet_id_type>;
-                    pub type Pubrec =
-                        $crate::mqtt_internal::packet::v3_1_1::GenericPubrec<$packet_id_type>;
-                    pub type Pubrel =
-                        $crate::mqtt_internal::packet::v3_1_1::GenericPubrel<$packet_id_type>;
-                    pub type Pubcomp =
-                        $crate::mqtt_internal::packet::v3_1_1::GenericPubcomp<$packet_id_type>;
-                    pub type Suback =
-                        $crate::mqtt_internal::packet::v3_1_1::GenericSuback<$packet_id_type>;
-                    pub type Unsuback =
-                        $crate::mqtt_internal::packet::v3_1_1::GenericUnsuback<$packet_id_type>;
-
-                    // Re-export everything else from mqtt_internal
-                    #[allow(unused_imports)]
-                    pub use $crate::mqtt_internal::packet::v3_1_1::*;
-                }
-
-                pub mod v5_0 {
-                    // Generic* → * aliases only
-                    pub type Auth = $crate::mqtt_internal::packet::v5_0::GenericAuth<
-                        $string_buffer_size,
-                        $binary_buffer_size,
-                    >;
-                    pub type Connack = $crate::mqtt_internal::packet::v5_0::GenericConnack<
-                        $string_buffer_size,
-                        $binary_buffer_size,
-                    >;
-                    pub type Connect = $crate::mqtt_internal::packet::v5_0::GenericConnect<
-                        $string_buffer_size,
-                        $binary_buffer_size,
-                    >;
-                    pub type Disconnect = $crate::mqtt_internal::packet::v5_0::GenericDisconnect<
-                        $string_buffer_size,
-                        $binary_buffer_size,
-                    >;
-                    pub type Puback = $crate::mqtt_internal::packet::v5_0::GenericPuback<
-                        $packet_id_type,
-                        $string_buffer_size,
-                        $binary_buffer_size,
-                    >;
-                    pub type Pubcomp = $crate::mqtt_internal::packet::v5_0::GenericPubcomp<
-                        $packet_id_type,
-                        $string_buffer_size,
-                        $binary_buffer_size,
-                    >;
-                    pub type Publish = $crate::mqtt_internal::packet::v5_0::GenericPublish<
-                        $packet_id_type,
-                        $string_buffer_size,
-                        $binary_buffer_size,
-                        $payload_buffer_size,
-                    >;
-                    pub type Pubrec = $crate::mqtt_internal::packet::v5_0::GenericPubrec<
-                        $packet_id_type,
-                        $string_buffer_size,
-                        $binary_buffer_size,
-                    >;
-                    pub type Pubrel = $crate::mqtt_internal::packet::v5_0::GenericPubrel<
-                        $packet_id_type,
-                        $string_buffer_size,
-                        $binary_buffer_size,
-                    >;
-                    pub type Suback = $crate::mqtt_internal::packet::v5_0::GenericSuback<
-                        $packet_id_type,
-                        $string_buffer_size,
-                        $binary_buffer_size,
-                    >;
-                    pub type Subscribe = $crate::mqtt_internal::packet::v5_0::GenericSubscribe<
-                        $packet_id_type,
-                        $string_buffer_size,
-                        $binary_buffer_size,
-                    >;
-                    pub type Unsuback = $crate::mqtt_internal::packet::v5_0::GenericUnsuback<
-                        $packet_id_type,
-                        $string_buffer_size,
-                        $binary_buffer_size,
-                    >;
-                    pub type Unsubscribe = $crate::mqtt_internal::packet::v5_0::GenericUnsubscribe<
-                        $packet_id_type,
-                        $string_buffer_size,
-                        $binary_buffer_size,
-                    >;
-
-                    // Re-export everything else from mqtt_internal
-                    #[allow(unused_imports)]
-                    pub use $crate::mqtt_internal::packet::v5_0::*;
-                }
-
-                // Generic* → * aliases for packet-level types
-                pub type Packet = $crate::mqtt_internal::packet::GenericPacket<
-                    $packet_id_type,
-                    $string_buffer_size,
-                    $binary_buffer_size,
-                    $payload_buffer_size,
-                >;
-                pub type StorePacket = $crate::mqtt_internal::packet::GenericStorePacket<
-                    $packet_id_type,
-                    $string_buffer_size,
-                    $binary_buffer_size,
-                    $payload_buffer_size,
-                >;
-                pub type Property = $crate::mqtt_internal::packet::GenericProperty<
-                    $string_buffer_size,
-                    $binary_buffer_size,
-                >;
-                pub type Properties = $crate::mqtt_internal::packet::GenericProperties<
-                    $string_buffer_size,
-                    $binary_buffer_size,
-                >;
-                pub type MqttString =
-                    $crate::mqtt_internal::packet::GenericMqttString<$string_buffer_size>;
-                pub type MqttBinary =
-                    $crate::mqtt_internal::packet::GenericMqttBinary<$binary_buffer_size>;
-
-                // Generic* → * aliases for property types
-                pub type ContentType =
-                    $crate::mqtt_internal::packet::GenericContentType<$string_buffer_size>;
-                pub type ResponseTopic =
-                    $crate::mqtt_internal::packet::GenericResponseTopic<$string_buffer_size>;
-                pub type CorrelationData =
-                    $crate::mqtt_internal::packet::GenericCorrelationData<$binary_buffer_size>;
-                pub type AssignedClientIdentifier =
-                    $crate::mqtt_internal::packet::GenericAssignedClientIdentifier<
-                        $string_buffer_size,
-                    >;
-                pub type AuthenticationMethod =
-                    $crate::mqtt_internal::packet::GenericAuthenticationMethod<$string_buffer_size>;
-                pub type AuthenticationData =
-                    $crate::mqtt_internal::packet::GenericAuthenticationData<$binary_buffer_size>;
-                pub type ResponseInformation =
-                    $crate::mqtt_internal::packet::GenericResponseInformation<$string_buffer_size>;
-                pub type ServerReference =
-                    $crate::mqtt_internal::packet::GenericServerReference<$string_buffer_size>;
-                pub type ReasonString =
-                    $crate::mqtt_internal::packet::GenericReasonString<$string_buffer_size>;
-                pub type UserProperty =
-                    $crate::mqtt_internal::packet::GenericUserProperty<$string_buffer_size>;
-
-                // Re-export everything else from mqtt_internal
-                #[allow(unused_imports)]
-                pub use $crate::mqtt_internal::packet::*;
-            }
-
-            pub mod connection {
+    ($packet_id_type:ty, $string_buffer_size:expr, $binary_buffer_size:expr, $payload_buffer_size:expr) => {
+        pub mod packet {
+            pub mod v3_1_1 {
                 // Generic* → * aliases only
-                pub type Connection<Role> = $crate::mqtt_internal::connection::GenericConnection<
-                    Role,
-                    $packet_id_type,
+                pub type Connect = $crate::mqtt_internal::packet::v3_1_1::GenericConnect<
                     $string_buffer_size,
                     $binary_buffer_size,
-                    $payload_buffer_size,
                 >;
-
-                pub type Store = $crate::mqtt_internal::connection::GenericStore<
+                pub type Publish = $crate::mqtt_internal::packet::v3_1_1::GenericPublish<
                     $packet_id_type,
                     $string_buffer_size,
-                    $binary_buffer_size,
                     $payload_buffer_size,
                 >;
-
-                pub type Event = $crate::mqtt_internal::connection::GenericEvent<
+                pub type Subscribe = $crate::mqtt_internal::packet::v3_1_1::GenericSubscribe<
                     $packet_id_type,
                     $string_buffer_size,
-                    $binary_buffer_size,
-                    $payload_buffer_size,
                 >;
+                pub type Unsubscribe =
+                    $crate::mqtt_internal::packet::v3_1_1::GenericUnsubscribe<
+                        $packet_id_type,
+                        $string_buffer_size,
+                    >;
+                pub type Puback =
+                    $crate::mqtt_internal::packet::v3_1_1::GenericPuback<$packet_id_type>;
+                pub type Pubrec =
+                    $crate::mqtt_internal::packet::v3_1_1::GenericPubrec<$packet_id_type>;
+                pub type Pubrel =
+                    $crate::mqtt_internal::packet::v3_1_1::GenericPubrel<$packet_id_type>;
+                pub type Pubcomp =
+                    $crate::mqtt_internal::packet::v3_1_1::GenericPubcomp<$packet_id_type>;
+                pub type Suback =
+                    $crate::mqtt_internal::packet::v3_1_1::GenericSuback<$packet_id_type>;
+                pub type Unsuback =
+                    $crate::mqtt_internal::packet::v3_1_1::GenericUnsuback<$packet_id_type>;
 
-                // Re-export everything else from mqtt_internal
-                #[allow(unused_imports)]
-                pub use $crate::mqtt_internal::connection::*;
+                // Direct aliases for non-generic types
+                pub type Connack = $crate::mqtt_internal::packet::v3_1_1::Connack;
+                pub type Pingreq = $crate::mqtt_internal::packet::v3_1_1::Pingreq;
+                pub type Pingresp = $crate::mqtt_internal::packet::v3_1_1::Pingresp;
+                pub type Disconnect = $crate::mqtt_internal::packet::v3_1_1::Disconnect;
             }
 
-            pub mod common {
+            pub mod v5_0 {
                 // Generic* → * aliases only
-                pub type ArcPayload =
-                    $crate::mqtt_internal::common::GenericArcPayload<$payload_buffer_size>;
+                pub type Auth = $crate::mqtt_internal::packet::v5_0::GenericAuth<
+                    $string_buffer_size,
+                    $binary_buffer_size,
+                >;
+                pub type Connack = $crate::mqtt_internal::packet::v5_0::GenericConnack<
+                    $string_buffer_size,
+                    $binary_buffer_size,
+                >;
+                pub type Connect = $crate::mqtt_internal::packet::v5_0::GenericConnect<
+                    $string_buffer_size,
+                    $binary_buffer_size,
+                >;
+                pub type Disconnect = $crate::mqtt_internal::packet::v5_0::GenericDisconnect<
+                    $string_buffer_size,
+                    $binary_buffer_size,
+                >;
+                pub type Puback = $crate::mqtt_internal::packet::v5_0::GenericPuback<
+                    $packet_id_type,
+                    $string_buffer_size,
+                    $binary_buffer_size,
+                >;
+                pub type Pubcomp = $crate::mqtt_internal::packet::v5_0::GenericPubcomp<
+                    $packet_id_type,
+                    $string_buffer_size,
+                    $binary_buffer_size,
+                >;
+                pub type Publish = $crate::mqtt_internal::packet::v5_0::GenericPublish<
+                    $packet_id_type,
+                    $string_buffer_size,
+                    $binary_buffer_size,
+                    $payload_buffer_size,
+                >;
+                pub type Pubrec = $crate::mqtt_internal::packet::v5_0::GenericPubrec<
+                    $packet_id_type,
+                    $string_buffer_size,
+                    $binary_buffer_size,
+                >;
+                pub type Pubrel = $crate::mqtt_internal::packet::v5_0::GenericPubrel<
+                    $packet_id_type,
+                    $string_buffer_size,
+                    $binary_buffer_size,
+                >;
+                pub type Suback = $crate::mqtt_internal::packet::v5_0::GenericSuback<
+                    $packet_id_type,
+                    $string_buffer_size,
+                    $binary_buffer_size,
+                >;
+                pub type Subscribe = $crate::mqtt_internal::packet::v5_0::GenericSubscribe<
+                    $packet_id_type,
+                    $string_buffer_size,
+                    $binary_buffer_size,
+                >;
+                pub type Unsuback = $crate::mqtt_internal::packet::v5_0::GenericUnsuback<
+                    $packet_id_type,
+                    $string_buffer_size,
+                    $binary_buffer_size,
+                >;
+                pub type Unsubscribe = $crate::mqtt_internal::packet::v5_0::GenericUnsubscribe<
+                    $packet_id_type,
+                    $string_buffer_size,
+                    $binary_buffer_size,
+                >;
 
-                // Re-export everything else from mqtt_internal
-                #[allow(unused_imports)]
-                pub use $crate::mqtt_internal::common::*;
+                // Direct aliases for non-generic types
+                pub type Pingreq = $crate::mqtt_internal::packet::v5_0::Pingreq;
+                pub type Pingresp = $crate::mqtt_internal::packet::v5_0::Pingresp;
             }
 
-            // Top-level convenience aliases
+            // Generic* → * aliases for packet-level types
+            pub type Packet = $crate::mqtt_internal::packet::GenericPacket<
+                $packet_id_type,
+                $string_buffer_size,
+                $binary_buffer_size,
+                $payload_buffer_size,
+            >;
+            pub type StorePacket = $crate::mqtt_internal::packet::GenericStorePacket<
+                $packet_id_type,
+                $string_buffer_size,
+                $binary_buffer_size,
+                $payload_buffer_size,
+            >;
+            pub type Property = $crate::mqtt_internal::packet::GenericProperty<
+                $string_buffer_size,
+                $binary_buffer_size,
+            >;
+            pub type Properties = $crate::mqtt_internal::packet::GenericProperties<
+                $string_buffer_size,
+                $binary_buffer_size,
+            >;
+            pub type MqttString =
+                $crate::mqtt_internal::packet::GenericMqttString<$string_buffer_size>;
+            pub type MqttBinary =
+                $crate::mqtt_internal::packet::GenericMqttBinary<$binary_buffer_size>;
+
+            // Generic* → * aliases for property types
+            pub type ContentType =
+                $crate::mqtt_internal::packet::GenericContentType<$string_buffer_size>;
+            pub type ResponseTopic =
+                $crate::mqtt_internal::packet::GenericResponseTopic<$string_buffer_size>;
+            pub type CorrelationData =
+                $crate::mqtt_internal::packet::GenericCorrelationData<$binary_buffer_size>;
+            pub type AssignedClientIdentifier =
+                $crate::mqtt_internal::packet::GenericAssignedClientIdentifier<
+                    $string_buffer_size,
+                >;
+            pub type AuthenticationMethod =
+                $crate::mqtt_internal::packet::GenericAuthenticationMethod<$string_buffer_size>;
+            pub type AuthenticationData =
+                $crate::mqtt_internal::packet::GenericAuthenticationData<$binary_buffer_size>;
+            pub type ResponseInformation =
+                $crate::mqtt_internal::packet::GenericResponseInformation<$string_buffer_size>;
+            pub type ServerReference =
+                $crate::mqtt_internal::packet::GenericServerReference<$string_buffer_size>;
+            pub type ReasonString =
+                $crate::mqtt_internal::packet::GenericReasonString<$string_buffer_size>;
+            pub type UserProperty =
+                $crate::mqtt_internal::packet::GenericUserProperty<$string_buffer_size>;
+
+            // Re-export everything else from mqtt_internal
+            #[allow(unused_imports)]
+            pub use $crate::mqtt_internal::packet::*;
+        }
+
+        pub mod connection {
+            // Generic* → * aliases only
             pub type Connection<Role> = $crate::mqtt_internal::connection::GenericConnection<
                 Role,
+                $packet_id_type,
+                $string_buffer_size,
+                $binary_buffer_size,
+                $payload_buffer_size,
+            >;
+
+            pub type Store = $crate::mqtt_internal::connection::GenericStore<
                 $packet_id_type,
                 $string_buffer_size,
                 $binary_buffer_size,
@@ -312,20 +278,50 @@ macro_rules! make_type_size_aliases {
                 $payload_buffer_size,
             >;
 
-            // Re-export everything else from mqtt_internal at the top level
+            // Re-export everything else from mqtt_internal
             #[allow(unused_imports)]
-            pub use $crate::mqtt_internal::*;
-            // Ensure trait is available for packet operations
-            #[allow(unused_imports)]
-            pub use $crate::mqtt_internal::packet::GenericPacketTrait;
+            pub use $crate::mqtt_internal::connection::*;
+        }
 
-            // Re-export prelude for convenience
-            pub mod prelude {
-                #[allow(unused_imports)]
-                pub use $crate::mqtt_internal::connection::prelude::*;
-                #[allow(unused_imports)]
-                pub use $crate::mqtt_internal::packet::prelude::*;
-            }
+        pub mod common {
+            // Generic* → * aliases only
+            pub type ArcPayload =
+                $crate::mqtt_internal::common::GenericArcPayload<$payload_buffer_size>;
+
+            // Re-export everything else from mqtt_internal
+            #[allow(unused_imports)]
+            pub use $crate::mqtt_internal::common::*;
+        }
+
+        // Top-level convenience aliases
+        pub type Connection<Role> = $crate::mqtt_internal::connection::GenericConnection<
+            Role,
+            $packet_id_type,
+            $string_buffer_size,
+            $binary_buffer_size,
+            $payload_buffer_size,
+        >;
+
+        pub type Event = $crate::mqtt_internal::connection::GenericEvent<
+            $packet_id_type,
+            $string_buffer_size,
+            $binary_buffer_size,
+            $payload_buffer_size,
+        >;
+
+        // Re-export everything else from mqtt_internal at the top level
+        #[allow(unused_imports)]
+        pub use $crate::mqtt_internal::*;
+        // Ensure trait is available for packet operations
+        #[allow(unused_imports)]
+        pub use $crate::mqtt_internal::packet::GenericPacketTrait;
+
+        // Re-export prelude for convenience
+        pub mod prelude {
+            #[allow(unused_imports)]
+            pub use $crate::mqtt_internal::connection::prelude::*;
+            #[allow(unused_imports)]
+            pub use $crate::mqtt_internal::packet::prelude::*;
         }
     };
 }
@@ -334,10 +330,10 @@ macro_rules! make_type_size_aliases {
 ///
 /// This macro is a convenience wrapper around `make_type_size_aliases!` that uses the standard
 /// u16 packet identifier type as specified in the MQTT specification.
+/// Users control the module creation in their own code.
 ///
 /// # Parameters
 ///
-/// * `$mod_name` - The module name for the generated aliases (e.g., `mqtt`, `mqtt_128`, `mqtt_big`)
 /// * `$string_buffer_size` - Buffer size for string data (typically 32, 64, 128, etc.)
 /// * `$binary_buffer_size` - Buffer size for binary data (typically 32, 64, 128, etc.)
 /// * `$payload_buffer_size` - Buffer size for payload data (typically 32, 64, 128, etc.)
@@ -348,7 +344,9 @@ macro_rules! make_type_size_aliases {
 /// use mqtt_protocol_core::*;
 ///
 /// // Generate aliases with standard u16 packet IDs and custom buffer sizes
-/// make_size_aliases!(mqtt_128, 128, 128, 256);
+/// pub mod mqtt_128 {
+///     mqtt_protocol_core::make_size_aliases!(128, 128, 256);
+/// }
 ///
 /// // Use the generated aliases:
 /// let publish = mqtt_128::packet::v5_0::Publish::builder()
@@ -365,9 +363,8 @@ macro_rules! make_type_size_aliases {
 /// ```
 #[macro_export]
 macro_rules! make_size_aliases {
-    ($mod_name:ident, $string_buffer_size:expr, $binary_buffer_size:expr, $payload_buffer_size:expr) => {
+    ($string_buffer_size:expr, $binary_buffer_size:expr, $payload_buffer_size:expr) => {
         $crate::make_type_size_aliases!(
-            $mod_name,
             u16,
             $string_buffer_size,
             $binary_buffer_size,
@@ -380,8 +377,9 @@ macro_rules! make_size_aliases {
 pub use make_size_aliases;
 pub use make_type_size_aliases;
 
-/// Generate default type aliases with standard buffer sizes (32, 32, 128) in the `mqtt` module.
+/// Generate default type aliases with standard buffer sizes (32, 32, 128) in a user-defined module.
 /// This is a convenience macro that calls `make_size_aliases!` with default values.
+/// Users control the module creation in their own code.
 ///
 /// # Examples
 ///
@@ -389,7 +387,9 @@ pub use make_type_size_aliases;
 /// use mqtt_protocol_core::*;
 ///
 /// // Generate default aliases in the mqtt module
-/// make_default_aliases!();
+/// pub mod mqtt {
+///     mqtt_protocol_core::make_default_aliases!();
+/// }
 ///
 /// // Use the generated aliases:
 /// let publish = mqtt::packet::v5_0::Publish::builder()
@@ -407,7 +407,7 @@ pub use make_type_size_aliases;
 #[macro_export]
 macro_rules! make_default_aliases {
     () => {
-        $crate::make_size_aliases!(mqtt, 32, 32, 128);
+        $crate::make_size_aliases!(32, 32, 128);
     };
 }
 
@@ -418,7 +418,9 @@ mod tests {
     #[test]
     fn test_macro_expansion() {
         // Test that the macros expand without compilation errors
-        make_size_aliases!(mqtt_test, 64, 64, 128);
+        mod mqtt_test {
+            crate::make_size_aliases!(64, 64, 128);
+        }
 
         // This should create the type aliases in the module scope
         let _ = || {
@@ -434,7 +436,9 @@ mod tests {
     #[test]
     fn test_custom_packet_id_type() {
         // Test with u32 packet ID type for extended packet IDs
-        make_type_size_aliases!(mqtt_u32_test, u32, 32, 32, 64);
+        mod mqtt_u32_test {
+            crate::make_type_size_aliases!(u32, 32, 32, 64);
+        }
 
         let _ = || {
             // These type aliases should work with u32 packet IDs
@@ -464,7 +468,9 @@ mod tests {
     #[test]
     fn test_default_aliases() {
         // Test the default aliases macro
-        make_default_aliases!();
+        mod mqtt {
+            crate::make_default_aliases!();
+        }
 
         let _ = || {
             // These should use the default mqtt module
@@ -486,9 +492,15 @@ mod tests {
     #[test]
     fn test_multiple_size_aliases() {
         // Test that multiple different sized aliases can coexist
-        make_size_aliases!(mqtt_small, 16, 16, 32);
-        make_size_aliases!(mqtt_large, 256, 256, 512);
-        make_type_size_aliases!(mqtt_u32_large, u32, 128, 128, 256);
+        mod mqtt_small {
+            crate::make_size_aliases!(16, 16, 32);
+        }
+        mod mqtt_large {
+            crate::make_size_aliases!(256, 256, 512);
+        }
+        mod mqtt_u32_large {
+            crate::make_type_size_aliases!(u32, 128, 128, 256);
+        }
 
         let _ = || {
             // Each should work independently

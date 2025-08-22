@@ -19,7 +19,10 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-mqtt_protocol_core::make_default_aliases!();
+
+pub mod mqtt {
+    mqtt_protocol_core::make_default_aliases!();
+}
 
 use std::env;
 use std::io::{Read, Write};

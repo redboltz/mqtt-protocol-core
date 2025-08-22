@@ -20,11 +20,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// Generate default type aliases for all tests
-mqtt_protocol_core::make_default_aliases!();
+// Common test utilities
 
-// Generate u32 packet ID aliases for testing
-mqtt_protocol_core::make_type_size_aliases!(mqtt_pid32, u32, 32, 32, 128);
+pub mod mqtt {
+    mqtt_protocol_core::make_default_aliases_direct!();
+}
 
 #[cfg(feature = "std")]
 use std::sync::Once;
