@@ -38,7 +38,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-mqtt-protocol-core = "0.4.0"
+mqtt-protocol-core = "0.5.0"
 ```
 
 ### No-std Support
@@ -47,7 +47,7 @@ For `no_std` environments (embedded systems), disable the default `std` feature:
 
 ```toml
 [dependencies]
-mqtt-protocol-core = { version = "0.4.0", default-features = false }
+mqtt-protocol-core = { version = "0.5.0", default-features = false }
 ```
 
 Caveats:
@@ -64,16 +64,63 @@ The library supports several optional features that can be enabled/disabled as n
 ```toml
 # Enable tracing support (independent of std)
 [dependencies]
-mqtt-protocol-core = { version = "0.4.0", default-features = false, features = ["tracing"] }
+mqtt-protocol-core = { version = "0.5.0", default-features = false, features = ["tracing"] }
 
 # Use with std but without tracing
 [dependencies]
-mqtt-protocol-core = { version = "0.4.0", default-features = false, features = ["std"] }
+mqtt-protocol-core = { version = "0.5.0", default-features = false, features = ["std"] }
 
 # Full-featured (std + tracing)
 [dependencies]
-mqtt-protocol-core = { version = "0.4.0", features = ["tracing"] }
+mqtt-protocol-core = { version = "0.5.0", features = ["tracing"] }
 ```
+
+### Small String Optimization (SSO) Features
+
+This crate provides SSO features to optimize memory usage for small string and binary data by storing them on the stack instead of allocating on the heap:
+
+- **`sso-min-32bit`**: Minimal optimization for 32-bit environments (MqttString/MqttBinary: 12 bytes, ArcPayload: 15 bytes)
+- **`sso-min-64bit`**: Recommended optimization for 64-bit environments (MqttString/MqttBinary: 24 bytes, ArcPayload: 31 bytes)
+- **`sso-lv10`**: Level 10 optimization (MqttString/MqttBinary: 24 bytes, ArcPayload: 127 bytes)
+- **`sso-lv20`**: Level 20 optimization (MqttString/MqttBinary: 48 bytes, ArcPayload: 255 bytes)
+
+```toml
+# Use specific SSO optimization level
+[dependencies]
+mqtt-protocol-core = { version = "0.5.0", features = ["sso-lv10"] }
+
+# Combine with other features
+[dependencies]
+mqtt-protocol-core = { version = "0.5.0", features = ["std", "sso-lv20", "tracing"] }
+```
+
+#### ⚠️ **Important: Feature Flag Propagation Requirement**
+
+When your crate depends on `mqtt-protocol-core` and is used by other crates or applications, you should re-export all SSO feature flags to ensure proper feature selection.
+
+**Multiple SSO Features:** When multiple SSO features are enabled simultaneously, the system automatically selects the **largest buffer size** from the enabled features. This allows safe usage with `--all-features` and prevents compilation errors.
+
+**Feature Selection Priority:**
+1. `sso-lv20` (highest): 48-byte String/Binary, 255-byte ArcPayload
+2. `sso-lv10` or `sso-min-64bit`: 24-byte String/Binary, 127-byte ArcPayload
+3. `sso-min-32bit` (lowest): 12-byte String/Binary, 15-byte ArcPayload
+
+**Example: If your crate uses mqtt-protocol-core with SSO features:**
+
+```toml
+# Your crate's Cargo.toml
+[dependencies]
+mqtt-protocol-core = { version = "0.5.0", features = ["sso-lv10"] }
+
+[features]
+# You MUST re-export ALL SSO features to allow downstream configuration
+sso-min-32bit = ["mqtt-protocol-core/sso-min-32bit"]
+sso-min-64bit = ["mqtt-protocol-core/sso-min-64bit"]
+sso-lv10 = ["mqtt-protocol-core/sso-lv10"]
+sso-lv20 = ["mqtt-protocol-core/sso-lv20"]
+```
+
+This pattern ensures that when multiple dependency crates enable different SSO levels, the final application receives the maximum optimization level from all dependencies.
 
 **No-std Usage Example:**
 ```rust

@@ -20,292 +20,202 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 use crate::mqtt::result_code::MqttError;
-use alloc::{vec, vec::Vec};
+use alloc::vec::Vec;
 use core::convert::TryFrom;
 use serde::{Serialize, Serializer};
 #[cfg(feature = "std")]
 use std::io::IoSlice;
 
-/// MQTT Binary Data representation with pre-encoded byte buffer
+// SSO buffer size configuration - priority-based selection for maximum size
+#[cfg(feature = "sso-lv20")]
+const SSO_BUFFER_SIZE: usize = 48; // Highest priority: 48 bytes
+#[cfg(all(
+    not(feature = "sso-lv20"),
+    any(feature = "sso-lv10", feature = "sso-min-64bit")
+))]
+const SSO_BUFFER_SIZE: usize = 24; // Second priority: 24 bytes
+#[cfg(all(
+    not(any(feature = "sso-lv20", feature = "sso-lv10", feature = "sso-min-64bit")),
+    feature = "sso-min-32bit"
+))]
+const SSO_BUFFER_SIZE: usize = 12; // Third priority: 12 bytes
+#[cfg(not(any(
+    feature = "sso-min-32bit",
+    feature = "sso-min-64bit",
+    feature = "sso-lv10",
+    feature = "sso-lv20"
+)))]
+const SSO_BUFFER_SIZE: usize = 0; // No SSO features enabled
+
+// Determine data threshold
+#[cfg(any(
+    feature = "sso-min-32bit",
+    feature = "sso-min-64bit",
+    feature = "sso-lv10",
+    feature = "sso-lv20"
+))]
+const SSO_DATA_THRESHOLD: usize = SSO_BUFFER_SIZE - 2;
+
+/// MQTT Binary Data representation with Small String Optimization (SSO)
 ///
-/// This struct represents binary data as specified in the MQTT protocol specification.
-/// It efficiently stores binary data with a 2-byte length prefix, following the MQTT
-/// wire format for binary data fields.
+/// This enum represents binary data as specified in the MQTT protocol specification.
+/// It uses SSO to store small binary data on the stack and larger data on the heap,
+/// following the MQTT wire format for binary data fields.
 ///
-/// The binary data is stored in a pre-encoded format internally, which includes:
+/// The binary data is stored with a 2-byte length prefix, which includes:
 /// - 2 bytes for the length prefix (big-endian u16)
 /// - The actual binary data bytes
 ///
 /// This approach provides several benefits:
 /// - Zero-copy serialization to network buffers
-/// - Efficient memory usage with single allocation
+/// - Efficient memory usage (stack for small data, heap for large)
 /// - Guaranteed MQTT protocol compliance
 /// - Fast size calculations
 ///
 /// # Size Limits
 ///
 /// The maximum size of binary data is 65,535 bytes (2^16 - 1), as specified
-/// by the MQTT protocol. Attempting to create an `MqttBinary` with larger
-/// data will result in an error.
-///
-/// # Examples
-///
-/// ```ignore
-/// use mqtt_protocol_core::mqtt;
-///
-/// // Create binary data from a byte slice
-/// let data = b"hello world";
-/// let mqtt_binary = mqtt::packet::MqttBinary::new(data).unwrap();
-///
-/// // Access the binary data
-/// assert_eq!(mqtt_binary.as_slice(), b"hello world");
-/// assert_eq!(mqtt_binary.len(), 11);
-///
-/// // Get the complete encoded buffer (length prefix + data)
-/// let encoded = mqtt_binary.as_bytes();
-/// assert_eq!(encoded.len(), 13); // 2 bytes length + 11 bytes data
-/// ```
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub struct MqttBinary {
-    /// Complete buffer containing length prefix (2 bytes) + binary data
-    encoded: Vec<u8>,
+/// by the MQTT protocol. The SSO threshold is determined by feature flags.
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[allow(clippy::large_enum_variant)]
+pub enum MqttBinary {
+    #[cfg(any(
+        feature = "sso-min-32bit",
+        feature = "sso-min-64bit",
+        feature = "sso-lv10",
+        feature = "sso-lv20"
+    ))]
+    Small([u8; SSO_BUFFER_SIZE]), // buffer with length prefix
+    Large(Vec<u8>),
 }
 
 impl MqttBinary {
     /// Create a new MqttBinary from binary data
-    ///
-    /// Creates an `MqttBinary` instance from the provided binary data.
-    /// The data is copied into an internal buffer with a 2-byte length prefix.
-    ///
-    /// # Parameters
-    ///
-    /// * `data` - Binary data to store. Can be any type that implements `AsRef<[u8]>`
-    ///   such as `&[u8]`, `Vec<u8>`, or `&str`
-    ///
-    /// # Returns
-    ///
-    /// * `Ok(MqttBinary)` - Successfully created binary data
-    /// * `Err(MqttError::MalformedPacket)` - If data length exceeds 65,535 bytes
-    ///
-    /// # Examples
-    ///
-    /// ```ignore
-    /// use mqtt_protocol_core::mqtt;
-    ///
-    /// // From byte slice
-    /// let binary = mqtt::packet::MqttBinary::new(b"hello").unwrap();
-    ///
-    /// // From Vec<u8>
-    /// let vec_data = vec![1, 2, 3, 4, 5];
-    /// let binary = mqtt::packet::MqttBinary::new(vec_data).unwrap();
-    ///
-    /// // From string (converted to bytes)
-    /// let binary = mqtt::packet::MqttBinary::new("text data").unwrap();
-    /// ```
     pub fn new(data: impl AsRef<[u8]>) -> Result<Self, MqttError> {
         let data_ref = data.as_ref();
         if data_ref.len() > 65535 {
             return Err(MqttError::MalformedPacket);
         }
-        let len = data_ref.len() as u16;
 
+        // Try to fit in Small variant if SSO is enabled
+        #[cfg(any(
+            feature = "sso-min-32bit",
+            feature = "sso-min-64bit",
+            feature = "sso-lv10",
+            feature = "sso-lv20"
+        ))]
+        if data_ref.len() <= SSO_DATA_THRESHOLD {
+            let mut buffer = [0u8; SSO_BUFFER_SIZE];
+            let len = data_ref.len() as u16;
+            buffer[0] = (len >> 8) as u8;
+            buffer[1] = len as u8;
+            buffer[2..2 + data_ref.len()].copy_from_slice(data_ref);
+            return Ok(MqttBinary::Small(buffer));
+        }
+
+        // Fallback to Large variant
+        let len = data_ref.len() as u16;
         let mut encoded = Vec::with_capacity(2 + data_ref.len());
         encoded.push((len >> 8) as u8);
         encoded.push(len as u8);
         encoded.extend_from_slice(data_ref);
-
-        Ok(Self { encoded })
+        Ok(MqttBinary::Large(encoded))
     }
 
     /// Get the complete encoded byte sequence including length prefix
-    ///
-    /// Returns the complete internal buffer, which includes the 2-byte length prefix
-    /// followed by the binary data. This is the exact format used in MQTT wire protocol.
-    ///
-    /// # Returns
-    ///
-    /// A byte slice containing [length_high, length_low, data...]
-    ///
-    /// # Examples
-    ///
-    /// ```ignore
-    /// use mqtt_protocol_core::mqtt;
-    ///
-    /// let binary = mqtt::packet::MqttBinary::new(b"hi").unwrap();
-    /// let bytes = binary.as_bytes();
-    /// assert_eq!(bytes, &[0x00, 0x02, b'h', b'i']);
-    /// ```
     pub fn as_bytes(&self) -> &[u8] {
-        &self.encoded
+        match self {
+            #[cfg(any(
+                feature = "sso-min-32bit",
+                feature = "sso-min-64bit",
+                feature = "sso-lv10",
+                feature = "sso-lv20"
+            ))]
+            MqttBinary::Small(buffer) => {
+                let len = ((buffer[0] as usize) << 8) | (buffer[1] as usize);
+                &buffer[..2 + len]
+            }
+            MqttBinary::Large(encoded) => encoded,
+        }
     }
 
     /// Get only the binary data without the length prefix
-    ///
-    /// Returns a byte slice containing only the binary data portion,
-    /// excluding the 2-byte length prefix.
-    ///
-    /// # Returns
-    ///
-    /// A byte slice containing the raw binary data
-    ///
-    /// # Examples
-    ///
-    /// ```ignore
-    /// use mqtt_protocol_core::mqtt;
-    ///
-    /// let binary = mqtt::packet::MqttBinary::new(b"hello").unwrap();
-    /// assert_eq!(binary.as_slice(), b"hello");
-    /// ```
     pub fn as_slice(&self) -> &[u8] {
-        &self.encoded[2..]
+        match self {
+            #[cfg(any(
+                feature = "sso-min-32bit",
+                feature = "sso-min-64bit",
+                feature = "sso-lv10",
+                feature = "sso-lv20"
+            ))]
+            MqttBinary::Small(buffer) => {
+                let len = ((buffer[0] as usize) << 8) | (buffer[1] as usize);
+                &buffer[2..2 + len]
+            }
+            MqttBinary::Large(encoded) => &encoded[2..],
+        }
     }
 
     /// Get the length of the binary data in bytes
-    ///
-    /// Returns the number of bytes in the binary data portion only,
-    /// excluding the 2-byte length prefix.
-    ///
-    /// # Returns
-    ///
-    /// The length of the binary data in bytes
-    ///
-    /// # Examples
-    ///
-    /// ```ignore
-    /// use mqtt_protocol_core::mqtt;
-    ///
-    /// let binary = mqtt::packet::MqttBinary::new(b"hello").unwrap();
-    /// assert_eq!(binary.len(), 5);
-    ///
-    /// let empty = mqtt::packet::MqttBinary::new(b"").unwrap();
-    /// assert_eq!(empty.len(), 0);
-    /// ```
     pub fn len(&self) -> usize {
-        self.encoded.len() - 2
+        match self {
+            #[cfg(any(
+                feature = "sso-min-32bit",
+                feature = "sso-min-64bit",
+                feature = "sso-lv10",
+                feature = "sso-lv20"
+            ))]
+            MqttBinary::Small(buffer) => ((buffer[0] as usize) << 8) | (buffer[1] as usize),
+            MqttBinary::Large(encoded) => encoded.len() - 2,
+        }
     }
 
     /// Check if the binary data is empty
-    ///
-    /// Returns `true` if the binary data contains no bytes,
-    /// `false` otherwise.
-    ///
-    /// # Returns
-    ///
-    /// `true` if the binary data is empty, `false` otherwise
-    ///
-    /// # Examples
-    ///
-    /// ```ignore
-    /// use mqtt_protocol_core::mqtt;
-    ///
-    /// let empty = mqtt::packet::MqttBinary::new(b"").unwrap();
-    /// assert!(empty.is_empty());
-    ///
-    /// let data = mqtt::packet::MqttBinary::new(b"x").unwrap();
-    /// assert!(!data.is_empty());
-    /// ```
     pub fn is_empty(&self) -> bool {
-        self.encoded.len() <= 2
+        self.len() == 0
     }
 
     /// Get the total encoded size including the length field
-    ///
-    /// Returns the total number of bytes in the encoded representation,
-    /// including the 2-byte length prefix and the binary data.
-    ///
-    /// # Returns
-    ///
-    /// The total size in bytes (length prefix + binary data)
-    ///
-    /// # Examples
-    ///
-    /// ```ignore
-    /// use mqtt_protocol_core::mqtt;
-    ///
-    /// let binary = mqtt::packet::MqttBinary::new(b"hello").unwrap();
-    /// assert_eq!(binary.size(), 7); // 2 bytes prefix + 5 bytes data
-    /// assert_eq!(binary.len(), 5);  // Only data length
-    /// ```
     pub fn size(&self) -> usize {
-        self.encoded.len()
+        match self {
+            #[cfg(any(
+                feature = "sso-min-32bit",
+                feature = "sso-min-64bit",
+                feature = "sso-lv10",
+                feature = "sso-lv20"
+            ))]
+            MqttBinary::Small(buffer) => {
+                let len = ((buffer[0] as usize) << 8) | (buffer[1] as usize);
+                2 + len
+            }
+            MqttBinary::Large(encoded) => encoded.len(),
+        }
     }
 
     /// Create IoSlice buffers for efficient network I/O
-    ///
-    /// Returns a vector of `IoSlice` objects that can be used for vectored I/O
-    /// operations, allowing zero-copy writes to network sockets.
-    ///
-    /// # Returns
-    ///
-    /// A vector containing a single `IoSlice` referencing the complete encoded buffer
-    ///
-    /// # Examples
-    ///
-    /// ```ignore
-    /// use mqtt_protocol_core::mqtt;
-    /// use std::io::IoSlice;
-    ///
-    /// let binary = mqtt::packet::MqttBinary::new(b"data").unwrap();
-    /// let buffers = binary.to_buffers();
-    /// // Can be used with vectored write operations
-    /// // socket.write_vectored(&buffers)?;
-    /// ```
     #[cfg(feature = "std")]
     pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
-        vec![IoSlice::new(&self.encoded)]
+        match self {
+            MqttBinary::Large(encoded) => vec![IoSlice::new(encoded)],
+            #[cfg(any(
+                feature = "sso-min-32bit",
+                feature = "sso-min-64bit",
+                feature = "sso-lv10",
+                feature = "sso-lv20"
+            ))]
+            MqttBinary::Small(buffer) => {
+                let len = ((buffer[0] as usize) << 8) | (buffer[1] as usize);
+                vec![IoSlice::new(&buffer[..2 + len])]
+            }
+        }
     }
 
     /// Create a continuous buffer containing the complete packet data
-    ///
-    /// Returns a vector containing all packet bytes in a single continuous buffer.
-    /// This method is compatible with no-std environments and provides an alternative
-    /// to [`to_buffers()`] when vectored I/O is not needed.
-    ///
-    /// # Returns
-    ///
-    /// A vector containing the complete encoded buffer
-    ///
-    /// # Examples
-    ///
-    /// ```ignore
-    /// use mqtt_protocol_core::mqtt;
-    ///
-    /// let binary = mqtt::packet::MqttBinary::new(b"data").unwrap();
-    /// let buffer = binary.to_continuous_buffer();
-    /// // buffer contains all packet bytes
-    /// ```
-    ///
-    /// [`to_buffers()`]: #method.to_buffers
     pub fn to_continuous_buffer(&self) -> Vec<u8> {
-        self.encoded.clone()
+        self.as_bytes().to_vec()
     }
 
     /// Parse binary data from a byte sequence
-    ///
-    /// Decodes MQTT binary data from a byte buffer according to the MQTT protocol.
-    /// The buffer must start with a 2-byte length prefix followed by the binary data.
-    ///
-    /// # Parameters
-    ///
-    /// * `data` - Byte buffer containing the encoded binary data
-    ///
-    /// # Returns
-    ///
-    /// * `Ok((MqttBinary, bytes_consumed))` - Successfully parsed binary data and number of bytes consumed
-    /// * `Err(MqttError::MalformedPacket)` - If the buffer is too short or malformed
-    ///
-    /// # Examples
-    ///
-    /// ```ignore
-    /// use mqtt_protocol_core::mqtt;
-    ///
-    /// // Buffer: [length_high, length_low, data...]
-    /// let buffer = &[0x00, 0x05, b'h', b'e', b'l', b'l', b'o'];
-    /// let (binary, consumed) = mqtt::packet::MqttBinary::decode(buffer).unwrap();
-    ///
-    /// assert_eq!(binary.as_slice(), b"hello");
-    /// assert_eq!(consumed, 7);
-    /// ```
     pub fn decode(data: &[u8]) -> Result<(Self, usize), MqttError> {
         if data.len() < 2 {
             return Err(MqttError::MalformedPacket);
@@ -316,18 +226,30 @@ impl MqttBinary {
             return Err(MqttError::MalformedPacket);
         }
 
-        // Create encoded buffer
+        // Try to fit in Small variant if SSO is enabled
+        #[cfg(any(
+            feature = "sso-min-32bit",
+            feature = "sso-min-64bit",
+            feature = "sso-lv10",
+            feature = "sso-lv20"
+        ))]
+        if data_len <= SSO_DATA_THRESHOLD {
+            let payload = &data[2..2 + data_len];
+            let mut buffer = [0u8; SSO_BUFFER_SIZE];
+            buffer[0] = data[0];
+            buffer[1] = data[1];
+            buffer[2..2 + data_len].copy_from_slice(payload);
+            return Ok((MqttBinary::Small(buffer), 2 + data_len));
+        }
+
+        // Fallback to Large variant
         let mut encoded = Vec::with_capacity(2 + data_len);
         encoded.extend_from_slice(&data[0..2 + data_len]);
-
-        Ok((Self { encoded }, 2 + data_len))
+        Ok((MqttBinary::Large(encoded), 2 + data_len))
     }
 }
 
 /// Implementation of `AsRef<[u8]>` for `MqttBinary`
-///
-/// Returns the binary data portion (without length prefix) when the
-/// `MqttBinary` is used in contexts expecting a byte slice reference.
 impl AsRef<[u8]> for MqttBinary {
     fn as_ref(&self) -> &[u8] {
         self.as_slice()
@@ -335,10 +257,6 @@ impl AsRef<[u8]> for MqttBinary {
 }
 
 /// Implementation of `Deref` for `MqttBinary`
-///
-/// Allows `MqttBinary` to be used directly as a byte slice in many contexts
-/// through automatic dereferencing. The dereferenced value is the binary data
-/// without the length prefix.
 impl core::ops::Deref for MqttBinary {
     type Target = [u8];
 
@@ -348,9 +266,6 @@ impl core::ops::Deref for MqttBinary {
 }
 
 /// Implementation of `Serialize` for `MqttBinary`
-///
-/// Serializes the binary data portion (without length prefix) as bytes.
-/// This is useful for JSON serialization and other serialization formats.
 impl Serialize for MqttBinary {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -361,9 +276,6 @@ impl Serialize for MqttBinary {
 }
 
 /// Implementation of `TryFrom<&str>` for `MqttBinary`
-///
-/// Converts a string slice to `MqttBinary` by converting the string to UTF-8 bytes.
-/// This is useful when you need to store text data as binary in MQTT packets.
 impl TryFrom<&str> for MqttBinary {
     type Error = MqttError;
 
@@ -373,13 +285,184 @@ impl TryFrom<&str> for MqttBinary {
 }
 
 /// Implementation of `Default` for `MqttBinary`
-///
-/// Creates an empty `MqttBinary` with zero-length binary data.
-/// The internal buffer contains only the 2-byte length prefix (0x00, 0x00).
 impl Default for MqttBinary {
     fn default() -> Self {
-        MqttBinary {
-            encoded: vec![0x00, 0x00],
+        Self::new(b"").unwrap()
+    }
+}
+
+impl core::fmt::Debug for MqttBinary {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("MqttBinary")
+            .field("data", &self.as_slice())
+            .finish()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_empty_binary() {
+        let binary = MqttBinary::new(b"").unwrap();
+        assert_eq!(binary.len(), 0);
+        assert!(binary.is_empty());
+        assert_eq!(binary.size(), 2);
+        assert_eq!(binary.as_slice(), b"");
+        assert_eq!(binary.as_bytes(), vec![0x00, 0x00]);
+    }
+
+    #[test]
+    fn test_small_binary() {
+        let data = b"hello";
+        let binary = MqttBinary::new(data).unwrap();
+        assert_eq!(binary.len(), 5);
+        assert!(!binary.is_empty());
+        assert_eq!(binary.size(), 7);
+        assert_eq!(binary.as_slice(), data);
+        assert_eq!(
+            binary.as_bytes(),
+            vec![0x00, 0x05, b'h', b'e', b'l', b'l', b'o']
+        );
+    }
+
+    #[test]
+    fn test_decode_roundtrip() {
+        let original_data = b"test data";
+        let binary = MqttBinary::new(original_data).unwrap();
+        let encoded = binary.as_bytes();
+
+        let (decoded_binary, consumed) = MqttBinary::decode(&encoded).unwrap();
+        assert_eq!(consumed, encoded.len());
+        assert_eq!(decoded_binary.as_slice(), original_data);
+        assert_eq!(decoded_binary.len(), original_data.len());
+    }
+
+    #[test]
+    fn test_max_size() {
+        let data = vec![0u8; 65535];
+        let binary = MqttBinary::new(&data).unwrap();
+        assert_eq!(binary.len(), 65535);
+        assert_eq!(binary.size(), 65537);
+    }
+
+    #[test]
+    fn test_oversized_data() {
+        let data = vec![0u8; 65536];
+        let result = MqttBinary::new(&data);
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), MqttError::MalformedPacket);
+    }
+
+    #[test]
+    fn test_decode_malformed() {
+        // Too short buffer
+        assert!(MqttBinary::decode(&[0x00]).is_err());
+
+        // Length mismatch
+        assert!(MqttBinary::decode(&[0x00, 0x05, b'h', b'i']).is_err());
+    }
+
+    #[test]
+    fn test_continuous_buffer() {
+        let data = b"continuous";
+        let binary = MqttBinary::new(data).unwrap();
+        let buffer = binary.to_continuous_buffer();
+        assert_eq!(buffer[0], 0x00);
+        assert_eq!(buffer[1], 0x0A); // length = 10
+        assert_eq!(&buffer[2..], data);
+    }
+
+    #[cfg(feature = "std")]
+    #[test]
+    fn test_to_buffers() {
+        let data = b"buffer test";
+        let binary = MqttBinary::new(data).unwrap();
+        let buffers = binary.to_buffers();
+
+        // Both variants should return 1 buffer containing the encoded data
+        assert_eq!(buffers.len(), 1);
+
+        // Verify the buffer contains the complete encoded data
+        let buffer_data: &[u8] = &buffers[0];
+        assert_eq!(buffer_data, binary.as_bytes());
+    }
+
+    #[test]
+    fn test_trait_implementations() {
+        let binary = MqttBinary::new(b"trait test").unwrap();
+
+        // AsRef<[u8]>
+        let slice: &[u8] = binary.as_ref();
+        assert_eq!(slice, b"trait test");
+
+        // Deref
+        assert_eq!(&*binary, b"trait test");
+
+        // PartialEq
+        let binary2 = MqttBinary::new(b"trait test").unwrap();
+        assert_eq!(binary, binary2);
+
+        // Clone
+        let cloned = binary.clone();
+        assert_eq!(binary, cloned);
+
+        // Default
+        let default = MqttBinary::default();
+        assert!(default.is_empty());
+    }
+
+    #[test]
+    fn test_from_conversions() {
+        // TryFrom<&str>
+        let binary = MqttBinary::try_from("string test").unwrap();
+        assert_eq!(binary.as_slice(), b"string test");
+
+        // TryFrom with oversized data should fail
+        let long_str = "x".repeat(65536);
+        assert!(MqttBinary::try_from(long_str.as_str()).is_err());
+    }
+
+    // Feature-specific tests
+    #[cfg(any(
+        feature = "sso-min-32bit",
+        feature = "sso-min-64bit",
+        feature = "sso-lv10",
+        feature = "sso-lv20"
+    ))]
+    #[test]
+    fn test_sso_features() {
+        // Test small data (Small variant if SSO is enabled)
+        let small_data = b"small";
+        let binary = MqttBinary::new(small_data).unwrap();
+
+        #[cfg(any(
+            feature = "sso-min-32bit",
+            feature = "sso-min-64bit",
+            feature = "sso-lv10",
+            feature = "sso-lv20"
+        ))]
+        {
+            if let MqttBinary::Small(buffer) = binary {
+                let len = ((buffer[0] as usize) << 8) | (buffer[1] as usize);
+                assert_eq!(len, 5); // 5 bytes data
+            } else {
+                panic!("Expected Small variant for small data with SSO enabled");
+            }
         }
+
+        #[cfg(not(any(
+            feature = "sso-min-32bit",
+            feature = "sso-min-64bit",
+            feature = "sso-lv10",
+            feature = "sso-lv20"
+        )))]
+        assert!(matches!(binary, MqttBinary::Large(_)));
+
+        // Test data that should always be Large variant (larger than largest SSO buffer)
+        let very_large_data = b"This is a very long binary data that exceeds even the largest SSO buffer size to ensure it's always stored in the Large variant for consistent testing";
+        let binary = MqttBinary::new(very_large_data).unwrap();
+        assert!(matches!(binary, MqttBinary::Large(_)));
     }
 }

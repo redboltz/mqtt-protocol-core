@@ -23,17 +23,69 @@
 use alloc::{string::String, sync::Arc, vec::Vec};
 use serde::{Serialize, Serializer};
 
+// SSO buffer size configuration - priority-based selection for maximum size
+#[cfg(feature = "sso-lv20")]
+const SSO_BUFFER_SIZE: usize = 255; // Highest priority: 255 bytes
+#[cfg(all(not(feature = "sso-lv20"), feature = "sso-lv10"))]
+const SSO_BUFFER_SIZE: usize = 127; // Second priority: 127 bytes
+#[cfg(all(
+    not(any(feature = "sso-lv20", feature = "sso-lv10")),
+    feature = "sso-min-64bit"
+))]
+const SSO_BUFFER_SIZE: usize = 31; // Third priority: 31 bytes
+#[cfg(all(
+    not(any(feature = "sso-lv20", feature = "sso-lv10", feature = "sso-min-64bit")),
+    feature = "sso-min-32bit"
+))]
+const SSO_BUFFER_SIZE: usize = 15; // Fourth priority: 15 bytes
+#[cfg(not(any(
+    feature = "sso-min-32bit",
+    feature = "sso-min-64bit",
+    feature = "sso-lv10",
+    feature = "sso-lv20"
+)))]
+#[allow(dead_code)]
+const SSO_BUFFER_SIZE: usize = 0; // No SSO features enabled
+
+// Length type is always u8 since all buffer sizes fit in u8 range (max 255)
+#[cfg(any(
+    feature = "sso-min-32bit",
+    feature = "sso-min-64bit",
+    feature = "sso-lv10",
+    feature = "sso-lv20"
+))]
+type LengthType = u8;
+
+#[cfg(not(any(
+    feature = "sso-min-32bit",
+    feature = "sso-min-64bit",
+    feature = "sso-lv10",
+    feature = "sso-lv20"
+)))]
+#[allow(dead_code)]
+type LengthType = u8;
+
 /// A reference-counted byte payload with slice semantics
 ///
 /// `ArcPayload` provides an efficient way to handle byte data by using `Arc<[u8]>`
 /// for reference counting, combined with offset and length information to represent
 /// a slice view of the underlying data. This allows for zero-copy sharing of payload
 /// data across multiple consumers while maintaining slice-like semantics.
-#[derive(Clone, Debug)]
-pub struct ArcPayload {
-    data: Arc<[u8]>,
-    start: usize,
-    length: usize,
+#[derive(Clone)]
+#[allow(clippy::large_enum_variant)]
+pub enum ArcPayload {
+    #[cfg(any(
+        feature = "sso-min-32bit",
+        feature = "sso-min-64bit",
+        feature = "sso-lv10",
+        feature = "sso-lv20"
+    ))]
+    Small([u8; SSO_BUFFER_SIZE], LengthType), // buffer, actual_length
+    Large {
+        data: Arc<[u8]>,
+        start: usize,
+        length: usize,
+    },
 }
 
 impl PartialEq for ArcPayload {
@@ -80,7 +132,20 @@ impl ArcPayload {
     /// ```
     pub fn new(data: Arc<[u8]>, start: usize, length: usize) -> Self {
         debug_assert!(start + length <= data.len(), "payload out of bounds",);
-        Self {
+
+        #[cfg(any(
+            feature = "sso-min-32bit",
+            feature = "sso-min-64bit",
+            feature = "sso-lv10",
+            feature = "sso-lv20"
+        ))]
+        if length <= SSO_BUFFER_SIZE {
+            let mut buffer = [0u8; SSO_BUFFER_SIZE];
+            buffer[..length].copy_from_slice(&data[start..start + length]);
+            return Self::Small(buffer, length as LengthType);
+        }
+
+        Self::Large {
             data,
             start,
             length,
@@ -95,7 +160,20 @@ impl ArcPayload {
     ///
     /// A `&[u8]` slice of the payload data
     pub fn as_slice(&self) -> &[u8] {
-        &self.data[self.start..self.start + self.length]
+        match self {
+            ArcPayload::Large {
+                data,
+                start,
+                length,
+            } => &data[*start..*start + *length],
+            #[cfg(any(
+                feature = "sso-min-32bit",
+                feature = "sso-min-64bit",
+                feature = "sso-lv10",
+                feature = "sso-lv20"
+            ))]
+            ArcPayload::Small(buffer, length) => &buffer[..*length as usize],
+        }
     }
 
     /// Get the length of the payload
@@ -106,7 +184,16 @@ impl ArcPayload {
     ///
     /// The length of the payload in bytes
     pub fn len(&self) -> usize {
-        self.length
+        match self {
+            ArcPayload::Large { length, .. } => *length,
+            #[cfg(any(
+                feature = "sso-min-32bit",
+                feature = "sso-min-64bit",
+                feature = "sso-lv10",
+                feature = "sso-lv20"
+            ))]
+            ArcPayload::Small(_, length) => *length as usize,
+        }
     }
 
     /// Check if the payload is empty
@@ -117,7 +204,7 @@ impl ArcPayload {
     ///
     /// `true` if the payload length is zero, `false` otherwise
     pub fn is_empty(&self) -> bool {
-        self.length == 0
+        self.len() == 0
     }
 
     /// Get a reference to the underlying `Arc<[u8]>` data
@@ -129,18 +216,50 @@ impl ArcPayload {
     /// # Returns
     ///
     /// A reference to the underlying `Arc<[u8]>` data
-    pub fn arc_data(&self) -> &Arc<[u8]> {
-        &self.data
+    pub fn arc_data(&self) -> Option<&Arc<[u8]>> {
+        match self {
+            ArcPayload::Large { data, .. } => Some(data),
+            #[cfg(any(
+                feature = "sso-min-32bit",
+                feature = "sso-min-64bit",
+                feature = "sso-lv10",
+                feature = "sso-lv20"
+            ))]
+            ArcPayload::Small(_, _) => None, // Small variant doesn't use Arc data
+        }
     }
 }
 
 impl Default for ArcPayload {
     fn default() -> Self {
-        ArcPayload {
+        #[cfg(any(
+            feature = "sso-min-32bit",
+            feature = "sso-min-64bit",
+            feature = "sso-lv10",
+            feature = "sso-lv20"
+        ))]
+        return ArcPayload::Small([0u8; SSO_BUFFER_SIZE], 0 as LengthType);
+
+        #[cfg(not(any(
+            feature = "sso-min-32bit",
+            feature = "sso-min-64bit",
+            feature = "sso-lv10",
+            feature = "sso-lv20"
+        )))]
+        return ArcPayload::Large {
             data: Arc::from(&[] as &[u8]),
             start: 0,
             length: 0,
-        }
+        };
+    }
+}
+
+impl core::fmt::Debug for ArcPayload {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("ArcPayload")
+            .field("data", &self.as_slice())
+            .field("len", &self.len())
+            .finish()
     }
 }
 
@@ -162,7 +281,24 @@ pub trait IntoPayload {
 impl IntoPayload for &str {
     fn into_payload(self) -> ArcPayload {
         let bytes = self.as_bytes();
-        ArcPayload::new(Arc::from(bytes), 0, bytes.len())
+
+        #[cfg(any(
+            feature = "sso-min-32bit",
+            feature = "sso-min-64bit",
+            feature = "sso-lv10",
+            feature = "sso-lv20"
+        ))]
+        if bytes.len() <= SSO_BUFFER_SIZE {
+            let mut buffer = [0u8; SSO_BUFFER_SIZE];
+            buffer[..bytes.len()].copy_from_slice(bytes);
+            return ArcPayload::Small(buffer, bytes.len() as LengthType);
+        }
+
+        ArcPayload::Large {
+            data: Arc::from(bytes),
+            start: 0,
+            length: bytes.len(),
+        }
     }
 }
 
@@ -170,22 +306,71 @@ impl IntoPayload for &str {
 impl IntoPayload for String {
     fn into_payload(self) -> ArcPayload {
         let bytes = self.as_bytes();
-        ArcPayload::new(Arc::from(bytes), 0, bytes.len())
+
+        #[cfg(any(
+            feature = "sso-min-32bit",
+            feature = "sso-min-64bit",
+            feature = "sso-lv10",
+            feature = "sso-lv20"
+        ))]
+        if bytes.len() <= SSO_BUFFER_SIZE {
+            let mut buffer = [0u8; SSO_BUFFER_SIZE];
+            buffer[..bytes.len()].copy_from_slice(bytes);
+            return ArcPayload::Small(buffer, bytes.len() as LengthType);
+        }
+
+        ArcPayload::Large {
+            data: Arc::from(bytes),
+            start: 0,
+            length: bytes.len(),
+        }
     }
 }
 
 /// Convert a byte slice (`&[u8]`) into an `ArcPayload`
 impl IntoPayload for &[u8] {
     fn into_payload(self) -> ArcPayload {
-        ArcPayload::new(Arc::from(self), 0, self.len())
+        #[cfg(any(
+            feature = "sso-min-32bit",
+            feature = "sso-min-64bit",
+            feature = "sso-lv10",
+            feature = "sso-lv20"
+        ))]
+        if self.len() <= SSO_BUFFER_SIZE {
+            let mut buffer = [0u8; SSO_BUFFER_SIZE];
+            buffer[..self.len()].copy_from_slice(self);
+            return ArcPayload::Small(buffer, self.len() as LengthType);
+        }
+
+        ArcPayload::Large {
+            data: Arc::from(self),
+            start: 0,
+            length: self.len(),
+        }
     }
 }
 
 /// Convert an owned byte vector (`Vec<u8>`) into an `ArcPayload`
 impl IntoPayload for Vec<u8> {
     fn into_payload(self) -> ArcPayload {
+        #[cfg(any(
+            feature = "sso-min-32bit",
+            feature = "sso-min-64bit",
+            feature = "sso-lv10",
+            feature = "sso-lv20"
+        ))]
+        if self.len() <= SSO_BUFFER_SIZE {
+            let mut buffer = [0u8; SSO_BUFFER_SIZE];
+            buffer[..self.len()].copy_from_slice(&self);
+            return ArcPayload::Small(buffer, self.len() as LengthType);
+        }
+
         let len = self.len();
-        ArcPayload::new(Arc::from(self), 0, len)
+        ArcPayload::Large {
+            data: Arc::from(self),
+            start: 0,
+            length: len,
+        }
     }
 }
 
@@ -193,7 +378,24 @@ impl IntoPayload for Vec<u8> {
 impl IntoPayload for &Vec<u8> {
     fn into_payload(self) -> ArcPayload {
         let slice: &[u8] = self.as_slice();
-        ArcPayload::new(Arc::from(slice), 0, slice.len())
+
+        #[cfg(any(
+            feature = "sso-min-32bit",
+            feature = "sso-min-64bit",
+            feature = "sso-lv10",
+            feature = "sso-lv20"
+        ))]
+        if slice.len() <= SSO_BUFFER_SIZE {
+            let mut buffer = [0u8; SSO_BUFFER_SIZE];
+            buffer[..slice.len()].copy_from_slice(slice);
+            return ArcPayload::Small(buffer, slice.len() as LengthType);
+        }
+
+        ArcPayload::Large {
+            data: Arc::from(slice),
+            start: 0,
+            length: slice.len(),
+        }
     }
 }
 
@@ -201,7 +403,24 @@ impl IntoPayload for &Vec<u8> {
 impl<const N: usize> IntoPayload for &[u8; N] {
     fn into_payload(self) -> ArcPayload {
         let slice: &[u8] = self.as_slice();
-        ArcPayload::new(Arc::from(slice), 0, slice.len())
+
+        #[cfg(any(
+            feature = "sso-min-32bit",
+            feature = "sso-min-64bit",
+            feature = "sso-lv10",
+            feature = "sso-lv20"
+        ))]
+        if slice.len() <= SSO_BUFFER_SIZE {
+            let mut buffer = [0u8; SSO_BUFFER_SIZE];
+            buffer[..slice.len()].copy_from_slice(slice);
+            return ArcPayload::Small(buffer, slice.len() as LengthType);
+        }
+
+        ArcPayload::Large {
+            data: Arc::from(slice),
+            start: 0,
+            length: slice.len(),
+        }
     }
 }
 
@@ -209,7 +428,24 @@ impl<const N: usize> IntoPayload for &[u8; N] {
 impl IntoPayload for Arc<[u8]> {
     fn into_payload(self) -> ArcPayload {
         let len = self.len();
-        ArcPayload::new(self, 0, len)
+
+        #[cfg(any(
+            feature = "sso-min-32bit",
+            feature = "sso-min-64bit",
+            feature = "sso-lv10",
+            feature = "sso-lv20"
+        ))]
+        if len <= SSO_BUFFER_SIZE {
+            let mut buffer = [0u8; SSO_BUFFER_SIZE];
+            buffer[..len].copy_from_slice(&self);
+            return ArcPayload::Small(buffer, len as LengthType);
+        }
+
+        ArcPayload::Large {
+            data: self,
+            start: 0,
+            length: len,
+        }
     }
 }
 
@@ -224,5 +460,126 @@ impl IntoPayload for () {
 impl IntoPayload for ArcPayload {
     fn into_payload(self) -> ArcPayload {
         self
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_empty_payload() {
+        let payload = ArcPayload::default();
+        assert_eq!(payload.len(), 0);
+        assert!(payload.is_empty());
+        assert_eq!(payload.as_slice(), &[] as &[u8]);
+    }
+
+    #[test]
+    fn test_small_payload() {
+        let data = b"hello";
+        let payload = data.into_payload();
+        assert_eq!(payload.len(), 5);
+        assert!(!payload.is_empty());
+        assert_eq!(payload.as_slice(), b"hello");
+    }
+
+    #[test]
+    fn test_payload_variants() {
+        // Test small data (Small variant if any SSO feature is enabled)
+        let small_data = b"small";
+        let payload = small_data.into_payload();
+
+        #[cfg(any(
+            feature = "sso-min-32bit",
+            feature = "sso-min-64bit",
+            feature = "sso-lv10",
+            feature = "sso-lv20"
+        ))]
+        assert!(matches!(payload, ArcPayload::Small(_, _)));
+
+        #[cfg(not(any(
+            feature = "sso-min-32bit",
+            feature = "sso-min-64bit",
+            feature = "sso-lv10",
+            feature = "sso-lv20"
+        )))]
+        assert!(matches!(payload, ArcPayload::Large { .. }));
+
+        // Test data that should be Large if using smaller SSO buffers, but Small with sso-lv20
+        let medium_data = vec![0u8; 200]; // 200 bytes - larger than most SSO buffers but smaller than sso-lv20
+        let _payload = medium_data.into_payload();
+
+        // With sso-lv20 (255 bytes), this should be Small
+        #[cfg(feature = "sso-lv20")]
+        assert!(matches!(_payload, ArcPayload::Small(_, _)));
+
+        // Without sso-lv20, this should be Large (exceeds other SSO buffer sizes)
+        #[cfg(all(
+            any(
+                feature = "sso-min-32bit",
+                feature = "sso-min-64bit",
+                feature = "sso-lv10"
+            ),
+            not(feature = "sso-lv20")
+        ))]
+        assert!(matches!(_payload, ArcPayload::Large { .. }));
+
+        // Test data that should always be Large variant (larger than largest SSO buffer)
+        let very_large_data = b"This is a very long payload that exceeds even the largest SSO buffer size of 255 bytes. It should definitely be stored in the Large variant regardless of which SSO feature flags are enabled. This ensures consistent behavior across all configurations and provides a reliable test case.";
+        let payload = very_large_data.into_payload();
+        assert!(matches!(payload, ArcPayload::Large { .. }));
+    }
+
+    #[test]
+    fn test_arc_data_access() {
+        let small_data = b"test";
+        let small_payload = small_data.into_payload();
+
+        // Use data larger than largest SSO buffer to ensure Large variant
+        let very_large_data = b"This is a very long payload that exceeds even the largest SSO buffer size of 255 bytes. It should definitely be stored in the Large variant regardless of which SSO feature flags are enabled. This ensures consistent behavior across all configurations and provides a reliable test case for arc_data access.";
+        let large_payload = very_large_data.into_payload();
+
+        // Small variant should return None for arc_data when SSO is enabled
+        #[cfg(any(
+            feature = "sso-min-32bit",
+            feature = "sso-min-64bit",
+            feature = "sso-lv10",
+            feature = "sso-lv20"
+        ))]
+        if let ArcPayload::Small(_, _) = small_payload {
+            assert!(small_payload.arc_data().is_none());
+        }
+
+        // Without SSO, small data also uses Large variant
+        #[cfg(not(any(
+            feature = "sso-min-32bit",
+            feature = "sso-min-64bit",
+            feature = "sso-lv10",
+            feature = "sso-lv20"
+        )))]
+        assert!(small_payload.arc_data().is_some());
+
+        // Large variant should always return Some for arc_data
+        assert!(large_payload.arc_data().is_some());
+    }
+
+    #[test]
+    fn test_into_payload_implementations() {
+        // Test various types
+        let str_payload = "hello".into_payload();
+        assert_eq!(str_payload.as_slice(), b"hello");
+
+        let string_payload = String::from("world").into_payload();
+        assert_eq!(string_payload.as_slice(), b"world");
+
+        let vec_payload = vec![1, 2, 3, 4].into_payload();
+        assert_eq!(vec_payload.as_slice(), &[1, 2, 3, 4]);
+
+        let arr_payload = (&[5, 6, 7, 8]).into_payload();
+        assert_eq!(arr_payload.as_slice(), &[5, 6, 7, 8]);
+
+        let unit_payload = ().into_payload();
+        assert!(unit_payload.is_empty());
     }
 }

@@ -47,8 +47,16 @@ jobs:
     - name: Check formatting
       run: cargo fmt --all -- --check
 
-    - name: Run clippy
-      run: cargo clippy --all-targets --all-features -- -D warnings -A clippy::new_without_default -A clippy::collapsible_if -A clippy::empty_line_after_doc_comments -A clippy::doc_overindented_list_items -A clippy::unnecessary_to_owned -A clippy::needless_borrow -A clippy::vec_init_then_push -A clippy::unnecessary_map_or -A clippy::unwrap_or_default -A clippy::len_zero -A clippy::unusual_byte_groupings -A unused_imports -A dead_code -A clippy::assertions_on_constants -A clippy::needless_borrows_for_generic_args -A clippy::bool_assert_comparison
+    - name: Run clippy (no SSO features)
+      run: cargo clippy --all-targets --features std,tracing -- -D warnings -A clippy::new_without_default -A clippy::collapsible_if -A clippy::empty_line_after_doc_comments -A clippy::doc_overindented_list_items -A clippy::unnecessary_to_owned -A clippy::needless_borrow -A clippy::vec_init_then_push -A clippy::unnecessary_map_or -A clippy::unwrap_or_default -A clippy::len_zero -A clippy::unusual_byte_groupings -A unused_imports -A dead_code -A clippy::assertions_on_constants -A clippy::needless_borrows_for_generic_args -A clippy::bool_assert_comparison
+
+    - name: Run clippy (SSO features)
+      run: |
+        cargo clippy --all-targets --features std,tracing,sso-min-32bit -- -D warnings -A clippy::new_without_default -A clippy::collapsible_if -A clippy::empty_line_after_doc_comments -A clippy::doc_overindented_list_items -A clippy::unnecessary_to_owned -A clippy::needless_borrow -A clippy::vec_init_then_push -A clippy::unnecessary_map_or -A clippy::unwrap_or_default -A clippy::len_zero -A clippy::unusual_byte_groupings -A unused_imports -A dead_code -A clippy::assertions_on_constants -A clippy::needless_borrows_for_generic_args -A clippy::bool_assert_comparison
+        cargo clippy --all-targets --features std,tracing,sso-min-64bit -- -D warnings -A clippy::new_without_default -A clippy::collapsible_if -A clippy::empty_line_after_doc_comments -A clippy::doc_overindented_list_items -A clippy::unnecessary_to_owned -A clippy::needless_borrow -A clippy::vec_init_then_push -A clippy::unnecessary_map_or -A clippy::unwrap_or_default -A clippy::len_zero -A clippy::unusual_byte_groupings -A unused_imports -A dead_code -A clippy::assertions_on_constants -A clippy::needless_borrows_for_generic_args -A clippy::bool_assert_comparison
+        cargo clippy --all-targets --features std,tracing,sso-lv10 -- -D warnings -A clippy::new_without_default -A clippy::collapsible_if -A clippy::empty_line_after_doc_comments -A clippy::doc_overindented_list_items -A clippy::unnecessary_to_owned -A clippy::needless_borrow -A clippy::vec_init_then_push -A clippy::unnecessary_map_or -A clippy::unwrap_or_default -A clippy::len_zero -A clippy::unusual_byte_groupings -A unused_imports -A dead_code -A clippy::assertions_on_constants -A clippy::needless_borrows_for_generic_args -A clippy::bool_assert_comparison
+        cargo clippy --all-targets --features std,tracing,sso-lv20 -- -D warnings -A clippy::new_without_default -A clippy::collapsible_if -A clippy::empty_line_after_doc_comments -A clippy::doc_overindented_list_items -A clippy::unnecessary_to_owned -A clippy::needless_borrow -A clippy::vec_init_then_push -A clippy::unnecessary_map_or -A clippy::unwrap_or_default -A clippy::len_zero -A clippy::unusual_byte_groupings -A unused_imports -A dead_code -A clippy::assertions_on_constants -A clippy::needless_borrows_for_generic_args -A clippy::bool_assert_comparison
+        cargo clippy --all-targets --all-features -- -D warnings -A clippy::new_without_default -A clippy::collapsible_if -A clippy::empty_line_after_doc_comments -A clippy::doc_overindented_list_items -A clippy::unnecessary_to_owned -A clippy::needless_borrow -A clippy::vec_init_then_push -A clippy::unnecessary_map_or -A clippy::unwrap_or_default -A clippy::len_zero -A clippy::unusual_byte_groupings -A unused_imports -A dead_code -A clippy::assertions_on_constants -A clippy::needless_borrows_for_generic_args -A clippy::bool_assert_comparison
 
     - name: Build
       run: cargo build --verbose
@@ -56,21 +64,37 @@ jobs:
     - name: Build (no-std)
       run: cargo build --verbose --no-default-features --target thumbv7m-none-eabi
 
-    - name: Run tests (std no-tracing)
-      run: cargo test --verbose -- --nocapture
+    - name: Run tests (std, no SSO)
+      run: cargo test --verbose --features std -- --nocapture
 
-    - name: Run tests (std tracing)
-      run: cargo test --verbose --features tracing -- --nocapture
+    - name: Run tests (std + tracing, no SSO)
+      run: cargo test --verbose --features std,tracing -- --nocapture
 
-    - name: Run tests (no-std no no-tracing)
+    - name: Run tests (no-std, no SSO)
       run: cargo test --verbose --no-default-features -- --nocapture
 
-    - name: Run tests (no-std tracing)
+    - name: Run tests (no-std + tracing, no SSO)
       run: cargo test --verbose --no-default-features --features tracing -- --nocapture
+
+    - name: Run tests with SSO features
+      run: |
+        cargo test --verbose --features std,sso-min-32bit -- --nocapture
+        cargo test --verbose --features std,sso-min-64bit -- --nocapture
+        cargo test --verbose --features std,sso-lv10 -- --nocapture
+        cargo test --verbose --features std,sso-lv20 -- --nocapture
 
   coverage:
     name: Coverage
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        features: [
+          "std,tracing",
+          "std,tracing,sso-min-32bit",
+          "std,tracing,sso-min-64bit",
+          "std,tracing,sso-lv10",
+          "std,tracing,sso-lv20"
+        ]
     steps:
     - uses: actions/checkout@v4
 
@@ -81,11 +105,11 @@ jobs:
       run: cargo install cargo-tarpaulin
 
     - name: Generate code coverage
-      run: cargo tarpaulin --verbose --all-features --workspace --timeout 120 --out xml
+      run: cargo tarpaulin --verbose --features ${{ matrix.features }} --workspace --timeout 180 --out xml --output-dir coverage-${{ strategy.job-index }}
 
     - name: Upload to codecov.io
       uses: codecov/codecov-action@v4
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        file: ./cobertura.xml
-        fail_ci_if_error: true
+        file: ./coverage-${{ strategy.job-index }}/cobertura.xml
+        fail_ci_if_error: false

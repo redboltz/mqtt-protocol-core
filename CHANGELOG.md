@@ -1,3 +1,13 @@
+# 0.5.0 undetermined
+
+* Add SSO(Small Size Optimization) for MqttString, MqttBinary, and ArcPayload.
+  * The following feature flags are supported:
+     * sso-min-32bit = []  # MqttString/MqttBinary: 12, ArcPayload: 15 - 32bit enum size optimized
+     * sso-min-64bit = []  # MqttString/MqttBinary: 24, ArcPayload: 31 - 64bit enum size optimized
+     * sso-lv10 = []       # MqttString/MqttBinary: 24, ArcPayload: 127 - Level 10 optimization
+     * sso-lv20 = []       # MqttString/MqttBinary: 48, ArcPayload: 255 - Level 20 optimization
+  * If multiple sso-* features are set, then the highest level is used.
+
 # 0.4.0
 
 ## Breaking changes
