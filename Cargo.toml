@@ -13,9 +13,35 @@ keywords = ["mqtt", "protocol", "networking", "iot", "sans-io"]
 categories = ["network-programming", "embedded", "api-bindings"]
 
 [features]
-default = ["std"]
+default = ["std", "sso-bin-24", "sso-str-24", "sso-payload-31"]
 std = []
 tracing = ["dep:tracing"]
+
+# Small String Optimization (SSO) features for MqttBinary
+sso-bin-24 = []
+sso-bin-32 = []
+sso-bin-64 = []
+sso-bin-128 = []
+sso-bin-256 = []
+sso-bin-1024 = []
+sso-bin-4096 = []
+
+# Small String Optimization (SSO) features for MqttString
+sso-str-24 = []
+sso-str-32 = []
+sso-str-64 = []
+sso-str-128 = []
+sso-str-256 = []
+sso-str-1024 = []
+sso-str-4096 = []
+
+# Small String Optimization (SSO) features for ArcPayload
+sso-payload-31 = []
+sso-payload-64 = []
+sso-payload-128 = []
+sso-payload-255 = []
+sso-payload-1024 = []
+sso-payload-4096 = []
 
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }  # MQTT packet serialize/deserialize

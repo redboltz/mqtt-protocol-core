@@ -25,6 +25,67 @@ use serde::{Serialize, Serializer};
 #[cfg(feature = "std")]
 use std::io::IoSlice;
 
+// SSO buffer size configuration based on feature flags (highest priority first)
+#[cfg(feature = "sso-str-24")]
+const SSO_BUFFER_SIZE: usize = 24; // Total buffer size
+#[cfg(all(feature = "sso-str-32", not(feature = "sso-str-24")))]
+const SSO_BUFFER_SIZE: usize = 32; // Total buffer size
+#[cfg(all(
+    feature = "sso-str-64",
+    not(any(feature = "sso-str-24", feature = "sso-str-32"))
+))]
+const SSO_BUFFER_SIZE: usize = 64; // Total buffer size
+#[cfg(all(
+    feature = "sso-str-128",
+    not(any(feature = "sso-str-24", feature = "sso-str-32", feature = "sso-str-64"))
+))]
+const SSO_BUFFER_SIZE: usize = 128; // Total buffer size
+#[cfg(all(
+    feature = "sso-str-256",
+    not(any(
+        feature = "sso-str-24",
+        feature = "sso-str-32",
+        feature = "sso-str-64",
+        feature = "sso-str-128"
+    ))
+))]
+const SSO_BUFFER_SIZE: usize = 256; // Total buffer size
+#[cfg(all(
+    feature = "sso-str-1024",
+    not(any(
+        feature = "sso-str-24",
+        feature = "sso-str-32",
+        feature = "sso-str-64",
+        feature = "sso-str-128",
+        feature = "sso-str-256"
+    ))
+))]
+const SSO_BUFFER_SIZE: usize = 1024; // Total buffer size
+#[cfg(all(
+    feature = "sso-str-4096",
+    not(any(
+        feature = "sso-str-24",
+        feature = "sso-str-32",
+        feature = "sso-str-64",
+        feature = "sso-str-128",
+        feature = "sso-str-256",
+        feature = "sso-str-1024"
+    ))
+))]
+const SSO_BUFFER_SIZE: usize = 4096; // Total buffer size
+
+// Determine data threshold
+#[cfg(any(
+    feature = "sso-str-24",
+    feature = "sso-str-32",
+    feature = "sso-str-64",
+    feature = "sso-str-128",
+    feature = "sso-str-256",
+    feature = "sso-str-1024",
+    feature = "sso-str-4096"
+))]
+const SSO_DATA_THRESHOLD: usize = SSO_BUFFER_SIZE - 2;
+
 /// MQTT String representation with pre-encoded byte buffer
 ///
 /// This struct represents UTF-8 strings as specified in the MQTT protocol specification.
@@ -74,10 +135,20 @@ use std::io::IoSlice;
 /// assert!(mqtt_str.contains('w'));
 /// assert!(mqtt_str.starts_with("hello"));
 /// ```
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub struct MqttString {
-    /// Complete buffer including length prefix (2 bytes) + UTF-8 byte sequence
-    encoded: Vec<u8>,
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[allow(clippy::large_enum_variant)]
+pub enum MqttString {
+    #[cfg(any(
+        feature = "sso-str-24",
+        feature = "sso-str-32",
+        feature = "sso-str-64",
+        feature = "sso-str-128",
+        feature = "sso-str-256",
+        feature = "sso-str-1024",
+        feature = "sso-str-4096"
+    ))]
+    Small([u8; SSO_BUFFER_SIZE]),
+    Large(Vec<u8>),
 }
 
 impl MqttString {
@@ -119,12 +190,33 @@ impl MqttString {
             return Err(MqttError::MalformedPacket);
         }
 
-        let mut encoded = Vec::with_capacity(2 + len);
+        let total_encoded_len = 2 + len;
+
+        // Try to fit in Small variant if SSO is enabled
+        #[cfg(any(
+            feature = "sso-str-24",
+            feature = "sso-str-32",
+            feature = "sso-str-64",
+            feature = "sso-str-128",
+            feature = "sso-str-256",
+            feature = "sso-str-1024",
+            feature = "sso-str-4096"
+        ))]
+        if len <= SSO_DATA_THRESHOLD {
+            let mut buffer = [0u8; SSO_BUFFER_SIZE];
+            buffer[0] = (len >> 8) as u8;
+            buffer[1] = len as u8;
+            buffer[2..2 + len].copy_from_slice(s_ref.as_bytes());
+            return Ok(Self::Small(buffer));
+        }
+
+        // Fallback to Large variant
+        let mut encoded = Vec::with_capacity(total_encoded_len);
         encoded.push((len >> 8) as u8);
         encoded.push(len as u8);
         encoded.extend_from_slice(s_ref.as_bytes());
 
-        Ok(Self { encoded })
+        Ok(Self::Large(encoded))
     }
 
     /// Get the complete encoded byte sequence including length prefix
@@ -147,7 +239,22 @@ impl MqttString {
     /// assert_eq!(bytes, &[0x00, 0x02, b'h', b'i']);
     /// ```
     pub fn as_bytes(&self) -> &[u8] {
-        &self.encoded
+        match self {
+            MqttString::Large(encoded) => encoded,
+            #[cfg(any(
+                feature = "sso-str-24",
+                feature = "sso-str-32",
+                feature = "sso-str-64",
+                feature = "sso-str-128",
+                feature = "sso-str-256",
+                feature = "sso-str-1024",
+                feature = "sso-str-4096"
+            ))]
+            MqttString::Small(buffer) => {
+                let len = ((buffer[0] as usize) << 8) | (buffer[1] as usize);
+                &buffer[..2 + len]
+            }
+        }
     }
 
     /// Get the string content as a string slice
@@ -172,7 +279,23 @@ impl MqttString {
         // SAFETY: UTF-8 validity verified during MqttString creation or decode
         // Also, no direct modification of encoded field is provided,
         // ensuring buffer immutability
-        unsafe { core::str::from_utf8_unchecked(&self.encoded[2..]) }
+        let data = match self {
+            MqttString::Large(encoded) => &encoded[2..],
+            #[cfg(any(
+                feature = "sso-str-24",
+                feature = "sso-str-32",
+                feature = "sso-str-64",
+                feature = "sso-str-128",
+                feature = "sso-str-256",
+                feature = "sso-str-1024",
+                feature = "sso-str-4096"
+            ))]
+            MqttString::Small(buffer) => {
+                let len = ((buffer[0] as usize) << 8) | (buffer[1] as usize);
+                &buffer[2..2 + len]
+            }
+        };
+        unsafe { core::str::from_utf8_unchecked(data) }
     }
 
     /// Get the length of the string data in bytes
@@ -198,7 +321,19 @@ impl MqttString {
     /// assert_eq!(utf8.len(), 5); // 5 characters
     /// ```
     pub fn len(&self) -> usize {
-        self.encoded.len() - 2
+        match self {
+            MqttString::Large(encoded) => encoded.len() - 2,
+            #[cfg(any(
+                feature = "sso-str-24",
+                feature = "sso-str-32",
+                feature = "sso-str-64",
+                feature = "sso-str-128",
+                feature = "sso-str-256",
+                feature = "sso-str-1024",
+                feature = "sso-str-4096"
+            ))]
+            MqttString::Small(buffer) => ((buffer[0] as usize) << 8) | (buffer[1] as usize),
+        }
     }
 
     /// Check if the string is empty
@@ -222,7 +357,7 @@ impl MqttString {
     /// assert!(!text.is_empty());
     /// ```
     pub fn is_empty(&self) -> bool {
-        self.encoded.len() <= 2
+        self.len() == 0
     }
 
     /// Get the total encoded size including the length field
@@ -244,7 +379,22 @@ impl MqttString {
     /// assert_eq!(mqtt_str.len(), 5);  // Only string length
     /// ```
     pub fn size(&self) -> usize {
-        self.encoded.len()
+        match self {
+            MqttString::Large(encoded) => encoded.len(),
+            #[cfg(any(
+                feature = "sso-str-24",
+                feature = "sso-str-32",
+                feature = "sso-str-64",
+                feature = "sso-str-128",
+                feature = "sso-str-256",
+                feature = "sso-str-1024",
+                feature = "sso-str-4096"
+            ))]
+            MqttString::Small(buffer) => {
+                let len = ((buffer[0] as usize) << 8) | (buffer[1] as usize);
+                2 + len
+            }
+        }
     }
 
     /// Create IoSlice buffers for efficient network I/O
@@ -269,7 +419,22 @@ impl MqttString {
     /// ```
     #[cfg(feature = "std")]
     pub fn to_buffers(&self) -> Vec<IoSlice<'_>> {
-        vec![IoSlice::new(&self.encoded)]
+        match self {
+            MqttString::Large(encoded) => vec![IoSlice::new(encoded)],
+            #[cfg(any(
+                feature = "sso-str-24",
+                feature = "sso-str-32",
+                feature = "sso-str-64",
+                feature = "sso-str-128",
+                feature = "sso-str-256",
+                feature = "sso-str-1024",
+                feature = "sso-str-4096"
+            ))]
+            MqttString::Small(buffer) => {
+                let len = ((buffer[0] as usize) << 8) | (buffer[1] as usize);
+                vec![IoSlice::new(&buffer[..2 + len])]
+            }
+        }
     }
 
     /// Create a continuous buffer containing the complete packet data
@@ -294,7 +459,7 @@ impl MqttString {
     ///
     /// [`to_buffers()`]: #method.to_buffers
     pub fn to_continuous_buffer(&self) -> Vec<u8> {
-        self.encoded.clone()
+        self.as_bytes().to_vec()
     }
 
     /// Parse string data from a byte sequence
@@ -338,11 +503,31 @@ impl MqttString {
             return Err(MqttError::MalformedPacket);
         }
 
-        // Create encoded buffer
-        let mut encoded = Vec::with_capacity(2 + string_len);
-        encoded.extend_from_slice(&data[0..2 + string_len]);
+        let total_encoded_len = 2 + string_len;
 
-        Ok((Self { encoded }, 2 + string_len))
+        // Try to fit in Small variant if SSO is enabled
+        #[cfg(any(
+            feature = "sso-str-24",
+            feature = "sso-str-32",
+            feature = "sso-str-64",
+            feature = "sso-str-128",
+            feature = "sso-str-256",
+            feature = "sso-str-1024",
+            feature = "sso-str-4096"
+        ))]
+        if string_len <= SSO_DATA_THRESHOLD {
+            let mut buffer = [0u8; SSO_BUFFER_SIZE];
+            buffer[0] = data[0];
+            buffer[1] = data[1];
+            buffer[2..2 + string_len].copy_from_slice(&data[2..2 + string_len]);
+            return Ok((Self::Small(buffer), total_encoded_len));
+        }
+
+        // Fallback to Large variant
+        let mut encoded = Vec::with_capacity(total_encoded_len);
+        encoded.extend_from_slice(&data[0..total_encoded_len]);
+
+        Ok((Self::Large(encoded), total_encoded_len))
     }
 
     /// Check if the string contains a specific character
@@ -513,9 +698,15 @@ impl core::hash::Hash for MqttString {
 /// The internal buffer contains only the 2-byte length prefix (0x00, 0x00).
 impl Default for MqttString {
     fn default() -> Self {
-        MqttString {
-            encoded: vec![0x00, 0x00],
-        }
+        MqttString::new("").unwrap()
+    }
+}
+
+impl core::fmt::Debug for MqttString {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("MqttString")
+            .field("value", &self.as_str())
+            .finish()
     }
 }
 
@@ -540,5 +731,69 @@ impl TryFrom<String> for MqttString {
 
     fn try_from(s: String) -> Result<Self, Self::Error> {
         MqttString::new(s)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_empty_string() {
+        let string = MqttString::new("").unwrap();
+        assert_eq!(string.len(), 0);
+        assert!(string.is_empty());
+        assert_eq!(string.as_str(), "");
+        assert_eq!(string.as_bytes(), &[0x00, 0x00]);
+    }
+
+    #[test]
+    fn test_small_string() {
+        let string = MqttString::new("hello").unwrap();
+        assert_eq!(string.len(), 5);
+        assert!(!string.is_empty());
+        assert_eq!(string.as_str(), "hello");
+        assert_eq!(
+            string.as_bytes(),
+            &[0x00, 0x05, b'h', b'e', b'l', b'l', b'o']
+        );
+    }
+
+    #[cfg(feature = "std")]
+    #[test]
+    fn test_to_buffers() {
+        let data = "buffer test";
+        let string = MqttString::new(data).unwrap();
+        let buffers = string.to_buffers();
+
+        // Both variants should return 1 buffer containing the encoded data
+        assert_eq!(buffers.len(), 1);
+
+        // Verify the buffer contains the complete encoded data
+        let buffer_data: &[u8] = &buffers[0];
+        assert_eq!(buffer_data, string.as_bytes());
+    }
+
+    #[test]
+    fn test_string_variants() {
+        // Test data that fits in 22 bytes (Small variant)
+        let small_data = "small";
+        let string = MqttString::new(small_data).unwrap();
+
+        #[cfg(any(
+            feature = "sso-str-24",
+            feature = "sso-str-32",
+            feature = "sso-str-64",
+            feature = "sso-str-128",
+            feature = "sso-str-256",
+            feature = "sso-str-1024",
+            feature = "sso-str-4096"
+        ))]
+        assert!(matches!(string, MqttString::Small(_)));
+
+        // Test data larger than 22 bytes (Large variant)
+        let large_data = "this is definitely larger than twenty three bytes of data";
+        let string = MqttString::new(large_data).unwrap();
+        assert!(matches!(string, MqttString::Large(_)));
     }
 }

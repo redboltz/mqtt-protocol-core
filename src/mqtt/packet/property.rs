@@ -1753,6 +1753,7 @@ mqtt_property_u8!(
 /// let property = mqtt::packet::Property::UserProperty(user_prop);
 /// ```
 #[derive(Debug, Serialize, PartialEq, Eq, Clone)]
+#[allow(clippy::large_enum_variant)]
 pub enum Property {
     PayloadFormatIndicator(PayloadFormatIndicator),
     MessageExpiryInterval(MessageExpiryInterval),
