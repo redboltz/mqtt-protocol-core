@@ -50,6 +50,10 @@ For `no_std` environments (embedded systems), disable the default `std` feature:
 mqtt-protocol-core = { version = "0.4.0", default-features = false }
 ```
 
+Caveats:
+- This crate requires the use of `alloc`.
+- `alloc::sync::Arc` requires target support of [atomic pointer operations](https://doc.rust-lang.org/alloc/sync/index.html).
+
 ### Optional Features
 
 The library supports several optional features that can be enabled/disabled as needed:

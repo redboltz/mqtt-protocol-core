@@ -14,32 +14,60 @@ categories = ["network-programming", "embedded", "api-bindings"]
 
 [features]
 default = ["std"]
-std = []
+std = [
+    "serde/std",
+    "serde_json/std",
+    "thiserror/std",
+    "arrayvec/std",
+    "strum/std",
+    "once_cell/std",
+    "num-traits/std",
+    "indexmap/std",
+    "num_enum/std",
+    "derive_builder/std",
+    "foldhash/std",
+    "tracing?/std",
+]
 tracing = ["dep:tracing"]
 
 [dependencies]
-serde = { version = "1.0", features = ["derive"] }  # MQTT packet serialize/deserialize
-serde_json = "1.0"  # JSON serialization for Display implementations
-thiserror = "1.0"   # Error handling
+serde = { version = "1.0", default-features = false, features = [
+    "derive",
+] } # MQTT packet serialize/deserialize
+serde_json = { version = "1.0", default-features = false, features = [
+    "alloc",
+] } # JSON serialization for Display implementations
+thiserror = { version = "2.0", default-features = false } # Error handling
 delegate = "0.13"
-arrayvec = "0.7"
-strum = "0.27"
+arrayvec = { version = "0.7", default-features = false }
+strum = { version = "0.27", default-features = false }
 strum_macros = "0.27"
-once_cell = "1.18"
-num-traits = "0.2"
-indexmap = "2"
-hashbrown = "0.14"
-num_enum = "0.7"
-derive_builder = { version = "0.20", features = ["alloc"], default-features = false }
+once_cell = { version = "1.18", default-features = false }
+num-traits = { version = "0.2", default-features = false }
+indexmap = { version = "2", default-features = false }
+hashbrown = { version = "0.15", default-features = false, features = [
+    "alloc",
+    "core",
+    "inline-more",
+] }
+num_enum = { version = "0.7", default-features = false }
+derive_builder = { version = "0.20", default-features = false, features = [
+    "alloc",
+] }
 getset = "0.1.5"
 enum_dispatch = "0.3"
+foldhash = { version = "0.2.0", default-features = false }
 
 # logging
 tracing = { version = "0.1", default-features = false, optional = true }
 
 [dev-dependencies]
 static_assertions = "1.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt", "ansi"] }
+tracing-subscriber = { version = "0.3", features = [
+    "env-filter",
+    "fmt",
+    "ansi",
+] }
 tracing-appender = "0.2"
 
 # Release optimization settings
@@ -52,4 +80,3 @@ lto = true
 codegen-units = 1
 # Strip debug symbols to reduce binary size
 strip = true
-

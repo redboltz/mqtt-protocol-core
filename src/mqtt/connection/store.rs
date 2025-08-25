@@ -21,12 +21,12 @@
 // SOFTWARE.
 
 use crate::mqtt::common::tracing::trace;
+use crate::mqtt::common::IndexMap;
 use crate::mqtt::packet::GenericStorePacket;
 use crate::mqtt::packet::IsPacketId;
 use crate::mqtt::packet::ResponsePacket;
 use crate::mqtt::result_code::MqttError;
 use alloc::vec::Vec;
-use indexmap::IndexMap;
 
 /// A store that holds packets in insertion order and allows O(1) insert/remove by id.
 pub struct GenericStore<PacketIdType: IsPacketId> {
@@ -39,7 +39,7 @@ impl<PacketIdType: IsPacketId> GenericStore<PacketIdType> {
     /// Create a new empty store.
     pub fn new() -> Self {
         Self {
-            map: IndexMap::new(),
+            map: IndexMap::default(),
         }
     }
 

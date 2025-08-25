@@ -42,10 +42,10 @@ pub(crate) mod tracing;
 /// ```ignore
 /// use mqtt_protocol_core::mqtt::common::HashSet;
 ///
-/// let mut set = HashSet::new();
+/// let mut set = HashSet::default();
 /// set.insert("key");
 /// ```
-pub type HashSet<T> = hashbrown::HashSet<T>;
+pub type HashSet<T> = hashbrown::HashSet<T, foldhash::fast::RandomState>;
 
 /// Type alias for HashMap to provide a stable API abstraction over the underlying hash map implementation.
 ///
@@ -58,7 +58,23 @@ pub type HashSet<T> = hashbrown::HashSet<T>;
 /// ```ignore
 /// use mqtt_protocol_core::mqtt::common::HashMap;
 ///
-/// let mut map = HashMap::new();
+/// let mut map = HashMap::default();
 /// map.insert("key", "value");
 /// ```
-pub type HashMap<K, V> = hashbrown::HashMap<K, V>;
+pub type HashMap<K, V> = hashbrown::HashMap<K, V, foldhash::fast::RandomState>;
+
+/// Type alias for IndexMap to provide a stable API abstraction over the underlying hash map implementation.
+///
+/// This alias allows the library to use a high-performance hash map implementation
+/// (currently indexmap::IndexMap) while providing API stability to users. It also
+/// ensures consistent usage across the entire codebase.
+///
+/// # Examples
+///
+/// ```ignore
+/// use mqtt_protocol_core::mqtt::common::IndexMap;
+///
+/// let mut map = IndexMap::default();
+/// map.insert("key", "value");
+/// ```
+pub type IndexMap<K, V> = indexmap::IndexMap<K, V, foldhash::fast::RandomState>;
