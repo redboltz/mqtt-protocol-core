@@ -159,7 +159,7 @@ where
 
     #[builder(setter(into, strip_option))]
     #[getset(get = "pub")]
-    pub props: Option<Properties>,
+    pub props: Properties,
 
     #[builder(private)]
     payload_buf: ArcPayload,
@@ -540,9 +540,8 @@ where
         self.topic_name_buf = MqttString::new(topic)?;
 
         // Remove TopicAlias property if present
-        if let Some(ref mut props) = self.props {
-            props.retain(|prop| !matches!(prop, crate::mqtt::packet::Property::TopicAlias(_)));
-        }
+        self.props
+            .retain(|prop| !matches!(prop, crate::mqtt::packet::Property::TopicAlias(_)));
 
         // Recalculate property_length and remaining_length
         self.recalculate_lengths();
@@ -579,9 +578,8 @@ where
     /// // props() no longer contains TopicAlias property
     /// ```
     pub fn remove_topic_alias(mut self) -> Self {
-        if let Some(ref mut props) = self.props {
-            props.retain(|prop| !matches!(prop, crate::mqtt::packet::Property::TopicAlias(_)));
-        }
+        self.props
+            .retain(|prop| !matches!(prop, crate::mqtt::packet::Property::TopicAlias(_)));
 
         // Recalculate property_length and remaining_length
         self.recalculate_lengths();
@@ -695,18 +693,11 @@ where
         let topic_alias_property =
             Property::TopicAlias(crate::mqtt::packet::TopicAlias::new(topic_alias).unwrap());
 
-        match &mut self.props {
-            Some(props) => {
-                // Remove existing TopicAlias property if present
-                props.retain(|prop| !matches!(prop, Property::TopicAlias(_)));
-                // Add new TopicAlias property at the end
-                props.push(topic_alias_property);
-            }
-            None => {
-                // Create new properties list with TopicAlias
-                self.props = Some(vec![topic_alias_property]);
-            }
-        }
+        // Remove existing TopicAlias property if present
+        self.props
+            .retain(|prop| !matches!(prop, Property::TopicAlias(_)));
+        // Add new TopicAlias property at the end
+        self.props.push(topic_alias_property);
 
         // Recalculate lengths
         self.recalculate_lengths();
@@ -725,7 +716,7 @@ where
     /// - Remaining length including topic name, packet ID (if QoS > 0), properties, and payload
     fn recalculate_lengths(&mut self) {
         // Calculate property length
-        let props_size: usize = self.props.as_ref().map_or(0, |p| p.size());
+        let props_size: usize = self.props.size();
         self.property_length = if props_size > 0 {
             Some(VariableByteInteger::from_u32(props_size as u32).unwrap())
         } else {
@@ -833,9 +824,7 @@ where
         } else {
             bufs.push(IoSlice::new(&[0]));
         }
-        if let Some(ref props) = self.props {
-            bufs.append(&mut props.to_buffers());
-        }
+        bufs.append(&mut self.props.to_buffers());
         if self.payload_buf.len() > 0 {
             bufs.push(IoSlice::new(self.payload_buf.as_slice()));
         }
@@ -887,9 +876,7 @@ where
         } else {
             buf.push(0);
         }
-        if let Some(ref props) = self.props {
-            buf.append(&mut props.to_continuous_buffer());
-        }
+        buf.append(&mut self.props.to_continuous_buffer());
         if self.payload_buf.len() > 0 {
             buf.extend_from_slice(self.payload_buf.as_slice());
         }
@@ -981,9 +968,9 @@ where
             cursor += consumed;
             validate_publish_properties(&props)?;
             let prop_len = VariableByteInteger::from_u32(props.size() as u32).unwrap();
-            (Some(prop_len), Some(props))
+            (Some(prop_len), props)
         } else {
-            (None, None)
+            (None, Properties::new())
         };
 
         let payload_len = data_arc.len() - cursor;
@@ -998,7 +985,7 @@ where
                 .as_ref()
                 .map_or(0, |_| mem::size_of::<PacketIdType>())
             + property_length.as_ref().map_or(1, |pl| pl.size())
-            + props.as_ref().map_or(0, |ps| ps.size())
+            + props.size()
             + payload_len;
 
         let publish = GenericPublish {
@@ -1238,7 +1225,7 @@ where
     ///
     /// Various `MqttError` variants depending on the specific validation failure
     fn validate(&self) -> Result<(), MqttError> {
-        let property_validation = if let Some(Some(props)) = &self.props {
+        let property_validation = if let Some(props) = &self.props {
             validate_publish_properties(props)?
         } else {
             PropertyValidation::ValidWithoutTopicAlias
@@ -1289,7 +1276,7 @@ where
             }
         }
 
-        if let Some(Some(props)) = &self.props {
+        if let Some(props) = &self.props {
             validate_publish_properties(props)?;
         }
 
@@ -1329,12 +1316,12 @@ where
     pub fn build(self) -> Result<GenericPublish<PacketIdType>, MqttError> {
         self.validate()?;
 
-        let topic_name_buf = self.topic_name_buf.unwrap();
+        let topic_name_buf = self.topic_name_buf.unwrap_or(MqttString::new("").unwrap());
         let fixed_header = self.fixed_header.unwrap_or([FixedHeader::Publish as u8]);
         let packet_id_buf = self.packet_id_buf.flatten();
-        let props = self.props.flatten();
-        let props_size: usize = props.as_ref().map_or(0, |p| p.size());
-        let property_length = if props.is_some() {
+        let props = self.props.unwrap_or(Properties::new());
+        let props_size: usize = props.size();
+        let property_length = if !props.is_empty() {
             Some(VariableByteInteger::from_u32(props_size as u32).unwrap())
         } else {
             None
@@ -1392,11 +1379,8 @@ where
     where
         S: Serializer,
     {
-        let mut field_count = 6; // type, topic_name, qos, retain, dup, packet_id
+        let mut field_count = 7; // type, topic_name, qos, retain, dup, packet_id, props
 
-        if self.props.is_some() {
-            field_count += 1; // props
-        }
         field_count += 1; // payload
 
         let mut state = serializer.serialize_struct("publish", field_count)?;
@@ -1406,9 +1390,7 @@ where
         state.serialize_field("retain", &self.retain())?;
         state.serialize_field("dup", &self.dup())?;
         state.serialize_field("packet_id", &self.packet_id())?;
-        if let Some(props) = &self.props {
-            state.serialize_field("props", props)?;
-        }
+        state.serialize_field("props", &self.props)?;
 
         let payload_data = self.payload_buf.as_slice();
         match escape_binary_json_string(payload_data) {

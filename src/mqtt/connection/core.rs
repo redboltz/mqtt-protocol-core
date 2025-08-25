@@ -1114,15 +1114,11 @@ where
     ) -> Result<v5_0::GenericPublish<PacketIdType>, MqttError> {
         if packet.topic_name().is_empty() {
             // Topic is empty, need to resolve from topic alias
-            if let Some(props) = packet.props() {
-                if let Some(topic_alias) = Self::get_topic_alias_from_props(props) {
-                    if let Some(ref topic_alias_send) = self.topic_alias_send {
-                        if let Some(topic) = topic_alias_send.peek(topic_alias) {
-                            // Found topic for alias, add topic and remove alias property
-                            packet = packet.remove_topic_alias_add_topic(topic.to_string())?;
-                        } else {
-                            return Err(MqttError::PacketNotRegulated);
-                        }
+            if let Some(topic_alias) = Self::get_topic_alias_from_props(packet.props()) {
+                if let Some(ref topic_alias_send) = self.topic_alias_send {
+                    if let Some(topic) = topic_alias_send.peek(topic_alias) {
+                        // Found topic for alias, add topic and remove alias property
+                        packet = packet.remove_topic_alias_add_topic(topic.to_string())?;
                     } else {
                         return Err(MqttError::PacketNotRegulated);
                     }
@@ -1528,7 +1524,7 @@ where
             if self.need_store
                 && (self.status != ConnectionStatus::Disconnected || self.offline_publish)
             {
-                let ta_opt = Self::get_topic_alias_from_props_opt(packet.props());
+                let ta_opt = Self::get_topic_alias_from_props(packet.props());
                 if packet.topic_name().is_empty() {
                     // Topic name is empty, must validate topic alias
                     let topic_opt = self.validate_topic_alias(ta_opt);
@@ -1568,7 +1564,7 @@ where
         }
 
         let packet_id_opt = packet.packet_id();
-        let ta_opt = Self::get_topic_alias_from_props_opt(packet.props());
+        let ta_opt = Self::get_topic_alias_from_props(packet.props());
         if packet.topic_name().is_empty() {
             // process manually provided TopicAlias
             if !topic_alias_validated && self.validate_topic_alias(ta_opt).is_none() {
@@ -2797,7 +2793,7 @@ where
                         // Topic Alias handling
                         if packet.topic_name().is_empty() {
                             // Extract topic from topic_alias
-                            if let Some(ta) = Self::get_topic_alias_from_props_opt(packet.props()) {
+                            if let Some(ta) = Self::get_topic_alias_from_props(packet.props()) {
                                 if ta == 0
                                     || self.topic_alias_recv.is_none()
                                     || ta > self.topic_alias_recv.as_ref().unwrap().max()
@@ -2841,7 +2837,7 @@ where
                             }
                         } else {
                             // Topic is not empty, check if topic alias needs to be registered
-                            if let Some(ta) = Self::get_topic_alias_from_props_opt(packet.props()) {
+                            if let Some(ta) = Self::get_topic_alias_from_props(packet.props()) {
                                 if ta == 0
                                     || self.topic_alias_recv.is_none()
                                     || ta > self.topic_alias_recv.as_ref().unwrap().max()
@@ -3607,14 +3603,6 @@ where
         }
 
         events
-    }
-
-    fn get_topic_alias_from_props_opt(props: &Option<Vec<Property>>) -> Option<u16> {
-        if let Some(props) = props {
-            Self::get_topic_alias_from_props(props.as_slice())
-        } else {
-            None
-        }
     }
 
     fn refresh_pingreq_recv(&mut self) -> Vec<GenericEvent<PacketIdType>> {

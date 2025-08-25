@@ -31,9 +31,9 @@ fn v5_0_send_stored_oversize() {
         let packet = mqtt::packet::v5_0::Connect::builder()
             .client_id("cid1")
             .unwrap()
-            .props(vec![
-                mqtt::packet::SessionExpiryInterval::new(0xffffffff).unwrap().into(),
-            ])
+            .props(vec![mqtt::packet::SessionExpiryInterval::new(0xffffffff)
+                .unwrap()
+                .into()])
             .build()
             .expect("Failed to build Connect packet");
         let _ = con.checked_send(packet);
@@ -76,9 +76,9 @@ fn v5_0_send_stored_oversize() {
         let packet = mqtt::packet::v5_0::Connack::builder()
             .session_present(true)
             .reason_code(mqtt::result_code::ConnectReasonCode::Success)
-            .props(vec![
-                mqtt::packet::MaximumPacketSize::new(15).unwrap().into(),
-            ])
+            .props(vec![mqtt::packet::MaximumPacketSize::new(15)
+                .unwrap()
+                .into()])
             .build()
             .expect("Failed to build Connack packet");
         let flattened: Vec<u8> = packet.to_continuous_buffer();
@@ -88,12 +88,18 @@ fn v5_0_send_stored_oversize() {
         if let mqtt::connection::Event::NotifyPacketIdReleased(packet_id) = &events[0] {
             assert_eq!(*packet_id, pid);
         } else {
-            panic!("Expected NotifyPacketIdReleased event, got: {:?}", events[0]);
+            panic!(
+                "Expected NotifyPacketIdReleased event, got: {:?}",
+                events[0]
+            );
         }
         if let mqtt::connection::Event::NotifyPacketReceived(packet) = &events[1] {
             if let mqtt::packet::GenericPacket::V5_0Connack(connack) = packet {
                 assert_eq!(connack.session_present(), true);
-                assert_eq!(connack.reason_code(), mqtt::result_code::ConnectReasonCode::Success);
+                assert_eq!(
+                    connack.reason_code(),
+                    mqtt::result_code::ConnectReasonCode::Success
+                );
             } else {
                 panic!("Expected V5_0Connack packet, got: {:?}", packet);
             }
@@ -118,9 +124,9 @@ fn v5_0_send_stored_oversize() {
         let packet = mqtt::packet::v5_0::Connack::builder()
             .session_present(true)
             .reason_code(mqtt::result_code::ConnectReasonCode::Success)
-            .props(vec![
-                mqtt::packet::MaximumPacketSize::new(15).unwrap().into(),
-            ])
+            .props(vec![mqtt::packet::MaximumPacketSize::new(15)
+                .unwrap()
+                .into()])
             .build()
             .expect("Failed to build Connack packet");
         let flattened: Vec<u8> = packet.to_continuous_buffer();
@@ -130,13 +136,15 @@ fn v5_0_send_stored_oversize() {
         if let mqtt::connection::Event::NotifyPacketReceived(packet) = &events[0] {
             if let mqtt::packet::GenericPacket::V5_0Connack(connack) = packet {
                 assert_eq!(connack.session_present(), true);
-                assert_eq!(connack.reason_code(), mqtt::result_code::ConnectReasonCode::Success);
+                assert_eq!(
+                    connack.reason_code(),
+                    mqtt::result_code::ConnectReasonCode::Success
+                );
             } else {
                 panic!("Expected V5_0Connack packet, got: {:?}", packet);
             }
         } else {
             panic!("Expected NotifyPacketReceived event, got: {:?}", events[1]);
         }
-
     }
 }
