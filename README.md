@@ -38,7 +38,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-mqtt-protocol-core = "0.3.1"
+mqtt-protocol-core = "0.4.0"
 ```
 
 ### No-std Support
@@ -47,7 +47,7 @@ For `no_std` environments (embedded systems), disable the default `std` feature:
 
 ```toml
 [dependencies]
-mqtt-protocol-core = { version = "0.3.1", default-features = false }
+mqtt-protocol-core = { version = "0.4.0", default-features = false }
 ```
 
 ### Optional Features
@@ -60,15 +60,15 @@ The library supports several optional features that can be enabled/disabled as n
 ```toml
 # Enable tracing support (independent of std)
 [dependencies]
-mqtt-protocol-core = { version = "0.3.1", default-features = false, features = ["tracing"] }
+mqtt-protocol-core = { version = "0.4.0", default-features = false, features = ["tracing"] }
 
 # Use with std but without tracing
 [dependencies]
-mqtt-protocol-core = { version = "0.3.1", default-features = false, features = ["std"] }
+mqtt-protocol-core = { version = "0.4.0", default-features = false, features = ["std"] }
 
 # Full-featured (std + tracing)
 [dependencies]
-mqtt-protocol-core = { version = "0.3.1", features = ["tracing"] }
+mqtt-protocol-core = { version = "0.4.0", features = ["tracing"] }
 ```
 
 **No-std Usage Example:**
