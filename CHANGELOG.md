@@ -1,5 +1,13 @@
-# 0.3.1
+# 0.4.0
 
+## Breaking changes
+
+* Fix v5_0::GenericPublish::props() no Option. #20
+  * According to the MQTT v5.0 spec, Property Length is always required even if it is 0 and payload is also empty.
+
+## Other updates
+
+* Refine documents. #19
 * Separate tracing feature. #18
 
 # 0.3.0

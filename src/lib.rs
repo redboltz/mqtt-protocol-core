@@ -121,7 +121,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! mqtt-protocol-core = { version = "0.3.1", default-features = false }
+//! mqtt-protocol-core = { version = "0.4.0", default-features = false }
 //! ```
 //!
 //! **No-std usage example:**
@@ -173,15 +173,15 @@
 //! ```toml
 //! # Enable tracing support (independent of std)
 //! [dependencies]
-//! mqtt-protocol-core = { version = "0.3.1", default-features = false, features = ["tracing"] }
+//! mqtt-protocol-core = { version = "0.4.0", default-features = false, features = ["tracing"] }
 //!
 //! # Use with std but without tracing overhead
 //! [dependencies]
-//! mqtt-protocol-core = { version = "0.3.1", default-features = false, features = ["std"] }
+//! mqtt-protocol-core = { version = "0.4.0", default-features = false, features = ["std"] }
 //!
 //! # Full-featured (std + tracing)
 //! [dependencies]
-//! mqtt-protocol-core = { version = "0.3.1", features = ["tracing"] }
+//! mqtt-protocol-core = { version = "0.4.0", features = ["tracing"] }
 //! ```
 //!
 //! **Key points for no-std usage:**

@@ -23,7 +23,7 @@ use mqtt_protocol_core::mqtt;
 mod common;
 
 #[test]
-fn test_auto_map_topic_alias_send_v5_0() {
+fn auto_map_topic_alias_send() {
     common::init_tracing();
     let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
 
@@ -74,13 +74,11 @@ fn test_auto_map_topic_alias_send_v5_0() {
             // Verify topic name is empty and topic alias is 1
             if p.topic_name().is_empty() {
                 // Check for TopicAlias property with value 1
-                if let Some(props) = p.props() {
-                    for prop in props.iter() {
-                        if let mqtt::packet::Property::TopicAlias(ta) = prop {
-                            if ta.val() == 1 {
-                                publish_a_mapped = true;
-                                break;
-                            }
+                for prop in p.props().iter() {
+                    if let mqtt::packet::Property::TopicAlias(ta) = prop {
+                        if ta.val() == 1 {
+                            publish_a_mapped = true;
+                            break;
                         }
                     }
                 }
@@ -114,13 +112,11 @@ fn test_auto_map_topic_alias_send_v5_0() {
             // Verify topic name is empty and topic alias is 2
             if p.topic_name().is_empty() {
                 // Check for TopicAlias property with value 2
-                if let Some(props) = p.props() {
-                    for prop in props.iter() {
-                        if let mqtt::packet::Property::TopicAlias(ta) = prop {
-                            if ta.val() == 2 {
-                                publish_b_mapped = true;
-                                break;
-                            }
+                for prop in p.props().iter() {
+                    if let mqtt::packet::Property::TopicAlias(ta) = prop {
+                        if ta.val() == 2 {
+                            publish_b_mapped = true;
+                            break;
                         }
                     }
                 }
@@ -134,7 +130,7 @@ fn test_auto_map_topic_alias_send_v5_0() {
 }
 
 #[test]
-fn test_auto_replace_topic_alias_send_v5_0() {
+fn auto_replace_topic_alias_send() {
     common::init_tracing();
     let mut connection = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
 
@@ -185,13 +181,10 @@ fn test_auto_replace_topic_alias_send_v5_0() {
             // Verify topic name is maintained and no properties
             if p.topic_name() == "topic/test" {
                 // Check that there are no properties or no TopicAlias property
-                let has_topic_alias = if let Some(props) = p.props() {
-                    props
-                        .iter()
-                        .any(|prop| matches!(prop, mqtt::packet::Property::TopicAlias(_)))
-                } else {
-                    false
-                };
+                let has_topic_alias = p
+                    .props()
+                    .iter()
+                    .any(|prop| matches!(prop, mqtt::packet::Property::TopicAlias(_)));
                 if !has_topic_alias {
                     publish_a_unchanged = true;
                     break;
@@ -238,15 +231,13 @@ fn test_auto_replace_topic_alias_send_v5_0() {
             // Verify topic name is empty and topic alias is 1
             if p.topic_name().is_empty() {
                 // Check for TopicAlias property with value 1
-                if let Some(props) = p.props() {
-                    for prop in props.iter() {
-                        if let mqtt::packet::Property::TopicAlias(ta) = prop {
-                            if ta.val() == 1 {
-                                publish_c_replaced = true;
-                                break;
-                            }
-                        }
-                    }
+                let has_topic_alias = p
+                    .props()
+                    .iter()
+                    .any(|prop| matches!(prop, mqtt::packet::Property::TopicAlias(_)));
+                if has_topic_alias {
+                    publish_c_replaced = true;
+                    break;
                 }
             }
         }
@@ -258,7 +249,182 @@ fn test_auto_replace_topic_alias_send_v5_0() {
 }
 
 #[test]
-fn test_regulate_for_store_topic_alias_v5_0() {
+fn manual_topic_alias() {
+    common::init_tracing();
+    let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
+
+    {
+        // Send CONNECT
+        let connect = mqtt::packet::v5_0::Connect::builder()
+            .client_id("test_client")
+            .unwrap()
+            .props(vec![mqtt::packet::SessionExpiryInterval::new(0xffffffff)
+                .unwrap()
+                .into()])
+            .build()
+            .unwrap();
+
+        let _events = connection.send(connect.into());
+
+        // Receive CONNACK with TopicAliasMaximum set to 65535
+        let connack = mqtt::packet::v5_0::Connack::builder()
+            .session_present(false)
+            .reason_code(mqtt::result_code::ConnectReasonCode::Success)
+            .props(vec![mqtt::packet::TopicAliasMaximum::new(65535)
+                .unwrap()
+                .into()])
+            .build()
+            .unwrap();
+
+        let bytes = connack.to_continuous_buffer();
+        let _events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
+    }
+
+    {
+        // Send QoS0 PUBLISH A
+        let publish_a = mqtt::packet::v5_0::Publish::builder()
+            .topic_name("topic/a")
+            .unwrap()
+            .qos(mqtt::packet::Qos::AtMostOnce)
+            .payload(b"payload A".to_vec())
+            .props(vec![mqtt::packet::TopicAlias::new(1).unwrap().into()])
+            .build()
+            .unwrap();
+
+        let events_a = connection.send(publish_a.into());
+
+        // Find RequestSendPacket event for PUBLISH A and verify topic alias mapping
+        let mut publish_a_registered = false;
+        for event in &events_a {
+            if let mqtt::connection::Event::RequestSendPacket {
+                packet: mqtt::packet::Packet::V5_0Publish(p),
+                ..
+            } = event
+            {
+                assert_eq!(p.topic_name(), "topic/a");
+                // Check for TopicAlias property with value 1
+                for prop in p.props().iter() {
+                    if let mqtt::packet::Property::TopicAlias(ta) = prop {
+                        if ta.val() == 1 {
+                            publish_a_registered = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        assert!(
+            publish_a_registered,
+            "PUBLISH A should have a topic name and TopicAlias=1"
+        );
+    }
+    {
+        // Send QoS0 PUBLISH B
+        let publish_b = mqtt::packet::v5_0::Publish::builder()
+            .qos(mqtt::packet::Qos::AtLeastOnce)
+            .packet_id(connection.acquire_packet_id().unwrap())
+            .payload(b"payload B".to_vec())
+            .props(vec![mqtt::packet::TopicAlias::new(1).unwrap().into()])
+            .build()
+            .unwrap();
+
+        let events_b = connection.send(publish_b.into());
+
+        // Find RequestSendPacket event for PUBLISH B and verify topic alias mapping
+        let mut publish_b_mapped = false;
+        for event in &events_b {
+            if let mqtt::connection::Event::RequestSendPacket {
+                packet: mqtt::packet::Packet::V5_0Publish(p),
+                ..
+            } = event
+            {
+                // Verify topic name is empty and topic alias is 1
+                if p.topic_name().is_empty() {
+                    // Check for TopicAlias property with value 1
+                    for prop in p.props().iter() {
+                        if let mqtt::packet::Property::TopicAlias(ta) = prop {
+                            if ta.val() == 1 {
+                                publish_b_mapped = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        assert!(
+            publish_b_mapped,
+            "PUBLISH B should have empty topic name and TopicAlias=1"
+        );
+    }
+    connection.notify_closed();
+
+    {
+        // Send CONNECT
+        let connect = mqtt::packet::v5_0::Connect::builder()
+            .client_id("test_client")
+            .unwrap()
+            .clean_start(false)
+            .build()
+            .unwrap();
+
+        let _events = connection.send(connect.into());
+
+        // Receive CONNACK with TopicAliasMaximum set to 65535
+        let connack = mqtt::packet::v5_0::Connack::builder()
+            .session_present(true)
+            .reason_code(mqtt::result_code::ConnectReasonCode::Success)
+            .props(vec![mqtt::packet::TopicAliasMaximum::new(65535)
+                .unwrap()
+                .into()])
+            .build()
+            .unwrap();
+
+        let bytes = connack.to_continuous_buffer();
+        let events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
+        assert_eq!(events.len(), 2);
+        if let mqtt::connection::Event::RequestSendPacket {
+            packet,
+            release_packet_id_if_send_error,
+        } = &events[0]
+        {
+            let publish_extracted: mqtt::packet::Packet = mqtt::packet::v5_0::Publish::builder()
+                .qos(mqtt::packet::Qos::AtLeastOnce)
+                .packet_id(1)
+                .topic_name("topic/a")
+                .unwrap()
+                .payload(b"payload B".to_vec())
+                .build()
+                .unwrap()
+                .set_dup(true)
+                .into();
+
+            assert_eq!(packet, &publish_extracted);
+            assert!(release_packet_id_if_send_error.is_none());
+        } else {
+            panic!(
+                "Expected NotifyPacketIdReleased event, got: {:?}",
+                events[0]
+            );
+        }
+        if let mqtt::connection::Event::NotifyPacketReceived(packet) = &events[1] {
+            if let mqtt::packet::GenericPacket::V5_0Connack(connack) = packet {
+                assert_eq!(connack.session_present(), true);
+                assert_eq!(
+                    connack.reason_code(),
+                    mqtt::result_code::ConnectReasonCode::Success
+                );
+            } else {
+                panic!("Expected V5_0Connack packet, got: {:?}", packet);
+            }
+        } else {
+            panic!("Expected NotifyPacketReceived event, got: {:?}", events[1]);
+        }
+    }
+}
+
+#[test]
+fn regulate_for_store_topic_alias() {
     common::init_tracing();
     let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
 
@@ -310,11 +476,10 @@ fn test_regulate_for_store_topic_alias_v5_0() {
     assert!(result_1.is_ok());
     let regulated = result_1.unwrap();
     assert_eq!(regulated.topic_name(), "original/topic");
-    if let Some(props) = regulated.props() {
-        assert!(!props
-            .iter()
-            .any(|prop| matches!(prop, mqtt::packet::Property::TopicAlias(_))));
-    }
+    assert!(!regulated
+        .props()
+        .iter()
+        .any(|prop| matches!(prop, mqtt::packet::Property::TopicAlias(_))));
 
     let packet_id_3 = connection.acquire_packet_id().unwrap();
     let publish_specified_topic = mqtt::packet::v5_0::Publish::builder()
@@ -331,11 +496,10 @@ fn test_regulate_for_store_topic_alias_v5_0() {
     assert!(result_2.is_ok());
     let regulated = result_2.unwrap();
     assert_eq!(regulated.topic_name(), "new/topic");
-    if let Some(props) = regulated.props() {
-        assert!(!props
-            .iter()
-            .any(|prop| matches!(prop, mqtt::packet::Property::TopicAlias(_))));
-    }
+    assert!(!regulated
+        .props()
+        .iter()
+        .any(|prop| matches!(prop, mqtt::packet::Property::TopicAlias(_))));
 
     let packet_id_6 = connection.acquire_packet_id().unwrap();
     let publish_unregistered_alias = mqtt::packet::v5_0::Publish::builder()
@@ -357,3 +521,28 @@ fn test_regulate_for_store_topic_alias_v5_0() {
         ));
     }
 }
+
+// fn client_set_topic_alias_maximum_recv_out_of_range() {
+//     common::init_tracing();
+//     let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
+
+//     // Send CONNECT
+//     let connect = mqtt::packet::v5_0::Connect::builder()
+//         .client_id("test_client")
+//         .unwrap()
+//         .props(vec![mqtt::packet::TopicAliasMaximum::new(3)
+//             .unwrap()
+//             .into()])
+//         .build()
+//         .unwrap();
+
+//     let _events = connection.send(connect.into());
+
+//     // Receive CONNACK with TopicAliasMaximum set to 65535
+//     let connack = mqtt::packet::v5_0::Connack::builder()
+//         .session_present(false)
+//         .reason_code(mqtt::result_code::ConnectReasonCode::Success)
+//         .build()
+//         .unwrap();
+
+// }
