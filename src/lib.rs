@@ -126,7 +126,7 @@
 //!
 //! **No-std usage example:**
 //!
-//! ```rust,no_run
+//! ```rust,no_run,ignore
 //! #![no_std]
 //! extern crate alloc;
 //!

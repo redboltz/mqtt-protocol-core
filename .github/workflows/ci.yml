@@ -24,6 +24,7 @@ jobs:
       uses: dtolnay/rust-toolchain@stable
       with:
         components: rustfmt, clippy
+        targets: thumbv7m-none-eabi
 
     - name: Cache cargo registry
       uses: actions/cache@v4
@@ -51,6 +52,9 @@ jobs:
 
     - name: Build
       run: cargo build --verbose
+
+    - name: Build (no-std)
+      run: cargo build --verbose --no-default-features --target thumbv7m-none-eabi
 
     - name: Run tests (std no-tracing)
       run: cargo test --verbose -- --nocapture

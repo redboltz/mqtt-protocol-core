@@ -22,11 +22,11 @@
 
 use crate::mqtt::common::tracing::trace;
 use crate::mqtt::common::HashMap;
+use crate::mqtt::common::IndexMap;
 use alloc::{
     string::{String, ToString},
     vec::Vec,
 };
-use indexmap::IndexMap;
 
 use crate::mqtt::ValueAllocator;
 
@@ -57,8 +57,8 @@ impl TopicAliasSend {
 
         Self {
             max_alias,
-            alias_to_topic: IndexMap::new(),
-            topic_to_aliases: HashMap::new(),
+            alias_to_topic: IndexMap::default(),
+            topic_to_aliases: HashMap::default(),
             value_allocator: ValueAllocator::new(Self::MIN_ALIAS, max_alias),
         }
     }

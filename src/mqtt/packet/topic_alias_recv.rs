@@ -47,7 +47,7 @@ impl TopicAliasRecv {
 
         Self {
             max_alias,
-            aliases: HashMap::new(),
+            aliases: HashMap::default(),
         }
     }
 

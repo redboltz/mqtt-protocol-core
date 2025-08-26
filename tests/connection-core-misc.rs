@@ -949,7 +949,7 @@ fn test_qos2_publish_handled_restore_v5_0() {
     let _events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
 
     // Restore QoS2 publish handled with packet_id 1
-    let mut handled_set = mqtt::common::HashSet::new();
+    let mut handled_set = mqtt::common::HashSet::default();
     handled_set.insert(1u16);
     connection.restore_qos2_publish_handled(handled_set);
 
