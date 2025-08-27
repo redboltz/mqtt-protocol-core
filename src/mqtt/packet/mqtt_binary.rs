@@ -45,6 +45,7 @@ const SSO_BUFFER_SIZE: usize = 12; // Third priority: 12 bytes
     feature = "sso-lv10",
     feature = "sso-lv20"
 )))]
+#[allow(dead_code)]
 const SSO_BUFFER_SIZE: usize = 0; // No SSO features enabled
 
 // Determine data threshold

@@ -23,7 +23,7 @@ use mqtt_protocol_core::mqtt;
 mod common;
 
 #[test]
-fn v5_0_any_maximum_packet_size_test() {
+fn any_maximum_packet_size() {
     common::init_tracing();
     // Create MQTT v5.0 Any connection
     let mut con = mqtt::Connection::<mqtt::role::Any>::new(mqtt::Version::V5_0);
@@ -291,4 +291,88 @@ fn v5_0_any_maximum_packet_size_test() {
         )),
         "Expected PacketTooLarge error for DISCONNECT packet"
     );
+}
+
+#[test]
+fn over_maximum_packet_size_recv() {
+    common::init_tracing();
+    // Create MQTT v5.0 Any connection
+    let mut con = mqtt::Connection::<mqtt::role::Any>::new(mqtt::Version::V5_0);
+
+    // Send CONNECT packet
+    let connect_packet = mqtt::packet::v5_0::Connect::builder()
+        .client_id("test-client")
+        .unwrap()
+        .clean_start(true)
+        .props(vec![mqtt::packet::MaximumPacketSize::new(30)
+            .unwrap()
+            .into()])
+        .build()
+        .expect("Failed to build Connect packet");
+    let events = con.send(connect_packet.into());
+    assert_eq!(events.len(), 1);
+
+    let connack_packet = mqtt::packet::v5_0::Connack::builder()
+        .session_present(false)
+        .reason_code(mqtt::result_code::ConnectReasonCode::Success)
+        .build()
+        .expect("Failed to build Connack packet");
+    let bytes = connack_packet.to_continuous_buffer();
+    let _events = con.recv(&mut mqtt::common::Cursor::new(&bytes));
+
+    let publish = mqtt::packet::v5_0::Publish::builder()
+        .topic_name("topic/c")
+        .unwrap()
+        .qos(mqtt::packet::Qos::ExactlyOnce)
+        .packet_id(1u16)
+        .payload(b"012345678901234567890123456789".to_vec())
+        .build()
+        .unwrap();
+    let bytes = publish.to_continuous_buffer();
+    let events = con.recv(&mut mqtt::common::Cursor::new(&bytes));
+
+    assert_eq!(events.len(), 3);
+
+    // First event: RequestSendPacket with Disconnect packet
+    if let mqtt::connection::Event::RequestSendPacket {
+        packet: event_packet,
+        release_packet_id_if_send_error,
+    } = &events[0]
+    {
+        let expected_disconnect: mqtt::packet::Packet = mqtt::packet::v5_0::Disconnect::builder()
+            .reason_code(mqtt::result_code::DisconnectReasonCode::PacketTooLarge)
+            .build()
+            .unwrap()
+            .into();
+        assert_eq!(*event_packet, expected_disconnect);
+        assert!(release_packet_id_if_send_error.is_none());
+    } else {
+        assert!(
+            false,
+            "Expected RequestSendPacket event, but got: {:?}",
+            events[0]
+        );
+    }
+
+    // Second event: RequestClose
+    if let mqtt::connection::Event::RequestClose = &events[1] {
+        // Expected RequestClose event
+    } else {
+        assert!(
+            false,
+            "Expected RequestClose event, but got: {:?}",
+            events[1]
+        );
+    }
+
+    // Third event: NotifyError with PacketTooLarge
+    if let mqtt::connection::Event::NotifyError(error) = &events[2] {
+        assert_eq!(*error, mqtt::result_code::MqttError::PacketTooLarge);
+    } else {
+        assert!(
+            false,
+            "Expected NotifyError(PacketTooLarge) event, but got: {:?}",
+            events[2]
+        );
+    }
 }

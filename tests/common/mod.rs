@@ -66,6 +66,7 @@ pub fn init_tracing() {
     auto_init_tracing();
 }
 
+#[allow(dead_code)]
 pub fn v3_1_1_client_connecting(
     con: &mut mqtt::Connection<mqtt::role::Client>,
     clean_session: bool,
@@ -79,6 +80,7 @@ pub fn v3_1_1_client_connecting(
     let _ = con.checked_send(packet);
 }
 
+#[allow(dead_code)]
 pub fn v3_1_1_client_establish_connection(
     con: &mut mqtt::Connection<mqtt::role::Client>,
     clean_session: bool,
@@ -111,6 +113,7 @@ pub fn v3_1_1_server_connecting(
     let _ = con.recv(&mut cursor);
 }
 
+#[allow(dead_code)]
 pub fn v3_1_1_server_establish_connection(
     con: &mut mqtt::Connection<mqtt::role::Server>,
     clean_session: bool,
@@ -127,7 +130,6 @@ pub fn v3_1_1_server_establish_connection(
     }
 }
 
-#[cfg(feature = "std")]
 #[allow(dead_code)]
 pub fn v5_0_client_establish_connection(con: &mut mqtt::Connection<mqtt::role::Client>) {
     {
@@ -150,7 +152,6 @@ pub fn v5_0_client_establish_connection(con: &mut mqtt::Connection<mqtt::role::C
     }
 }
 
-#[cfg(feature = "std")]
 #[allow(dead_code)]
 pub fn v5_0_server_connecting(con: &mut mqtt::Connection<mqtt::role::Server>) {
     let packet = mqtt::packet::v5_0::Connect::builder()
@@ -163,7 +164,6 @@ pub fn v5_0_server_connecting(con: &mut mqtt::Connection<mqtt::role::Server>) {
     let _ = con.recv(&mut cursor);
 }
 
-#[cfg(feature = "std")]
 #[allow(dead_code)]
 pub fn v5_0_server_establish_connection(con: &mut mqtt::Connection<mqtt::role::Server>) {
     v5_0_server_connecting(con);
