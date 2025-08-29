@@ -2471,7 +2471,11 @@ where
                         }
                         _ => ConnectReturnCode::NotAuthorized, // TBD close could be better
                     };
-                    let connack = v3_1_1::Connack::builder().return_code(rc).build().unwrap();
+                    let connack = v3_1_1::Connack::builder()
+                        .return_code(rc)
+                        .session_present(false)
+                        .build()
+                        .unwrap();
                     let connack_events = self.process_send_v3_1_1_connack(connack);
                     events.extend(connack_events);
                 } else {
@@ -2539,7 +2543,11 @@ where
                         }
                         _ => ConnectReasonCode::UnspecifiedError,
                     };
-                    let connack = v5_0::Connack::builder().reason_code(rc).build().unwrap();
+                    let connack = v5_0::Connack::builder()
+                        .reason_code(rc)
+                        .session_present(false)
+                        .build()
+                        .unwrap();
                     let connack_events = self.process_send_v5_0_connack(connack);
                     events.extend(connack_events);
                 } else {

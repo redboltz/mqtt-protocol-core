@@ -269,3 +269,75 @@ fn v3_1_1_client_send_disconnect() {
         );
     }
 }
+
+#[test]
+fn v5_0_client_send_pingreq() {
+    common::init_tracing();
+    let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
+    con.set_pingresp_recv_timeout(Some(5000));
+    v5_0_client_establish_connection(&mut con);
+
+    let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Pingreq::new().into();
+    let events = con.send(packet.clone());
+    assert_eq!(events.len(), 2);
+
+    if let mqtt::connection::Event::RequestSendPacket {
+        packet: event_packet,
+        release_packet_id_if_send_error,
+    } = &events[0]
+    {
+        assert_eq!(*event_packet, packet);
+        assert!(release_packet_id_if_send_error.is_none());
+    } else {
+        assert!(
+            false,
+            "Expected RequestSendPacket event, but got: {:?}",
+            events[0]
+        );
+    }
+
+    if let mqtt::connection::GenericEvent::RequestTimerReset {
+        kind: mqtt::connection::TimerKind::PingrespRecv,
+        duration_ms,
+    } = &events[1]
+    {
+        assert_eq!(*duration_ms, 5000);
+    } else {
+        assert!(
+            false,
+            "Expected RequestTimerReset event with PingrespRecv, but got: {:?}",
+            events[1]
+        );
+    }
+}
+
+#[test]
+fn v5_0_client_send_auth() {
+    common::init_tracing();
+    let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
+    con.set_pingresp_recv_timeout(Some(5000));
+    v5_0_client_establish_connection(&mut con);
+
+    let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Auth::builder()
+        .reason_code(mqtt::result_code::AuthReasonCode::Success)
+        .build()
+        .expect("Failed to build auth packet")
+        .into();
+    let events = con.send(packet.clone());
+    assert_eq!(events.len(), 1);
+
+    if let mqtt::connection::Event::RequestSendPacket {
+        packet: event_packet,
+        release_packet_id_if_send_error,
+    } = &events[0]
+    {
+        assert_eq!(*event_packet, packet);
+        assert!(release_packet_id_if_send_error.is_none());
+    } else {
+        assert!(
+            false,
+            "Expected RequestSendPacket event, but got: {:?}",
+            events[0]
+        );
+    }
+}

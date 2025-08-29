@@ -1,5 +1,9 @@
-# 0.5.0 undetermined
+# 0.5.1 undetermined
 
+* Fix panic on connack generation. #25
+  * When errornous CONNECT packet is received, a CONNACK packet with rc is automatically generated but it caused panic due to lack of session_present field.
+
+# 0.5.0
 ## Breaking changes
 
 * Add TopicAlias extract mechanism on PUBLISH packet receiving. #24
