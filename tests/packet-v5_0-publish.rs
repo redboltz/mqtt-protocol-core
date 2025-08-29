@@ -1394,7 +1394,7 @@ fn test_add_extracted_topic_name_success() {
     assert_eq!(packet.topic_name(), "");
 
     // Add extracted topic name
-    let result = packet.add_extracted_topic_name("resolved/topic".to_string());
+    let result = packet.add_extracted_topic_name("resolved/topic");
     assert!(result.is_ok());
     let packet_with_topic = result.unwrap();
 
@@ -1426,7 +1426,7 @@ fn test_add_extracted_topic_name_non_empty_topic_error() {
         .unwrap();
 
     // Should fail because topic name is not empty
-    let result = packet.add_extracted_topic_name("new/topic".to_string());
+    let result = packet.add_extracted_topic_name("new/topic");
     assert!(result.is_err());
     assert_eq!(
         result.unwrap_err(),
@@ -1450,16 +1450,14 @@ fn test_add_extracted_topic_name_invalid_topic_wildcard() {
         .unwrap();
 
     // Should fail with wildcard in topic name
-    let result = packet
-        .clone()
-        .add_extracted_topic_name("test/+/topic".to_string());
+    let result = packet.clone().add_extracted_topic_name("test/+/topic");
     assert!(result.is_err());
     assert_eq!(
         result.unwrap_err(),
         mqtt::result_code::MqttError::MalformedPacket
     );
 
-    let result = packet.add_extracted_topic_name("test/#".to_string());
+    let result = packet.add_extracted_topic_name("test/#");
     assert!(result.is_err());
     assert_eq!(
         result.unwrap_err(),

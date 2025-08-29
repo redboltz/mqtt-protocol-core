@@ -626,7 +626,7 @@ where
     /// assert_eq!(publish_with_extracted_topic.topic_name(), "sensors/temperature");
     /// assert!(publish_with_extracted_topic.topic_name_extracted());
     /// ```
-    pub fn add_extracted_topic_name(mut self, topic: String) -> Result<Self, MqttError> {
+    pub fn add_extracted_topic_name(mut self, topic: &str) -> Result<Self, MqttError> {
         // Check that topic_name is currently empty
         if !self.topic_name_buf.as_str().is_empty() {
             return Err(MqttError::TopicNameInvalid);
@@ -1379,9 +1379,7 @@ where
     where
         S: Serializer,
     {
-        let mut field_count = 7; // type, topic_name, qos, retain, dup, packet_id, props
-
-        field_count += 1; // payload
+        let field_count = 9; // type, topic_name, qos, retain, dup, extracted, packet_id, props, payload
 
         let mut state = serializer.serialize_struct("publish", field_count)?;
         state.serialize_field("type", PacketType::Publish.as_str())?;
@@ -1389,6 +1387,7 @@ where
         state.serialize_field("qos", &self.qos())?;
         state.serialize_field("retain", &self.retain())?;
         state.serialize_field("dup", &self.dup())?;
+        state.serialize_field("extracted", &self.topic_name_extracted())?;
         state.serialize_field("packet_id", &self.packet_id())?;
         state.serialize_field("props", &self.props)?;
 

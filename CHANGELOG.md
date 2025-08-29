@@ -1,12 +1,25 @@
 # 0.5.0 undetermined
 
-* Add SSO(Small Size Optimization) for MqttString, MqttBinary, and ArcPayload.
+## Breaking changes
+
+* Add TopicAlias extract mechanism on PUBLISH packet receiving. #24
+  * When an endpoint receives a MQTTv5.0 PUBLISH packet that has a validly registerd TopicAlias propery
+    and has empty TopicName, the endpoint automatically extract and add the registered TopicName.
+    The TopicAlias is not changed. RemainingLength is re-caluclated.
+    In addition, you can check the TopicAlias field is extracted one (originally empty) using `topic_name_extracted()` method.
+    NOTE: Eq comparison fails if topic_name_extracted field is different.
+
+* Add SSO(Small Size Optimization) for MqttString, MqttBinary, and ArcPayload. #23
   * The following feature flags are supported:
      * sso-min-32bit = []  # MqttString/MqttBinary: 12, ArcPayload: 15 - 32bit enum size optimized
      * sso-min-64bit = []  # MqttString/MqttBinary: 24, ArcPayload: 31 - 64bit enum size optimized
      * sso-lv10 = []       # MqttString/MqttBinary: 24, ArcPayload: 127 - Level 10 optimization
      * sso-lv20 = []       # MqttString/MqttBinary: 48, ArcPayload: 255 - Level 20 optimization
   * If multiple sso-* features are set, then the highest level is used.
+
+## Other updates
+
+* Refine tests. #23
 
 # 0.4.0
 
