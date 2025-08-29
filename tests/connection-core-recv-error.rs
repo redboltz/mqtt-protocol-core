@@ -104,3 +104,59 @@ fn recv_error_malformed_packet_invalid_remaining_length() {
         _ => panic!("Expected NotifyError event, got {:?}", events[1]),
     }
 }
+
+#[test]
+fn recv_error_malformed_packet_v3_1_1_connect_cid_not_valid() {
+    common::init_tracing();
+    let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V3_1_1);
+
+    // Create malformed CONNECT packet with ClientId length specified but insufficient data
+    // MQTT v3.1.1 CONNECT packet structure:
+    // Fixed Header: 0x10 (CONNECT packet type), remaining length
+    // Variable Header: Protocol Name (6 bytes: 0x00,0x04,"MQTT"), Protocol Version (0x04), Connect Flags (0x02), Keep Alive (2 bytes)
+    // Payload: Client Identifier length (2 bytes) + Client Identifier data (but we provide insufficient data)
+    let data = [
+        0x10, // CONNECT packet type
+        0x0C, // Remaining length: 12 bytes
+        0x00, 0x04, // Protocol name length
+        b'M', b'Q', b'T', b'T', // Protocol name "MQTT"
+        0x04, // Protocol version (v3.1.1)
+        0x02, // Connect flags (clean session)
+        0x00, 0x3C, // Keep alive (60 seconds)
+        0x00,
+        0x05, // Client ID length: 5 bytes (but we don't provide the 5 bytes of data)
+              // Missing Client ID data - this makes the packet malformed
+    ];
+    let mut cursor = mqtt::common::Cursor::new(data.as_slice());
+
+    let events = con.recv(&mut cursor);
+
+    // Should return error events
+    assert_eq!(events.len(), 2);
+
+    // First event should be RequestSendPacket with CONNACK containing IdentifierRejected
+    match &events[0] {
+        mqtt::connection::Event::RequestSendPacket { packet, .. } => {
+            if let mqtt::packet::Packet::V3_1_1Connack(connack) = packet {
+                assert_eq!(
+                    connack.return_code(),
+                    mqtt::result_code::ConnectReturnCode::IdentifierRejected
+                );
+            } else {
+                panic!("Expected CONNACK packet, got {:?}", packet);
+            }
+        }
+        _ => panic!("Expected RequestSendPacket event, got {:?}", events[0]),
+    }
+
+    // Second event should be NotifyError with ClientIdentifierNotValid
+    match &events[1] {
+        mqtt::connection::Event::NotifyError(error) => {
+            assert_eq!(
+                *error,
+                mqtt::result_code::MqttError::ClientIdentifierNotValid
+            );
+        }
+        _ => panic!("Expected NotifyError event, got {:?}", events[1]),
+    }
+}
