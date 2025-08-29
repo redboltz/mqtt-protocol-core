@@ -267,3 +267,14 @@ fn test_mqttstring_buffers_equivalence() {
     // Verify the continuous buffer is not empty
     assert!(!continuous_buffer.is_empty());
 }
+
+#[test]
+fn test_mqttstring_debug() {
+    common::init_tracing();
+    let s = mqtt::packet::MqttString::new("debug_test").unwrap();
+
+    // Test Debug trait implementation
+    let debug_output = format!("{s:?}");
+    assert!(debug_output.contains("MqttString"));
+    assert!(debug_output.contains("debug_test"));
+}

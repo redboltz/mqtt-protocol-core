@@ -541,6 +541,94 @@ fn v3_1_1_client_not_allowed_to_send_on_status_disconnected_publish_qos2() {
 }
 
 #[test]
+fn v3_1_1_client_not_allowed_to_send_on_status_disconnected_puback() {
+    common::init_tracing();
+    let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
+    let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Puback::builder()
+        .packet_id(1)
+        .build()
+        .expect("Failed to build Puback packet")
+        .into();
+    let events = con.send(packet);
+    assert_eq!(events.len(), 1);
+    if let mqtt::connection::Event::NotifyError(error) = &events[0] {
+        assert_eq!(error, &mqtt::result_code::MqttError::PacketNotAllowedToSend);
+    } else {
+        assert!(
+            false,
+            "Expected NotifyError event, but got: {:?}",
+            events[0]
+        );
+    }
+}
+
+#[test]
+fn v3_1_1_client_not_allowed_to_send_on_status_disconnected_pubrec() {
+    common::init_tracing();
+    let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
+    let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Pubrec::builder()
+        .packet_id(1)
+        .build()
+        .expect("Failed to build Pubrec packet")
+        .into();
+    let events = con.send(packet);
+    assert_eq!(events.len(), 1);
+    if let mqtt::connection::Event::NotifyError(error) = &events[0] {
+        assert_eq!(error, &mqtt::result_code::MqttError::PacketNotAllowedToSend);
+    } else {
+        assert!(
+            false,
+            "Expected NotifyError event, but got: {:?}",
+            events[0]
+        );
+    }
+}
+
+#[test]
+fn v3_1_1_client_not_allowed_to_send_on_status_disconnected_pubrel() {
+    common::init_tracing();
+    let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
+    let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Pubrel::builder()
+        .packet_id(1)
+        .build()
+        .expect("Failed to build Pubrel packet")
+        .into();
+    let events = con.send(packet);
+    assert_eq!(events.len(), 1);
+    if let mqtt::connection::Event::NotifyError(error) = &events[0] {
+        assert_eq!(error, &mqtt::result_code::MqttError::PacketNotAllowedToSend);
+    } else {
+        assert!(
+            false,
+            "Expected NotifyError event, but got: {:?}",
+            events[0]
+        );
+    }
+}
+
+#[test]
+fn v3_1_1_client_not_allowed_to_send_on_status_disconnected_pubcomp() {
+    common::init_tracing();
+    let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
+    let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Pubcomp::builder()
+        .packet_id(1)
+        .build()
+        .expect("Failed to build Pubcomp packet")
+        .into();
+    let events = con.send(packet);
+    assert_eq!(events.len(), 1);
+    if let mqtt::connection::Event::NotifyError(error) = &events[0] {
+        assert_eq!(error, &mqtt::result_code::MqttError::PacketNotAllowedToSend);
+    } else {
+        assert!(
+            false,
+            "Expected NotifyError event, but got: {:?}",
+            events[0]
+        );
+    }
+}
+
+#[test]
 fn v3_1_1_client_not_allowed_to_send_on_status_disconnected_subscribe() {
     common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
@@ -1642,6 +1730,94 @@ fn v5_0_client_not_allowed_to_send_on_status_disconnected_publish_qos2() {
             false,
             "Expected NotifyPacketIdReleased event, but got: {:?}",
             events[1]
+        );
+    }
+}
+
+#[test]
+fn v5_0_client_not_allowed_to_send_on_status_disconnected_puback() {
+    common::init_tracing();
+    let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
+    let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Puback::builder()
+        .packet_id(1)
+        .build()
+        .expect("Failed to build Puback packet")
+        .into();
+    let events = con.send(packet);
+    assert_eq!(events.len(), 1);
+    if let mqtt::connection::Event::NotifyError(error) = &events[0] {
+        assert_eq!(error, &mqtt::result_code::MqttError::PacketNotAllowedToSend);
+    } else {
+        assert!(
+            false,
+            "Expected NotifyError event, but got: {:?}",
+            events[0]
+        );
+    }
+}
+
+#[test]
+fn v5_0_client_not_allowed_to_send_on_status_disconnected_pubrec() {
+    common::init_tracing();
+    let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
+    let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Pubrec::builder()
+        .packet_id(1)
+        .build()
+        .expect("Failed to build Pubrec packet")
+        .into();
+    let events = con.send(packet);
+    assert_eq!(events.len(), 1);
+    if let mqtt::connection::Event::NotifyError(error) = &events[0] {
+        assert_eq!(error, &mqtt::result_code::MqttError::PacketNotAllowedToSend);
+    } else {
+        assert!(
+            false,
+            "Expected NotifyError event, but got: {:?}",
+            events[0]
+        );
+    }
+}
+
+#[test]
+fn v5_0_client_not_allowed_to_send_on_status_disconnected_pubrel() {
+    common::init_tracing();
+    let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
+    let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Pubrel::builder()
+        .packet_id(1)
+        .build()
+        .expect("Failed to build Pubrel packet")
+        .into();
+    let events = con.send(packet);
+    assert_eq!(events.len(), 1);
+    if let mqtt::connection::Event::NotifyError(error) = &events[0] {
+        assert_eq!(error, &mqtt::result_code::MqttError::PacketNotAllowedToSend);
+    } else {
+        assert!(
+            false,
+            "Expected NotifyError event, but got: {:?}",
+            events[0]
+        );
+    }
+}
+
+#[test]
+fn v5_0_client_not_allowed_to_send_on_status_disconnected_pubcomp() {
+    common::init_tracing();
+    let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
+    let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Pubcomp::builder()
+        .packet_id(1)
+        .build()
+        .expect("Failed to build Pubcomp packet")
+        .into();
+    let events = con.send(packet);
+    assert_eq!(events.len(), 1);
+    if let mqtt::connection::Event::NotifyError(error) = &events[0] {
+        assert_eq!(error, &mqtt::result_code::MqttError::PacketNotAllowedToSend);
+    } else {
+        assert!(
+            false,
+            "Expected NotifyError event, but got: {:?}",
+            events[0]
         );
     }
 }

@@ -1,6 +1,6 @@
 [package]
 name = "mqtt-protocol-core"
-version = "0.4.0"
+version = "0.5.0"
 edition = "2021"
 license = "MIT"
 authors = ["Takatoshi Kondo <redboltz@gmail.com>"]
@@ -29,6 +29,13 @@ std = [
     "tracing?/std",
 ]
 tracing = ["dep:tracing"]
+
+# Small String Optimization (SSO) features
+# These features control the stack buffer size for MqttString, MqttBinary, and ArcPayload types
+sso-min-32bit = []  # MqttString/MqttBinary: 12, ArcPayload: 15 - 32bit enum size optimized
+sso-min-64bit = []  # MqttString/MqttBinary: 24, ArcPayload: 31 - 64bit enum size optimized
+sso-lv10 = []       # MqttString/MqttBinary: 24, ArcPayload: 127 - Level 10 optimization
+sso-lv20 = []       # MqttString/MqttBinary: 48, ArcPayload: 255 - Level 20 optimization
 
 [dependencies]
 serde = { version = "1.0", default-features = false, features = [

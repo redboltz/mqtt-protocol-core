@@ -23,7 +23,7 @@ use mqtt_protocol_core::mqtt;
 mod common;
 
 #[test]
-fn test_get_receive_maximum_vacancy_for_send() {
+fn get_receive_maximum_vacancy_for_send() {
     common::init_tracing();
     let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
 
@@ -140,7 +140,79 @@ fn test_get_receive_maximum_vacancy_for_send() {
 }
 
 #[test]
-fn test_offline_publish_v3_1_1() {
+fn receive_maximum_exceeded() {
+    common::init_tracing();
+    let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
+
+    // Initially no limit is set
+    assert_eq!(connection.get_receive_maximum_vacancy_for_send(), None);
+
+    // Receive CONNACK with ReceiveMaximum property set to 1
+    let connack = mqtt::packet::v5_0::Connack::builder()
+        .session_present(false)
+        .reason_code(mqtt::result_code::ConnectReasonCode::Success)
+        .props(vec![mqtt::packet::ReceiveMaximum::new(1).unwrap().into()])
+        .build()
+        .unwrap();
+
+    let bytes = connack.to_continuous_buffer();
+    let _events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
+
+    let packet_id_a = connection.acquire_packet_id().unwrap();
+    let publish_a = mqtt::packet::v5_0::Publish::builder()
+        .topic_name("topic/a")
+        .unwrap()
+        .qos(mqtt::packet::Qos::AtLeastOnce)
+        .packet_id(packet_id_a)
+        .payload(b"payload A".to_vec())
+        .build()
+        .unwrap();
+
+    let _events = connection.send(publish_a.into());
+
+    let packet_id_b = connection.acquire_packet_id().unwrap();
+    let publish_b = mqtt::packet::v5_0::Publish::builder()
+        .topic_name("topic/b")
+        .unwrap()
+        .qos(mqtt::packet::Qos::AtLeastOnce)
+        .packet_id(packet_id_b)
+        .payload(b"payload B".to_vec())
+        .build()
+        .unwrap();
+
+    let events = connection.send(publish_b.into());
+
+    // Check that events contains exactly 2 events in the correct order
+    assert_eq!(events.len(), 2, "Should have exactly 2 events");
+
+    // Check first event: NotifyError(MqttError::ReceiveMaximumExceeded)
+    if let mqtt::connection::Event::NotifyError(error) = &events[0] {
+        assert_eq!(
+            *error,
+            mqtt::result_code::MqttError::ReceiveMaximumExceeded,
+            "First event should be NotifyError(ReceiveMaximumExceeded)"
+        );
+    } else {
+        panic!("First event should be NotifyError but got: {:?}", events[0]);
+    }
+
+    // Check second event: NotifyPacketIdReleased(packet_id_b)
+    if let mqtt::connection::Event::NotifyPacketIdReleased(packet_id) = &events[1] {
+        assert_eq!(
+            *packet_id, packet_id_b,
+            "Second event should be NotifyPacketIdReleased({})",
+            packet_id_b
+        );
+    } else {
+        panic!(
+            "Second event should be NotifyPacketIdReleased but got: {:?}",
+            events[1]
+        );
+    }
+}
+
+#[test]
+fn offline_publish_v3_1_1() {
     common::init_tracing();
     let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
 
@@ -225,7 +297,7 @@ fn test_offline_publish_v3_1_1() {
 }
 
 #[test]
-fn test_offline_publish_v5_0() {
+fn offline_publish_v5_0() {
     common::init_tracing();
     let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
 
@@ -310,7 +382,7 @@ fn test_offline_publish_v5_0() {
 }
 
 #[test]
-fn test_auto_pub_response_v3_1_1() {
+fn auto_pub_response_v3_1_1() {
     common::init_tracing();
     let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
 
@@ -443,7 +515,7 @@ fn test_auto_pub_response_v3_1_1() {
 }
 
 #[test]
-fn test_auto_pub_response_v5_0() {
+fn auto_pub_response_v5_0() {
     common::init_tracing();
     let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
 
@@ -578,7 +650,7 @@ fn test_auto_pub_response_v5_0() {
 }
 
 #[test]
-fn test_qos2_pubrel_send_request_v3_1_1() {
+fn qos2_pubrel_send_request_v3_1_1() {
     common::init_tracing();
     let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
 
@@ -648,7 +720,7 @@ fn test_qos2_pubrel_send_request_v3_1_1() {
 }
 
 #[test]
-fn test_qos2_pubrel_send_request_v5_0() {
+fn qos2_pubrel_send_request_v5_0() {
     common::init_tracing();
     let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
 
@@ -719,7 +791,7 @@ fn test_qos2_pubrel_send_request_v5_0() {
 }
 
 #[test]
-fn test_auto_ping_response_server_v3_1_1() {
+fn auto_ping_response_server_v3_1_1() {
     common::init_tracing();
     let mut connection = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V3_1_1);
 
@@ -767,7 +839,7 @@ fn test_auto_ping_response_server_v3_1_1() {
 }
 
 #[test]
-fn test_auto_ping_response_server_v5_0() {
+fn auto_ping_response_server_v5_0() {
     common::init_tracing();
     let mut connection = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
 
@@ -815,7 +887,7 @@ fn test_auto_ping_response_server_v5_0() {
 }
 
 #[test]
-fn test_packet_id_management_v3_1_1() {
+fn packet_id_management_v3_1_1() {
     common::init_tracing();
     let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
 
@@ -843,7 +915,7 @@ fn test_packet_id_management_v3_1_1() {
 }
 
 #[test]
-fn test_qos2_publish_handled_v3_1_1() {
+fn qos2_publish_handled_v3_1_1() {
     common::init_tracing();
     let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
 
@@ -925,7 +997,7 @@ fn test_qos2_publish_handled_v3_1_1() {
 }
 
 #[test]
-fn test_qos2_publish_handled_restore_v5_0() {
+fn qos2_publish_handled_restore_v5_0() {
     common::init_tracing();
     let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
 
@@ -982,7 +1054,7 @@ fn test_qos2_publish_handled_restore_v5_0() {
 }
 
 #[test]
-fn test_restore_packets_v3_1_1() {
+fn restore_packets_v3_1_1() {
     common::init_tracing();
     let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
 
@@ -1125,7 +1197,7 @@ fn test_restore_packets_v3_1_1() {
 }
 
 #[test]
-fn test_restore_packets_v5_0_server() {
+fn restore_packets_v5_0_server() {
     common::init_tracing();
     let mut connection = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
 
@@ -1268,7 +1340,7 @@ fn test_restore_packets_v5_0_server() {
 }
 
 #[test]
-fn test_v3_1_1_client_qos2_publish_processing_state() {
+fn v3_1_1_client_qos2_publish_processing_state() {
     common::init_tracing();
     // Test v3.1.1 Client QoS2 publish processing state through the complete flow
     let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
@@ -1361,7 +1433,7 @@ fn test_v3_1_1_client_qos2_publish_processing_state() {
 }
 
 #[test]
-fn test_pingresp_recv_timer_reset_v3_1_1() {
+fn pingresp_recv_timer_reset_v3_1_1() {
     let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
 
     // Set pingresp recv timeout to 10000ms

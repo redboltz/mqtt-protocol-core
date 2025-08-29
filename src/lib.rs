@@ -121,7 +121,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! mqtt-protocol-core = { version = "0.4.0", default-features = false }
+//! mqtt-protocol-core = { version = "0.5.0", default-features = false }
 //! ```
 //!
 //! **No-std usage example:**
@@ -163,9 +163,9 @@
 //! }
 //! ```
 //!
-//! ## Optional Features
+//! ## Feature Flags
 //!
-//! The library supports several optional features:
+//! ### Core Features
 //!
 //! - **`std`** (default): Enables standard library support, including `std::io::IoSlice` for vectored I/O
 //! - **`tracing`**: Enables logging support via the `tracing` crate. When disabled, trace statements compile to no-ops with zero overhead
@@ -173,16 +173,79 @@
 //! ```toml
 //! # Enable tracing support (independent of std)
 //! [dependencies]
-//! mqtt-protocol-core = { version = "0.4.0", default-features = false, features = ["tracing"] }
+//! mqtt-protocol-core = { version = "0.5.0", default-features = false, features = ["tracing"] }
 //!
 //! # Use with std but without tracing overhead
 //! [dependencies]
-//! mqtt-protocol-core = { version = "0.4.0", default-features = false, features = ["std"] }
+//! mqtt-protocol-core = { version = "0.5.0", default-features = false, features = ["std"] }
 //!
 //! # Full-featured (std + tracing)
 //! [dependencies]
-//! mqtt-protocol-core = { version = "0.4.0", features = ["tracing"] }
+//! mqtt-protocol-core = { version = "0.5.0", features = ["tracing"] }
 //! ```
+//!
+//! ### Small String Optimization (SSO) Features
+//!
+//! These features optimize memory usage for small strings and binary data by storing them
+//! on the stack instead of allocating on the heap:
+//!
+//! - **`sso-min-32bit`**: Minimal optimization for 32-bit environments
+//!   - MqttString/MqttBinary: 12 bytes total buffer
+//!   - ArcPayload: 15 bytes data buffer
+//!
+//! - **`sso-min-64bit`**: Recommended optimization for 64-bit environments
+//!   - MqttString/MqttBinary: 24 bytes total buffer
+//!   - ArcPayload: 31 bytes data buffer
+//!
+//! - **`sso-lv10`**: Level 10 optimization for moderate performance gains
+//!   - MqttString/MqttBinary: 24 bytes total buffer
+//!   - ArcPayload: 127 bytes data buffer
+//!
+//! - **`sso-lv20`**: Level 20 optimization for maximum performance
+//!   - MqttString/MqttBinary: 48 bytes total buffer
+//!   - ArcPayload: 255 bytes data buffer
+//!
+//! ```toml
+//! # Use specific SSO optimization level
+//! [dependencies]
+//! mqtt-protocol-core = { version = "0.5.0", features = ["sso-lv10"] }
+//!
+//! # Combine with other features
+//! [dependencies]
+//! mqtt-protocol-core = { version = "0.5.0", features = ["std", "sso-lv20", "tracing"] }
+//! ```
+//!
+//! #### ⚠️ **Critical: SSO Feature Flag Propagation**
+//!
+//! **When your crate depends on mqtt-protocol-core and is consumed by other crates,
+//! you should re-export all SSO feature flags to ensure proper feature selection.**
+//!
+//! **Multiple SSO Features:** When multiple SSO features are enabled simultaneously,
+//! the system automatically selects the **largest buffer size** from the enabled features.
+//! This allows safe usage with `--all-features` and prevents compilation errors.
+//!
+//! **Feature Selection Priority:**
+//! 1. `sso-lv20` (highest): 48-byte String/Binary, 255-byte ArcPayload
+//! 2. `sso-lv10` or `sso-min-64bit`: 24-byte String/Binary, 127-byte ArcPayload
+//! 3. `sso-min-32bit` (lowest): 12-byte String/Binary, 15-byte ArcPayload
+//!
+//! **Required pattern for library authors:**
+//!
+//! ```toml
+//! # Your crate's Cargo.toml
+//! [dependencies]
+//! mqtt-protocol-core = { version = "0.5.0", features = ["sso-lv10"] }
+//!
+//! [features]
+//! # MANDATORY: Re-export ALL SSO features to allow downstream configuration
+//! sso-min-32bit = ["mqtt-protocol-core/sso-min-32bit"]
+//! sso-min-64bit = ["mqtt-protocol-core/sso-min-64bit"]
+//! sso-lv10 = ["mqtt-protocol-core/sso-lv10"]
+//! sso-lv20 = ["mqtt-protocol-core/sso-lv20"]
+//! ```
+//!
+//! This pattern ensures that when multiple dependency crates enable different SSO levels,
+//! the final application receives the maximum optimization level from all dependencies.
 //!
 //! **Key points for no-std usage:**
 //! - Use `extern crate alloc;` to enable heap allocations

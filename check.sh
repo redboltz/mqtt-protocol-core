@@ -1,7 +1,10 @@
 #!/bin/sh
 
 cargo fmt --all -- --check && \
+cargo clippy --all-targets --features std,tracing -- -D warnings -A clippy::new_without_default -A clippy::collapsible_if -A clippy::empty_line_after_doc_comments -A clippy::doc_overindented_list_items -A clippy::unnecessary_to_owned -A clippy::needless_borrow -A clippy::vec_init_then_push -A clippy::unnecessary_map_or -A clippy::unwrap_or_default -A clippy::len_zero -A clippy::unusual_byte_groupings -A unused_imports -A dead_code -A clippy::assertions_on_constants -A clippy::needless_borrows_for_generic_args -A clippy::bool_assert_comparison && \
+cargo clippy --all-targets --features std,tracing,sso-min-64bit -- -D warnings -A clippy::new_without_default -A clippy::collapsible_if -A clippy::empty_line_after_doc_comments -A clippy::doc_overindented_list_items -A clippy::unnecessary_to_owned -A clippy::needless_borrow -A clippy::vec_init_then_push -A clippy::unnecessary_map_or -A clippy::unwrap_or_default -A clippy::len_zero -A clippy::unusual_byte_groupings -A unused_imports -A dead_code -A clippy::assertions_on_constants -A clippy::needless_borrows_for_generic_args -A clippy::bool_assert_comparison && \
 cargo clippy --all-targets --all-features -- -D warnings -A clippy::new_without_default -A clippy::collapsible_if -A clippy::empty_line_after_doc_comments -A clippy::doc_overindented_list_items -A clippy::unnecessary_to_owned -A clippy::needless_borrow -A clippy::vec_init_then_push -A clippy::unnecessary_map_or -A clippy::unwrap_or_default -A clippy::len_zero -A clippy::unusual_byte_groupings -A unused_imports -A dead_code -A clippy::assertions_on_constants -A clippy::needless_borrows_for_generic_args -A clippy::bool_assert_comparison && \
-cargo build --verbose --features tracing && \
-cargo test --verbose --features tracing -- --nocapture
+cargo build --verbose --features std,tracing && \
+cargo test --verbose --features std,tracing -- --nocapture && \
+cargo test --verbose --features std,tracing,sso-lv10 -- --nocapture && \
 cargo test --verbose --no-default-features --features tracing -- --nocapture
