@@ -2725,7 +2725,7 @@ where
         match &raw_packet.data {
             PacketData::Publish(arc) => {
                 match v5_0::GenericPublish::parse(flags, arc.clone()) {
-                    Ok((packet, _consumed)) => {
+                    Ok((mut packet, _consumed)) => {
                         let mut already_handled = false;
                         let mut puback_send = false;
                         let mut pubrec_send = false;
@@ -2810,7 +2810,29 @@ where
                                 }
 
                                 if let Some(ref topic_alias_recv) = self.topic_alias_recv {
-                                    if topic_alias_recv.get(ta).is_none() {
+                                    if let Some(topic_name) = topic_alias_recv.get(ta) {
+                                        match packet.add_extracted_topic_name(topic_name) {
+                                            Ok(extracted) => {
+                                                packet = extracted;
+                                            }
+                                            Err(_e) => {
+                                                error!("topic alias extract failed: {_e}");
+                                                let disconnect = v5_0::Disconnect::builder()
+                                                    .reason_code(
+                                                        DisconnectReasonCode::TopicAliasInvalid,
+                                                    )
+                                                    .build()
+                                                    .unwrap();
+                                                events.extend(
+                                                    self.process_send_v5_0_disconnect(disconnect),
+                                                );
+                                                events.push(GenericEvent::NotifyError(
+                                                    MqttError::TopicAliasInvalid,
+                                                ));
+                                                return events;
+                                            }
+                                        }
+                                    } else {
                                         let disconnect = v5_0::Disconnect::builder()
                                             .reason_code(DisconnectReasonCode::TopicAliasInvalid)
                                             .build()
@@ -2822,8 +2844,6 @@ where
                                         ));
                                         return events;
                                     }
-                                    // Note: In a complete implementation, we would modify the packet
-                                    // to add the resolved topic. For now, we'll proceed.
                                 }
                             } else {
                                 let disconnect = v5_0::Disconnect::builder()

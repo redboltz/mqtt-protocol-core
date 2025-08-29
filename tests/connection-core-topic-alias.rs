@@ -768,6 +768,77 @@ fn manual_topic_alias_register_oor_recv() {
 }
 
 #[test]
+fn manual_topic_alias_extract_recv() {
+    common::init_tracing();
+    let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
+
+    {
+        // Send CONNECT
+        let connect = mqtt::packet::v5_0::Connect::builder()
+            .client_id("test_client")
+            .unwrap()
+            .props(vec![mqtt::packet::TopicAliasMaximum::new(3)
+                .unwrap()
+                .into()])
+            .build()
+            .unwrap();
+
+        let _events = connection.send(connect.into());
+
+        // Receive CONNACK with TopicAliasMaximum set to 65535
+        let connack = mqtt::packet::v5_0::Connack::builder()
+            .session_present(false)
+            .reason_code(mqtt::result_code::ConnectReasonCode::Success)
+            .build()
+            .unwrap();
+
+        let bytes = connack.to_continuous_buffer();
+        let _events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
+    }
+
+    {
+        // Recv QoS0 PUBLISH A with topic alias register
+        let publish_a = mqtt::packet::v5_0::Publish::builder()
+            .qos(mqtt::packet::Qos::AtLeastOnce)
+            .packet_id(1)
+            .topic_name("topic/a")
+            .unwrap()
+            .payload(b"payload A".to_vec())
+            .props(vec![mqtt::packet::TopicAlias::new(1).unwrap().into()])
+            .build()
+            .unwrap();
+
+        let bytes = publish_a.to_continuous_buffer();
+        let _events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
+    }
+    {
+        // Recv QoS0 PUBLISH B with using topic alias
+        let publish_b = mqtt::packet::v5_0::Publish::builder()
+            .qos(mqtt::packet::Qos::AtLeastOnce)
+            .packet_id(1)
+            .payload(b"payload B".to_vec())
+            .props(vec![mqtt::packet::TopicAlias::new(1).unwrap().into()])
+            .build()
+            .unwrap();
+
+        let bytes = publish_b.to_continuous_buffer();
+        let events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
+
+        assert_eq!(events.len(), 1);
+        let expected = publish_b.add_extracted_topic_name("topic/a").unwrap();
+        if let mqtt::connection::Event::NotifyPacketReceived(packet) = &events[0] {
+            if let mqtt::packet::GenericPacket::V5_0Publish(publish) = packet {
+                assert_eq!(*publish, expected);
+            } else {
+                panic!("Expected V5_0Publish packet, got: {:?}", packet);
+            }
+        } else {
+            panic!("Expected NotifyPacketReceived event, got: {:?}", events[0]);
+        }
+    }
+}
+
+#[test]
 fn manual_topic_alias_use_oor_recv() {
     common::init_tracing();
     let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
