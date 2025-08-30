@@ -768,6 +768,98 @@ fn manual_topic_alias_register_oor_recv() {
 }
 
 #[test]
+fn manual_topic_alias_register_oor_recv_server() {
+    common::init_tracing();
+    let mut connection = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
+
+    {
+        // Send CONNECT
+        let connect = mqtt::packet::v5_0::Connect::builder()
+            .client_id("test_client")
+            .unwrap()
+            .build()
+            .unwrap();
+
+        let bytes = connect.to_continuous_buffer();
+        let _events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
+
+        // Receive CONNACK with TopicAliasMaximum set to 65535
+        let connack = mqtt::packet::v5_0::Connack::builder()
+            .session_present(false)
+            .reason_code(mqtt::result_code::ConnectReasonCode::Success)
+            .props(vec![mqtt::packet::TopicAliasMaximum::new(3)
+                .unwrap()
+                .into()])
+            .build()
+            .unwrap();
+
+        let _events = connection.send(connack.into());
+    }
+
+    {
+        // Recv QoS0 PUBLISH A with unregistered topic alias
+        let publish_a = mqtt::packet::v5_0::Publish::builder()
+            .qos(mqtt::packet::Qos::AtLeastOnce)
+            .packet_id(1)
+            .topic_name("topic/a")
+            .unwrap()
+            .payload(b"payload A".to_vec())
+            .props(vec![mqtt::packet::TopicAlias::new(4).unwrap().into()])
+            .build()
+            .unwrap();
+
+        let bytes = publish_a.to_continuous_buffer();
+        let events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
+
+        assert_eq!(events.len(), 3);
+
+        // First event: RequestSendPacket with Disconnect packet
+        if let mqtt::connection::Event::RequestSendPacket {
+            packet: event_packet,
+            release_packet_id_if_send_error,
+        } = &events[0]
+        {
+            let expected_disconnect: mqtt::packet::Packet =
+                mqtt::packet::v5_0::Disconnect::builder()
+                    .reason_code(mqtt::result_code::DisconnectReasonCode::TopicAliasInvalid)
+                    .build()
+                    .unwrap()
+                    .into();
+            assert_eq!(*event_packet, expected_disconnect);
+            assert!(release_packet_id_if_send_error.is_none());
+        } else {
+            assert!(
+                false,
+                "Expected RequestSendPacket event, but got: {:?}",
+                events[0]
+            );
+        }
+
+        // Second event: RequestClose
+        if let mqtt::connection::Event::RequestClose = &events[1] {
+            // Expected RequestClose event
+        } else {
+            assert!(
+                false,
+                "Expected RequestClose event, but got: {:?}",
+                events[1]
+            );
+        }
+
+        // Third event: NotifyError with TopicAliasInvalid
+        if let mqtt::connection::Event::NotifyError(error) = &events[2] {
+            assert_eq!(*error, mqtt::result_code::MqttError::TopicAliasInvalid);
+        } else {
+            assert!(
+                false,
+                "Expected NotifyError(TopicAliasInvalid) event, but got: {:?}",
+                events[2]
+            );
+        }
+    }
+}
+
+#[test]
 fn manual_topic_alias_extract_recv() {
     common::init_tracing();
     let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);

@@ -1364,6 +1364,7 @@ where
             self.status = ConnectionStatus::Connected;
         } else {
             self.status = ConnectionStatus::Disconnected;
+            self.cancel_timers(&mut events);
         }
 
         events.push(GenericEvent::RequestSendPacket {
@@ -2738,24 +2739,30 @@ where
                         let mut puback_send = false;
                         let mut pubrec_send = false;
 
+                        let mut check_receive_maximum = |events: &mut Vec<
+                            GenericEvent<PacketIdType>,
+                        >| {
+                            if let Some(max) = self.publish_recv_max {
+                                if self.publish_recv.len() >= max as usize {
+                                    let disconnect = v5_0::Disconnect::builder()
+                                        .reason_code(DisconnectReasonCode::ReceiveMaximumExceeded)
+                                        .build()
+                                        .unwrap();
+                                    events.extend(self.process_send_v5_0_disconnect(disconnect));
+                                    events.push(GenericEvent::NotifyError(
+                                        MqttError::ReceiveMaximumExceeded,
+                                    ));
+                                    return false;
+                                }
+                            }
+                            true
+                        };
+
                         match packet.qos() {
                             Qos::AtLeastOnce => {
                                 let packet_id = packet.packet_id().unwrap();
-                                if let Some(max) = self.publish_recv_max {
-                                    if self.publish_recv.len() >= max as usize {
-                                        let disconnect = v5_0::Disconnect::builder()
-                                            .reason_code(
-                                                DisconnectReasonCode::ReceiveMaximumExceeded,
-                                            )
-                                            .build()
-                                            .unwrap();
-                                        events
-                                            .extend(self.process_send_v5_0_disconnect(disconnect));
-                                        events.push(GenericEvent::NotifyError(
-                                            MqttError::ReceiveMaximumExceeded,
-                                        ));
-                                        return events;
-                                    }
+                                if !check_receive_maximum(&mut events) {
+                                    return events;
                                 }
                                 self.publish_recv.insert(packet_id);
                                 if self.auto_pub_response
@@ -2766,21 +2773,8 @@ where
                             }
                             Qos::ExactlyOnce => {
                                 let packet_id = packet.packet_id().unwrap();
-                                if let Some(max) = self.publish_recv_max {
-                                    if self.publish_recv.len() >= max as usize {
-                                        let disconnect = v5_0::Disconnect::builder()
-                                            .reason_code(
-                                                DisconnectReasonCode::ReceiveMaximumExceeded,
-                                            )
-                                            .build()
-                                            .unwrap();
-                                        events
-                                            .extend(self.process_send_v5_0_disconnect(disconnect));
-                                        events.push(GenericEvent::NotifyError(
-                                            MqttError::ReceiveMaximumExceeded,
-                                        ));
-                                        return events;
-                                    }
+                                if !check_receive_maximum(&mut events) {
+                                    return events;
                                 }
                                 self.publish_recv.insert(packet_id);
 
