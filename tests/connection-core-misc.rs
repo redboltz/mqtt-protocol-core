@@ -140,7 +140,7 @@ fn get_receive_maximum_vacancy_for_send() {
 }
 
 #[test]
-fn receive_maximum_exceeded() {
+fn receive_maximum_exceeded_send() {
     common::init_tracing();
     let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
 
@@ -207,6 +207,97 @@ fn receive_maximum_exceeded() {
         panic!(
             "Second event should be NotifyPacketIdReleased but got: {:?}",
             events[1]
+        );
+    }
+}
+
+#[test]
+fn receive_maximum_exceeded_recv() {
+    common::init_tracing();
+    let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
+
+    let packet = mqtt::packet::v5_0::Connect::builder()
+        .client_id("cid1")
+        .unwrap()
+        .props(vec![mqtt::packet::ReceiveMaximum::new(1).unwrap().into()])
+        .build()
+        .expect("Failed to build Connect packet");
+    let _events = con.checked_send(packet.clone());
+
+    let packet = mqtt::packet::v5_0::Connack::builder()
+        .session_present(false)
+        .reason_code(mqtt::result_code::ConnectReasonCode::Success)
+        .build()
+        .unwrap();
+
+    let bytes = packet.to_continuous_buffer();
+    let _events = con.recv(&mut mqtt::common::Cursor::new(&bytes));
+
+    let packet_id_a = con.acquire_packet_id().unwrap();
+    let publish_a = mqtt::packet::v5_0::Publish::builder()
+        .topic_name("topic/a")
+        .unwrap()
+        .qos(mqtt::packet::Qos::AtLeastOnce)
+        .packet_id(packet_id_a)
+        .payload(b"payload A".to_vec())
+        .build()
+        .unwrap();
+
+    let bytes = publish_a.to_continuous_buffer();
+    let _events = con.recv(&mut mqtt::common::Cursor::new(&bytes));
+
+    let packet_id_b = con.acquire_packet_id().unwrap();
+    let publish_b = mqtt::packet::v5_0::Publish::builder()
+        .topic_name("topic/b")
+        .unwrap()
+        .qos(mqtt::packet::Qos::AtLeastOnce)
+        .packet_id(packet_id_b)
+        .payload(b"payload B".to_vec())
+        .build()
+        .unwrap();
+
+    let bytes = publish_b.to_continuous_buffer();
+    let events = con.recv(&mut mqtt::common::Cursor::new(&bytes));
+
+    assert_eq!(events.len(), 3, "Should have exactly 3 events");
+
+    // Test first event: RequestSendPacket with Disconnect packet
+    if let mqtt::connection::GenericEvent::RequestSendPacket {
+        packet,
+        release_packet_id_if_send_error,
+    } = &events[0]
+    {
+        if let mqtt::packet::Packet::V5_0Disconnect(disconnect) = packet {
+            assert_eq!(
+                disconnect.reason_code(),
+                Some(mqtt::result_code::DisconnectReasonCode::ReceiveMaximumExceeded)
+            );
+        } else {
+            panic!("Expected V5_0Disconnect packet, but got: {:?}", packet);
+        }
+        assert!(release_packet_id_if_send_error.is_none());
+    } else {
+        panic!("Expected RequestSendPacket event, but got: {:?}", events[0]);
+    }
+
+    // Test second event: RequestClose
+    if let mqtt::connection::GenericEvent::RequestClose = &events[1] {
+        // Expected RequestClose event
+    } else {
+        panic!("Expected RequestClose event, but got: {:?}", events[1]);
+    }
+
+    // Test third event: NotifyError(MqttError::ReceiveMaximumExceeded)
+    if let mqtt::connection::GenericEvent::NotifyError(error) = &events[2] {
+        assert_eq!(
+            *error,
+            mqtt::result_code::MqttError::ReceiveMaximumExceeded,
+            "Third event should be NotifyError(ReceiveMaximumExceeded)"
+        );
+    } else {
+        panic!(
+            "Expected NotifyError(ReceiveMaximumExceeded) event, but got: {:?}",
+            events[2]
         );
     }
 }
@@ -1077,6 +1168,14 @@ fn restore_packets_v3_1_1() {
         .build()
         .unwrap();
 
+    let publish_c = mqtt::packet::v3_1_1::Publish::builder()
+        .topic_name("topic/c")
+        .unwrap()
+        .qos(mqtt::packet::Qos::AtMostOnce)
+        .payload(b"payload B".to_vec())
+        .build()
+        .unwrap();
+
     let pubrel = mqtt::packet::v3_1_1::Pubrel::builder()
         .packet_id(3)
         .build()
@@ -1086,7 +1185,10 @@ fn restore_packets_v3_1_1() {
     let packets = vec![
         mqtt::packet::GenericStorePacket::V3_1_1Publish(publish_a.clone()),
         mqtt::packet::GenericStorePacket::V3_1_1Publish(publish_b.clone()),
+        mqtt::packet::GenericStorePacket::V3_1_1Publish(publish_b.clone()), // skipped
+        mqtt::packet::GenericStorePacket::V3_1_1Publish(publish_c.clone()), // ignored
         mqtt::packet::GenericStorePacket::V3_1_1Pubrel(pubrel.clone()),
+        mqtt::packet::GenericStorePacket::V3_1_1Pubrel(pubrel.clone()), // skipped
     ];
     connection.restore_packets(packets);
 
@@ -1118,6 +1220,7 @@ fn restore_packets_v3_1_1() {
     let mut publish_b_index = None;
     let mut pubrel_index = None;
 
+    assert_eq!(events.len(), 4); // 3 send + 1 recv(connack)
     for (index, event) in events.iter().enumerate() {
         match event {
             mqtt::connection::Event::RequestSendPacket {
@@ -1220,6 +1323,14 @@ fn restore_packets_v5_0_server() {
         .build()
         .unwrap();
 
+    let publish_c = mqtt::packet::v5_0::Publish::builder()
+        .topic_name("topic/c")
+        .unwrap()
+        .qos(mqtt::packet::Qos::AtMostOnce)
+        .payload(b"payload C".to_vec())
+        .build()
+        .unwrap();
+
     let pubrel = mqtt::packet::v5_0::Pubrel::builder()
         .packet_id(3)
         .build()
@@ -1229,7 +1340,10 @@ fn restore_packets_v5_0_server() {
     let packets = vec![
         mqtt::packet::GenericStorePacket::V5_0Publish(publish_a.clone()),
         mqtt::packet::GenericStorePacket::V5_0Publish(publish_b.clone()),
+        mqtt::packet::GenericStorePacket::V5_0Publish(publish_b.clone()), // skipped
+        mqtt::packet::GenericStorePacket::V5_0Publish(publish_c.clone()), // ignored
         mqtt::packet::GenericStorePacket::V5_0Pubrel(pubrel.clone()),
+        mqtt::packet::GenericStorePacket::V5_0Pubrel(pubrel.clone()), // skipped
     ];
     connection.restore_packets(packets);
 
@@ -1261,6 +1375,7 @@ fn restore_packets_v5_0_server() {
     let mut publish_b_index = None;
     let mut pubrel_index = None;
 
+    assert_eq!(events.len(), 4); // 1 (connack send) + 3 (publish QoS1, QoS2, pubrel)
     for (index, event) in events.iter().enumerate() {
         match event {
             mqtt::connection::Event::RequestSendPacket {
