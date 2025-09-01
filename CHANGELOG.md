@@ -1,5 +1,8 @@
 # 0.5.1 undetermined
 
+* Add RequestClose on CONNACK with error sending.  #27
+* Fix invalid ConnectReasonCode. #27
+* Refine tests. #26, #27
 * Fix panic on connack generation. #25
   * When errornous CONNECT packet is received, a CONNACK packet with rc is automatically generated but it caused panic due to lack of session_present field.
 

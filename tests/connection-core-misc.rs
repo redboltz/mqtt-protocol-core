@@ -415,18 +415,9 @@ fn connack_error_server() {
         .unwrap();
     let events = con.checked_send(packet.clone());
 
-    assert_eq!(events.len(), 2);
+    assert_eq!(events.len(), 3);
 
-    // First event: RequestTimerCancel(TimerKind::PingreqRecv)
     match &events[0] {
-        mqtt::connection::Event::RequestTimerCancel(timer_kind) => {
-            assert_eq!(*timer_kind, mqtt::connection::TimerKind::PingreqRecv);
-        }
-        _ => panic!("Expected RequestTimerCancel event, got {:?}", events[0]),
-    }
-
-    // Second event: RequestSendPacket
-    match &events[1] {
         mqtt::connection::Event::RequestSendPacket {
             packet: sent_packet,
             release_packet_id_if_send_error,
@@ -435,6 +426,18 @@ fn connack_error_server() {
             assert_eq!(*release_packet_id_if_send_error, None);
         }
         _ => panic!("Expected RequestSendPacket event, got {:?}", events[1]),
+    }
+    match &events[1] {
+        mqtt::connection::Event::RequestTimerCancel(timer_kind) => {
+            assert_eq!(*timer_kind, mqtt::connection::TimerKind::PingreqRecv);
+        }
+        _ => panic!("Expected RequestTimerCancel event, got {:?}", events[0]),
+    }
+    match &events[2] {
+        mqtt::connection::Event::RequestClose => {
+            // Expected RequestClose event
+        }
+        _ => panic!("Expected RequestClose event, got {:?}", events[0]),
     }
 }
 
