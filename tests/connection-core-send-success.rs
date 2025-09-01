@@ -341,3 +341,48 @@ fn v5_0_client_send_auth() {
         );
     }
 }
+
+#[test]
+fn v5_0_client_send_connect_keep_alive() {
+    common::init_tracing();
+    let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
+    let packet = mqtt::packet::v5_0::Connect::builder()
+        .client_id("cid1")
+        .unwrap()
+        .keep_alive(10)
+        .build()
+        .expect("Failed to build Connect packet");
+    let events = con.checked_send(packet.clone());
+    assert_eq!(events.len(), 2);
+
+    // Test first event: RequestSendPacket
+    if let mqtt::connection::GenericEvent::RequestSendPacket {
+        packet: event_packet,
+        release_packet_id_if_send_error,
+    } = &events[0]
+    {
+        assert_eq!(*event_packet, packet.into());
+        assert!(release_packet_id_if_send_error.is_none());
+    } else {
+        assert!(
+            false,
+            "Expected RequestSendPacket event, but got: {:?}",
+            events[0]
+        );
+    }
+
+    // Test second event: RequestTimerReset for PingreqSend
+    if let mqtt::connection::GenericEvent::RequestTimerReset {
+        kind: mqtt::connection::TimerKind::PingreqSend,
+        duration_ms: timeout_ms,
+    } = &events[1]
+    {
+        assert_eq!(*timeout_ms, 10000); // 10 seconds * 1000ms
+    } else {
+        assert!(
+            false,
+            "Expected RequestTimerReset event with PingreqSend, but got: {:?}",
+            events[1]
+        );
+    }
+}
