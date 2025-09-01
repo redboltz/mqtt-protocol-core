@@ -20,7 +20,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 use mqtt_protocol_core::mqtt;
+
 mod common;
+use common::*;
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -132,9 +134,8 @@ fn recv_error_malformed_packet_v3_1_1_connect_cid_not_valid() {
     let events = con.recv(&mut cursor);
 
     // Should return error events
-    assert_eq!(events.len(), 2);
+    assert_eq!(events.len(), 3);
 
-    // First event should be RequestSendPacket with CONNACK containing IdentifierRejected
     match &events[0] {
         mqtt::connection::Event::RequestSendPacket { packet, .. } => {
             if let mqtt::packet::Packet::V3_1_1Connack(connack) = packet {
@@ -148,14 +149,362 @@ fn recv_error_malformed_packet_v3_1_1_connect_cid_not_valid() {
         }
         _ => panic!("Expected RequestSendPacket event, got {:?}", events[0]),
     }
-
-    // Second event should be NotifyError with ClientIdentifierNotValid
     match &events[1] {
+        mqtt::connection::Event::RequestClose => {
+            // Expected RequestClose event
+        }
+        _ => panic!("Expected RequestClose event, got {:?}", events[0]),
+    }
+    match &events[2] {
         mqtt::connection::Event::NotifyError(error) => {
             assert_eq!(
                 *error,
                 mqtt::result_code::MqttError::ClientIdentifierNotValid
             );
+        }
+        _ => panic!("Expected NotifyError event, got {:?}", events[1]),
+    }
+}
+
+#[test]
+fn recv_error_malformed_packet_v3_1_1_connect_username_not_valid() {
+    common::init_tracing();
+    let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V3_1_1);
+
+    // Create malformed CONNECT packet with UserName length specified but insufficient data
+    // MQTT v3.1.1 CONNECT packet structure:
+    // Fixed Header: 0x10 (CONNECT packet type), remaining length
+    // Variable Header: Protocol Name (6 bytes: 0x00,0x04,"MQTT"), Protocol Version (0x04), Connect Flags (0x02), Keep Alive (2 bytes)
+    // Payload: Client Identifier length (2 bytes) + Client Identifier data (but we provide insufficient data)
+    let data = [
+        0x10, // CONNECT packet type
+        0x0f, // Remaining length: 15 bytes
+        0x00, 0x04, // Protocol name length
+        b'M', b'Q', b'T', b'T', // Protocol name "MQTT"
+        0x04, // Protocol version (v3.1.1)
+        0x80, // Connect flags (username)
+        0x00, 0x3C, // Keep alive (60 seconds)
+        0x00, 0x01, // Client ID length
+        b'C', // Client ID
+        0x00, 0x02, // UserName Length
+    ];
+    let mut cursor = mqtt::common::Cursor::new(data.as_slice());
+
+    let events = con.recv(&mut cursor);
+
+    // Should return error events
+    assert_eq!(events.len(), 3);
+
+    match &events[0] {
+        mqtt::connection::Event::RequestSendPacket { packet, .. } => {
+            if let mqtt::packet::Packet::V3_1_1Connack(connack) = packet {
+                assert_eq!(
+                    connack.return_code(),
+                    mqtt::result_code::ConnectReturnCode::BadUserNameOrPassword
+                );
+            } else {
+                panic!("Expected CONNACK packet, got {:?}", packet);
+            }
+        }
+        _ => panic!("Expected RequestSendPacket event, got {:?}", events[0]),
+    }
+    match &events[1] {
+        mqtt::connection::Event::RequestClose => {
+            // Expected RequestClose event
+        }
+        _ => panic!("Expected RequestClose event, got {:?}", events[0]),
+    }
+    match &events[2] {
+        mqtt::connection::Event::NotifyError(error) => {
+            assert_eq!(*error, mqtt::result_code::MqttError::BadUserNameOrPassword);
+        }
+        _ => panic!("Expected NotifyError event, got {:?}", events[1]),
+    }
+}
+
+#[test]
+fn recv_error_malformed_packet_v3_1_1_connect_version_not_valid() {
+    common::init_tracing();
+    let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V3_1_1);
+    let packet = mqtt::packet::v5_0::Connect::builder()
+        .client_id("cid1")
+        .unwrap()
+        .build()
+        .expect("Failed to build Connect packet");
+    let bytes = packet.to_continuous_buffer();
+    let mut cursor = mqtt::common::Cursor::new(bytes.as_slice());
+    let events = con.recv(&mut cursor);
+
+    // Should return error events
+    assert_eq!(events.len(), 3);
+
+    match &events[0] {
+        mqtt::connection::Event::RequestSendPacket { packet, .. } => {
+            if let mqtt::packet::Packet::V3_1_1Connack(connack) = packet {
+                assert_eq!(
+                    connack.return_code(),
+                    mqtt::result_code::ConnectReturnCode::UnacceptableProtocolVersion
+                );
+            } else {
+                panic!("Expected CONNACK packet, got {:?}", packet);
+            }
+        }
+        _ => panic!("Expected RequestSendPacket event, got {:?}", events[0]),
+    }
+    match &events[1] {
+        mqtt::connection::Event::RequestClose => {
+            // Expected RequestClose event
+        }
+        _ => panic!("Expected RequestClose event, got {:?}", events[0]),
+    }
+    match &events[2] {
+        mqtt::connection::Event::NotifyError(error) => {
+            assert_eq!(
+                *error,
+                mqtt::result_code::MqttError::UnsupportedProtocolVersion
+            );
+        }
+        _ => panic!("Expected NotifyError event, got {:?}", events[1]),
+    }
+}
+
+#[test]
+fn recv_error_malformed_packet_v3_1_1_connect_on_connected() {
+    common::init_tracing();
+    let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V3_1_1);
+    v3_1_1_server_establish_connection(&mut con, true, false);
+
+    let packet = mqtt::packet::v3_1_1::Connect::builder()
+        .client_id("cid1")
+        .unwrap()
+        .build()
+        .expect("Failed to build Connect packet");
+    let bytes = packet.to_continuous_buffer();
+    let mut cursor = mqtt::common::Cursor::new(bytes.as_slice());
+    let events = con.recv(&mut cursor);
+
+    // Should return error events
+    assert_eq!(events.len(), 2);
+
+    match &events[0] {
+        mqtt::connection::Event::RequestClose => {}
+        _ => panic!("Expected RequestClose event, got {:?}", events[0]),
+    }
+    match &events[1] {
+        mqtt::connection::Event::NotifyError(error) => {
+            assert_eq!(*error, mqtt::result_code::MqttError::ProtocolError);
+        }
+        _ => panic!("Expected NotifyError event, got {:?}", events[1]),
+    }
+}
+
+#[test]
+fn recv_error_malformed_packet_v5_0_connect_cid_not_valid() {
+    common::init_tracing();
+    let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
+
+    // Create malformed CONNECT packet with ClientId length specified but insufficient data
+    // MQTT v5.0 CONNECT packet structure:
+    // Fixed Header: 0x10 (CONNECT packet type), remaining length
+    // Variable Header: Protocol Name (6 bytes: 0x00,0x04,"MQTT"), Protocol Version (0x04), Connect Flags (0x02), Keep Alive (2 bytes)
+    // Payload: Client Identifier length (2 bytes) + Client Identifier data (but we provide insufficient data)
+    let data = [
+        0x10, // CONNECT packet type
+        0x0D, // Remaining length: 13 bytes
+        0x00, 0x04, // Protocol name length
+        b'M', b'Q', b'T', b'T', // Protocol name "MQTT"
+        0x05, // Protocol version (v5.0)
+        0x02, // Connect flags (clean session)
+        0x00, 0x3C, // Keep alive (60 seconds)
+        0x00, // Property Length
+        0x00,
+        0x05, // Client ID length: 5 bytes (but we don't provide the 5 bytes of data)
+              // Missing Client ID data - this makes the packet malformed
+    ];
+    let mut cursor = mqtt::common::Cursor::new(data.as_slice());
+
+    let events = con.recv(&mut cursor);
+
+    // Should return error events
+    assert_eq!(events.len(), 3);
+
+    match &events[0] {
+        mqtt::connection::Event::RequestSendPacket { packet, .. } => {
+            if let mqtt::packet::Packet::V5_0Connack(connack) = packet {
+                assert_eq!(
+                    connack.reason_code(),
+                    mqtt::result_code::ConnectReasonCode::ClientIdentifierNotValid
+                );
+            } else {
+                panic!("Expected CONNACK packet, got {:?}", packet);
+            }
+        }
+        _ => panic!("Expected RequestSendPacket event, got {:?}", events[0]),
+    }
+    match &events[1] {
+        mqtt::connection::Event::RequestClose => {
+            // Expected RequestClose event
+        }
+        _ => panic!("Expected RequestClose event, got {:?}", events[0]),
+    }
+    match &events[2] {
+        mqtt::connection::Event::NotifyError(error) => {
+            assert_eq!(
+                *error,
+                mqtt::result_code::MqttError::ClientIdentifierNotValid
+            );
+        }
+        _ => panic!("Expected NotifyError event, got {:?}", events[1]),
+    }
+}
+
+#[test]
+fn recv_error_malformed_packet_v5_0_connect_username_not_valid() {
+    common::init_tracing();
+    let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
+
+    // Create malformed CONNECT packet with UserName length specified but insufficient data
+    // MQTT v5.0 CONNECT packet structure:
+    // Fixed Header: 0x10 (CONNECT packet type), remaining length
+    // Variable Header: Protocol Name (6 bytes: 0x00,0x04,"MQTT"), Protocol Version (0x04), Connect Flags (0x02), Keep Alive (2 bytes)
+    // Payload: Client Identifier length (2 bytes) + Client Identifier data (but we provide insufficient data)
+    let data = [
+        0x10, // CONNECT packet type
+        0x10, // Remaining length: 16 bytes
+        0x00, 0x04, // Protocol name length
+        b'M', b'Q', b'T', b'T', // Protocol name "MQTT"
+        0x05, // Protocol version (v5.0)
+        0x80, // Connect flags (username)
+        0x00, 0x3C, // Keep alive (60 seconds)
+        0x00, // PropertyLength
+        0x00, 0x01, // Client ID length
+        b'C', // Client ID
+        0x00, 0x02, // UserName Length
+    ];
+    let mut cursor = mqtt::common::Cursor::new(data.as_slice());
+
+    let events = con.recv(&mut cursor);
+
+    // Should return error events
+    assert_eq!(events.len(), 3);
+
+    match &events[0] {
+        mqtt::connection::Event::RequestSendPacket { packet, .. } => {
+            if let mqtt::packet::Packet::V5_0Connack(connack) = packet {
+                assert_eq!(
+                    connack.reason_code(),
+                    mqtt::result_code::ConnectReasonCode::BadUserNameOrPassword
+                );
+            } else {
+                panic!("Expected CONNACK packet, got {:?}", packet);
+            }
+        }
+        _ => panic!("Expected RequestSendPacket event, got {:?}", events[0]),
+    }
+    match &events[1] {
+        mqtt::connection::Event::RequestClose => {
+            // Expected RequestClose event
+        }
+        _ => panic!("Expected RequestClose event, got {:?}", events[0]),
+    }
+    match &events[2] {
+        mqtt::connection::Event::NotifyError(error) => {
+            assert_eq!(*error, mqtt::result_code::MqttError::BadUserNameOrPassword);
+        }
+        _ => panic!("Expected NotifyError event, got {:?}", events[1]),
+    }
+}
+
+#[test]
+fn recv_error_malformed_packet_v5_0_connect_version_not_valid() {
+    common::init_tracing();
+    let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
+    let packet = mqtt::packet::v3_1_1::Connect::builder()
+        .client_id("cid1")
+        .unwrap()
+        .build()
+        .expect("Failed to build Connect packet");
+    let bytes = packet.to_continuous_buffer();
+    let mut cursor = mqtt::common::Cursor::new(bytes.as_slice());
+    let events = con.recv(&mut cursor);
+
+    // Should return error events
+    assert_eq!(events.len(), 3);
+
+    match &events[0] {
+        mqtt::connection::Event::RequestSendPacket { packet, .. } => {
+            if let mqtt::packet::Packet::V5_0Connack(connack) = packet {
+                assert_eq!(
+                    connack.reason_code(),
+                    mqtt::result_code::ConnectReasonCode::UnsupportedProtocolVersion
+                );
+            } else {
+                panic!("Expected CONNACK packet, got {:?}", packet);
+            }
+        }
+        _ => panic!("Expected RequestSendPacket event, got {:?}", events[0]),
+    }
+    match &events[1] {
+        mqtt::connection::Event::RequestClose => {
+            // Expected RequestClose event
+        }
+        _ => panic!("Expected RequestClose event, got {:?}", events[0]),
+    }
+    match &events[2] {
+        mqtt::connection::Event::NotifyError(error) => {
+            assert_eq!(
+                *error,
+                mqtt::result_code::MqttError::UnsupportedProtocolVersion
+            );
+        }
+        _ => panic!("Expected NotifyError event, got {:?}", events[1]),
+    }
+}
+
+#[test]
+fn recv_error_malformed_packet_v5_0_connect_on_connected() {
+    common::init_tracing();
+    let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
+    v5_0_server_establish_connection(&mut con);
+
+    let packet = mqtt::packet::v5_0::Connect::builder()
+        .client_id("cid1")
+        .unwrap()
+        .build()
+        .expect("Failed to build Connect packet");
+    let bytes = packet.to_continuous_buffer();
+    let mut cursor = mqtt::common::Cursor::new(bytes.as_slice());
+    let events = con.recv(&mut cursor);
+
+    // Should return error events
+    assert_eq!(events.len(), 3);
+
+    // First event: RequestSendPacket with V5.0 Disconnect packet
+    match &events[0] {
+        mqtt::connection::Event::RequestSendPacket {
+            packet,
+            release_packet_id_if_send_error,
+        } => {
+            if let mqtt::packet::Packet::V5_0Disconnect(disconnect) = packet {
+                assert_eq!(
+                    disconnect.reason_code(),
+                    Some(mqtt::result_code::DisconnectReasonCode::ProtocolError)
+                );
+            } else {
+                panic!("Expected V5_0Disconnect packet, got {:?}", packet);
+            }
+            assert_eq!(*release_packet_id_if_send_error, None);
+        }
+        _ => panic!("Expected RequestSendPacket event, got {:?}", events[0]),
+    }
+
+    match &events[1] {
+        mqtt::connection::Event::RequestClose => {}
+        _ => panic!("Expected RequestClose event, got {:?}", events[0]),
+    }
+    match &events[2] {
+        mqtt::connection::Event::NotifyError(error) => {
+            assert_eq!(*error, mqtt::result_code::MqttError::ProtocolError);
         }
         _ => panic!("Expected NotifyError event, got {:?}", events[1]),
     }

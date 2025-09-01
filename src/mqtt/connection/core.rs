@@ -1360,17 +1360,19 @@ where
             return vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)];
         }
         let mut events = Vec::new();
-        if packet.return_code() == ConnectReturnCode::Accepted {
-            self.status = ConnectionStatus::Connected;
-        } else {
-            self.status = ConnectionStatus::Disconnected;
-            self.cancel_timers(&mut events);
-        }
-
+        let rc = packet.return_code();
         events.push(GenericEvent::RequestSendPacket {
             packet: packet.into(),
             release_packet_id_if_send_error: None,
         });
+        if rc != ConnectReturnCode::Accepted {
+            self.status = ConnectionStatus::Disconnected;
+            self.cancel_timers(&mut events);
+            events.push(GenericEvent::RequestClose);
+            return events;
+        }
+
+        self.status = ConnectionStatus::Connected;
         events.extend(self.send_stored());
         self.send_post_process(&mut events);
 
@@ -1390,10 +1392,8 @@ where
         }
 
         let mut events = Vec::new();
-
-        if packet.reason_code() == ConnectReasonCode::Success {
-            self.status = ConnectionStatus::Connected;
-
+        let rc = packet.reason_code();
+        if rc == ConnectReasonCode::Success {
             // Process properties
             for prop in packet.props() {
                 match prop {
@@ -1415,15 +1415,21 @@ where
                     }
                 }
             }
-        } else {
-            self.status = ConnectionStatus::Disconnected;
-            self.cancel_timers(&mut events);
         }
-
         events.push(GenericEvent::RequestSendPacket {
             packet: packet.into(),
             release_packet_id_if_send_error: None,
         });
+
+        if rc != ConnectReasonCode::Success {
+            self.status = ConnectionStatus::Disconnected;
+            self.cancel_timers(&mut events);
+            events.push(GenericEvent::RequestClose);
+            return events;
+        }
+
+        self.status = ConnectionStatus::Connected;
+
         events.extend(self.send_stored());
         self.send_post_process(&mut events);
 
@@ -2437,14 +2443,15 @@ where
         raw_packet: RawPacket,
     ) -> Vec<GenericEvent<PacketIdType>> {
         let mut events = Vec::new();
+        if self.status != ConnectionStatus::Disconnected {
+            events.push(GenericEvent::RequestClose);
+            events.push(GenericEvent::NotifyError(MqttError::ProtocolError));
+            return events;
+        }
+        self.status = ConnectionStatus::Connecting;
         match v3_1_1::Connect::parse(raw_packet.data_as_slice()) {
             Ok((packet, _)) => {
-                if self.status != ConnectionStatus::Disconnected {
-                    events.push(GenericEvent::NotifyError(MqttError::ProtocolError));
-                    return events;
-                }
                 self.initialize(false);
-                self.status = ConnectionStatus::Connecting;
                 if packet.keep_alive() > 0 {
                     self.pingreq_recv_timeout_ms =
                         Some((packet.keep_alive() as u64) * 1000 * 3 / 2);
@@ -2458,30 +2465,21 @@ where
                 events.push(GenericEvent::NotifyPacketReceived(packet.into()));
             }
             Err(e) => {
-                if self.status == ConnectionStatus::Disconnected {
-                    self.status = ConnectionStatus::Connecting;
-                    let rc = match e {
-                        MqttError::ClientIdentifierNotValid => {
-                            ConnectReturnCode::IdentifierRejected
-                        }
-                        MqttError::BadUserNameOrPassword => {
-                            ConnectReturnCode::BadUserNameOrPassword
-                        }
-                        MqttError::UnsupportedProtocolVersion => {
-                            ConnectReturnCode::UnacceptableProtocolVersion
-                        }
-                        _ => ConnectReturnCode::NotAuthorized, // TBD close could be better
-                    };
-                    let connack = v3_1_1::Connack::builder()
-                        .return_code(rc)
-                        .session_present(false)
-                        .build()
-                        .unwrap();
-                    let connack_events = self.process_send_v3_1_1_connack(connack);
-                    events.extend(connack_events);
-                } else {
-                    events.push(GenericEvent::RequestClose);
-                }
+                let rc = match e {
+                    MqttError::ClientIdentifierNotValid => ConnectReturnCode::IdentifierRejected,
+                    MqttError::BadUserNameOrPassword => ConnectReturnCode::BadUserNameOrPassword,
+                    MqttError::UnsupportedProtocolVersion => {
+                        ConnectReturnCode::UnacceptableProtocolVersion
+                    }
+                    _ => ConnectReturnCode::NotAuthorized, // TBD close could be better
+                };
+                let connack = v3_1_1::Connack::builder()
+                    .return_code(rc)
+                    .session_present(false)
+                    .build()
+                    .unwrap();
+                let connack_events = self.process_send_v3_1_1_connack(connack);
+                events.extend(connack_events);
                 events.push(GenericEvent::NotifyError(e));
             }
         }
@@ -2494,14 +2492,20 @@ where
         raw_packet: RawPacket,
     ) -> Vec<GenericEvent<PacketIdType>> {
         let mut events = Vec::new();
+        if self.status != ConnectionStatus::Disconnected {
+            let disconnect = v5_0::Disconnect::builder()
+                .reason_code(DisconnectReasonCode::ProtocolError)
+                .build()
+                .unwrap();
+            let disconnect_events = self.process_send_v5_0_disconnect(disconnect);
+            events.extend(disconnect_events);
+            events.push(GenericEvent::NotifyError(MqttError::ProtocolError));
+            return events;
+        }
+        self.status = ConnectionStatus::Connecting;
         match v5_0::Connect::parse(raw_packet.data_as_slice()) {
             Ok((packet, _)) => {
-                if self.status != ConnectionStatus::Disconnected {
-                    events.push(GenericEvent::NotifyError(MqttError::ProtocolError));
-                    return events;
-                }
                 self.initialize(false);
-                self.status = ConnectionStatus::Connecting;
                 if packet.keep_alive() > 0 {
                     self.pingreq_recv_timeout_ms =
                         Some((packet.keep_alive() as u64) * 1000 * 3 / 2);
@@ -2530,35 +2534,23 @@ where
                 events.push(GenericEvent::NotifyPacketReceived(packet.into()));
             }
             Err(e) => {
-                if self.status == ConnectionStatus::Disconnected {
-                    self.status = ConnectionStatus::Connecting;
-                    let rc = match e {
-                        MqttError::ClientIdentifierNotValid => {
-                            ConnectReasonCode::ClientIdentifierNotValid
-                        }
-                        MqttError::BadUserNameOrPassword => {
-                            ConnectReasonCode::BadAuthenticationMethod
-                        }
-                        MqttError::UnsupportedProtocolVersion => {
-                            ConnectReasonCode::UnsupportedProtocolVersion
-                        }
-                        _ => ConnectReasonCode::UnspecifiedError,
-                    };
-                    let connack = v5_0::Connack::builder()
-                        .reason_code(rc)
-                        .session_present(false)
-                        .build()
-                        .unwrap();
-                    let connack_events = self.process_send_v5_0_connack(connack);
-                    events.extend(connack_events);
-                } else {
-                    let disconnect = v5_0::Disconnect::builder()
-                        .reason_code(DisconnectReasonCode::ProtocolError)
-                        .build()
-                        .unwrap();
-                    let disconnect_events = self.process_send_v5_0_disconnect(disconnect);
-                    events.extend(disconnect_events);
-                }
+                let rc = match e {
+                    MqttError::ClientIdentifierNotValid => {
+                        ConnectReasonCode::ClientIdentifierNotValid
+                    }
+                    MqttError::BadUserNameOrPassword => ConnectReasonCode::BadUserNameOrPassword,
+                    MqttError::UnsupportedProtocolVersion => {
+                        ConnectReasonCode::UnsupportedProtocolVersion
+                    }
+                    _ => ConnectReasonCode::UnspecifiedError,
+                };
+                let connack = v5_0::Connack::builder()
+                    .reason_code(rc)
+                    .session_present(false)
+                    .build()
+                    .unwrap();
+                let connack_events = self.process_send_v5_0_connack(connack);
+                events.extend(connack_events);
                 events.push(GenericEvent::NotifyError(e));
             }
         }
