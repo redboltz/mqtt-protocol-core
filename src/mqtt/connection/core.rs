@@ -3611,46 +3611,6 @@ where
     }
 }
 
-// traits
-
-pub trait RecvBehavior<Role, PacketIdType>
-where
-    PacketIdType: IsPacketId,
-{
-    fn recv(&mut self, data: &mut Cursor<&[u8]>) -> Vec<GenericEvent<PacketIdType>>;
-}
-
-// RecvBehavior implementations
-impl<PacketIdType> RecvBehavior<role::Client, PacketIdType>
-    for GenericConnection<role::Client, PacketIdType>
-where
-    PacketIdType: IsPacketId,
-{
-    fn recv(&mut self, data: &mut Cursor<&[u8]>) -> Vec<GenericEvent<PacketIdType>> {
-        self.recv(data)
-    }
-}
-
-impl<PacketIdType> RecvBehavior<role::Server, PacketIdType>
-    for GenericConnection<role::Server, PacketIdType>
-where
-    PacketIdType: IsPacketId,
-{
-    fn recv(&mut self, data: &mut Cursor<&[u8]>) -> Vec<GenericEvent<PacketIdType>> {
-        self.recv(data)
-    }
-}
-
-impl<PacketIdType> RecvBehavior<role::Any, PacketIdType>
-    for GenericConnection<role::Any, PacketIdType>
-where
-    PacketIdType: IsPacketId,
-{
-    fn recv(&mut self, data: &mut Cursor<&[u8]>) -> Vec<GenericEvent<PacketIdType>> {
-        self.recv(data)
-    }
-}
-
 // tests
 
 #[cfg(test)]

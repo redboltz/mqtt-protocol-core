@@ -30,7 +30,6 @@ pub use packet_id_manager::PacketIdManager;
 pub mod core;
 pub use self::core::Connection;
 pub use self::core::GenericConnection;
-pub use self::core::RecvBehavior;
 
 pub mod event;
 pub use self::event::Event;
