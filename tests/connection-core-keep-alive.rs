@@ -23,7 +23,7 @@ use mqtt_protocol_core::mqtt;
 mod common;
 
 #[test]
-fn receive_keep_alive_v3_1_1() {
+fn server_receive_keep_alive_v3_1_1() {
     common::init_tracing();
     let mut connection = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V3_1_1);
 
@@ -54,6 +54,228 @@ fn receive_keep_alive_v3_1_1() {
             assert_eq!(connect_received.keep_alive(), 1u16);
         } else {
             panic!("Expected V3_1_1Connect packet, got: {packet:?}");
+        }
+    } else {
+        panic!("Expected NotifyPacketReceived event, got: {:?}", events[1]);
+    }
+}
+
+#[test]
+fn server_receive_keep_alive_v5_0_override_1to0() {
+    common::init_tracing();
+    let mut connection = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
+
+    let connect = mqtt::packet::v5_0::Connect::builder()
+        .client_id("test_client")
+        .unwrap()
+        .clean_start(false)
+        .keep_alive(1u16)
+        .build()
+        .unwrap();
+    let bytes = connect.to_continuous_buffer();
+    let events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
+    assert_eq!(events.len(), 2);
+
+    // Check RequestTimerReset event
+    if let mqtt::connection::Event::RequestTimerReset { kind, duration_ms } = &events[0] {
+        assert_eq!(*kind, mqtt::connection::TimerKind::PingreqRecv);
+        assert_eq!(*duration_ms, 1500);
+    } else {
+        panic!("Expected RequestTimerReset event, got: {:?}", events[0]);
+    }
+
+    // Check NotifyPacketReceived event for connect
+    if let mqtt::connection::Event::NotifyPacketReceived(packet) = &events[1] {
+        if let mqtt::packet::GenericPacket::V5_0Connect(connect_received) = packet {
+            assert_eq!(connect_received.client_id(), "test_client");
+            assert_eq!(connect_received.clean_start(), false);
+            assert_eq!(connect_received.keep_alive(), 1u16);
+        } else {
+            panic!("Expected V5_Connect packet, got: {packet:?}");
+        }
+    } else {
+        panic!("Expected NotifyPacketReceived event, got: {:?}", events[1]);
+    }
+
+    // Override by server keep alive
+    let packet = mqtt::packet::v5_0::Connack::builder()
+        .session_present(false)
+        .reason_code(mqtt::result_code::ConnectReasonCode::Success)
+        .props(vec![mqtt::packet::ServerKeepAlive::new(0).unwrap().into()])
+        .build()
+        .unwrap();
+    let events = connection.checked_send(packet.clone());
+    assert_eq!(events.len(), 2);
+
+    // Check RequestTimerReset event
+    if let mqtt::connection::Event::RequestTimerCancel(kind) = &events[0] {
+        assert_eq!(*kind, mqtt::connection::TimerKind::PingreqRecv);
+    } else {
+        panic!("Expected RequestTimerCancel event, got: {:?}", events[0]);
+    }
+
+    // Check RequestSendPacket event for packet (connack)
+    if let mqtt::connection::Event::RequestSendPacket { packet, .. } = &events[1] {
+        if let mqtt::packet::GenericPacket::V5_0Connack(connack_packet) = packet {
+            assert_eq!(connack_packet.session_present(), false);
+            assert_eq!(
+                connack_packet.reason_code(),
+                mqtt::result_code::ConnectReasonCode::Success
+            );
+        } else {
+            panic!("Expected V5_0Connack packet, got: {packet:?}");
+        }
+    } else {
+        panic!("Expected RequestSendPacket event, got: {:?}", events[1]);
+    }
+}
+
+#[test]
+fn server_receive_keep_alive_v5_0_override_0to1() {
+    common::init_tracing();
+    let mut connection = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
+
+    let connect = mqtt::packet::v5_0::Connect::builder()
+        .client_id("test_client")
+        .unwrap()
+        .clean_start(false)
+        .keep_alive(0u16)
+        .build()
+        .unwrap();
+    let bytes = connect.to_continuous_buffer();
+    let events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
+    assert_eq!(events.len(), 1);
+
+    // Check NotifyPacketReceived event for connect
+    if let mqtt::connection::Event::NotifyPacketReceived(packet) = &events[0] {
+        if let mqtt::packet::GenericPacket::V5_0Connect(connect_received) = packet {
+            assert_eq!(connect_received.client_id(), "test_client");
+            assert_eq!(connect_received.clean_start(), false);
+            assert_eq!(connect_received.keep_alive(), 0u16);
+        } else {
+            panic!("Expected V5_Connect packet, got: {packet:?}");
+        }
+    } else {
+        panic!("Expected NotifyPacketReceived event, got: {:?}", events[1]);
+    }
+
+    // Override by server keep alive
+    let packet = mqtt::packet::v5_0::Connack::builder()
+        .session_present(false)
+        .reason_code(mqtt::result_code::ConnectReasonCode::Success)
+        .props(vec![mqtt::packet::ServerKeepAlive::new(1).unwrap().into()])
+        .build()
+        .unwrap();
+    let events = connection.checked_send(packet.clone());
+    assert_eq!(events.len(), 2);
+
+    // Check RequestTimerReset event
+    if let mqtt::connection::Event::RequestTimerReset { kind, duration_ms } = &events[0] {
+        assert_eq!(*kind, mqtt::connection::TimerKind::PingreqRecv);
+        assert_eq!(*duration_ms, 1500);
+    } else {
+        panic!("Expected RequestTimerReset event, got: {:?}", events[0]);
+    }
+
+    // Check RequestSendPacket event for packet (connack)
+    if let mqtt::connection::Event::RequestSendPacket { packet, .. } = &events[1] {
+        if let mqtt::packet::GenericPacket::V5_0Connack(connack_packet) = packet {
+            assert_eq!(connack_packet.session_present(), false);
+            assert_eq!(
+                connack_packet.reason_code(),
+                mqtt::result_code::ConnectReasonCode::Success
+            );
+        } else {
+            panic!("Expected V5_0Connack packet, got: {packet:?}");
+        }
+    } else {
+        panic!("Expected RequestSendPacket event, got: {:?}", events[1]);
+    }
+}
+
+#[test]
+fn client_receive_connack_server_keep_alive_prop_1to0() {
+    common::init_tracing();
+    let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
+
+    let connect = mqtt::packet::v5_0::Connect::builder()
+        .client_id("test_client")
+        .unwrap()
+        .clean_start(true)
+        .keep_alive(1u16)
+        .build()
+        .unwrap();
+    let _events = connection.checked_send(connect.clone());
+
+    let connack = mqtt::packet::v5_0::Connack::builder()
+        .session_present(false)
+        .reason_code(mqtt::result_code::ConnectReasonCode::Success)
+        .props(vec![mqtt::packet::ServerKeepAlive::new(0).unwrap().into()])
+        .build()
+        .unwrap();
+
+    let bytes = connack.to_continuous_buffer();
+    let events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
+    assert_eq!(events.len(), 2);
+
+    // Check RequestTimerReset event
+    if let mqtt::connection::Event::RequestTimerCancel(kind) = &events[0] {
+        assert_eq!(*kind, mqtt::connection::TimerKind::PingreqSend);
+    } else {
+        panic!("Expected RequestTimerReset event, got: {:?}", events[0]);
+    }
+
+    // Check NotifyPacketReceived event for connack
+    if let mqtt::connection::Event::NotifyPacketReceived(packet) = &events[1] {
+        if let mqtt::packet::GenericPacket::V5_0Connack(connack_received) = packet {
+            assert_eq!(*connack_received, connack);
+        } else {
+            panic!("Expected V5_0Connack packet, got: {packet:?}");
+        }
+    } else {
+        panic!("Expected NotifyPacketReceived event, got: {:?}", events[1]);
+    }
+}
+
+#[test]
+fn client_receive_connack_server_keep_alive_prop_0to1() {
+    common::init_tracing();
+    let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
+
+    let connect = mqtt::packet::v5_0::Connect::builder()
+        .client_id("test_client")
+        .unwrap()
+        .clean_start(true)
+        .keep_alive(0u16)
+        .build()
+        .unwrap();
+    let _events = connection.checked_send(connect.clone());
+
+    let connack = mqtt::packet::v5_0::Connack::builder()
+        .session_present(false)
+        .reason_code(mqtt::result_code::ConnectReasonCode::Success)
+        .props(vec![mqtt::packet::ServerKeepAlive::new(1).unwrap().into()])
+        .build()
+        .unwrap();
+
+    let bytes = connack.to_continuous_buffer();
+    let events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
+    assert_eq!(events.len(), 2);
+
+    // Check RequestTimerReset event
+    if let mqtt::connection::Event::RequestTimerReset { kind, duration_ms } = &events[0] {
+        assert_eq!(*kind, mqtt::connection::TimerKind::PingreqSend);
+        assert_eq!(*duration_ms, 1500);
+    } else {
+        panic!("Expected RequestTimerReset event, got: {:?}", events[0]);
+    }
+
+    // Check NotifyPacketReceived event for connack
+    if let mqtt::connection::Event::NotifyPacketReceived(packet) = &events[1] {
+        if let mqtt::packet::GenericPacket::V5_0Connack(connack_received) = packet {
+            assert_eq!(*connack_received, connack);
+        } else {
+            panic!("Expected V5_0Connack packet, got: {packet:?}");
         }
     } else {
         panic!("Expected NotifyPacketReceived event, got: {:?}", events[1]);

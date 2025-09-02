@@ -21,7 +21,6 @@
 // SOFTWARE.
 use mqtt_protocol_core::mqtt;
 mod common;
-use common::*;
 
 #[test]
 fn get_receive_maximum_vacancy_for_send_client() {
