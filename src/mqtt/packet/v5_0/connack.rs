@@ -844,6 +844,7 @@ fn validate_connack_properties(props: &[Property]) -> Result<(), MqttError> {
     let mut count_assigned_client_identifier = 0;
     let mut count_topic_alias_maximum = 0;
     let mut count_reason_string = 0;
+    let mut count_server_keep_alive = 0;
     for prop in props {
         match prop {
             Property::SessionExpiryInterval(_) => count_session_expiry_interval += 1,
@@ -854,6 +855,7 @@ fn validate_connack_properties(props: &[Property]) -> Result<(), MqttError> {
             Property::AssignedClientIdentifier(_) => count_assigned_client_identifier += 1,
             Property::TopicAliasMaximum(_) => count_topic_alias_maximum += 1,
             Property::ReasonString(_) => count_reason_string += 1,
+            Property::ServerKeepAlive(_) => count_server_keep_alive += 1,
             Property::UserProperty(_) => {}
             _ => return Err(MqttError::ProtocolError),
         }
@@ -866,6 +868,7 @@ fn validate_connack_properties(props: &[Property]) -> Result<(), MqttError> {
         || count_assigned_client_identifier > 1
         || count_topic_alias_maximum > 1
         || count_reason_string > 1
+        || count_server_keep_alive > 1
     {
         return Err(MqttError::ProtocolError);
     }

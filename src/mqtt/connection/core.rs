@@ -1410,6 +1410,24 @@ where
                         debug_assert!(val.val() != 0, "MaximumPacketSize must not be 0");
                         self.maximum_packet_size_recv = val.val();
                     }
+                    Property::ServerKeepAlive(val) => {
+                        let val = val.val();
+                        if val == 0 {
+                            if self.pingreq_recv_set {
+                                self.pingreq_recv_set = false;
+                                events
+                                    .push(GenericEvent::RequestTimerCancel(TimerKind::PingreqRecv));
+                            }
+                            self.pingreq_recv_timeout_ms = None;
+                        } else {
+                            self.pingreq_recv_timeout_ms = Some(val as u64 * 1000 * 3 / 2);
+                            self.pingreq_recv_set = true;
+                            events.push(GenericEvent::RequestTimerReset {
+                                kind: TimerKind::PingreqRecv,
+                                duration_ms: self.pingreq_recv_timeout_ms.unwrap(),
+                            });
+                        }
+                    }
                     _ => {
                         // Ignore other properties
                     }
@@ -2611,9 +2629,23 @@ where
                                 self.maximum_packet_size_send = val.val();
                             }
                             Property::ServerKeepAlive(val) => {
-                                // Set PINGREQ send interval if this is a client
-                                let timeout_ms = (val.val() as u64) * 1000;
-                                self.pingreq_send_interval_ms = Some(timeout_ms);
+                                let val = val.val();
+                                if val == 0 {
+                                    if self.pingreq_send_set {
+                                        self.pingreq_send_set = false;
+                                        events.push(GenericEvent::RequestTimerCancel(
+                                            TimerKind::PingreqSend,
+                                        ));
+                                    }
+                                    self.pingreq_send_interval_ms = None;
+                                } else {
+                                    self.pingreq_send_interval_ms = Some(val as u64 * 1000 * 3 / 2);
+                                    self.pingreq_send_set = true;
+                                    events.push(GenericEvent::RequestTimerReset {
+                                        kind: TimerKind::PingreqSend,
+                                        duration_ms: self.pingreq_send_interval_ms.unwrap(),
+                                    });
+                                }
                             }
                             _ => {
                                 // Ignore other properties
