@@ -111,7 +111,7 @@ where
     #[builder(private)]
     reason_code_buf: Option<[u8; 1]>,
     #[builder(private)]
-    property_length: Option<VariableByteInteger>,
+    property_length: VariableByteInteger,
 
     /// Optional MQTT v5.0 properties associated with this PUBACK packet.
     ///
@@ -311,8 +311,8 @@ where
         if let Some(buf) = &self.reason_code_buf {
             bufs.push(IoSlice::new(buf));
         }
-        if let Some(pl) = &self.property_length {
-            bufs.push(IoSlice::new(pl.as_bytes()));
+        if self.props.is_some() {
+            bufs.push(IoSlice::new(self.property_length.as_bytes()));
         }
         if let Some(ref props) = self.props {
             bufs.append(&mut props.to_buffers());
@@ -358,8 +358,8 @@ where
         if let Some(rc_buf) = &self.reason_code_buf {
             buf.extend_from_slice(rc_buf);
         }
-        if let Some(pl) = &self.property_length {
-            buf.extend_from_slice(pl.as_bytes());
+        if self.props.is_some() {
+            buf.extend_from_slice(self.property_length.as_bytes());
         }
         if let Some(ref props) = self.props {
             buf.append(&mut props.to_continuous_buffer());
@@ -444,14 +444,18 @@ where
             validate_puback_properties(&props)?;
             let prop_len = VariableByteInteger::from_u32(props.size() as u32).unwrap();
 
-            (Some(prop_len), Some(props))
+            (prop_len, Some(props))
         } else {
-            (None, None)
+            (VariableByteInteger::from_u32(0).unwrap(), None)
         };
 
         let remaining_size = buffer_size
             + reason_code_buf.as_ref().map_or(0, |_| 1)
-            + property_length.as_ref().map_or(0, |pl| pl.size())
+            + if props.is_some() {
+                property_length.size()
+            } else {
+                0
+            }
             + props.as_ref().map_or(0, |ps| ps.size());
 
         let puback = GenericPuback {
@@ -631,12 +635,7 @@ where
         let reason_code_buf = self.reason_code_buf.flatten();
         let props = self.props.flatten();
         let props_size: usize = props.as_ref().map_or(0, |p| p.size());
-        // property_length only if properties are present
-        let property_length = if props.is_some() {
-            Some(VariableByteInteger::from_u32(props_size as u32).unwrap())
-        } else {
-            None
-        };
+        let property_length = VariableByteInteger::from_u32(props_size as u32).unwrap();
 
         let mut remaining = mem::size_of::<PacketIdType>();
         // add reason code if present
@@ -644,8 +643,8 @@ where
             remaining += 1;
         }
         // add properties if present
-        if let Some(ref pl) = property_length {
-            remaining += pl.size() + props_size;
+        if props.is_some() {
+            remaining += property_length.size() + props_size;
         }
         let remaining_length = VariableByteInteger::from_u32(remaining as u32).unwrap();
 
