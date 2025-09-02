@@ -1,5 +1,6 @@
 # 0.5.1 undetermined
 
+* Fix v5_0::GenericPublish property_length from Option<VariableByteInteger> to VariableByteInteger. #30
 * Add ServerKeepAlive timer handling on sending CONNACK. #29
 * Refine common methods. #28
 * Add RequestClose on CONNACK with error sending.  #27

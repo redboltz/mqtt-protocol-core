@@ -155,7 +155,7 @@ where
     #[builder(private)]
     packet_id_buf: Option<PacketIdType::Buffer>,
     #[builder(private)]
-    property_length: Option<VariableByteInteger>,
+    property_length: VariableByteInteger,
 
     #[builder(setter(into, strip_option))]
     #[getset(get = "pub")]
@@ -717,11 +717,7 @@ where
     fn recalculate_lengths(&mut self) {
         // Calculate property length
         let props_size: usize = self.props.size();
-        self.property_length = if props_size > 0 {
-            Some(VariableByteInteger::from_u32(props_size as u32).unwrap())
-        } else {
-            None
-        };
+        self.property_length = VariableByteInteger::from_u32(props_size as u32).unwrap();
 
         // Calculate remaining length
         let mut remaining_size = self.topic_name_buf.size();
@@ -735,7 +731,7 @@ where
         }
 
         // Add property length size
-        remaining_size += self.property_length.as_ref().map_or(1, |pl| pl.size()); // 1 byte for property length 0
+        remaining_size += self.property_length.size();
         remaining_size += props_size;
 
         // Add payload size
@@ -819,11 +815,7 @@ where
         if let Some(buf) = &self.packet_id_buf {
             bufs.push(IoSlice::new(buf.as_ref()));
         }
-        if let Some(pl) = &self.property_length {
-            bufs.push(IoSlice::new(pl.as_bytes()));
-        } else {
-            bufs.push(IoSlice::new(&[0]));
-        }
+        bufs.push(IoSlice::new(self.property_length.as_bytes()));
         bufs.append(&mut self.props.to_buffers());
         if self.payload_buf.len() > 0 {
             bufs.push(IoSlice::new(self.payload_buf.as_slice()));
@@ -871,11 +863,7 @@ where
         if let Some(packet_id_buf) = &self.packet_id_buf {
             buf.extend_from_slice(packet_id_buf.as_ref());
         }
-        if let Some(pl) = &self.property_length {
-            buf.extend_from_slice(pl.as_bytes());
-        } else {
-            buf.push(0);
-        }
+        buf.extend_from_slice(self.property_length.as_bytes());
         buf.append(&mut self.props.to_continuous_buffer());
         if self.payload_buf.len() > 0 {
             buf.extend_from_slice(self.payload_buf.as_slice());
@@ -968,9 +956,9 @@ where
             cursor += consumed;
             validate_publish_properties(&props)?;
             let prop_len = VariableByteInteger::from_u32(props.size() as u32).unwrap();
-            (Some(prop_len), props)
+            (prop_len, props)
         } else {
-            (None, Properties::new())
+            (VariableByteInteger::from_u32(0).unwrap(), Properties::new())
         };
 
         let payload_len = data_arc.len() - cursor;
@@ -984,7 +972,7 @@ where
             + packet_id_buf
                 .as_ref()
                 .map_or(0, |_| mem::size_of::<PacketIdType>())
-            + property_length.as_ref().map_or(1, |pl| pl.size())
+            + property_length.size()
             + props.size()
             + payload_len;
 
@@ -1321,22 +1309,14 @@ where
         let packet_id_buf = self.packet_id_buf.flatten();
         let props = self.props.unwrap_or(Properties::new());
         let props_size: usize = props.size();
-        let property_length = if !props.is_empty() {
-            Some(VariableByteInteger::from_u32(props_size as u32).unwrap())
-        } else {
-            None
-        };
+        let property_length = VariableByteInteger::from_u32(props_size as u32).unwrap();
         let payload = self.payload_buf.unwrap_or_else(ArcPayload::default);
 
         let mut remaining = topic_name_buf.size();
         if (fixed_header[0] >> 1) & 0b0000_0011 != 0 && packet_id_buf.is_some() {
             remaining += mem::size_of::<PacketIdType>();
         }
-        if let Some(ref pl) = property_length {
-            remaining += pl.size() + props_size;
-        } else {
-            remaining += 1;
-        }
+        remaining += property_length.size() + props_size;
         remaining += payload.len();
         let remaining_length = VariableByteInteger::from_u32(remaining as u32).unwrap();
 
