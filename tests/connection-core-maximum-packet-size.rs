@@ -460,3 +460,46 @@ fn server_over_maximum_packet_size_recv() {
         );
     }
 }
+
+#[test]
+fn server_over_maximum_packet_size_send() {
+    common::init_tracing();
+    // Create MQTT v5.0 Any connection
+    let mut con = mqtt::Connection::<mqtt::role::Any>::new(mqtt::Version::V5_0);
+
+    let connect_packet = mqtt::packet::v5_0::Connect::builder()
+        .client_id("test-client")
+        .unwrap()
+        .clean_start(true)
+        .props(vec![mqtt::packet::MaximumPacketSize::new(10)
+            .unwrap()
+            .into()])
+        .build()
+        .expect("Failed to build Connect packet");
+    let bytes = connect_packet.to_continuous_buffer();
+    let _events = con.recv(&mut mqtt::common::Cursor::new(&bytes));
+
+    let connack_packet = mqtt::packet::v5_0::Connack::builder()
+        .session_present(false)
+        .reason_code(mqtt::result_code::ConnectReasonCode::Success)
+        .build()
+        .expect("Failed to build Connack packet");
+    let _events = con.send(connack_packet.into());
+
+    let publish_packet = mqtt::packet::v5_0::Publish::builder()
+        .topic_name("test/topic")
+        .unwrap()
+        .qos(mqtt::packet::Qos::AtMostOnce)
+        .payload("0123456789a")
+        .build()
+        .expect("Failed to build Publish packet");
+
+    let events = con.send(publish_packet.into());
+    assert!(
+        events.iter().any(|event| matches!(
+            event,
+            mqtt::connection::Event::NotifyError(mqtt::result_code::MqttError::PacketTooLarge)
+        )),
+        "Expected PacketTooLarge error for PUBLISH packet"
+    );
+}
