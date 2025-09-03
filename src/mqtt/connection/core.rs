@@ -2510,11 +2510,7 @@ where
     ) -> Vec<GenericEvent<PacketIdType>> {
         let mut events = Vec::new();
         if self.status != ConnectionStatus::Disconnected {
-            self.handle_v5_0_error(
-                MqttError::ProtocolError,
-                DisconnectReasonCode::ProtocolError,
-                &mut events,
-            );
+            self.handle_v5_0_error(MqttError::ProtocolError, &mut events);
             return events;
         }
         self.status = ConnectionStatus::Connecting;
@@ -2665,14 +2661,10 @@ where
             }
             Err(e) => {
                 if self.status == ConnectionStatus::Connected {
-                    let disconnect = v5_0::Disconnect::builder()
-                        .reason_code(e.into())
-                        .build()
-                        .unwrap();
-                    let disconnect_events = self.process_send_v5_0_disconnect(disconnect);
-                    events.extend(disconnect_events);
+                    self.handle_v5_0_error(e, &mut events);
+                } else {
+                    events.push(GenericEvent::NotifyError(e));
                 }
-                events.push(GenericEvent::NotifyError(e));
             }
         }
 
@@ -2764,7 +2756,6 @@ where
                                     if self.publish_recv.len() >= max as usize {
                                         self.handle_v5_0_error(
                                             MqttError::ReceiveMaximumExceeded,
-                                            DisconnectReasonCode::ReceiveMaximumExceeded,
                                             events,
                                         );
                                         return false;
@@ -2817,7 +2808,6 @@ where
                                 {
                                     self.handle_v5_0_error(
                                         MqttError::TopicAliasInvalid,
-                                        DisconnectReasonCode::TopicAliasInvalid,
                                         &mut events,
                                     );
                                     return events;
@@ -2833,7 +2823,6 @@ where
                                                 error!("topic alias extract failed: {_e}");
                                                 self.handle_v5_0_error(
                                                     MqttError::TopicAliasInvalid,
-                                                    DisconnectReasonCode::TopicAliasInvalid,
                                                     &mut events,
                                                 );
                                                 return events;
@@ -2842,18 +2831,13 @@ where
                                     } else {
                                         self.handle_v5_0_error(
                                             MqttError::TopicAliasInvalid,
-                                            DisconnectReasonCode::TopicAliasInvalid,
                                             &mut events,
                                         );
                                         return events;
                                     }
                                 }
                             } else {
-                                self.handle_v5_0_error(
-                                    MqttError::TopicAliasInvalid,
-                                    DisconnectReasonCode::TopicAliasInvalid,
-                                    &mut events,
-                                );
+                                self.handle_v5_0_error(MqttError::TopicAliasInvalid, &mut events);
                                 return events;
                             }
                         } else {
@@ -2865,7 +2849,6 @@ where
                                 {
                                     self.handle_v5_0_error(
                                         MqttError::TopicAliasInvalid,
-                                        DisconnectReasonCode::TopicAliasInvalid,
                                         &mut events,
                                     );
                                     return events;
@@ -2902,14 +2885,10 @@ where
                     }
                     Err(e) => {
                         if self.status == ConnectionStatus::Connected {
-                            let disconnect = v5_0::Disconnect::builder()
-                                .reason_code(e.into())
-                                .build()
-                                .unwrap();
-                            let disconnect_events = self.process_send_v5_0_disconnect(disconnect);
-                            events.extend(disconnect_events);
+                            self.handle_v5_0_error(e, &mut events);
+                        } else {
+                            events.push(GenericEvent::NotifyError(e));
                         }
-                        events.push(GenericEvent::NotifyError(e));
                     }
                 }
             }
@@ -2971,15 +2950,11 @@ where
                     events.extend(self.refresh_pingreq_recv());
                     events.push(GenericEvent::NotifyPacketReceived(packet.into()));
                 } else {
-                    self.handle_v5_0_error(
-                        MqttError::ProtocolError,
-                        DisconnectReasonCode::ProtocolError,
-                        &mut events,
-                    );
+                    self.handle_v5_0_error(MqttError::ProtocolError, &mut events);
                 }
             }
             Err(e) => {
-                self.handle_v5_0_error(e, DisconnectReasonCode::ProtocolError, &mut events);
+                self.handle_v5_0_error(e, &mut events);
             }
         }
 
@@ -3060,13 +3035,12 @@ where
                 } else {
                     self.handle_v5_0_error(
                         MqttError::from(DisconnectReasonCode::ProtocolError),
-                        DisconnectReasonCode::ProtocolError,
                         &mut events,
                     );
                 }
             }
             Err(e) => {
-                self.handle_v5_0_error(e, DisconnectReasonCode::ProtocolError, &mut events);
+                self.handle_v5_0_error(e, &mut events);
             }
         }
 
@@ -3122,7 +3096,7 @@ where
                 events.push(GenericEvent::NotifyPacketReceived(packet.into()));
             }
             Err(e) => {
-                self.handle_v5_0_error(e, DisconnectReasonCode::ProtocolError, &mut events);
+                self.handle_v5_0_error(e, &mut events);
             }
         }
 
@@ -3181,15 +3155,11 @@ where
                     events.extend(self.refresh_pingreq_recv());
                     events.push(GenericEvent::NotifyPacketReceived(packet.into()));
                 } else {
-                    self.handle_v5_0_error(
-                        MqttError::ProtocolError,
-                        DisconnectReasonCode::ProtocolError,
-                        &mut events,
-                    );
+                    self.handle_v5_0_error(MqttError::ProtocolError, &mut events);
                 }
             }
             Err(e) => {
-                self.handle_v5_0_error(e, DisconnectReasonCode::ProtocolError, &mut events);
+                self.handle_v5_0_error(e, &mut events);
             }
         }
 
@@ -3227,7 +3197,7 @@ where
                 events.push(GenericEvent::NotifyPacketReceived(packet.into()));
             }
             Err(e) => {
-                self.handle_v5_0_error(e, DisconnectReasonCode::ProtocolError, &mut events);
+                self.handle_v5_0_error(e, &mut events);
             }
         }
 
@@ -3279,15 +3249,11 @@ where
                     events.extend(self.refresh_pingreq_recv());
                     events.push(GenericEvent::NotifyPacketReceived(packet.into()));
                 } else {
-                    self.handle_v5_0_error(
-                        MqttError::ProtocolError,
-                        DisconnectReasonCode::ProtocolError,
-                        &mut events,
-                    );
+                    self.handle_v5_0_error(MqttError::ProtocolError, &mut events);
                 }
             }
             Err(e) => {
-                self.handle_v5_0_error(e, DisconnectReasonCode::ProtocolError, &mut events);
+                self.handle_v5_0_error(e, &mut events);
             }
         }
 
@@ -3325,7 +3291,7 @@ where
                 events.push(GenericEvent::NotifyPacketReceived(packet.into()));
             }
             Err(e) => {
-                self.handle_v5_0_error(e, DisconnectReasonCode::ProtocolError, &mut events);
+                self.handle_v5_0_error(e, &mut events);
             }
         }
 
@@ -3377,15 +3343,11 @@ where
                     events.extend(self.refresh_pingreq_recv());
                     events.push(GenericEvent::NotifyPacketReceived(packet.into()));
                 } else {
-                    self.handle_v5_0_error(
-                        MqttError::ProtocolError,
-                        DisconnectReasonCode::ProtocolError,
-                        &mut events,
-                    );
+                    self.handle_v5_0_error(MqttError::ProtocolError, &mut events);
                 }
             }
             Err(e) => {
-                self.handle_v5_0_error(e, DisconnectReasonCode::ProtocolError, &mut events);
+                self.handle_v5_0_error(e, &mut events);
             }
         }
 
@@ -3439,7 +3401,7 @@ where
                 events.push(GenericEvent::NotifyPacketReceived(packet.into()));
             }
             Err(e) => {
-                self.handle_v5_0_error(e, DisconnectReasonCode::ProtocolError, &mut events);
+                self.handle_v5_0_error(e, &mut events);
             }
         }
 
@@ -3479,7 +3441,7 @@ where
                 events.push(GenericEvent::NotifyPacketReceived(packet.into()));
             }
             Err(e) => {
-                self.handle_v5_0_error(e, DisconnectReasonCode::ProtocolError, &mut events);
+                self.handle_v5_0_error(e, &mut events);
             }
         }
 
@@ -3517,7 +3479,7 @@ where
                 events.push(GenericEvent::NotifyPacketReceived(packet.into()));
             }
             Err(e) => {
-                self.handle_v5_0_error(e, DisconnectReasonCode::ProtocolError, &mut events);
+                self.handle_v5_0_error(e, &mut events);
             }
         }
 
@@ -3533,7 +3495,7 @@ where
                 events.push(GenericEvent::NotifyPacketReceived(packet.into()));
             }
             Err(e) => {
-                self.handle_v5_0_error(e, DisconnectReasonCode::ProtocolError, &mut events);
+                self.handle_v5_0_error(e, &mut events);
             }
         }
 
@@ -3545,14 +3507,9 @@ where
         events.push(GenericEvent::NotifyError(e));
     }
 
-    fn handle_v5_0_error(
-        &mut self,
-        e: MqttError,
-        reason_code: DisconnectReasonCode,
-        events: &mut Vec<GenericEvent<PacketIdType>>,
-    ) {
+    fn handle_v5_0_error(&mut self, e: MqttError, events: &mut Vec<GenericEvent<PacketIdType>>) {
         let disconnect = v5_0::Disconnect::builder()
-            .reason_code(reason_code)
+            .reason_code(e.into())
             .build()
             .unwrap();
         events.extend(self.process_send_v5_0_disconnect(disconnect));

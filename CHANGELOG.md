@@ -1,12 +1,13 @@
 # 0.5.1 undetermined
 
+* Refine error handling. #32
 * Remove unused trait `RecvBehavior`. #31
 * Fix v5_0::GenericPublish property_length from Option<VariableByteInteger> to VariableByteInteger. #30
 * Add ServerKeepAlive timer handling on sending CONNACK. #29
 * Refine common methods. #28
 * Add RequestClose on CONNACK with error sending.  #27
 * Fix invalid ConnectReasonCode. #27
-* Refine tests. #26, #27, #28, #29
+* Refine tests. #26, #27, #28, #29, #32
 * Fix panic on connack generation. #25
   * When errornous CONNECT packet is received, a CONNACK packet with rc is automatically generated but it caused panic due to lack of session_present field.
 
