@@ -3004,31 +3004,24 @@ where
                 let packet_id = packet.packet_id();
                 if self.pid_pubrec.remove(&packet_id) {
                     self.store.erase(ResponsePacket::V5_0Pubrec, packet_id);
-                    if let Some(reason_code) = packet.reason_code() {
-                        if reason_code != PubrecReasonCode::Success {
-                            if self.pid_man.is_used_id(packet_id) {
-                                self.pid_man.release_id(packet_id);
-                                events.push(GenericEvent::NotifyPacketIdReleased(packet_id));
-                            }
-                            self.qos2_publish_processing.remove(&packet_id);
-                            if self.publish_send_max.is_some() {
-                                self.publish_send_count -= 1;
-                            }
-                        } else if self.auto_pub_response
-                            && self.status == ConnectionStatus::Connected
-                        {
+                    let reason_code = packet.reason_code();
+                    if reason_code.is_none() || reason_code.unwrap() == PubrecReasonCode::Success {
+                        if self.auto_pub_response && self.status == ConnectionStatus::Connected {
                             let pubrel = v5_0::GenericPubrel::<PacketIdType>::builder()
                                 .packet_id(packet_id)
                                 .build()
                                 .unwrap();
                             events.extend(self.process_send_v5_0_pubrel(pubrel));
                         }
-                    } else if self.auto_pub_response && self.status == ConnectionStatus::Connected {
-                        let pubrel = v5_0::GenericPubrel::<PacketIdType>::builder()
-                            .packet_id(packet_id)
-                            .build()
-                            .unwrap();
-                        events.extend(self.process_send_v5_0_pubrel(pubrel));
+                    } else {
+                        if self.pid_man.is_used_id(packet_id) {
+                            self.pid_man.release_id(packet_id);
+                            events.push(GenericEvent::NotifyPacketIdReleased(packet_id));
+                        }
+                        self.qos2_publish_processing.remove(&packet_id);
+                        if self.publish_send_max.is_some() {
+                            self.publish_send_count -= 1;
+                        }
                     }
                     events.extend(self.refresh_pingreq_recv());
                     events.push(GenericEvent::NotifyPacketReceived(packet.into()));
@@ -3416,8 +3409,10 @@ where
 
         match v3_1_1::Pingresp::parse(raw_packet.data_as_slice()) {
             Ok((packet, _)) => {
-                self.pingresp_recv_set = false;
-                events.push(GenericEvent::RequestTimerCancel(TimerKind::PingrespRecv));
+                if self.pingresp_recv_set {
+                    self.pingresp_recv_set = false;
+                    events.push(GenericEvent::RequestTimerCancel(TimerKind::PingrespRecv));
+                }
                 events.push(GenericEvent::NotifyPacketReceived(packet.into()));
             }
             Err(e) => {
@@ -3436,8 +3431,10 @@ where
 
         match v5_0::Pingresp::parse(raw_packet.data_as_slice()) {
             Ok((packet, _)) => {
-                self.pingresp_recv_set = false;
-                events.push(GenericEvent::RequestTimerCancel(TimerKind::PingrespRecv));
+                if self.pingresp_recv_set {
+                    self.pingresp_recv_set = false;
+                    events.push(GenericEvent::RequestTimerCancel(TimerKind::PingrespRecv));
+                }
                 events.push(GenericEvent::NotifyPacketReceived(packet.into()));
             }
             Err(e) => {
@@ -3527,7 +3524,7 @@ where
                     kind: TimerKind::PingreqRecv,
                     duration_ms: timeout_ms,
                 });
-            } else {
+            } else if self.pingreq_recv_set {
                 self.pingreq_recv_set = false;
                 events.push(GenericEvent::RequestTimerCancel(TimerKind::PingreqRecv));
             }
