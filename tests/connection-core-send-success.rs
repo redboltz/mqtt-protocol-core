@@ -107,6 +107,43 @@ fn v3_1_1_server_send_suback() {
 }
 
 #[test]
+fn v5_0_client_send_suback() {
+    common::init_tracing();
+    let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
+    v5_0_client_establish_connection(&mut con);
+
+    let qh = con.get_qos2_publish_handled();
+    assert!(qh.is_empty());
+
+    let packet_id = con.acquire_packet_id().unwrap();
+    let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Publish::builder()
+        .packet_id(packet_id)
+        .topic_name("test/topic")
+        .unwrap()
+        .qos(mqtt::packet::Qos::ExactlyOnce)
+        .payload("payload")
+        .build()
+        .expect("Failed to build Publish packet")
+        .into();
+    let bytes = packet.to_continuous_buffer();
+    let _events = con.recv(&mut mqtt::common::Cursor::new(&bytes));
+
+    let qh = con.get_qos2_publish_handled();
+    assert_eq!(qh.len(), 1);
+
+    let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Pubrec::builder()
+        .packet_id(packet_id)
+        .reason_code(mqtt::result_code::PubrecReasonCode::NotAuthorized)
+        .build()
+        .expect("Failed to build Pubrec packet")
+        .into();
+    let _events = con.send(packet.clone());
+
+    let qh = con.get_qos2_publish_handled();
+    assert_eq!(qh.len(), 0);
+}
+
+#[test]
 fn v5_0_server_send_suback() {
     common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
