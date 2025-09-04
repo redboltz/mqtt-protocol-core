@@ -49,16 +49,28 @@ fn client_recv_publish_qos0_v3_1_1() {
 }
 
 #[test]
-fn server_recv_pingresp_v3_1_1() {
+fn client_recv_pingresp_v3_1_1() {
     common::init_tracing();
-    let mut connection = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V3_1_1);
-    v3_1_1_server_establish_connection(&mut connection, true, false);
+    let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
+    connection.set_pingresp_recv_timeout(Some(3000));
+    v3_1_1_client_establish_connection(&mut connection, true, false);
+
+    let packet = mqtt::packet::v3_1_1::Pingreq::new();
+    let _events = connection.checked_send(packet);
 
     let packet = mqtt::packet::v3_1_1::Pingresp::new();
     let bytes = packet.to_continuous_buffer();
     let events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
-    assert_eq!(events.len(), 1);
-    match &events[0] {
+    assert_eq!(events.len(), 2);
+
+    // Check RequestTimerCancel event
+    if let mqtt::connection::Event::RequestTimerCancel(kind) = &events[0] {
+        assert_eq!(*kind, mqtt::connection::TimerKind::PingrespRecv);
+    } else {
+        panic!("Expected RequestTimerCancel event, got: {:?}", events[0]);
+    }
+
+    match &events[1] {
         mqtt::connection::Event::NotifyPacketReceived(evt_packet) => {
             assert_eq!(*evt_packet, packet.into());
         }
@@ -110,16 +122,28 @@ fn client_recv_publish_qos0_v5_0() {
 }
 
 #[test]
-fn server_recv_pingresp_v5_0() {
+fn client_recv_pingresp_v5_0() {
     common::init_tracing();
-    let mut connection = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
-    v5_0_server_establish_connection(&mut connection);
+    let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
+    connection.set_pingresp_recv_timeout(Some(3000));
+    v5_0_client_establish_connection(&mut connection);
+
+    let packet = mqtt::packet::v5_0::Pingreq::new();
+    let _events = connection.checked_send(packet);
 
     let packet = mqtt::packet::v5_0::Pingresp::new();
     let bytes = packet.to_continuous_buffer();
     let events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
-    assert_eq!(events.len(), 1);
-    match &events[0] {
+    assert_eq!(events.len(), 2);
+
+    // Check RequestTimerCancel event
+    if let mqtt::connection::Event::RequestTimerCancel(kind) = &events[0] {
+        assert_eq!(*kind, mqtt::connection::TimerKind::PingrespRecv);
+    } else {
+        panic!("Expected RequestTimerCancel event, got: {:?}", events[0]);
+    }
+
+    match &events[1] {
         mqtt::connection::Event::NotifyPacketReceived(evt_packet) => {
             assert_eq!(*evt_packet, packet.into());
         }

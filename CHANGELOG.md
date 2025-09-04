@@ -1,5 +1,6 @@
 # 0.5.1 undetermined
 
+* Fix PINGRESP receiving timeout timer management. #34
 * Refine error handling. #32
 * Remove unused trait `RecvBehavior`. #31
 * Fix v5_0::GenericPublish property_length from Option<VariableByteInteger> to VariableByteInteger. #30
