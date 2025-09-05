@@ -1254,9 +1254,6 @@ where
         if self.status != ConnectionStatus::Disconnected {
             return vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)];
         }
-        if !self.validate_maximum_packet_size_send(packet.size()) {
-            return vec![GenericEvent::NotifyError(MqttError::PacketTooLarge)];
-        }
 
         let mut events = Vec::new();
         self.initialize(true);
@@ -1567,7 +1564,6 @@ where
                         .remove_topic_alias_add_topic(topic_opt.unwrap())
                         .unwrap()
                         .set_dup(true);
-                    // TBD validate_maximum_packet_size(store_packet.size());
                     self.store.add(store_packet.try_into().unwrap()).unwrap();
                 } else {
                     // Topic name is not empty, remove topic alias if present
@@ -2105,7 +2101,7 @@ where
             release_packet_id_if_send_error: None,
         });
         if let Some(timeout_ms) = self.pingresp_recv_timeout_ms {
-            self.pingreq_send_set = true;
+            self.pingresp_recv_set = true;
             events.push(GenericEvent::RequestTimerReset {
                 kind: TimerKind::PingrespRecv,
                 duration_ms: timeout_ms,
@@ -2133,7 +2129,7 @@ where
             release_packet_id_if_send_error: None,
         });
         if let Some(timeout_ms) = self.pingresp_recv_timeout_ms {
-            self.pingreq_send_set = true;
+            self.pingresp_recv_set = true;
             events.push(GenericEvent::RequestTimerReset {
                 kind: TimerKind::PingrespRecv,
                 duration_ms: timeout_ms,
@@ -2265,6 +2261,28 @@ where
         true
     }
 
+    #[rustfmt::skip]
+    fn can_receive(&self, packet_type: u8) -> bool {
+        !((Role::IS_CLIENT &&
+            (
+                packet_type == 1 || // CONNECT
+                packet_type == 8 || // SUBSCRIBE
+                packet_type == 10 || // UNSUBSCRIBE
+                packet_type == 12 || // PINGREQ
+                (packet_type == 14 && self.protocol_version == Version::V3_1_1) || // DISCONNECT
+                (packet_type == 15 && self.protocol_version == Version::V3_1_1) // AUTH
+            )
+        ) || (Role::IS_SERVER &&
+            (
+                packet_type == 2 || // CONNACK
+                packet_type == 9 || // SUBACK
+                packet_type == 11 || // UNSUBACK
+                packet_type == 13 || // PINGRESP
+                (packet_type == 15 && self.protocol_version == Version::V3_1_1) // AUTH
+            )
+        ))
+    }
+
     fn process_recv_packet(&mut self, raw_packet: RawPacket) -> Vec<GenericEvent<PacketIdType>> {
         let mut events = Vec::new();
 
@@ -2287,6 +2305,11 @@ where
         }
 
         let packet_type = raw_packet.packet_type();
+        if !self.can_receive(packet_type) {
+            events.push(GenericEvent::NotifyError(MqttError::ProtocolError));
+            return events;
+        }
+
         let _flags = raw_packet.flags();
         match self.protocol_version {
             Version::V3_1_1 => {
@@ -3004,31 +3027,24 @@ where
                 let packet_id = packet.packet_id();
                 if self.pid_pubrec.remove(&packet_id) {
                     self.store.erase(ResponsePacket::V5_0Pubrec, packet_id);
-                    if let Some(reason_code) = packet.reason_code() {
-                        if reason_code != PubrecReasonCode::Success {
-                            if self.pid_man.is_used_id(packet_id) {
-                                self.pid_man.release_id(packet_id);
-                                events.push(GenericEvent::NotifyPacketIdReleased(packet_id));
-                            }
-                            self.qos2_publish_processing.remove(&packet_id);
-                            if self.publish_send_max.is_some() {
-                                self.publish_send_count -= 1;
-                            }
-                        } else if self.auto_pub_response
-                            && self.status == ConnectionStatus::Connected
-                        {
+                    let reason_code = packet.reason_code();
+                    if reason_code.is_none() || reason_code.unwrap() == PubrecReasonCode::Success {
+                        if self.auto_pub_response && self.status == ConnectionStatus::Connected {
                             let pubrel = v5_0::GenericPubrel::<PacketIdType>::builder()
                                 .packet_id(packet_id)
                                 .build()
                                 .unwrap();
                             events.extend(self.process_send_v5_0_pubrel(pubrel));
                         }
-                    } else if self.auto_pub_response && self.status == ConnectionStatus::Connected {
-                        let pubrel = v5_0::GenericPubrel::<PacketIdType>::builder()
-                            .packet_id(packet_id)
-                            .build()
-                            .unwrap();
-                        events.extend(self.process_send_v5_0_pubrel(pubrel));
+                    } else {
+                        if self.pid_man.is_used_id(packet_id) {
+                            self.pid_man.release_id(packet_id);
+                            events.push(GenericEvent::NotifyPacketIdReleased(packet_id));
+                        }
+                        self.qos2_publish_processing.remove(&packet_id);
+                        if self.publish_send_max.is_some() {
+                            self.publish_send_count -= 1;
+                        }
                     }
                     events.extend(self.refresh_pingreq_recv());
                     events.push(GenericEvent::NotifyPacketReceived(packet.into()));
@@ -3416,8 +3432,10 @@ where
 
         match v3_1_1::Pingresp::parse(raw_packet.data_as_slice()) {
             Ok((packet, _)) => {
-                self.pingresp_recv_set = false;
-                events.push(GenericEvent::RequestTimerCancel(TimerKind::PingrespRecv));
+                if self.pingresp_recv_set {
+                    self.pingresp_recv_set = false;
+                    events.push(GenericEvent::RequestTimerCancel(TimerKind::PingrespRecv));
+                }
                 events.push(GenericEvent::NotifyPacketReceived(packet.into()));
             }
             Err(e) => {
@@ -3436,8 +3454,10 @@ where
 
         match v5_0::Pingresp::parse(raw_packet.data_as_slice()) {
             Ok((packet, _)) => {
-                self.pingresp_recv_set = false;
-                events.push(GenericEvent::RequestTimerCancel(TimerKind::PingrespRecv));
+                if self.pingresp_recv_set {
+                    self.pingresp_recv_set = false;
+                    events.push(GenericEvent::RequestTimerCancel(TimerKind::PingrespRecv));
+                }
                 events.push(GenericEvent::NotifyPacketReceived(packet.into()));
             }
             Err(e) => {
@@ -3527,7 +3547,7 @@ where
                     kind: TimerKind::PingreqRecv,
                     duration_ms: timeout_ms,
                 });
-            } else {
+            } else if self.pingreq_recv_set {
                 self.pingreq_recv_set = false;
                 events.push(GenericEvent::RequestTimerCancel(TimerKind::PingreqRecv));
             }
@@ -3560,11 +3580,6 @@ where
             }
         }
         None
-    }
-
-    #[allow(dead_code)]
-    fn is_packet_id_used(&self, packet_id: PacketIdType) -> bool {
-        self.pid_man.is_used_id(packet_id)
     }
 }
 

@@ -242,274 +242,6 @@ fn offline_publish_v5_0() {
 }
 
 #[test]
-fn auto_pub_response_v3_1_1() {
-    common::init_tracing();
-    let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
-
-    // Enable automatic publish response
-    connection.set_auto_pub_response(true);
-
-    // Send CONNECT
-    let connect = mqtt::packet::v3_1_1::Connect::builder()
-        .client_id("test_client")
-        .unwrap()
-        .build()
-        .unwrap();
-
-    let _events = connection.send(connect.into());
-
-    // Receive CONNACK
-    let connack = mqtt::packet::v3_1_1::Connack::builder()
-        .session_present(false)
-        .return_code(mqtt::result_code::ConnectReturnCode::Accepted)
-        .build()
-        .unwrap();
-
-    let bytes = connack.to_continuous_buffer();
-    let _events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
-
-    // Create and receive QoS1 PUBLISH A
-    let packet_id_a = 1u16;
-    let publish_a = mqtt::packet::v3_1_1::Publish::builder()
-        .topic_name("topic/a")
-        .unwrap()
-        .qos(mqtt::packet::Qos::AtLeastOnce)
-        .packet_id(packet_id_a)
-        .payload(b"payload A".to_vec())
-        .build()
-        .unwrap();
-
-    let bytes = publish_a.to_continuous_buffer();
-    let events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
-
-    // Find PUBACK send request event with same packet_id
-    let mut puback_found = false;
-    for event in &events {
-        if let mqtt::connection::Event::RequestSendPacket {
-            packet: mqtt::packet::Packet::V3_1_1Puback(p),
-            ..
-        } = event
-        {
-            if p.packet_id() == packet_id_a {
-                puback_found = true;
-                break;
-            }
-        }
-    }
-    assert!(
-        puback_found,
-        "PUBACK with packet_id {} should be found in events",
-        packet_id_a
-    );
-
-    // Create and receive QoS2 PUBLISH B
-    let packet_id_b = 2u16;
-    let publish_b = mqtt::packet::v3_1_1::Publish::builder()
-        .topic_name("topic/b")
-        .unwrap()
-        .qos(mqtt::packet::Qos::ExactlyOnce)
-        .packet_id(packet_id_b)
-        .payload(b"payload B".to_vec())
-        .build()
-        .unwrap();
-
-    let bytes = publish_b.to_continuous_buffer();
-    let events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
-
-    // Find PUBREC send request event with same packet_id
-    let mut pubrec_found = false;
-    for event in &events {
-        if let mqtt::connection::Event::RequestSendPacket {
-            packet: mqtt::packet::Packet::V3_1_1Pubrec(p),
-            ..
-        } = event
-        {
-            if p.packet_id() == packet_id_b {
-                pubrec_found = true;
-                break;
-            }
-        }
-    }
-    assert!(
-        pubrec_found,
-        "PUBREC with packet_id {} should be found in events",
-        packet_id_b
-    );
-
-    // Send PUBREC B
-    let pubrec_b = mqtt::packet::v3_1_1::Pubrec::builder()
-        .packet_id(packet_id_b)
-        .build()
-        .unwrap();
-
-    let _events = connection.send(pubrec_b.into());
-
-    // Receive PUBREL B
-    let pubrel_b = mqtt::packet::v3_1_1::Pubrel::builder()
-        .packet_id(packet_id_b)
-        .build()
-        .unwrap();
-
-    let bytes = pubrel_b.to_continuous_buffer();
-    let events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
-
-    // Find PUBCOMP send request event with same packet_id
-    let mut pubcomp_found = false;
-    for event in &events {
-        if let mqtt::connection::Event::RequestSendPacket {
-            packet: mqtt::packet::Packet::V3_1_1Pubcomp(p),
-            ..
-        } = event
-        {
-            if p.packet_id() == packet_id_b {
-                pubcomp_found = true;
-                break;
-            }
-        }
-    }
-    assert!(
-        pubcomp_found,
-        "PUBCOMP with packet_id {} should be found in events",
-        packet_id_b
-    );
-}
-
-#[test]
-fn auto_pub_response_v5_0() {
-    common::init_tracing();
-    let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
-
-    // Enable automatic publish response
-    connection.set_auto_pub_response(true);
-
-    // Send CONNECT
-    let connect = mqtt::packet::v5_0::Connect::builder()
-        .client_id("test_client")
-        .unwrap()
-        .build()
-        .unwrap();
-
-    let _events = connection.send(connect.into());
-
-    // Receive CONNACK
-    let connack = mqtt::packet::v5_0::Connack::builder()
-        .session_present(false)
-        .reason_code(mqtt::result_code::ConnectReasonCode::Success)
-        .build()
-        .unwrap();
-
-    let bytes = connack.to_continuous_buffer();
-    let _events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
-
-    // Create and receive QoS1 PUBLISH A
-    let packet_id_a = 1u16;
-    let publish_a = mqtt::packet::v5_0::Publish::builder()
-        .topic_name("topic/a")
-        .unwrap()
-        .qos(mqtt::packet::Qos::AtLeastOnce)
-        .packet_id(packet_id_a)
-        .payload(b"payload A".to_vec())
-        .build()
-        .unwrap();
-
-    let bytes = publish_a.to_continuous_buffer();
-    let events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
-
-    // Find PUBACK send request event with same packet_id
-    let mut puback_found = false;
-    for event in &events {
-        if let mqtt::connection::Event::RequestSendPacket {
-            packet: mqtt::packet::Packet::V5_0Puback(p),
-            ..
-        } = event
-        {
-            if p.packet_id() == packet_id_a {
-                puback_found = true;
-                break;
-            }
-        }
-    }
-    assert!(
-        puback_found,
-        "PUBACK with packet_id {} should be found in events",
-        packet_id_a
-    );
-
-    // Create and receive QoS2 PUBLISH B
-    let packet_id_b = 2u16;
-    let publish_b = mqtt::packet::v5_0::Publish::builder()
-        .topic_name("topic/b")
-        .unwrap()
-        .qos(mqtt::packet::Qos::ExactlyOnce)
-        .packet_id(packet_id_b)
-        .payload(b"payload B".to_vec())
-        .build()
-        .unwrap();
-
-    let bytes = publish_b.to_continuous_buffer();
-    let events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
-
-    // Find PUBREC send request event with same packet_id
-    let mut pubrec_found = false;
-    for event in &events {
-        if let mqtt::connection::Event::RequestSendPacket {
-            packet: mqtt::packet::Packet::V5_0Pubrec(p),
-            ..
-        } = event
-        {
-            if p.packet_id() == packet_id_b {
-                pubrec_found = true;
-                break;
-            }
-        }
-    }
-    assert!(
-        pubrec_found,
-        "PUBREC with packet_id {} should be found in events",
-        packet_id_b
-    );
-
-    // Send PUBREC B
-    let pubrec_b = mqtt::packet::v5_0::Pubrec::builder()
-        .packet_id(packet_id_b)
-        .reason_code(mqtt::result_code::PubrecReasonCode::Success)
-        .build()
-        .unwrap();
-
-    let _events = connection.send(pubrec_b.into());
-
-    // Receive PUBREL B
-    let pubrel_b = mqtt::packet::v5_0::Pubrel::builder()
-        .packet_id(packet_id_b)
-        .reason_code(mqtt::result_code::PubrelReasonCode::Success)
-        .build()
-        .unwrap();
-
-    let bytes = pubrel_b.to_continuous_buffer();
-    let events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
-
-    // Find PUBCOMP send request event with same packet_id
-    let mut pubcomp_found = false;
-    for event in &events {
-        if let mqtt::connection::Event::RequestSendPacket {
-            packet: mqtt::packet::Packet::V5_0Pubcomp(p),
-            ..
-        } = event
-        {
-            if p.packet_id() == packet_id_b {
-                pubcomp_found = true;
-                break;
-            }
-        }
-    }
-    assert!(
-        pubcomp_found,
-        "PUBCOMP with packet_id {} should be found in events",
-        packet_id_b
-    );
-}
-
-#[test]
 fn puback_match_v3_1_1() {
     common::init_tracing();
     let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
@@ -584,6 +316,219 @@ fn puback_no_match_v3_1_1() {
 }
 
 #[test]
+fn pubrec_no_match_v3_1_1() {
+    common::init_tracing();
+    let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
+    v3_1_1_client_establish_connection(&mut connection, true, false);
+
+    let pubrec_a = mqtt::packet::v3_1_1::Pubrec::builder()
+        .packet_id(1u16)
+        .build()
+        .unwrap();
+    let bytes = pubrec_a.to_continuous_buffer();
+    let events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
+    assert_eq!(events.len(), 2);
+
+    // First event: RequestClose
+    match &events[0] {
+        mqtt::connection::Event::RequestClose => {
+            // Expected RequestClose event
+        }
+        _ => panic!("Expected RequestClose event, got {:?}", events[0]),
+    }
+
+    // Second event: NotifyError(MqttError::ProtocolError)
+    match &events[1] {
+        mqtt::connection::Event::NotifyError(error) => {
+            assert_eq!(*error, mqtt::result_code::MqttError::ProtocolError);
+        }
+        _ => panic!("Expected NotifyError event, got {:?}", events[1]),
+    }
+}
+
+#[test]
+fn pubcomp_no_match_v3_1_1() {
+    common::init_tracing();
+    let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
+    v3_1_1_client_establish_connection(&mut connection, true, false);
+
+    let pubcomp_a = mqtt::packet::v3_1_1::Pubcomp::builder()
+        .packet_id(1u16)
+        .build()
+        .unwrap();
+    let bytes = pubcomp_a.to_continuous_buffer();
+    let events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
+    assert_eq!(events.len(), 2);
+
+    // First event: RequestClose
+    match &events[0] {
+        mqtt::connection::Event::RequestClose => {
+            // Expected RequestClose event
+        }
+        _ => panic!("Expected RequestClose event, got {:?}", events[0]),
+    }
+
+    // Second event: NotifyError(MqttError::ProtocolError)
+    match &events[1] {
+        mqtt::connection::Event::NotifyError(error) => {
+            assert_eq!(*error, mqtt::result_code::MqttError::ProtocolError);
+        }
+        _ => panic!("Expected NotifyError event, got {:?}", events[1]),
+    }
+}
+
+#[test]
+fn suback_match_v3_1_1() {
+    common::init_tracing();
+    let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
+    v3_1_1_client_establish_connection(&mut connection, true, false);
+
+    let packet_id = connection.acquire_packet_id().unwrap();
+    let subscribe = mqtt::packet::v3_1_1::Subscribe::builder()
+        .packet_id(packet_id)
+        .entries(vec![mqtt::packet::SubEntry::new(
+            "test/topic",
+            mqtt::packet::SubOpts::default(),
+        )
+        .unwrap()])
+        .build()
+        .unwrap();
+    let _events = connection.checked_send(subscribe.clone());
+
+    let suback = mqtt::packet::v3_1_1::Suback::builder()
+        .packet_id(packet_id)
+        .return_codes(vec![
+            mqtt::result_code::SubackReturnCode::SuccessMaximumQos0,
+        ])
+        .build()
+        .unwrap();
+    let bytes = suback.to_continuous_buffer();
+    let events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
+    assert_eq!(events.len(), 2);
+
+    // First event: NotifyPacketIdReleased
+    match &events[0] {
+        mqtt::connection::Event::NotifyPacketIdReleased(released_packet_id) => {
+            assert_eq!(*released_packet_id, packet_id);
+        }
+        _ => panic!("Expected NotifyPacketIdReleased event, got {:?}", events[0]),
+    }
+
+    // Second event: NotifyPacketReceived
+    match &events[1] {
+        mqtt::connection::Event::NotifyPacketReceived(packet) => {
+            assert_eq!(*packet, suback.into());
+        }
+        _ => panic!("Expected NotifyPacketReceived event, got {:?}", events[1]),
+    }
+}
+
+#[test]
+fn suback_no_match_v3_1_1() {
+    common::init_tracing();
+    let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
+    v3_1_1_client_establish_connection(&mut connection, true, false);
+
+    let suback = mqtt::packet::v3_1_1::Suback::builder()
+        .packet_id(1u16)
+        .return_codes(vec![
+            mqtt::result_code::SubackReturnCode::SuccessMaximumQos0,
+        ])
+        .build()
+        .unwrap();
+    let bytes = suback.to_continuous_buffer();
+    let events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
+    assert_eq!(events.len(), 2);
+
+    // First event: RequestClose
+    match &events[0] {
+        mqtt::connection::Event::RequestClose => {
+            // Expected RequestClose event
+        }
+        _ => panic!("Expected RequestClose event, got {:?}", events[0]),
+    }
+
+    // Second event: NotifyError(MqttError::ProtocolError)
+    match &events[1] {
+        mqtt::connection::Event::NotifyError(error) => {
+            assert_eq!(*error, mqtt::result_code::MqttError::ProtocolError);
+        }
+        _ => panic!("Expected NotifyError event, got {:?}", events[1]),
+    }
+}
+
+#[test]
+fn unsuback_match_v3_1_1() {
+    common::init_tracing();
+    let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
+    v3_1_1_client_establish_connection(&mut connection, true, false);
+
+    let packet_id = connection.acquire_packet_id().unwrap();
+    let unsubscribe = mqtt::packet::v3_1_1::Unsubscribe::builder()
+        .packet_id(packet_id)
+        .entries(vec!["test/topic"])
+        .unwrap()
+        .build()
+        .unwrap();
+    let _events = connection.checked_send(unsubscribe.clone());
+
+    let unsuback = mqtt::packet::v3_1_1::Unsuback::builder()
+        .packet_id(1u16)
+        .build()
+        .unwrap();
+    let bytes = unsuback.to_continuous_buffer();
+    let events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
+    assert_eq!(events.len(), 2);
+
+    // First event: NotifyPacketIdReleased
+    match &events[0] {
+        mqtt::connection::Event::NotifyPacketIdReleased(released_packet_id) => {
+            assert_eq!(*released_packet_id, packet_id);
+        }
+        _ => panic!("Expected NotifyPacketIdReleased event, got {:?}", events[0]),
+    }
+
+    // Second event: NotifyPacketReceived
+    match &events[1] {
+        mqtt::connection::Event::NotifyPacketReceived(packet) => {
+            assert_eq!(*packet, unsuback.into());
+        }
+        _ => panic!("Expected NotifyPacketReceived event, got {:?}", events[1]),
+    }
+}
+
+#[test]
+fn unsuback_no_match_v3_1_1() {
+    common::init_tracing();
+    let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
+    v3_1_1_client_establish_connection(&mut connection, true, false);
+
+    let unsuback = mqtt::packet::v3_1_1::Unsuback::builder()
+        .packet_id(1u16)
+        .build()
+        .unwrap();
+    let bytes = unsuback.to_continuous_buffer();
+    let events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
+    assert_eq!(events.len(), 2);
+
+    // First event: RequestClose
+    match &events[0] {
+        mqtt::connection::Event::RequestClose => {
+            // Expected RequestClose event
+        }
+        _ => panic!("Expected RequestClose event, got {:?}", events[0]),
+    }
+
+    // Second event: NotifyError(MqttError::ProtocolError)
+    match &events[1] {
+        mqtt::connection::Event::NotifyError(error) => {
+            assert_eq!(*error, mqtt::result_code::MqttError::ProtocolError);
+        }
+        _ => panic!("Expected NotifyError event, got {:?}", events[1]),
+    }
+}
+
+#[test]
 fn puback_no_match_v5_0() {
     common::init_tracing();
     let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
@@ -634,240 +579,290 @@ fn puback_no_match_v5_0() {
 }
 
 #[test]
-fn qos2_pubrel_send_request_v3_1_1() {
-    common::init_tracing();
-    let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
-
-    // Enable automatic publish response
-    connection.set_auto_pub_response(true);
-
-    // Send CONNECT
-    let connect = mqtt::packet::v3_1_1::Connect::builder()
-        .client_id("test_client")
-        .unwrap()
-        .build()
-        .unwrap();
-
-    let _events = connection.send(connect.into());
-
-    // Receive CONNACK
-    let connack = mqtt::packet::v3_1_1::Connack::builder()
-        .session_present(false)
-        .return_code(mqtt::result_code::ConnectReturnCode::Accepted)
-        .build()
-        .unwrap();
-
-    let bytes = connack.to_continuous_buffer();
-    let _events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
-
-    // Acquire packet ID and send QoS2 PUBLISH
-    let packet_id = connection.acquire_packet_id().unwrap();
-    let publish = mqtt::packet::v3_1_1::Publish::builder()
-        .topic_name("test/topic")
-        .unwrap()
-        .qos(mqtt::packet::Qos::ExactlyOnce)
-        .packet_id(packet_id)
-        .payload(b"test payload".to_vec())
-        .build()
-        .unwrap();
-
-    let _events = connection.send(publish.into());
-
-    // Receive PUBREC
-    let pubrec = mqtt::packet::v3_1_1::Pubrec::builder()
-        .packet_id(packet_id)
-        .build()
-        .unwrap();
-
-    let bytes = pubrec.to_continuous_buffer();
-    let events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
-
-    // Find PUBREL send request event with same packet_id
-    let mut pubrel_found = false;
-    for event in &events {
-        if let mqtt::connection::Event::RequestSendPacket {
-            packet: mqtt::packet::Packet::V3_1_1Pubrel(p),
-            ..
-        } = event
-        {
-            if p.packet_id() == packet_id {
-                pubrel_found = true;
-                break;
-            }
-        }
-    }
-    assert!(
-        pubrel_found,
-        "PUBREL with packet_id {} should be found in events",
-        packet_id
-    );
-}
-
-#[test]
-fn qos2_pubrel_send_request_v5_0() {
+fn pubrec_no_match_v5_0() {
     common::init_tracing();
     let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
+    v5_0_client_establish_connection(&mut connection);
 
-    // Enable automatic publish response
-    connection.set_auto_pub_response(true);
-
-    // Send CONNECT
-    let connect = mqtt::packet::v5_0::Connect::builder()
-        .client_id("test_client")
-        .unwrap()
+    let pubrec_a = mqtt::packet::v5_0::Pubrec::builder()
+        .packet_id(1u16)
         .build()
         .unwrap();
-
-    let _events = connection.send(connect.into());
-
-    // Receive CONNACK
-    let connack = mqtt::packet::v5_0::Connack::builder()
-        .session_present(false)
-        .reason_code(mqtt::result_code::ConnectReasonCode::Success)
-        .build()
-        .unwrap();
-
-    let bytes = connack.to_continuous_buffer();
-    let _events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
-
-    // Acquire packet ID and send QoS2 PUBLISH
-    let packet_id = connection.acquire_packet_id().unwrap();
-    let publish = mqtt::packet::v5_0::Publish::builder()
-        .topic_name("test/topic")
-        .unwrap()
-        .qos(mqtt::packet::Qos::ExactlyOnce)
-        .packet_id(packet_id)
-        .payload(b"test payload".to_vec())
-        .build()
-        .unwrap();
-
-    let _events = connection.send(publish.into());
-
-    // Receive PUBREC
-    let pubrec = mqtt::packet::v5_0::Pubrec::builder()
-        .packet_id(packet_id)
-        .reason_code(mqtt::result_code::PubrecReasonCode::Success)
-        .build()
-        .unwrap();
-
-    let bytes = pubrec.to_continuous_buffer();
+    let bytes = pubrec_a.to_continuous_buffer();
     let events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
+    assert_eq!(events.len(), 3);
 
-    // Find PUBREL send request event with same packet_id
-    let mut pubrel_found = false;
-    for event in &events {
-        if let mqtt::connection::Event::RequestSendPacket {
-            packet: mqtt::packet::Packet::V5_0Pubrel(p),
-            ..
-        } = event
-        {
-            if p.packet_id() == packet_id {
-                pubrel_found = true;
-                break;
+    // First event: RequestSendPacket with V5.0 Disconnect packet
+    match &events[0] {
+        mqtt::connection::Event::RequestSendPacket {
+            packet,
+            release_packet_id_if_send_error,
+        } => {
+            if let mqtt::packet::Packet::V5_0Disconnect(disconnect) = packet {
+                assert_eq!(
+                    disconnect.reason_code(),
+                    Some(mqtt::result_code::DisconnectReasonCode::ProtocolError)
+                );
+            } else {
+                panic!("Expected V5_0Disconnect packet, got {:?}", packet);
             }
+            assert_eq!(*release_packet_id_if_send_error, None);
         }
+        _ => panic!("Expected RequestSendPacket event, got {:?}", events[0]),
     }
-    assert!(
-        pubrel_found,
-        "PUBREL with packet_id {} should be found in events",
-        packet_id
-    );
+
+    // Second event: RequestClose
+    match &events[1] {
+        mqtt::connection::Event::RequestClose => {
+            // Expected RequestClose event
+        }
+        _ => panic!("Expected RequestClose event, got {:?}", events[1]),
+    }
+
+    // Third event: NotifyError(MqttError::ProtocolError)
+    match &events[2] {
+        mqtt::connection::Event::NotifyError(error) => {
+            assert_eq!(*error, mqtt::result_code::MqttError::ProtocolError);
+        }
+        _ => panic!("Expected NotifyError event, got {:?}", events[2]),
+    }
 }
 
 #[test]
-fn auto_ping_response_server_v3_1_1() {
+fn pubcomp_no_match_v5_0() {
     common::init_tracing();
-    let mut connection = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V3_1_1);
+    let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
+    v5_0_client_establish_connection(&mut connection);
 
-    // Enable automatic ping response
-    connection.set_auto_ping_response(true);
-
-    // Receive CONNECT
-    let connect = mqtt::packet::v3_1_1::Connect::builder()
-        .client_id("test_client")
-        .unwrap()
+    let pubcomp_a = mqtt::packet::v5_0::Pubcomp::builder()
+        .packet_id(1u16)
         .build()
         .unwrap();
-
-    let bytes = connect.to_continuous_buffer();
-    let _events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
-
-    // Send CONNACK
-    let connack = mqtt::packet::v3_1_1::Connack::builder()
-        .session_present(false)
-        .return_code(mqtt::result_code::ConnectReturnCode::Accepted)
-        .build()
-        .unwrap();
-
-    let _events = connection.send(connack.into());
-
-    // Receive PINGREQ
-    let pingreq = mqtt::packet::v3_1_1::Pingreq::new();
-
-    let bytes = pingreq.to_continuous_buffer();
+    let bytes = pubcomp_a.to_continuous_buffer();
     let events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
+    assert_eq!(events.len(), 3);
 
-    // Find PINGRESP send request event
-    let mut pingresp_found = false;
-    for event in &events {
-        if let mqtt::connection::Event::RequestSendPacket {
-            packet: mqtt::packet::Packet::V3_1_1Pingresp(_),
-            ..
-        } = event
-        {
-            pingresp_found = true;
-            break;
+    // First event: RequestSendPacket with V5.0 Disconnect packet
+    match &events[0] {
+        mqtt::connection::Event::RequestSendPacket {
+            packet,
+            release_packet_id_if_send_error,
+        } => {
+            if let mqtt::packet::Packet::V5_0Disconnect(disconnect) = packet {
+                assert_eq!(
+                    disconnect.reason_code(),
+                    Some(mqtt::result_code::DisconnectReasonCode::ProtocolError)
+                );
+            } else {
+                panic!("Expected V5_0Disconnect packet, got {:?}", packet);
+            }
+            assert_eq!(*release_packet_id_if_send_error, None);
         }
+        _ => panic!("Expected RequestSendPacket event, got {:?}", events[0]),
     }
-    assert!(pingresp_found, "PINGRESP should be found in events");
+
+    // Second event: RequestClose
+    match &events[1] {
+        mqtt::connection::Event::RequestClose => {
+            // Expected RequestClose event
+        }
+        _ => panic!("Expected RequestClose event, got {:?}", events[1]),
+    }
+
+    // Third event: NotifyError(MqttError::ProtocolError)
+    match &events[2] {
+        mqtt::connection::Event::NotifyError(error) => {
+            assert_eq!(*error, mqtt::result_code::MqttError::ProtocolError);
+        }
+        _ => panic!("Expected NotifyError event, got {:?}", events[2]),
+    }
 }
 
 #[test]
-fn auto_ping_response_server_v5_0() {
+fn suback_match_v5_0() {
     common::init_tracing();
-    let mut connection = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
+    let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
+    v5_0_client_establish_connection(&mut connection);
 
-    // Enable automatic ping response
-    connection.set_auto_ping_response(true);
+    let packet_id = connection.acquire_packet_id().unwrap();
+    let subscribe = mqtt::packet::v5_0::Subscribe::builder()
+        .packet_id(packet_id)
+        .entries(vec![mqtt::packet::SubEntry::new(
+            "test/topic",
+            mqtt::packet::SubOpts::default(),
+        )
+        .unwrap()])
+        .build()
+        .unwrap();
+    let _events = connection.checked_send(subscribe.clone());
 
-    // Receive CONNECT
-    let connect = mqtt::packet::v5_0::Connect::builder()
-        .client_id("test_client")
+    let suback = mqtt::packet::v5_0::Suback::builder()
+        .packet_id(packet_id)
+        .reason_codes(vec![mqtt::result_code::SubackReasonCode::GrantedQos0])
+        .build()
+        .unwrap();
+    let bytes = suback.to_continuous_buffer();
+    let events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
+    assert_eq!(events.len(), 2);
+
+    // First event: NotifyPacketIdReleased
+    match &events[0] {
+        mqtt::connection::Event::NotifyPacketIdReleased(released_packet_id) => {
+            assert_eq!(*released_packet_id, packet_id);
+        }
+        _ => panic!("Expected NotifyPacketIdReleased event, got {:?}", events[0]),
+    }
+
+    // Second event: NotifyPacketReceived
+    match &events[1] {
+        mqtt::connection::Event::NotifyPacketReceived(packet) => {
+            assert_eq!(*packet, suback.into());
+        }
+        _ => panic!("Expected NotifyPacketReceived event, got {:?}", events[1]),
+    }
+}
+
+#[test]
+fn suback_no_match_v5_0() {
+    common::init_tracing();
+    let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
+    v5_0_client_establish_connection(&mut connection);
+
+    let suback = mqtt::packet::v5_0::Suback::builder()
+        .packet_id(1u16)
+        .reason_codes(vec![mqtt::result_code::SubackReasonCode::GrantedQos0])
+        .build()
+        .unwrap();
+    let bytes = suback.to_continuous_buffer();
+    let events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
+    assert_eq!(events.len(), 3);
+
+    // First event: RequestSendPacket with V5.0 Disconnect packet
+    match &events[0] {
+        mqtt::connection::Event::RequestSendPacket {
+            packet,
+            release_packet_id_if_send_error,
+        } => {
+            if let mqtt::packet::Packet::V5_0Disconnect(disconnect) = packet {
+                assert_eq!(
+                    disconnect.reason_code(),
+                    Some(mqtt::result_code::DisconnectReasonCode::ProtocolError)
+                );
+            } else {
+                panic!("Expected V5_0Disconnect packet, got {:?}", packet);
+            }
+            assert_eq!(*release_packet_id_if_send_error, None);
+        }
+        _ => panic!("Expected RequestSendPacket event, got {:?}", events[0]),
+    }
+
+    // Second event: RequestClose
+    match &events[1] {
+        mqtt::connection::Event::RequestClose => {
+            // Expected RequestClose event
+        }
+        _ => panic!("Expected RequestClose event, got {:?}", events[1]),
+    }
+
+    // Third event: NotifyError(MqttError::ProtocolError)
+    match &events[2] {
+        mqtt::connection::Event::NotifyError(error) => {
+            assert_eq!(*error, mqtt::result_code::MqttError::ProtocolError);
+        }
+        _ => panic!("Expected NotifyError event, got {:?}", events[2]),
+    }
+}
+
+#[test]
+fn unsuback_match_v5_0() {
+    common::init_tracing();
+    let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
+    v5_0_client_establish_connection(&mut connection);
+
+    let packet_id = connection.acquire_packet_id().unwrap();
+    let unsubscribe = mqtt::packet::v5_0::Unsubscribe::builder()
+        .packet_id(packet_id)
+        .entries(vec!["test/topic"])
         .unwrap()
         .build()
         .unwrap();
+    let _events = connection.checked_send(unsubscribe.clone());
 
-    let bytes = connect.to_continuous_buffer();
-    let _events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
-
-    // Send CONNACK
-    let connack = mqtt::packet::v5_0::Connack::builder()
-        .session_present(false)
-        .reason_code(mqtt::result_code::ConnectReasonCode::Success)
+    let unsuback = mqtt::packet::v5_0::Unsuback::builder()
+        .packet_id(packet_id)
+        .reason_codes(vec![mqtt::result_code::UnsubackReasonCode::Success])
         .build()
         .unwrap();
-
-    let _events = connection.send(connack.into());
-
-    // Receive PINGREQ
-    let pingreq = mqtt::packet::v5_0::Pingreq::new();
-
-    let bytes = pingreq.to_continuous_buffer();
+    let bytes = unsuback.to_continuous_buffer();
     let events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
+    assert_eq!(events.len(), 2);
 
-    // Find PINGRESP send request event
-    let mut pingresp_found = false;
-    for event in &events {
-        if let mqtt::connection::Event::RequestSendPacket {
-            packet: mqtt::packet::Packet::V5_0Pingresp(_),
-            ..
-        } = event
-        {
-            pingresp_found = true;
-            break;
+    // First event: NotifyPacketIdReleased
+    match &events[0] {
+        mqtt::connection::Event::NotifyPacketIdReleased(released_packet_id) => {
+            assert_eq!(*released_packet_id, packet_id);
         }
+        _ => panic!("Expected NotifyPacketIdReleased event, got {:?}", events[0]),
     }
-    assert!(pingresp_found, "PINGRESP should be found in events");
+
+    // Second event: NotifyPacketReceived
+    match &events[1] {
+        mqtt::connection::Event::NotifyPacketReceived(packet) => {
+            assert_eq!(*packet, unsuback.into());
+        }
+        _ => panic!("Expected NotifyPacketReceived event, got {:?}", events[1]),
+    }
+}
+
+#[test]
+fn unsuback_no_match_v5_0() {
+    common::init_tracing();
+    let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
+    v5_0_client_establish_connection(&mut connection);
+
+    let unsuback = mqtt::packet::v5_0::Unsuback::builder()
+        .packet_id(1u16)
+        .reason_codes(vec![mqtt::result_code::UnsubackReasonCode::Success])
+        .build()
+        .unwrap();
+    let bytes = unsuback.to_continuous_buffer();
+    let events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
+    assert_eq!(events.len(), 3);
+
+    // First event: RequestSendPacket with V5.0 Disconnect packet
+    match &events[0] {
+        mqtt::connection::Event::RequestSendPacket {
+            packet,
+            release_packet_id_if_send_error,
+        } => {
+            if let mqtt::packet::Packet::V5_0Disconnect(disconnect) = packet {
+                assert_eq!(
+                    disconnect.reason_code(),
+                    Some(mqtt::result_code::DisconnectReasonCode::ProtocolError)
+                );
+            } else {
+                panic!("Expected V5_0Disconnect packet, got {:?}", packet);
+            }
+            assert_eq!(*release_packet_id_if_send_error, None);
+        }
+        _ => panic!("Expected RequestSendPacket event, got {:?}", events[0]),
+    }
+
+    // Second event: RequestClose
+    match &events[1] {
+        mqtt::connection::Event::RequestClose => {
+            // Expected RequestClose event
+        }
+        _ => panic!("Expected RequestClose event, got {:?}", events[1]),
+    }
+
+    // Third event: NotifyError(MqttError::ProtocolError)
+    match &events[2] {
+        mqtt::connection::Event::NotifyError(error) => {
+            assert_eq!(*error, mqtt::result_code::MqttError::ProtocolError);
+        }
+        _ => panic!("Expected NotifyError event, got {:?}", events[2]),
+    }
 }
 
 #[test]
