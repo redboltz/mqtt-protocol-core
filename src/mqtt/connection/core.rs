@@ -186,8 +186,11 @@ where
     // Connection state
     status: ConnectionStatus,
 
-    // PINGREQ send interval in milliseconds
-    pingreq_send_interval_ms: Option<u64>,
+    // PINGREQ send interval in milliseconds set by user
+    pingreq_user_send_interval_ms: Option<u64>,
+    pingreq_keep_alive_ms: u64,
+    pingreq_server_keep_alive_ms: Option<u64>,
+
     // PINGREQ receive timeout in milliseconds
     pingreq_recv_timeout_ms: Option<u64>,
     // PINGRESP receive timeout in milliseconds
@@ -275,7 +278,9 @@ where
             maximum_packet_size_send: MQTT_PACKET_SIZE_NO_LIMIT,
             maximum_packet_size_recv: MQTT_PACKET_SIZE_NO_LIMIT,
             status: ConnectionStatus::Disconnected,
-            pingreq_send_interval_ms: None,
+            pingreq_user_send_interval_ms: None,
+            pingreq_keep_alive_ms: 0,
+            pingreq_server_keep_alive_ms: None,
             pingreq_recv_timeout_ms: None,
             pingresp_recv_timeout_ms: None,
             qos2_publish_handled: HashSet::default(),
@@ -798,23 +803,24 @@ where
     /// Events generated from updating the ping interval
     pub fn set_pingreq_send_interval(
         &mut self,
-        duration_ms: u64,
+        duration_ms: Option<u64>,
     ) -> Vec<GenericEvent<PacketIdType>> {
         let mut events = Vec::new();
-
-        if duration_ms == 0 {
-            self.pingreq_send_interval_ms = None;
-            self.pingreq_send_set = false;
-            events.push(GenericEvent::RequestTimerCancel(TimerKind::PingreqSend));
-        } else {
-            self.pingreq_send_interval_ms = Some(duration_ms);
-            self.pingreq_send_set = true;
-            events.push(GenericEvent::RequestTimerReset {
-                kind: TimerKind::PingreqSend,
-                duration_ms,
-            });
+        self.pingreq_user_send_interval_ms = duration_ms;
+        if let Some(ms) = duration_ms {
+            if ms == 0 {
+                if self.pingreq_send_set {
+                    self.pingreq_send_set = false;
+                    events.push(GenericEvent::RequestTimerCancel(TimerKind::PingreqSend));
+                }
+            } else if self.status == ConnectionStatus::Connected {
+                self.pingreq_send_set = true;
+                events.push(GenericEvent::RequestTimerReset {
+                    kind: TimerKind::PingreqSend,
+                    duration_ms: ms,
+                });
+            }
         }
-
         events
     }
 
@@ -1161,6 +1167,8 @@ where
         self.pid_suback.clear();
         self.pid_unsuback.clear();
         self.is_client = is_client;
+        self.pingreq_keep_alive_ms = 0;
+        self.pingreq_server_keep_alive_ms = None;
     }
 
     fn clear_store_related(&mut self) {
@@ -1259,11 +1267,7 @@ where
         self.initialize(true);
         self.status = ConnectionStatus::Connecting;
 
-        // Extract keep_alive and set pingreq_send_interval_ms if != 0
-        let keep_alive = packet.keep_alive();
-        if keep_alive != 0 && self.pingreq_send_interval_ms.is_none() {
-            self.pingreq_send_interval_ms = Some(keep_alive as u64 * 1000);
-        }
+        self.pingreq_keep_alive_ms = packet.keep_alive() as u64 * 1000;
 
         // Handle clean_session flag
         if packet.clean_start() {
@@ -1301,11 +1305,7 @@ where
         self.initialize(true);
         self.status = ConnectionStatus::Connecting;
 
-        // Extract keep_alive and set pingreq_send_interval_ms if != 0
-        let keep_alive = packet.keep_alive();
-        if keep_alive != 0 && self.pingreq_send_interval_ms.is_none() {
-            self.pingreq_send_interval_ms = Some(keep_alive as u64 * 1000);
-        }
+        self.pingreq_keep_alive_ms = packet.keep_alive() as u64 * 1000;
 
         // Handle clean_start flag
         if packet.clean_start() {
@@ -2243,11 +2243,20 @@ where
 
     fn send_post_process(&mut self, events: &mut Vec<GenericEvent<PacketIdType>>) {
         if self.is_client {
-            if let Some(timeout_ms) = self.pingreq_send_interval_ms {
+            // Priority 3
+            let mut ms: u64 = self.pingreq_keep_alive_ms;
+            if let Some(timeout_ms) = self.pingreq_user_send_interval_ms {
+                // Priority 1
+                ms = timeout_ms;
+            } else if let Some(timeout_ms) = self.pingreq_server_keep_alive_ms {
+                // Priority 2
+                ms = timeout_ms;
+            }
+            if ms > 0 {
                 self.pingreq_send_set = true;
                 events.push(GenericEvent::RequestTimerReset {
                     kind: TimerKind::PingreqSend,
-                    duration_ms: timeout_ms,
+                    duration_ms: ms,
                 });
             }
         }
@@ -2648,22 +2657,24 @@ where
                                 self.maximum_packet_size_send = val.val();
                             }
                             Property::ServerKeepAlive(val) => {
-                                let val = val.val();
-                                if val == 0 {
-                                    if self.pingreq_send_set {
-                                        self.pingreq_send_set = false;
-                                        events.push(GenericEvent::RequestTimerCancel(
-                                            TimerKind::PingreqSend,
-                                        ));
+                                let val = val.val() as u64 * 1000;
+                                self.pingreq_server_keep_alive_ms = Some(val);
+                                if self.pingreq_user_send_interval_ms.is_none() {
+                                    if val == 0 {
+                                        if self.pingreq_send_set {
+                                            self.pingreq_send_set = false;
+                                            events.push(GenericEvent::RequestTimerCancel(
+                                                TimerKind::PingreqSend,
+                                            ));
+                                        }
+                                        self.pingreq_user_send_interval_ms = None;
+                                    } else {
+                                        self.pingreq_send_set = true;
+                                        events.push(GenericEvent::RequestTimerReset {
+                                            kind: TimerKind::PingreqSend,
+                                            duration_ms: val,
+                                        });
                                     }
-                                    self.pingreq_send_interval_ms = None;
-                                } else {
-                                    self.pingreq_send_interval_ms = Some(val as u64 * 1000 * 3 / 2);
-                                    self.pingreq_send_set = true;
-                                    events.push(GenericEvent::RequestTimerReset {
-                                        kind: TimerKind::PingreqSend,
-                                        duration_ms: self.pingreq_send_interval_ms.unwrap(),
-                                    });
                                 }
                             }
                             _ => {

@@ -265,7 +265,7 @@ fn client_receive_connack_server_keep_alive_prop_0to1() {
     // Check RequestTimerReset event
     if let mqtt::connection::Event::RequestTimerReset { kind, duration_ms } = &events[0] {
         assert_eq!(*kind, mqtt::connection::TimerKind::PingreqSend);
-        assert_eq!(*duration_ms, 1500);
+        assert_eq!(*duration_ms, 1000);
     } else {
         panic!("Expected RequestTimerReset event, got: {:?}", events[0]);
     }
