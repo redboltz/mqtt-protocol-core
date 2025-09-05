@@ -1,4 +1,15 @@
-# 0.5.1 undetermined
+# 0.6.0 undetermined
+
+## Breaking changes
+
+* Re-designed PINGREQ sending interval management. #35
+  * GenericConnection::set_pingreq_send_interval() duration parameter becomes `Option<u64>`.
+  * Prioritize PINGREQ sending interval settings.
+     1. User setting by GenericConnection::set_pingreq_send_interval().
+     2. ServerKeepAlive Property value in received CONNACK packet.
+     3. KeepAlive(default 0) value in sent CONNECT packet.
+
+## Other updates
 
 * Fix PINGRESP receiving timeout timer management. #34
 * Refine error handling. #32

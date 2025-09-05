@@ -38,7 +38,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-mqtt-protocol-core = "0.5.1"
+mqtt-protocol-core = "0.6.0"
 ```
 
 ### No-std Support
@@ -47,7 +47,7 @@ For `no_std` environments (embedded systems), disable the default `std` feature:
 
 ```toml
 [dependencies]
-mqtt-protocol-core = { version = "0.5.1", default-features = false }
+mqtt-protocol-core = { version = "0.6.0", default-features = false }
 ```
 
 Caveats:
@@ -64,15 +64,15 @@ The library supports several optional features that can be enabled/disabled as n
 ```toml
 # Enable tracing support (independent of std)
 [dependencies]
-mqtt-protocol-core = { version = "0.5.1", default-features = false, features = ["tracing"] }
+mqtt-protocol-core = { version = "0.6.0", default-features = false, features = ["tracing"] }
 
 # Use with std but without tracing
 [dependencies]
-mqtt-protocol-core = { version = "0.5.1", default-features = false, features = ["std"] }
+mqtt-protocol-core = { version = "0.6.0", default-features = false, features = ["std"] }
 
 # Full-featured (std + tracing)
 [dependencies]
-mqtt-protocol-core = { version = "0.5.1", features = ["tracing"] }
+mqtt-protocol-core = { version = "0.6.0", features = ["tracing"] }
 ```
 
 ### Small String Optimization (SSO) Features
@@ -87,11 +87,11 @@ This crate provides SSO features to optimize memory usage for small string and b
 ```toml
 # Use specific SSO optimization level
 [dependencies]
-mqtt-protocol-core = { version = "0.5.1", features = ["sso-lv10"] }
+mqtt-protocol-core = { version = "0.6.0", features = ["sso-lv10"] }
 
 # Combine with other features
 [dependencies]
-mqtt-protocol-core = { version = "0.5.1", features = ["std", "sso-lv20", "tracing"] }
+mqtt-protocol-core = { version = "0.6.0", features = ["std", "sso-lv20", "tracing"] }
 ```
 
 #### ⚠️ **Important: Feature Flag Propagation Requirement**
@@ -110,7 +110,7 @@ When your crate depends on `mqtt-protocol-core` and is used by other crates or a
 ```toml
 # Your crate's Cargo.toml
 [dependencies]
-mqtt-protocol-core = { version = "0.5.1", features = ["sso-lv10"] }
+mqtt-protocol-core = { version = "0.6.0", features = ["sso-lv10"] }
 
 [features]
 # You MUST re-export ALL SSO features to allow downstream configuration

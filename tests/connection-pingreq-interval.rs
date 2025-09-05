@@ -22,24 +22,37 @@
 // tests/connection-pingreq-interval.rs
 // Tests for set_pingreq_send_interval functionality
 use mqtt_protocol_core::mqtt;
-
 mod common;
-use mqtt_protocol_core::mqtt::connection::event::{GenericEvent, TimerKind};
+
+use crate::common::v5_0_client_establish_connection;
 
 #[test]
-fn test_set_pingreq_send_interval_enable() {
+fn test_set_pingreq_send_interval_enable_disconnected() {
     common::init_tracing();
     let mut connection =
         mqtt::GenericConnection::<mqtt::role::Client, u16>::new(mqtt::Version::V5_0);
 
     // Enable PINGREQ timer with 30 second interval
-    let events = connection.set_pingreq_send_interval(30000);
+    let events = connection.set_pingreq_send_interval(Some(30000));
+
+    assert!(events.is_empty());
+}
+
+#[test]
+fn test_set_pingreq_send_interval_enable_connected() {
+    common::init_tracing();
+    let mut connection =
+        mqtt::GenericConnection::<mqtt::role::Client, u16>::new(mqtt::Version::V5_0);
+    v5_0_client_establish_connection(&mut connection);
+
+    // Enable PINGREQ timer with 30 second interval
+    let events = connection.set_pingreq_send_interval(Some(30000));
 
     // Should return one TimerReset event
     assert_eq!(events.len(), 1);
     match &events[0] {
-        GenericEvent::RequestTimerReset { kind, duration_ms } => {
-            assert_eq!(kind, &TimerKind::PingreqSend);
+        mqtt::connection::GenericEvent::RequestTimerReset { kind, duration_ms } => {
+            assert_eq!(kind, &mqtt::connection::TimerKind::PingreqSend);
             assert_eq!(duration_ms, &30000);
         }
         _ => panic!("Expected TimerReset event"),
@@ -47,43 +60,75 @@ fn test_set_pingreq_send_interval_enable() {
 }
 
 #[test]
-fn test_set_pingreq_send_interval_disable() {
+fn test_set_pingreq_send_interval_disable_disconnected() {
     common::init_tracing();
     let mut connection =
         mqtt::GenericConnection::<mqtt::role::Client, u16>::new(mqtt::Version::V5_0);
 
     // First enable the timer
-    connection.set_pingreq_send_interval(15000);
+    connection.set_pingreq_send_interval(Some(15000));
 
     // Then disable it with 0 duration
-    let events = connection.set_pingreq_send_interval(0);
+    let events = connection.set_pingreq_send_interval(Some(0));
+
+    assert!(events.is_empty());
+}
+
+#[test]
+fn test_set_pingreq_send_interval_disable_connected() {
+    common::init_tracing();
+    let mut connection =
+        mqtt::GenericConnection::<mqtt::role::Client, u16>::new(mqtt::Version::V5_0);
+    v5_0_client_establish_connection(&mut connection);
+
+    // First enable the timer
+    connection.set_pingreq_send_interval(Some(15000));
+
+    // Then disable it with 0 duration
+    let events = connection.set_pingreq_send_interval(Some(0));
 
     // Should return one TimerCancel event
     assert_eq!(events.len(), 1);
     match &events[0] {
-        GenericEvent::RequestTimerCancel(kind) => {
-            assert_eq!(kind, &TimerKind::PingreqSend);
+        mqtt::connection::GenericEvent::RequestTimerCancel(kind) => {
+            assert_eq!(kind, &mqtt::connection::TimerKind::PingreqSend);
         }
         _ => panic!("Expected TimerCancel event"),
     }
 }
 
 #[test]
-fn test_set_pingreq_send_interval_update() {
+fn test_set_pingreq_send_interval_update_disconnected() {
     common::init_tracing();
     let mut connection =
         mqtt::GenericConnection::<mqtt::role::Client, u16>::new(mqtt::Version::V5_0);
 
     // Set initial interval
-    let events1 = connection.set_pingreq_send_interval(10000);
+    let events1 = connection.set_pingreq_send_interval(Some(10000));
+    assert!(events1.is_empty());
+
+    // Update to different interval
+    let events2 = connection.set_pingreq_send_interval(Some(20000));
+    assert!(events2.is_empty());
+}
+
+#[test]
+fn test_set_pingreq_send_interval_update_connected() {
+    common::init_tracing();
+    let mut connection =
+        mqtt::GenericConnection::<mqtt::role::Client, u16>::new(mqtt::Version::V5_0);
+    v5_0_client_establish_connection(&mut connection);
+
+    // Set initial interval
+    let events1 = connection.set_pingreq_send_interval(Some(10000));
     assert_eq!(events1.len(), 1);
 
     // Update to different interval
-    let events2 = connection.set_pingreq_send_interval(20000);
+    let events2 = connection.set_pingreq_send_interval(Some(20000));
     assert_eq!(events2.len(), 1);
     match &events2[0] {
-        GenericEvent::RequestTimerReset { kind, duration_ms } => {
-            assert_eq!(kind, &TimerKind::PingreqSend);
+        mqtt::connection::GenericEvent::RequestTimerReset { kind, duration_ms } => {
+            assert_eq!(kind, &mqtt::connection::TimerKind::PingreqSend);
             assert_eq!(duration_ms, &20000);
         }
         _ => panic!("Expected TimerReset event"),
@@ -91,20 +136,45 @@ fn test_set_pingreq_send_interval_update() {
 }
 
 #[test]
-fn test_set_pingreq_send_interval_server_role() {
+fn test_set_pingreq_send_interval_server_keep_alive() {
     common::init_tracing();
     let mut connection =
-        mqtt::GenericConnection::<mqtt::role::Server, u32>::new(mqtt::Version::V3_1_1);
+        mqtt::GenericConnection::<mqtt::role::Client, u16>::new(mqtt::Version::V5_0);
+    let connect = mqtt::packet::v5_0::Connect::builder()
+        .client_id("test_client")
+        .unwrap()
+        .clean_start(true)
+        .build()
+        .unwrap();
+    let _events = connection.checked_send(connect.clone());
 
-    // Test with server role and u32 packet ID type
-    let events = connection.set_pingreq_send_interval(45000);
+    let connack = mqtt::packet::v5_0::Connack::builder()
+        .session_present(false)
+        .reason_code(mqtt::result_code::ConnectReasonCode::Success)
+        .props(vec![mqtt::packet::ServerKeepAlive::new(1).unwrap().into()])
+        .build()
+        .unwrap();
 
-    assert_eq!(events.len(), 1);
-    match &events[0] {
-        GenericEvent::RequestTimerReset { kind, duration_ms } => {
-            assert_eq!(kind, &TimerKind::PingreqSend);
-            assert_eq!(duration_ms, &45000);
+    let bytes = connack.to_continuous_buffer();
+    let events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
+    assert_eq!(events.len(), 2);
+
+    // Check RequestTimerReset event
+    if let mqtt::connection::Event::RequestTimerReset { kind, duration_ms } = &events[0] {
+        assert_eq!(*kind, mqtt::connection::TimerKind::PingreqSend);
+        assert_eq!(*duration_ms, 1000);
+    } else {
+        panic!("Expected RequestTimerReset event, got: {:?}", events[0]);
+    }
+
+    // Check NotifyPacketReceived event for connack
+    if let mqtt::connection::Event::NotifyPacketReceived(packet) = &events[1] {
+        if let mqtt::packet::GenericPacket::V5_0Connack(connack_received) = packet {
+            assert_eq!(*connack_received, connack);
+        } else {
+            panic!("Expected V5_0Connack packet, got: {packet:?}");
         }
-        _ => panic!("Expected TimerReset event"),
+    } else {
+        panic!("Expected NotifyPacketReceived event, got: {:?}", events[1]);
     }
 }
