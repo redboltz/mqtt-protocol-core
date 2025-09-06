@@ -1073,7 +1073,7 @@ fn pingresp_recv_timer_reset_v3_1_1() {
     let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
 
     // Set pingresp recv timeout to 10000ms
-    connection.set_pingresp_recv_timeout(Some(10000));
+    connection.set_pingresp_recv_timeout(10000);
 
     // Send CONNECT
     let connect = mqtt::packet::v3_1_1::Connect::builder()

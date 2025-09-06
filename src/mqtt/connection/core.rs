@@ -192,9 +192,9 @@ where
     pingreq_server_keep_alive_ms: Option<u64>,
 
     // PINGREQ receive timeout in milliseconds
-    pingreq_recv_timeout_ms: Option<u64>,
+    pingreq_recv_timeout_ms: u64,
     // PINGRESP receive timeout in milliseconds
-    pingresp_recv_timeout_ms: Option<u64>,
+    pingresp_recv_timeout_ms: u64,
 
     // QoS2 PUBLISH packet handling state (for duplicate detection)
     qos2_publish_handled: HashSet<PacketIdType>,
@@ -281,8 +281,8 @@ where
             pingreq_user_send_interval_ms: None,
             pingreq_keep_alive_ms: 0,
             pingreq_server_keep_alive_ms: None,
-            pingreq_recv_timeout_ms: None,
-            pingresp_recv_timeout_ms: None,
+            pingreq_recv_timeout_ms: 0,
+            pingresp_recv_timeout_ms: 0,
             qos2_publish_handled: HashSet::default(),
             qos2_publish_processing: HashSet::default(),
             pingreq_send_set: false,
@@ -791,12 +791,21 @@ where
 
     /// Set the PINGREQ send interval
     ///
-    /// Sets the interval for sending PINGREQ packets to maintain the connection alive.
+    /// Overrides the interval for sending PINGREQ packets to maintain the connection alive.
     /// When changed, this may generate timer-related events to update the ping schedule.
+    ///
+    /// PINGREQ is sent after the interval has elapsed since the last packet of any type was sent.
+    ///
+    /// The send interval is determined by the following priority order:
+    /// 1. User setting by this function
+    /// 2. ServerKeepAlive property value in received CONNACK packet
+    /// 3. KeepAlive value in sent CONNECT packet
     ///
     /// # Parameters
     ///
-    /// * `duration_ms` - The interval in milliseconds between PINGREQ packets
+    /// * `duration_ms` - The interval override setting:
+    ///   - `Some(value)` - Override with specified milliseconds. If 0, no PINGREQ is sent.
+    ///   - `None` - Do not override, use CONNACK ServerKeepAlive or CONNECT KeepAlive instead.
     ///
     /// # Returns
     ///
@@ -904,8 +913,15 @@ where
         self.auto_replace_topic_alias_send = enable;
     }
 
-    /// Set PINGREQ receive timeout
-    pub fn set_pingresp_recv_timeout(&mut self, timeout_ms: Option<u64>) {
+    /// Set the PINGRESP receive timeout
+    ///
+    /// Sets the timeout for receiving PINGRESP packets after sending PINGREQ packets.
+    /// If PINGRESP is not received within this timeout, the connection is considered disconnected.
+    ///
+    /// # Parameters
+    ///
+    /// * `timeout_ms` - The timeout in milliseconds. Set to 0 to disable timeout.
+    pub fn set_pingresp_recv_timeout(&mut self, timeout_ms: u64) {
         self.pingresp_recv_timeout_ms = timeout_ms;
     }
 
@@ -1415,13 +1431,13 @@ where
                                 events
                                     .push(GenericEvent::RequestTimerCancel(TimerKind::PingreqRecv));
                             }
-                            self.pingreq_recv_timeout_ms = None;
+                            self.pingreq_recv_timeout_ms = 0;
                         } else {
-                            self.pingreq_recv_timeout_ms = Some(val as u64 * 1000 * 3 / 2);
+                            self.pingreq_recv_timeout_ms = val as u64 * 1000 * 3 / 2;
                             self.pingreq_recv_set = true;
                             events.push(GenericEvent::RequestTimerReset {
                                 kind: TimerKind::PingreqRecv,
-                                duration_ms: self.pingreq_recv_timeout_ms.unwrap(),
+                                duration_ms: self.pingreq_recv_timeout_ms,
                             });
                         }
                     }
@@ -2100,11 +2116,11 @@ where
             packet: packet.into(),
             release_packet_id_if_send_error: None,
         });
-        if let Some(timeout_ms) = self.pingresp_recv_timeout_ms {
+        if self.pingresp_recv_timeout_ms != 0 {
             self.pingresp_recv_set = true;
             events.push(GenericEvent::RequestTimerReset {
                 kind: TimerKind::PingrespRecv,
-                duration_ms: timeout_ms,
+                duration_ms: self.pingresp_recv_timeout_ms,
             });
         }
         self.send_post_process(&mut events);
@@ -2128,11 +2144,11 @@ where
             packet: packet.into(),
             release_packet_id_if_send_error: None,
         });
-        if let Some(timeout_ms) = self.pingresp_recv_timeout_ms {
+        if self.pingresp_recv_timeout_ms != 0 {
             self.pingresp_recv_set = true;
             events.push(GenericEvent::RequestTimerReset {
                 kind: TimerKind::PingrespRecv,
-                duration_ms: timeout_ms,
+                duration_ms: self.pingresp_recv_timeout_ms,
             });
         }
         self.send_post_process(&mut events);
@@ -2502,8 +2518,7 @@ where
             Ok((packet, _)) => {
                 self.initialize(false);
                 if packet.keep_alive() > 0 {
-                    self.pingreq_recv_timeout_ms =
-                        Some((packet.keep_alive() as u64) * 1000 * 3 / 2);
+                    self.pingreq_recv_timeout_ms = (packet.keep_alive() as u64) * 1000 * 3 / 2;
                 }
                 if packet.clean_session() {
                     self.clear_store_related();
@@ -2550,8 +2565,7 @@ where
             Ok((packet, _)) => {
                 self.initialize(false);
                 if packet.keep_alive() > 0 {
-                    self.pingreq_recv_timeout_ms =
-                        Some((packet.keep_alive() as u64) * 1000 * 3 / 2);
+                    self.pingreq_recv_timeout_ms = (packet.keep_alive() as u64) * 1000 * 3 / 2;
                 }
                 if packet.clean_start() {
                     self.clear_store_related();
@@ -3549,14 +3563,14 @@ where
 
     fn refresh_pingreq_recv(&mut self) -> Vec<GenericEvent<PacketIdType>> {
         let mut events = Vec::new();
-        if let Some(timeout_ms) = self.pingreq_recv_timeout_ms {
+        if self.pingreq_recv_timeout_ms != 0 {
             if self.status == ConnectionStatus::Connecting
                 || self.status == ConnectionStatus::Connected
             {
                 self.pingreq_recv_set = true;
                 events.push(GenericEvent::RequestTimerReset {
                     kind: TimerKind::PingreqRecv,
-                    duration_ms: timeout_ms,
+                    duration_ms: self.pingreq_recv_timeout_ms,
                 });
             } else if self.pingreq_recv_set {
                 self.pingreq_recv_set = false;

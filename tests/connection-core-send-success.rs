@@ -311,7 +311,7 @@ fn v3_1_1_client_send_disconnect() {
 fn v5_0_client_send_pingreq() {
     common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
-    con.set_pingresp_recv_timeout(Some(5000));
+    con.set_pingresp_recv_timeout(5000);
     v5_0_client_establish_connection(&mut con);
 
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Pingreq::new().into();
@@ -352,7 +352,7 @@ fn v5_0_client_send_pingreq() {
 fn v5_0_client_send_auth() {
     common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
-    con.set_pingresp_recv_timeout(Some(5000));
+    con.set_pingresp_recv_timeout(5000);
     v5_0_client_establish_connection(&mut con);
 
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Auth::builder()

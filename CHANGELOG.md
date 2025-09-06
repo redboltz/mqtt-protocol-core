@@ -2,6 +2,8 @@
 
 ## Breaking changes
 
+* Replace set_pingresp_recv_timeout() timeout_ms type. #36
+  * u64 is used instead of Option<u64>.
 * Re-designed PINGREQ sending interval management. #35
   * GenericConnection::set_pingreq_send_interval() duration parameter becomes `Option<u64>`.
   * Prioritize PINGREQ sending interval settings.
