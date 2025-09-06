@@ -28,7 +28,7 @@ fn v5_0_client_send_connect_keep_alive() {
     common::init_tracing();
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
     con.set_pingreq_send_interval(Some(3000));
-    con.set_pingresp_recv_timeout(Some(1000));
+    con.set_pingresp_recv_timeout(1000);
     v5_0_client_establish_connection(&mut con);
 
     let packet = mqtt::packet::v5_0::Pingreq::new();

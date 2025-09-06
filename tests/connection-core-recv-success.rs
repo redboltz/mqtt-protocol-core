@@ -52,7 +52,7 @@ fn client_recv_publish_qos0_v3_1_1() {
 fn client_recv_pingresp_v3_1_1() {
     common::init_tracing();
     let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
-    connection.set_pingresp_recv_timeout(Some(3000));
+    connection.set_pingresp_recv_timeout(3000);
     v3_1_1_client_establish_connection(&mut connection, true, false);
 
     let packet = mqtt::packet::v3_1_1::Pingreq::new();
@@ -125,7 +125,7 @@ fn client_recv_publish_qos0_v5_0() {
 fn client_recv_pingresp_v5_0() {
     common::init_tracing();
     let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
-    connection.set_pingresp_recv_timeout(Some(3000));
+    connection.set_pingresp_recv_timeout(3000);
     v5_0_client_establish_connection(&mut connection);
 
     let packet = mqtt::packet::v5_0::Pingreq::new();
