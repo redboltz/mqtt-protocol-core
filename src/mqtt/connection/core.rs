@@ -1519,8 +1519,8 @@ where
                 packet: packet.into(),
                 release_packet_id_if_send_error,
             });
+            self.send_post_process(&mut events);
         }
-        self.send_post_process(&mut events);
 
         events
     }
@@ -1688,8 +1688,8 @@ where
                 packet: packet.into(),
                 release_packet_id_if_send_error,
             });
+            self.send_post_process(&mut events);
         }
-        self.send_post_process(&mut events);
 
         events
     }
