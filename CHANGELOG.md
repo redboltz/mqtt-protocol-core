@@ -1,3 +1,7 @@
+# 0.6.1
+
+* Fix send_post_process() on offline publish. #37
+
 # 0.6.0
 
 ## Breaking changes
