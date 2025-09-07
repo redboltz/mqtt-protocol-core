@@ -398,7 +398,7 @@ where
 
         // Return error if versions don't match
         if self.protocol_version != packet_version {
-            return vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)];
+            return vec![GenericEvent::NotifyError(MqttError::VersionMismatch)];
         }
 
         match packet {
@@ -3564,18 +3564,11 @@ where
     fn refresh_pingreq_recv(&mut self) -> Vec<GenericEvent<PacketIdType>> {
         let mut events = Vec::new();
         if self.pingreq_recv_timeout_ms != 0 {
-            if self.status == ConnectionStatus::Connecting
-                || self.status == ConnectionStatus::Connected
-            {
-                self.pingreq_recv_set = true;
-                events.push(GenericEvent::RequestTimerReset {
-                    kind: TimerKind::PingreqRecv,
-                    duration_ms: self.pingreq_recv_timeout_ms,
-                });
-            } else if self.pingreq_recv_set {
-                self.pingreq_recv_set = false;
-                events.push(GenericEvent::RequestTimerCancel(TimerKind::PingreqRecv));
-            }
+            self.pingreq_recv_set = true;
+            events.push(GenericEvent::RequestTimerReset {
+                kind: TimerKind::PingreqRecv,
+                duration_ms: self.pingreq_recv_timeout_ms,
+            });
         }
 
         events
