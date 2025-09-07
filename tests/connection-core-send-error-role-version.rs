@@ -125,7 +125,7 @@ fn v3_1_1_client_not_allowed_to_send_v3_1_1_pingresp() {
 // v3.1.1 client version mismatch (representative packet)
 
 #[test]
-fn v3_1_1_client_not_allowed_to_send_v5_0_connect() {
+fn v3_1_1_client_version_mismatch_v5_0_connect() {
     common::init_tracing();
     let mut con_v3_1_1 = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Connect::builder()
@@ -138,7 +138,7 @@ fn v3_1_1_client_not_allowed_to_send_v5_0_connect() {
     assert_eq!(events.len(), 1);
 
     if let mqtt::connection::Event::NotifyError(error) = &events[0] {
-        assert_eq!(error, &mqtt::result_code::MqttError::PacketNotAllowedToSend);
+        assert_eq!(error, &mqtt::result_code::MqttError::VersionMismatch);
     } else {
         assert!(
             false,
@@ -276,7 +276,7 @@ fn v3_1_1_server_not_allowed_to_send_v3_1_1_disconnect() {
 // v3.1.1 server version mismatch (representative packet)
 
 #[test]
-fn v3_1_1_server_not_allowed_to_send_v5_0_connack() {
+fn v3_1_1_server_version_mismatch_v5_0_connack() {
     common::init_tracing();
     let mut con_v3_1_1 = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V3_1_1);
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Connack::builder()
@@ -289,7 +289,7 @@ fn v3_1_1_server_not_allowed_to_send_v5_0_connack() {
     assert_eq!(events.len(), 1);
 
     if let mqtt::connection::Event::NotifyError(error) = &events[0] {
-        assert_eq!(error, &mqtt::result_code::MqttError::PacketNotAllowedToSend);
+        assert_eq!(error, &mqtt::result_code::MqttError::VersionMismatch);
     } else {
         assert!(
             false,
@@ -402,7 +402,7 @@ fn v5_0_client_not_allowed_to_send_v5_0_pingresp() {
 // v5.0 client version mismatch (representative packet)
 
 #[test]
-fn v5_0_client_not_allowed_to_send_v3_1_1_connect() {
+fn v5_0_client_version_mismatch_v3_1_1_connect() {
     common::init_tracing();
     let mut con_v5_0 = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Connect::builder()
@@ -415,7 +415,7 @@ fn v5_0_client_not_allowed_to_send_v3_1_1_connect() {
     assert_eq!(events.len(), 1);
 
     if let mqtt::connection::Event::NotifyError(error) = &events[0] {
-        assert_eq!(error, &mqtt::result_code::MqttError::PacketNotAllowedToSend);
+        assert_eq!(error, &mqtt::result_code::MqttError::VersionMismatch);
     } else {
         assert!(
             false,
@@ -533,7 +533,7 @@ fn v5_0_server_not_allowed_to_send_v5_0_pingresq() {
 // v5.0 client version mismatch (representative packet)
 
 #[test]
-fn v5_0_server_not_allowed_to_send_v3_1_1_connack() {
+fn v5_0_server_version_mismatch_v3_1_1_connack() {
     common::init_tracing();
     let mut con_v5_0 = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Connack::builder()
@@ -546,7 +546,60 @@ fn v5_0_server_not_allowed_to_send_v3_1_1_connack() {
     assert_eq!(events.len(), 1);
 
     if let mqtt::connection::Event::NotifyError(error) = &events[0] {
-        assert_eq!(error, &mqtt::result_code::MqttError::PacketNotAllowedToSend);
+        assert_eq!(error, &mqtt::result_code::MqttError::VersionMismatch);
+    } else {
+        assert!(
+            false,
+            "Expected NotifyError event, but got: {:?}",
+            events[0]
+        );
+    }
+}
+
+// v5.0 any version mismatch (representative packet)
+
+// runtime
+
+#[test]
+fn v5_0_any_version_mismatch_v3_1_1_connack() {
+    common::init_tracing();
+    let mut con_v5_0 = mqtt::Connection::<mqtt::role::Any>::new(mqtt::Version::V5_0);
+    let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Connack::builder()
+        .session_present(false)
+        .return_code(mqtt::result_code::ConnectReturnCode::Accepted)
+        .build()
+        .expect("Failed to build Connack packet")
+        .into();
+    let events = con_v5_0.checked_send(packet);
+    assert_eq!(events.len(), 1);
+
+    if let mqtt::connection::Event::NotifyError(error) = &events[0] {
+        assert_eq!(error, &mqtt::result_code::MqttError::VersionMismatch);
+    } else {
+        assert!(
+            false,
+            "Expected NotifyError event, but got: {:?}",
+            events[0]
+        );
+    }
+}
+
+// static
+
+#[test]
+fn v5_0_any_version_mismatch_v3_1_1_connack_static() {
+    common::init_tracing();
+    let mut con_v5_0 = mqtt::Connection::<mqtt::role::Any>::new(mqtt::Version::V5_0);
+    let packet = mqtt::packet::v3_1_1::Connack::builder()
+        .session_present(false)
+        .return_code(mqtt::result_code::ConnectReturnCode::Accepted)
+        .build()
+        .expect("Failed to build Connack packet");
+    let events = con_v5_0.checked_send(packet);
+    assert_eq!(events.len(), 1);
+
+    if let mqtt::connection::Event::NotifyError(error) = &events[0] {
+        assert_eq!(error, &mqtt::result_code::MqttError::VersionMismatch);
     } else {
         assert!(
             false,

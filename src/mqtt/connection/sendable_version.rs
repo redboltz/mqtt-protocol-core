@@ -264,11 +264,3 @@ where
         *version == Version::V5_0
     }
 }
-
-// ---- Blanket impl to allow &T: SendableVersion when T: SendableVersion ----
-
-impl<T: SendableVersion> SendableVersion for &T {
-    fn check(version: &Version) -> bool {
-        T::check(version)
-    }
-}
