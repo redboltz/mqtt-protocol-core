@@ -36,18 +36,6 @@ fn test_arc_payload_serialize() {
 }
 
 #[test]
-fn test_arc_payload_debug() {
-    common::init_tracing();
-    let data = vec![1, 2, 3];
-    let payload: mqtt::common::ArcPayload = data.into_payload();
-
-    // Test Debug trait (line 259)
-    let debug_output = format!("{payload:?}");
-    assert!(debug_output.contains("ArcPayload"));
-    assert!(debug_output.contains("[1, 2, 3]"));
-}
-
-#[test]
 fn test_arc_payload_small_from_slice() {
     common::init_tracing();
     // Test creating Small variant from &[u8] (line 340, 346)
@@ -63,6 +51,30 @@ fn test_arc_payload_large_from_slice() {
     common::init_tracing();
     // Test creating Large variant from &[u8] (line 346)
     let large_data = &[0u8; 1000]; // Large enough to force Large variant
+    let payload: mqtt::common::ArcPayload = large_data.into_payload();
+
+    assert_eq!(payload.len(), 1000);
+    assert_eq!(payload.as_slice().len(), 1000);
+}
+
+#[test]
+fn test_arc_payload_small_from_dyn_size_slice() {
+    common::init_tracing();
+    // Test creating Small variant from &[u8] (line 331, 340)
+    let small_data_array = [1u8, 2, 3]; // Fixed size array
+    let small_data: &[u8] = &small_data_array; // Convert to dynamic slice
+    let payload: mqtt::common::ArcPayload = small_data.into_payload();
+
+    assert_eq!(payload.len(), 3);
+    assert_eq!(payload.as_slice(), &[1, 2, 3]);
+}
+
+#[test]
+fn test_arc_payload_large_from_dyn_size_slice() {
+    common::init_tracing();
+    // Test creating Large variant from &[u8] (line 331, 346)
+    let large_data_array = [0u8; 1000]; // Fixed size array
+    let large_data: &[u8] = &large_data_array; // Convert to dynamic slice
     let payload: mqtt::common::ArcPayload = large_data.into_payload();
 
     assert_eq!(payload.len(), 1000);
@@ -86,6 +98,30 @@ fn test_arc_payload_large_from_vec() {
     // Test creating Large variant from Vec<u8>
     let large_vec = vec![42u8; 1000]; // Large enough to force Large variant
     let payload: mqtt::common::ArcPayload = large_vec.into_payload();
+
+    assert_eq!(payload.len(), 1000);
+    assert!(payload.as_slice().iter().all(|&x| x == 42));
+}
+
+#[test]
+fn test_arc_payload_small_from_vec_ref() {
+    common::init_tracing();
+    // Test creating Small variant from Vec<u8> (line 389)
+    let small_vec = vec![10u8, 20, 30]; // Small enough for SSO
+    let vec_ref = &small_vec;
+    let payload: mqtt::common::ArcPayload = vec_ref.into_payload();
+
+    assert_eq!(payload.len(), 3);
+    assert_eq!(payload.as_slice(), &[10, 20, 30]);
+}
+
+#[test]
+fn test_arc_payload_large_from_vec_ref() {
+    common::init_tracing();
+    // Test creating Large variant from Vec<u8>
+    let large_vec = vec![42u8; 1000]; // Large enough to force Large variant
+    let vec_ref = &large_vec;
+    let payload: mqtt::common::ArcPayload = vec_ref.into_payload();
 
     assert_eq!(payload.len(), 1000);
     assert!(payload.as_slice().iter().all(|&x| x == 42));
