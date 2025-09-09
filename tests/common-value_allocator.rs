@@ -226,3 +226,41 @@ fn signed_value() {
     assert!(a.use_value(0));
     assert_eq!(a.interval_count(), 3);
 }
+
+#[test]
+fn dump() {
+    common::init_tracing();
+    // Test dump method with various scenarios
+    let mut a = ValueAllocator::new(0usize, 4);
+
+    // Initial state: one interval [0, 4]
+    a.dump();
+    assert_eq!(a.interval_count(), 1);
+
+    // Allocate some values to create gaps
+    assert_eq!(a.allocate(), Some(0));
+    assert!(a.use_value(2));
+    assert!(a.use_value(4));
+
+    // Should have intervals [1, 1] and [3, 3]
+    a.dump();
+    assert_eq!(a.interval_count(), 2);
+
+    // Deallocate to merge intervals
+    a.deallocate(0);
+    a.deallocate(2);
+
+    // Should have intervals [0, 3]
+    a.dump();
+    assert_eq!(a.interval_count(), 1);
+
+    // Test with signed values
+    let mut b = ValueAllocator::new(-5i32, 5);
+    assert!(b.use_value(-3));
+    assert!(b.use_value(0));
+    assert!(b.use_value(3));
+
+    // Should have intervals [-5, -4], [-2, -1], [1, 2], [4, 5]
+    b.dump();
+    assert_eq!(b.interval_count(), 4);
+}
