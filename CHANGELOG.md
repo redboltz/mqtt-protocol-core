@@ -1,6 +1,13 @@
-# 0.6.1
+# 0.7.0
 
-* Fix send_post_process() on offline publish. #37
+## Breaking changes
+
+* Remove is_publish_processing() method from connection. #40
+
+## Other updates
+
+* Fix send_post_process() on offline publish. #38
+* Fix MqttError code. #37
 
 # 0.6.0
 
