@@ -121,7 +121,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! mqtt-protocol-core = { version = "0.6.1", default-features = false }
+//! mqtt-protocol-core = { version = "0.7.0", default-features = false }
 //! ```
 //!
 //! **No-std usage example:**
@@ -173,15 +173,15 @@
 //! ```toml
 //! # Enable tracing support (independent of std)
 //! [dependencies]
-//! mqtt-protocol-core = { version = "0.6.1", default-features = false, features = ["tracing"] }
+//! mqtt-protocol-core = { version = "0.7.0", default-features = false, features = ["tracing"] }
 //!
 //! # Use with std but without tracing overhead
 //! [dependencies]
-//! mqtt-protocol-core = { version = "0.6.1", default-features = false, features = ["std"] }
+//! mqtt-protocol-core = { version = "0.7.0", default-features = false, features = ["std"] }
 //!
 //! # Full-featured (std + tracing)
 //! [dependencies]
-//! mqtt-protocol-core = { version = "0.6.1", features = ["tracing"] }
+//! mqtt-protocol-core = { version = "0.7.0", features = ["tracing"] }
 //! ```
 //!
 //! ### Small String Optimization (SSO) Features
@@ -208,11 +208,11 @@
 //! ```toml
 //! # Use specific SSO optimization level
 //! [dependencies]
-//! mqtt-protocol-core = { version = "0.6.1", features = ["sso-lv10"] }
+//! mqtt-protocol-core = { version = "0.7.0", features = ["sso-lv10"] }
 //!
 //! # Combine with other features
 //! [dependencies]
-//! mqtt-protocol-core = { version = "0.6.1", features = ["std", "sso-lv20", "tracing"] }
+//! mqtt-protocol-core = { version = "0.7.0", features = ["std", "sso-lv20", "tracing"] }
 //! ```
 //!
 //! #### ⚠️ **Critical: SSO Feature Flag Propagation**
@@ -234,7 +234,7 @@
 //! ```toml
 //! # Your crate's Cargo.toml
 //! [dependencies]
-//! mqtt-protocol-core = { version = "0.6.1", features = ["sso-lv10"] }
+//! mqtt-protocol-core = { version = "0.7.0", features = ["sso-lv10"] }
 //!
 //! [features]
 //! # MANDATORY: Re-export ALL SSO features to allow downstream configuration

@@ -30,6 +30,7 @@ use crate::mqtt::common::Cursor;
 use crate::mqtt::common::HashSet;
 use crate::mqtt::connection::event::{GenericEvent, TimerKind};
 use crate::mqtt::connection::GenericStore;
+use crate::mqtt::result_code;
 
 use serde::Serialize;
 
@@ -198,8 +199,6 @@ where
 
     // QoS2 PUBLISH packet handling state (for duplicate detection)
     qos2_publish_handled: HashSet<PacketIdType>,
-    // QoS2 PUBLISH packet processing state
-    qos2_publish_processing: HashSet<PacketIdType>,
 
     // Timer state flags
     pingreq_send_set: bool,
@@ -284,7 +283,6 @@ where
             pingreq_recv_timeout_ms: 0,
             pingresp_recv_timeout_ms: 0,
             qos2_publish_handled: HashSet::default(),
-            qos2_publish_processing: HashSet::default(),
             pingreq_send_set: false,
             pingreq_recv_set: false,
             pingresp_recv_set: false,
@@ -755,7 +753,6 @@ where
 
         // If not storing session state, clear QoS2 states and release publish-related packet IDs
         if !self.need_store {
-            self.qos2_publish_processing.clear();
             self.qos2_publish_handled.clear();
 
             // Release packet IDs for PUBACK
@@ -1113,25 +1110,6 @@ where
         self.protocol_version
     }
 
-    /// Check if a PUBLISH packet is currently being processed
-    ///
-    /// This function is used in MQTT v5.0 to determine whether to return Success or
-    /// PacketIdentifierNotFound as PubrelReasonCode when manually sending a PUBREL packet
-    /// after receiving a PUBREC packet following a QoS2 PUBLISH packet transmission.
-    /// If true, return Success; if false, return PacketIdentifierNotFound.
-    /// Note that QoS1 PUBLISH packets are outside the scope of this function and always return false.
-    ///
-    /// # Parameters
-    ///
-    /// * `packet_id` - The packet ID to check
-    ///
-    /// # Returns
-    ///
-    /// True if the packet ID is in use for PUBLISH processing
-    pub fn is_publish_processing(&self, packet_id: PacketIdType) -> bool {
-        self.qos2_publish_processing.contains(&packet_id)
-    }
-
     /// Regulate packet for store (remove/resolve topic alias)
     ///
     /// This method prepares a V5.0 publish packet for storage by resolving topic aliases
@@ -1184,7 +1162,6 @@ where
         self.topic_alias_send = None;
         self.topic_alias_recv = None;
         self.publish_recv.clear();
-        self.qos2_publish_processing.clear();
         self.need_store = false;
         self.pid_suback.clear();
         self.pid_unsuback.clear();
@@ -1510,7 +1487,6 @@ where
                 release_packet_id_if_send_error = Some(packet_id);
             }
             if packet.qos() == Qos::ExactlyOnce {
-                self.qos2_publish_processing.insert(packet_id);
                 self.pid_pubrec.insert(packet_id);
             } else {
                 self.pid_puback.insert(packet_id);
@@ -1596,7 +1572,6 @@ where
                 release_packet_id_if_send_error = Some(packet_id);
             }
             if packet.qos() == Qos::ExactlyOnce {
-                self.qos2_publish_processing.insert(packet_id);
                 self.pid_pubrec.insert(packet_id);
             } else {
                 self.pid_puback.insert(packet_id);
@@ -3072,7 +3047,6 @@ where
                             self.pid_man.release_id(packet_id);
                             events.push(GenericEvent::NotifyPacketIdReleased(packet_id));
                         }
-                        self.qos2_publish_processing.remove(&packet_id);
                         if self.publish_send_max.is_some() {
                             self.publish_send_count -= 1;
                         }
@@ -3131,13 +3105,22 @@ where
         match v5_0::GenericPubrel::<PacketIdType>::parse(raw_packet.data_as_slice()) {
             Ok((packet, _)) => {
                 let packet_id = packet.packet_id();
-                self.qos2_publish_handled.remove(&packet_id);
+                let removed = self.qos2_publish_handled.remove(&packet_id);
                 if self.auto_pub_response && self.status == ConnectionStatus::Connected {
-                    let pubcomp = v5_0::GenericPubcomp::<PacketIdType>::builder()
-                        .packet_id(packet_id)
-                        .build()
-                        .unwrap();
-                    events.extend(self.process_send_v5_0_pubcomp(pubcomp));
+                    if removed {
+                        let pubcomp = v5_0::GenericPubcomp::<PacketIdType>::builder()
+                            .packet_id(packet_id)
+                            .build()
+                            .unwrap();
+                        events.extend(self.process_send_v5_0_pubcomp(pubcomp));
+                    } else {
+                        let pubcomp = v5_0::GenericPubcomp::<PacketIdType>::builder()
+                            .packet_id(packet_id)
+                            .reason_code(result_code::PubcompReasonCode::PacketIdentifierNotFound)
+                            .build()
+                            .unwrap();
+                        events.extend(self.process_send_v5_0_pubcomp(pubcomp));
+                    }
                 }
                 events.extend(self.refresh_pingreq_recv());
                 events.push(GenericEvent::NotifyPacketReceived(packet.into()));
@@ -3165,7 +3148,6 @@ where
                         self.pid_man.release_id(packet_id);
                         events.push(GenericEvent::NotifyPacketIdReleased(packet_id));
                     }
-                    self.qos2_publish_processing.remove(&packet_id);
                     events.extend(self.refresh_pingreq_recv());
                     events.push(GenericEvent::NotifyPacketReceived(packet.into()));
                 } else {
@@ -3195,7 +3177,6 @@ where
                         self.pid_man.release_id(packet_id);
                         events.push(GenericEvent::NotifyPacketIdReleased(packet_id));
                     }
-                    self.qos2_publish_processing.remove(&packet_id);
                     if self.publish_send_max.is_some() {
                         self.publish_send_count -= 1;
                     }
