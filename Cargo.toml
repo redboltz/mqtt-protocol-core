@@ -1,7 +1,8 @@
 [package]
 name = "mqtt-protocol-core"
-version = "0.7.0"
+version = "0.7.1"
 edition = "2021"
+rust-version = "1.86.0"
 license = "MIT"
 authors = ["Takatoshi Kondo <redboltz@gmail.com>"]
 description = "A Sans-I/O style MQTT protocol library for Rust that supports both MQTT v5.0 and v3.1.1."
