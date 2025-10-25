@@ -195,6 +195,162 @@ fn build_fail_valid_prop_rs_mt() {
     assert_eq!(err, mqtt::result_code::MqttError::ProtocolError);
 }
 
+#[test]
+fn build_fail_valid_prop_wsa_mt() {
+    common::init_tracing();
+    let err = mqtt::packet::v5_0::Connack::builder()
+        .session_present(true)
+        .reason_code(mqtt::result_code::ConnectReasonCode::Success)
+        .props(vec![
+            mqtt::packet::WildcardSubscriptionAvailable::new(1)
+                .unwrap()
+                .into(),
+            mqtt::packet::WildcardSubscriptionAvailable::new(0)
+                .unwrap()
+                .into(),
+        ])
+        .build()
+        .unwrap_err();
+
+    assert_eq!(err, mqtt::result_code::MqttError::ProtocolError);
+}
+
+#[test]
+fn build_fail_valid_prop_sia_mt() {
+    common::init_tracing();
+    let err = mqtt::packet::v5_0::Connack::builder()
+        .session_present(true)
+        .reason_code(mqtt::result_code::ConnectReasonCode::Success)
+        .props(vec![
+            mqtt::packet::SubscriptionIdentifierAvailable::new(1)
+                .unwrap()
+                .into(),
+            mqtt::packet::SubscriptionIdentifierAvailable::new(0)
+                .unwrap()
+                .into(),
+        ])
+        .build()
+        .unwrap_err();
+
+    assert_eq!(err, mqtt::result_code::MqttError::ProtocolError);
+}
+
+#[test]
+fn build_fail_valid_prop_ssa_mt() {
+    common::init_tracing();
+    let err = mqtt::packet::v5_0::Connack::builder()
+        .session_present(true)
+        .reason_code(mqtt::result_code::ConnectReasonCode::Success)
+        .props(vec![
+            mqtt::packet::SharedSubscriptionAvailable::new(1)
+                .unwrap()
+                .into(),
+            mqtt::packet::SharedSubscriptionAvailable::new(0)
+                .unwrap()
+                .into(),
+        ])
+        .build()
+        .unwrap_err();
+
+    assert_eq!(err, mqtt::result_code::MqttError::ProtocolError);
+}
+
+#[test]
+fn build_fail_valid_prop_ska_mt() {
+    common::init_tracing();
+    let err = mqtt::packet::v5_0::Connack::builder()
+        .session_present(true)
+        .reason_code(mqtt::result_code::ConnectReasonCode::Success)
+        .props(vec![
+            mqtt::packet::ServerKeepAlive::new(10).unwrap().into(),
+            mqtt::packet::ServerKeepAlive::new(20).unwrap().into(),
+        ])
+        .build()
+        .unwrap_err();
+
+    assert_eq!(err, mqtt::result_code::MqttError::ProtocolError);
+}
+
+#[test]
+fn build_fail_valid_prop_ri_mt() {
+    common::init_tracing();
+    let err = mqtt::packet::v5_0::Connack::builder()
+        .session_present(true)
+        .reason_code(mqtt::result_code::ConnectReasonCode::Success)
+        .props(vec![
+            mqtt::packet::ResponseInformation::new("info1")
+                .unwrap()
+                .into(),
+            mqtt::packet::ResponseInformation::new("info2")
+                .unwrap()
+                .into(),
+        ])
+        .build()
+        .unwrap_err();
+
+    assert_eq!(err, mqtt::result_code::MqttError::ProtocolError);
+}
+
+#[test]
+fn build_fail_valid_prop_sr_mt() {
+    common::init_tracing();
+    let err = mqtt::packet::v5_0::Connack::builder()
+        .session_present(true)
+        .reason_code(mqtt::result_code::ConnectReasonCode::Success)
+        .props(vec![
+            mqtt::packet::ServerReference::new("server1")
+                .unwrap()
+                .into(),
+            mqtt::packet::ServerReference::new("server2")
+                .unwrap()
+                .into(),
+        ])
+        .build()
+        .unwrap_err();
+
+    assert_eq!(err, mqtt::result_code::MqttError::ProtocolError);
+}
+
+#[test]
+fn build_fail_valid_prop_am_mt() {
+    common::init_tracing();
+    let err = mqtt::packet::v5_0::Connack::builder()
+        .session_present(true)
+        .reason_code(mqtt::result_code::ConnectReasonCode::Success)
+        .props(vec![
+            mqtt::packet::AuthenticationMethod::new("method1")
+                .unwrap()
+                .into(),
+            mqtt::packet::AuthenticationMethod::new("method2")
+                .unwrap()
+                .into(),
+        ])
+        .build()
+        .unwrap_err();
+
+    assert_eq!(err, mqtt::result_code::MqttError::ProtocolError);
+}
+
+#[test]
+fn build_fail_valid_prop_ad_mt() {
+    common::init_tracing();
+    let err = mqtt::packet::v5_0::Connack::builder()
+        .session_present(true)
+        .reason_code(mqtt::result_code::ConnectReasonCode::Success)
+        .props(vec![
+            mqtt::packet::AuthenticationData::new(b"data1")
+                .unwrap()
+                .into(),
+            mqtt::packet::AuthenticationData::new(b"data2")
+                .unwrap()
+                .into(),
+        ])
+        .build()
+        .unwrap_err();
+
+    assert_eq!(err, mqtt::result_code::MqttError::ProtocolError);
+}
+
 // build success tests
 
 #[test]
@@ -214,6 +370,28 @@ fn build_succes_svalid_prop() {
                 .into(),
             mqtt::packet::TopicAliasMaximum::new(5).unwrap().into(),
             mqtt::packet::ReasonString::new("Connection successful")
+                .unwrap()
+                .into(),
+            mqtt::packet::WildcardSubscriptionAvailable::new(1)
+                .unwrap()
+                .into(),
+            mqtt::packet::SubscriptionIdentifierAvailable::new(1)
+                .unwrap()
+                .into(),
+            mqtt::packet::SharedSubscriptionAvailable::new(1)
+                .unwrap()
+                .into(),
+            mqtt::packet::ServerKeepAlive::new(30).unwrap().into(),
+            mqtt::packet::ResponseInformation::new("response info")
+                .unwrap()
+                .into(),
+            mqtt::packet::ServerReference::new("mqtt.example.com")
+                .unwrap()
+                .into(),
+            mqtt::packet::AuthenticationMethod::new("SCRAM-SHA-256")
+                .unwrap()
+                .into(),
+            mqtt::packet::AuthenticationData::new(b"auth_data")
                 .unwrap()
                 .into(),
             mqtt::packet::UserProperty::new("key1", "value1")
