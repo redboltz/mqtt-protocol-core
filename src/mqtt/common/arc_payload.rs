@@ -20,7 +20,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-use alloc::{string::String, sync::Arc, vec::Vec};
+use crate::mqtt::Arc;
+use alloc::{string::String, vec::Vec};
 use serde::{Serialize, Serializer};
 
 // SSO buffer size configuration - priority-based selection for maximum size

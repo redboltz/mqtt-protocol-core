@@ -19,17 +19,8 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-pub mod packet;
-pub mod prelude;
 
-pub mod connection;
-pub use connection::role;
-pub use connection::Connection;
-pub use connection::GenericConnection;
-pub use connection::SendBehavior;
-pub use connection::Version;
-
-pub mod common;
-pub use common::{Arc, ArcPayload, IntoPayload, ValueAllocator};
-
-pub mod result_code;
+#[cfg(target_has_atomic = "ptr")]
+pub type Arc<T> = alloc::sync::Arc<T>;
+#[cfg(not(target_has_atomic = "ptr"))]
+pub type Arc<T> = alloc::rc::Rc<T>;

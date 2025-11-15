@@ -21,7 +21,6 @@
 // SOFTWARE.
 
 use alloc::string::String;
-use alloc::sync::Arc;
 use alloc::vec::Vec;
 use core::fmt;
 use core::mem;
@@ -48,7 +47,7 @@ use crate::mqtt::packet::IsPacketId;
 use crate::mqtt::packet::PropertiesToBuffers;
 use crate::mqtt::packet::{Properties, PropertiesParse, PropertiesSize, Property};
 use crate::mqtt::result_code::MqttError;
-use crate::mqtt::{ArcPayload, IntoPayload};
+use crate::mqtt::{Arc, ArcPayload, IntoPayload};
 
 /// MQTT 5.0 PUBLISH packet representation
 ///
