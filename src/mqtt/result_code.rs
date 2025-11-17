@@ -26,6 +26,7 @@ use num_enum::TryFromPrimitive;
 use serde::{Serialize, Serializer};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[repr(u16)]
 pub enum MqttError {
     // MQTT protocol based error
@@ -210,6 +211,7 @@ impl core::convert::TryFrom<u8> for MqttError {
 
 /// MQTT v3.1.1 Connect Return Code
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, TryFromPrimitive)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[repr(u8)]
 pub enum ConnectReturnCode {
     Accepted = 0,                    // Connection accepted (not an error)
@@ -254,6 +256,7 @@ impl Serialize for ConnectReturnCode {
 
 /// MQTT v3.1.1 SUBACK Return Code
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, TryFromPrimitive)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[repr(u8)]
 pub enum SubackReturnCode {
     SuccessMaximumQos0 = 0x00, // Success with QoS0 (not an error)
@@ -297,6 +300,7 @@ impl Serialize for SubackReturnCode {
 
 /// MQTT v5.0 Connect Reason Code (used in CONNACK)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, TryFromPrimitive)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[repr(u8)]
 pub enum ConnectReasonCode {
     Success = 0x00,                     // Success (not an error)
@@ -370,6 +374,7 @@ impl From<ConnectReasonCode> for MqttError {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, TryFromPrimitive)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[repr(u8)]
 pub enum DisconnectReasonCode {
     NormalDisconnection = 0x00,
@@ -501,6 +506,7 @@ impl From<MqttError> for DisconnectReasonCode {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, TryFromPrimitive)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[repr(u8)]
 pub enum SubackReasonCode {
     GrantedQos0 = 0x00,
@@ -566,6 +572,7 @@ impl From<SubackReasonCode> for MqttError {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, TryFromPrimitive)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[repr(u8)]
 pub enum UnsubackReasonCode {
     Success = 0x00,
@@ -618,6 +625,7 @@ impl From<UnsubackReasonCode> for MqttError {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, TryFromPrimitive)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[repr(u8)]
 pub enum PubackReasonCode {
     Success = 0x00,
@@ -674,6 +682,7 @@ impl From<PubackReasonCode> for MqttError {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, TryFromPrimitive)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[repr(u8)]
 pub enum PubrecReasonCode {
     Success = 0x00,
@@ -729,6 +738,7 @@ impl From<PubrecReasonCode> for MqttError {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, TryFromPrimitive)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[repr(u8)]
 pub enum PubrelReasonCode {
     Success = 0x00,
@@ -771,6 +781,7 @@ impl From<PubrelReasonCode> for MqttError {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, TryFromPrimitive)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[repr(u8)]
 pub enum PubcompReasonCode {
     Success = 0x00,
@@ -813,6 +824,7 @@ impl From<PubcompReasonCode> for MqttError {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, TryFromPrimitive)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[repr(u8)]
 pub enum AuthReasonCode {
     Success = 0x00,

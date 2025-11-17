@@ -42,6 +42,7 @@ use serde::{Deserialize, Serialize};
 /// assert_eq!(packet_type.as_str(), "connect");
 /// ```
 #[derive(Deserialize, PartialEq, Eq, Copy, Clone, TryFromPrimitive)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[repr(u8)]
 pub enum PacketType {
     /// Client connection request packet
@@ -98,6 +99,7 @@ pub enum PacketType {
 /// assert_eq!(header.packet_type(), PacketType::Connect);
 /// ```
 #[derive(Deserialize, PartialEq, Eq, Copy, Clone, TryFromPrimitive)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[repr(u8)]
 pub enum FixedHeader {
     /// CONNECT packet header (0x10)

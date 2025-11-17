@@ -71,6 +71,7 @@ use serde::{Deserialize, Serialize};
 #[derive(
     Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, TryFromPrimitive,
 )]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[repr(u8)]
 pub enum Qos {
     /// QoS level 0: At most once delivery

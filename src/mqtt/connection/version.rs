@@ -52,6 +52,7 @@
 /// }
 /// ```
 #[derive(PartialEq, Clone, Copy, Debug)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum Version {
     /// Version to be determined by incoming CONNECT packet
     ///

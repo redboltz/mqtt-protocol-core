@@ -33,6 +33,7 @@ use crate::mqtt::result_code::MqttError;
 /// This enum defines the different kinds of timers used in MQTT protocol operations.
 /// Each timer serves a specific purpose in maintaining connection health and protocol compliance.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum TimerKind {
     /// Timer for sending PINGREQ packets
     ///
