@@ -85,7 +85,7 @@ fn offline_publish_v3_1_1() {
         .topic_name("topic/a")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
-        .packet_id(packet_id_a)
+        .packet_id(Some(packet_id_a))
         .payload(b"payload A".to_vec())
         .build()
         .unwrap();
@@ -98,7 +98,7 @@ fn offline_publish_v3_1_1() {
         .topic_name("topic/b")
         .unwrap()
         .qos(mqtt::packet::Qos::ExactlyOnce)
-        .packet_id(packet_id_b)
+        .packet_id(Some(packet_id_b))
         .payload(b"payload B".to_vec())
         .build()
         .unwrap();
@@ -170,7 +170,7 @@ fn offline_publish_v5_0() {
         .topic_name("topic/a")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
-        .packet_id(packet_id_a)
+        .packet_id(Some(packet_id_a))
         .payload(b"payload A".to_vec())
         .build()
         .unwrap();
@@ -183,7 +183,7 @@ fn offline_publish_v5_0() {
         .topic_name("topic/b")
         .unwrap()
         .qos(mqtt::packet::Qos::ExactlyOnce)
-        .packet_id(packet_id_b)
+        .packet_id(Some(packet_id_b))
         .payload(b"payload B".to_vec())
         .build()
         .unwrap();
@@ -253,7 +253,7 @@ fn puback_match_v3_1_1() {
         .topic_name("topic/a")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
-        .packet_id(packet_id_a)
+        .packet_id(Some(packet_id_a))
         .payload(b"payload A".to_vec())
         .build()
         .unwrap();
@@ -930,7 +930,7 @@ fn qos2_publish_handled_v3_1_1() {
         .topic_name("topic/a")
         .unwrap()
         .qos(mqtt::packet::Qos::ExactlyOnce)
-        .packet_id(packet_id_a)
+        .packet_id(Some(packet_id_a))
         .payload(b"payload A".to_vec())
         .build()
         .unwrap();

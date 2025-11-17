@@ -82,7 +82,7 @@ fn build_fail_qos0_with_packet_id() {
     let err = mqtt::packet::v5_0::Publish::builder()
         .topic_name("test")
         .unwrap()
-        .packet_id(1u16)
+        .packet_id(Some(1u16))
         .build()
         .unwrap_err();
     assert_eq!(err, mqtt::result_code::MqttError::MalformedPacket);
@@ -120,7 +120,7 @@ fn build_fail_qos0_with_packet_id_validation() {
         .topic_name("test")
         .unwrap()
         .qos(mqtt::packet::Qos::AtMostOnce)
-        .packet_id(1u16)
+        .packet_id(Some(1u16))
         .build()
         .unwrap_err();
     assert_eq!(err, mqtt::result_code::MqttError::MalformedPacket);
@@ -134,7 +134,7 @@ fn build_fail_qos1_packet_id_zero() {
         .topic_name("test")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
-        .packet_id(0u16)
+        .packet_id(Some(0u16))
         .build()
         .unwrap_err();
     assert_eq!(err, mqtt::result_code::MqttError::MalformedPacket);
@@ -179,7 +179,7 @@ fn build_success_qos2() {
         .topic_name("test")
         .unwrap()
         .qos(mqtt::packet::Qos::ExactlyOnce)
-        .packet_id(1234u16)
+        .packet_id(Some(1234u16))
         .payload("hello")
         .build()
         .unwrap();
@@ -228,7 +228,7 @@ fn display_qos1_with_packet_id() {
         .topic_name("test/topic")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
-        .packet_id(1234u16)
+        .packet_id(Some(1234u16))
         .payload("hello")
         .build()
         .unwrap();
@@ -361,6 +361,7 @@ fn getter_qos0() {
     let packet = mqtt::packet::v5_0::Publish::builder()
         .topic_name("test/topic")
         .unwrap()
+        .packet_id(None)
         .payload("hello")
         .build()
         .unwrap();
@@ -381,7 +382,7 @@ fn getter_qos1_with_packet_id() {
         .topic_name("test/topic")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
-        .packet_id(1234u16)
+        .packet_id(Some(1234u16))
         .payload("hello")
         .build()
         .unwrap();
@@ -474,7 +475,7 @@ fn to_buffers_qos1() {
         .topic_name("test")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
-        .packet_id(1234u16)
+        .packet_id(Some(1234u16))
         .payload("hello")
         .build()
         .unwrap();
@@ -813,7 +814,7 @@ fn size_qos1() {
         .topic_name("test")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
-        .packet_id(1234u16)
+        .packet_id(Some(1234u16))
         .payload("hello")
         .build()
         .unwrap();
@@ -1091,7 +1092,7 @@ fn test_length_recalculation_with_qos1() {
         .topic_name("")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
-        .packet_id(123u16)
+        .packet_id(Some(123u16))
         .props(props)
         .payload("test payload")
         .build()
@@ -1230,7 +1231,7 @@ fn test_roundtrip_serialization_after_modification() {
         .topic_name("")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
-        .packet_id(456u16)
+        .packet_id(Some(456u16))
         .props(props)
         .payload("modified packet payload")
         .build()
@@ -1321,7 +1322,7 @@ fn test_set_dup_false() {
         .topic_name("test/topic")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
-        .packet_id(123u16)
+        .packet_id(Some(123u16))
         .dup(true)
         .retain(true)
         .props(props)
@@ -1357,7 +1358,7 @@ fn test_set_dup_chaining() {
         .topic_name("test/topic")
         .unwrap()
         .qos(mqtt::packet::Qos::ExactlyOnce)
-        .packet_id(456u16)
+        .packet_id(Some(456u16))
         .payload("test payload")
         .build()
         .unwrap();

@@ -1155,10 +1155,10 @@ where
     /// use mqtt_protocol_core::mqtt;
     ///
     /// let builder = mqtt::packet::v5_0::Publish::builder()
-    ///     .packet_id(42);
+    ///     .packet_id(Some(42));
     /// ```
-    pub fn packet_id(mut self, id: PacketIdType) -> Self {
-        self.packet_id_buf = Some(Some(id.to_buffer()));
+    pub fn packet_id(mut self, id: Option<PacketIdType>) -> Self {
+        self.packet_id_buf = id.map(|id| Some(id.to_buffer()));
         self
     }
 

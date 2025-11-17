@@ -861,10 +861,10 @@ where
     ///     .topic_name("test/topic")
     ///     .unwrap()
     ///     .qos(Qos::AtLeastOnce)
-    ///     .packet_id(123);
+    ///     .packet_id(Some(123));
     /// ```
-    pub fn packet_id(mut self, id: PacketIdType) -> Self {
-        self.packet_id_buf = Some(Some(id.to_buffer()));
+    pub fn packet_id(mut self, id: Option<PacketIdType>) -> Self {
+        self.packet_id_buf = id.map(|id| Some(id.to_buffer()));
         self
     }
 

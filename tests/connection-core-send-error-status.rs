@@ -99,7 +99,7 @@ fn v3_1_1_client_not_allowed_to_send_invalid_pid_publish_qos1() {
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
     v3_1_1_client_establish_connection(&mut con, true, false);
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Publish::builder()
-        .packet_id(1)
+        .packet_id(Some(1))
         .topic_name("topic")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
@@ -129,7 +129,7 @@ fn v3_1_1_client_not_allowed_to_send_invalid_pid_publish_qos2() {
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
     v3_1_1_client_establish_connection(&mut con, true, false);
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Publish::builder()
-        .packet_id(1)
+        .packet_id(Some(1))
         .topic_name("topic")
         .unwrap()
         .qos(mqtt::packet::Qos::ExactlyOnce)
@@ -268,7 +268,7 @@ fn v3_1_1_client_not_allowed_to_send_on_status_connecting_publish_qos1() {
     v3_1_1_client_connecting(&mut con, true);
     let packet_id = con.acquire_packet_id().unwrap();
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Publish::builder()
-        .packet_id(packet_id)
+        .packet_id(Some(packet_id))
         .topic_name("topic")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
@@ -304,7 +304,7 @@ fn v3_1_1_client_not_allowed_to_send_on_status_connecting_publish_qos2() {
     v3_1_1_client_connecting(&mut con, true);
     let packet_id = con.acquire_packet_id().unwrap();
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Publish::builder()
-        .packet_id(packet_id)
+        .packet_id(Some(packet_id))
         .topic_name("topic")
         .unwrap()
         .qos(mqtt::packet::Qos::ExactlyOnce)
@@ -476,7 +476,7 @@ fn v3_1_1_client_not_allowed_to_send_on_status_disconnected_publish_qos1() {
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
     let packet_id = con.acquire_packet_id().unwrap();
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Publish::builder()
-        .packet_id(packet_id)
+        .packet_id(Some(packet_id))
         .topic_name("topic")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
@@ -511,7 +511,7 @@ fn v3_1_1_client_not_allowed_to_send_on_status_disconnected_publish_qos2() {
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
     let packet_id = con.acquire_packet_id().unwrap();
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Publish::builder()
-        .packet_id(packet_id)
+        .packet_id(Some(packet_id))
         .topic_name("topic")
         .unwrap()
         .qos(mqtt::packet::Qos::ExactlyOnce)
@@ -748,7 +748,7 @@ fn v3_1_1_server_not_allowed_to_send_invalid_pid_publish_qos1() {
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V3_1_1);
     v3_1_1_server_establish_connection(&mut con, true, false);
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Publish::builder()
-        .packet_id(1)
+        .packet_id(Some(1))
         .topic_name("topic")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
@@ -778,7 +778,7 @@ fn v3_1_1_server_not_allowed_to_send_invalid_pid_publish_qos2() {
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V3_1_1);
     v3_1_1_server_establish_connection(&mut con, true, false);
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Publish::builder()
-        .packet_id(1)
+        .packet_id(Some(1))
         .topic_name("topic")
         .unwrap()
         .qos(mqtt::packet::Qos::ExactlyOnce)
@@ -890,7 +890,7 @@ fn v3_1_1_server_not_allowed_to_send_on_status_connecting_publish_qos1() {
     v3_1_1_server_connecting(&mut con, true);
     let packet_id = con.acquire_packet_id().unwrap();
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Publish::builder()
-        .packet_id(packet_id)
+        .packet_id(Some(packet_id))
         .topic_name("topic")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
@@ -926,7 +926,7 @@ fn v3_1_1_server_not_allowed_to_send_on_status_connecting_publish_qos2() {
     v3_1_1_server_connecting(&mut con, true);
     let packet_id = con.acquire_packet_id().unwrap();
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Publish::builder()
-        .packet_id(packet_id)
+        .packet_id(Some(packet_id))
         .topic_name("topic")
         .unwrap()
         .qos(mqtt::packet::Qos::ExactlyOnce)
@@ -1079,7 +1079,7 @@ fn v3_1_1_server_not_allowed_to_send_on_status_disconnected_publish_qos1() {
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V3_1_1);
     let packet_id = con.acquire_packet_id().unwrap();
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Publish::builder()
-        .packet_id(packet_id)
+        .packet_id(Some(packet_id))
         .topic_name("topic")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
@@ -1114,7 +1114,7 @@ fn v3_1_1_server_not_allowed_to_send_on_status_disconnected_publish_qos2() {
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V3_1_1);
     let packet_id = con.acquire_packet_id().unwrap();
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Publish::builder()
-        .packet_id(packet_id)
+        .packet_id(Some(packet_id))
         .topic_name("topic")
         .unwrap()
         .qos(mqtt::packet::Qos::ExactlyOnce)
@@ -1282,7 +1282,7 @@ fn v5_0_client_not_allowed_to_send_invalid_pid_publish_qos1() {
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
     v5_0_client_establish_connection(&mut con);
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Publish::builder()
-        .packet_id(1)
+        .packet_id(Some(1))
         .topic_name("topic")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
@@ -1312,7 +1312,7 @@ fn v5_0_client_not_allowed_to_send_invalid_pid_publish_qos2() {
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
     v5_0_client_establish_connection(&mut con);
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Publish::builder()
-        .packet_id(1)
+        .packet_id(Some(1))
         .topic_name("topic")
         .unwrap()
         .qos(mqtt::packet::Qos::ExactlyOnce)
@@ -1458,7 +1458,7 @@ fn v5_0_client_not_allowed_to_send_on_status_connecting_publish_qos1() {
     v5_0_client_connecting(&mut con);
     let packet_id = con.acquire_packet_id().unwrap();
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Publish::builder()
-        .packet_id(packet_id)
+        .packet_id(Some(packet_id))
         .topic_name("topic")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
@@ -1494,7 +1494,7 @@ fn v5_0_client_not_allowed_to_send_on_status_connecting_publish_qos2() {
     v5_0_client_connecting(&mut con);
     let packet_id = con.acquire_packet_id().unwrap();
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Publish::builder()
-        .packet_id(packet_id)
+        .packet_id(Some(packet_id))
         .topic_name("topic")
         .unwrap()
         .qos(mqtt::packet::Qos::ExactlyOnce)
@@ -1670,7 +1670,7 @@ fn v5_0_client_not_allowed_to_send_on_status_disconnected_publish_qos1() {
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
     let packet_id = con.acquire_packet_id().unwrap();
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Publish::builder()
-        .packet_id(packet_id)
+        .packet_id(Some(packet_id))
         .topic_name("topic")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
@@ -1705,7 +1705,7 @@ fn v5_0_client_not_allowed_to_send_on_status_disconnected_publish_qos2() {
     let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
     let packet_id = con.acquire_packet_id().unwrap();
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Publish::builder()
-        .packet_id(packet_id)
+        .packet_id(Some(packet_id))
         .topic_name("topic")
         .unwrap()
         .qos(mqtt::packet::Qos::ExactlyOnce)
@@ -1968,7 +1968,7 @@ fn v5_0_server_not_allowed_to_send_invalid_pid_publish_qos1() {
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
     v5_0_server_establish_connection(&mut con);
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Publish::builder()
-        .packet_id(1)
+        .packet_id(Some(1))
         .topic_name("topic")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
@@ -1998,7 +1998,7 @@ fn v5_0_server_not_allowed_to_send_invalid_pid_publish_qos2() {
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
     v5_0_server_establish_connection(&mut con);
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Publish::builder()
-        .packet_id(1)
+        .packet_id(Some(1))
         .topic_name("topic")
         .unwrap()
         .qos(mqtt::packet::Qos::ExactlyOnce)
@@ -2110,7 +2110,7 @@ fn v5_0_server_not_allowed_to_send_on_status_connecting_publish_qos1() {
     v5_0_server_connecting(&mut con);
     let packet_id = con.acquire_packet_id().unwrap();
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Publish::builder()
-        .packet_id(packet_id)
+        .packet_id(Some(packet_id))
         .topic_name("topic")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
@@ -2146,7 +2146,7 @@ fn v5_0_server_not_allowed_to_send_on_status_connecting_publish_qos2() {
     v5_0_server_connecting(&mut con);
     let packet_id = con.acquire_packet_id().unwrap();
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Publish::builder()
-        .packet_id(packet_id)
+        .packet_id(Some(packet_id))
         .topic_name("topic")
         .unwrap()
         .qos(mqtt::packet::Qos::ExactlyOnce)
@@ -2321,7 +2321,7 @@ fn v5_0_server_not_allowed_to_send_on_status_disconnected_publish_qos1() {
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
     let packet_id = con.acquire_packet_id().unwrap();
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Publish::builder()
-        .packet_id(packet_id)
+        .packet_id(Some(packet_id))
         .topic_name("topic")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
@@ -2356,7 +2356,7 @@ fn v5_0_server_not_allowed_to_send_on_status_disconnected_publish_qos2() {
     let mut con = mqtt::Connection::<mqtt::role::Server>::new(mqtt::Version::V5_0);
     let packet_id = con.acquire_packet_id().unwrap();
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Publish::builder()
-        .packet_id(packet_id)
+        .packet_id(Some(packet_id))
         .topic_name("topic")
         .unwrap()
         .qos(mqtt::packet::Qos::ExactlyOnce)

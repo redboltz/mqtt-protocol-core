@@ -324,7 +324,7 @@ fn client_over_maximum_packet_size_recv() {
         .topic_name("topic/c")
         .unwrap()
         .qos(mqtt::packet::Qos::ExactlyOnce)
-        .packet_id(1u16)
+        .packet_id(Some(1u16))
         .payload(b"012345678901234567890123456789".to_vec())
         .build()
         .unwrap();
@@ -408,7 +408,7 @@ fn server_over_maximum_packet_size_recv() {
         .topic_name("topic/c")
         .unwrap()
         .qos(mqtt::packet::Qos::ExactlyOnce)
-        .packet_id(1u16)
+        .packet_id(Some(1u16))
         .payload(b"012345678901234567890123456789".to_vec())
         .build()
         .unwrap();

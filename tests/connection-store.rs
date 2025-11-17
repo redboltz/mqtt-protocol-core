@@ -35,7 +35,7 @@ fn make_packet_u32(id: u32, qos: Qos) -> GenericStorePacket<u32> {
         .unwrap()
         .payload("test payload")
         .qos(qos)
-        .packet_id(id)
+        .packet_id(Some(id))
         .build()
         .unwrap();
 
@@ -50,7 +50,7 @@ fn make_packet_u16(id: u16, qos: Qos) -> GenericStorePacket<u16> {
         .unwrap()
         .payload("test payload")
         .qos(qos)
-        .packet_id(id)
+        .packet_id(Some(id))
         .build()
         .unwrap();
 

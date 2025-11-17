@@ -129,7 +129,7 @@ fn client_recv_pubrel_success_v5_0() {
     v5_0_client_establish_connection(&mut connection);
 
     let packet = mqtt::packet::v5_0::Publish::builder()
-        .packet_id(1)
+        .packet_id(Some(1))
         .topic_name("topic/a")
         .unwrap()
         .qos(mqtt::packet::Qos::ExactlyOnce)

@@ -65,20 +65,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         handle_events(&mut stream, &mut connection, events)?;
     }
 
-    let mut publish_builder = mqtt::packet::v5_0::Publish::builder()
+    let packet_id = match qos_level {
+        mqtt::packet::Qos::AtMostOnce => None,
+        _ => Some(
+            connection
+                .acquire_packet_id()
+                .map_err(|e| format!("Failed to acquire packet ID: {e:?}"))?,
+        ),
+    };
+
+    let publish_packet = mqtt::packet::v5_0::Publish::builder()
         .topic_name(topic)
         .unwrap()
         .qos(qos_level)
-        .payload(payload.as_bytes());
-
-    if qos_level != mqtt::packet::Qos::AtMostOnce {
-        let packet_id = connection
-            .acquire_packet_id()
-            .map_err(|e| format!("Failed to acquire packet ID: {e:?}"))?;
-        publish_builder = publish_builder.packet_id(packet_id);
-    }
-
-    let publish_packet = publish_builder
+        .packet_id(packet_id)
+        .payload(payload.as_bytes())
         .build()
         .map_err(|e| format!("Failed to build PUBLISH packet: {e:?}"))?;
 

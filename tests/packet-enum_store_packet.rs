@@ -77,7 +77,7 @@ fn v3_1_1_publish_qos1_store_packet() {
         .topic_name("test/topic")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
-        .packet_id(123u16)
+        .packet_id(Some(123u16))
         .payload(b"test payload")
         .build()
         .unwrap();
@@ -100,7 +100,7 @@ fn v3_1_1_publish_qos2_store_packet() {
         .topic_name("test/topic")
         .unwrap()
         .qos(mqtt::packet::Qos::ExactlyOnce)
-        .packet_id(456u16)
+        .packet_id(Some(456u16))
         .payload(b"test payload")
         .build()
         .unwrap();
@@ -142,7 +142,7 @@ fn v5_0_publish_qos1_store_packet() {
         .topic_name("test/topic")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
-        .packet_id(789u16)
+        .packet_id(Some(789u16))
         .payload(b"test payload")
         .build()
         .unwrap();
@@ -165,7 +165,7 @@ fn v5_0_publish_qos2_store_packet() {
         .topic_name("test/topic")
         .unwrap()
         .qos(mqtt::packet::Qos::ExactlyOnce)
-        .packet_id(999u16)
+        .packet_id(Some(999u16))
         .payload(b"test payload")
         .build()
         .unwrap();
@@ -245,7 +245,7 @@ fn packet_type_v3_1_1_publish() {
         .topic_name("test/topic")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
-        .packet_id(1u16)
+        .packet_id(Some(1u16))
         .build()
         .unwrap();
 
@@ -275,7 +275,7 @@ fn packet_type_v5_0_publish() {
         .topic_name("test/topic")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
-        .packet_id(1u16)
+        .packet_id(Some(1u16))
         .build()
         .unwrap();
 
@@ -306,7 +306,7 @@ fn packet_id_v3_1_1_publish() {
         .topic_name("test/topic")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
-        .packet_id(333u16)
+        .packet_id(Some(333u16))
         .build()
         .unwrap();
 
@@ -333,7 +333,7 @@ fn packet_id_v5_0_publish() {
         .topic_name("test/topic")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
-        .packet_id(555u16)
+        .packet_id(Some(555u16))
         .build()
         .unwrap();
 
@@ -361,7 +361,7 @@ fn response_packet_v3_1_1_publish_qos1() {
         .topic_name("test/topic")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
-        .packet_id(1u16)
+        .packet_id(Some(1u16))
         .build()
         .unwrap();
 
@@ -379,7 +379,7 @@ fn response_packet_v3_1_1_publish_qos2() {
         .topic_name("test/topic")
         .unwrap()
         .qos(mqtt::packet::Qos::ExactlyOnce)
-        .packet_id(1u16)
+        .packet_id(Some(1u16))
         .build()
         .unwrap();
 
@@ -412,7 +412,7 @@ fn response_packet_v5_0_publish_qos1() {
         .topic_name("test/topic")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
-        .packet_id(1u16)
+        .packet_id(Some(1u16))
         .build()
         .unwrap();
 
@@ -430,7 +430,7 @@ fn response_packet_v5_0_publish_qos2() {
         .topic_name("test/topic")
         .unwrap()
         .qos(mqtt::packet::Qos::ExactlyOnce)
-        .packet_id(1u16)
+        .packet_id(Some(1u16))
         .build()
         .unwrap();
 
@@ -464,7 +464,7 @@ fn size_v3_1_1_publish() {
         .topic_name("test/topic")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
-        .packet_id(1u16)
+        .packet_id(Some(1u16))
         .payload(b"test payload")
         .build()
         .unwrap();
@@ -508,7 +508,7 @@ fn size_v5_0_publish() {
         .topic_name("test/topic")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
-        .packet_id(1u16)
+        .packet_id(Some(1u16))
         .payload(b"test payload")
         .build()
         .unwrap();
@@ -554,7 +554,7 @@ fn to_buffers_v3_1_1_publish() {
         .topic_name("test/topic")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
-        .packet_id(1u16)
+        .packet_id(Some(1u16))
         .payload(b"test payload")
         .build()
         .unwrap();
@@ -600,7 +600,7 @@ fn to_buffers_v5_0_publish() {
         .topic_name("test/topic")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
-        .packet_id(1u16)
+        .packet_id(Some(1u16))
         .payload(b"test payload")
         .build()
         .unwrap();
@@ -646,7 +646,7 @@ fn debug_v3_1_1_publish() {
         .topic_name("test/topic")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
-        .packet_id(1u16)
+        .packet_id(Some(1u16))
         .payload(b"test payload")
         .build()
         .unwrap();
@@ -664,7 +664,7 @@ fn display_v3_1_1_publish() {
         .topic_name("test/topic")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
-        .packet_id(1u16)
+        .packet_id(Some(1u16))
         .payload(b"test payload")
         .build()
         .unwrap();
@@ -696,7 +696,7 @@ fn debug_v5_0_publish() {
         .topic_name("test/topic")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
-        .packet_id(1u16)
+        .packet_id(Some(1u16))
         .payload(b"test payload")
         .build()
         .unwrap();
@@ -742,7 +742,7 @@ fn display_v5_0_publish() {
         .topic_name("test/topic")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
-        .packet_id(1u16)
+        .packet_id(Some(1u16))
         .payload(b"test payload")
         .build()
         .unwrap();
@@ -775,7 +775,7 @@ fn clone_v3_1_1_publish() {
         .topic_name("test/topic")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
-        .packet_id(1u16)
+        .packet_id(Some(1u16))
         .payload(b"test payload")
         .build()
         .unwrap();
@@ -806,7 +806,7 @@ fn convert_to_generic_packet_v3_1_1_publish() {
         .topic_name("test/topic")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
-        .packet_id(1u16)
+        .packet_id(Some(1u16))
         .payload(b"test payload")
         .build()
         .unwrap();
@@ -848,7 +848,7 @@ fn convert_to_generic_packet_v5_0_publish() {
         .topic_name("test/topic")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
-        .packet_id(789u16)
+        .packet_id(Some(789u16))
         .payload(b"test payload")
         .build()
         .unwrap();

@@ -55,7 +55,7 @@ fn auto_pub_response_v3_1_1() {
         .topic_name("topic/a")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
-        .packet_id(packet_id_a)
+        .packet_id(Some(packet_id_a))
         .payload(b"payload A".to_vec())
         .build()
         .unwrap();
@@ -89,7 +89,7 @@ fn auto_pub_response_v3_1_1() {
         .topic_name("topic/b")
         .unwrap()
         .qos(mqtt::packet::Qos::ExactlyOnce)
-        .packet_id(packet_id_b)
+        .packet_id(Some(packet_id_b))
         .payload(b"payload B".to_vec())
         .build()
         .unwrap();
@@ -188,7 +188,7 @@ fn auto_pub_response_v5_0() {
         .topic_name("topic/a")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
-        .packet_id(packet_id_a)
+        .packet_id(Some(packet_id_a))
         .payload(b"payload A".to_vec())
         .build()
         .unwrap();
@@ -222,7 +222,7 @@ fn auto_pub_response_v5_0() {
         .topic_name("topic/b")
         .unwrap()
         .qos(mqtt::packet::Qos::ExactlyOnce)
-        .packet_id(packet_id_b)
+        .packet_id(Some(packet_id_b))
         .payload(b"payload B".to_vec())
         .build()
         .unwrap();
@@ -323,7 +323,7 @@ fn qos2_pubrel_send_request_v3_1_1() {
         .topic_name("test/topic")
         .unwrap()
         .qos(mqtt::packet::Qos::ExactlyOnce)
-        .packet_id(packet_id)
+        .packet_id(Some(packet_id))
         .payload(b"test payload".to_vec())
         .build()
         .unwrap();
@@ -393,7 +393,7 @@ fn qos2_pubrel_send_request_v5_0() {
         .topic_name("test/topic")
         .unwrap()
         .qos(mqtt::packet::Qos::ExactlyOnce)
-        .packet_id(packet_id)
+        .packet_id(Some(packet_id))
         .payload(b"test payload".to_vec())
         .build()
         .unwrap();

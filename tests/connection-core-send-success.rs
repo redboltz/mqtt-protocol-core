@@ -68,7 +68,7 @@ fn v3_1_1_client_send_publish_pubrel() {
 
     let packet_id = con.acquire_packet_id().unwrap();
     let packet = mqtt::packet::v3_1_1::Publish::builder()
-        .packet_id(packet_id)
+        .packet_id(Some(packet_id))
         .topic_name("test/topic")
         .unwrap()
         .qos(mqtt::packet::Qos::ExactlyOnce)
@@ -131,7 +131,7 @@ fn v3_1_1_client_send_puback() {
 
     let packet_id = con.acquire_packet_id().unwrap();
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Publish::builder()
-        .packet_id(packet_id)
+        .packet_id(Some(packet_id))
         .topic_name("test/topic")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
@@ -173,7 +173,7 @@ fn v5_0_client_send_puback() {
 
     let packet_id = con.acquire_packet_id().unwrap();
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Publish::builder()
-        .packet_id(packet_id)
+        .packet_id(Some(packet_id))
         .topic_name("test/topic")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
@@ -215,7 +215,7 @@ fn v3_1_1_client_send_pubrec_pubcomp() {
 
     let packet_id = con.acquire_packet_id().unwrap();
     let packet: mqtt::packet::Packet = mqtt::packet::v3_1_1::Publish::builder()
-        .packet_id(packet_id)
+        .packet_id(Some(packet_id))
         .topic_name("test/topic")
         .unwrap()
         .qos(mqtt::packet::Qos::ExactlyOnce)
@@ -287,7 +287,7 @@ fn v5_0_client_send_pubrec_pubcomp() {
 
     let packet_id = con.acquire_packet_id().unwrap();
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Publish::builder()
-        .packet_id(packet_id)
+        .packet_id(Some(packet_id))
         .topic_name("test/topic")
         .unwrap()
         .qos(mqtt::packet::Qos::ExactlyOnce)
@@ -362,7 +362,7 @@ fn v5_0_client_send_pubrec() {
 
     let packet_id = con.acquire_packet_id().unwrap();
     let packet: mqtt::packet::Packet = mqtt::packet::v5_0::Publish::builder()
-        .packet_id(packet_id)
+        .packet_id(Some(packet_id))
         .topic_name("test/topic")
         .unwrap()
         .qos(mqtt::packet::Qos::ExactlyOnce)

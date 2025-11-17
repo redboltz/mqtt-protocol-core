@@ -50,7 +50,7 @@ fn get_receive_maximum_vacancy_for_send_client() {
         .topic_name("topic/a")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
-        .packet_id(packet_id_a)
+        .packet_id(Some(packet_id_a))
         .payload(b"payload A".to_vec())
         .build()
         .unwrap();
@@ -64,7 +64,7 @@ fn get_receive_maximum_vacancy_for_send_client() {
         .topic_name("topic/b")
         .unwrap()
         .qos(mqtt::packet::Qos::ExactlyOnce)
-        .packet_id(packet_id_b)
+        .packet_id(Some(packet_id_b))
         .payload(b"payload B".to_vec())
         .build()
         .unwrap();
@@ -78,7 +78,7 @@ fn get_receive_maximum_vacancy_for_send_client() {
         .topic_name("topic/c")
         .unwrap()
         .qos(mqtt::packet::Qos::ExactlyOnce)
-        .packet_id(packet_id_c)
+        .packet_id(Some(packet_id_c))
         .payload(b"payload C".to_vec())
         .build()
         .unwrap();
@@ -173,7 +173,7 @@ fn get_receive_maximum_vacancy_for_send_server() {
         .topic_name("topic/a")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
-        .packet_id(packet_id_a)
+        .packet_id(Some(packet_id_a))
         .payload(b"payload A".to_vec())
         .build()
         .unwrap();
@@ -187,7 +187,7 @@ fn get_receive_maximum_vacancy_for_send_server() {
         .topic_name("topic/b")
         .unwrap()
         .qos(mqtt::packet::Qos::ExactlyOnce)
-        .packet_id(packet_id_b)
+        .packet_id(Some(packet_id_b))
         .payload(b"payload B".to_vec())
         .build()
         .unwrap();
@@ -201,7 +201,7 @@ fn get_receive_maximum_vacancy_for_send_server() {
         .topic_name("topic/c")
         .unwrap()
         .qos(mqtt::packet::Qos::ExactlyOnce)
-        .packet_id(packet_id_c)
+        .packet_id(Some(packet_id_c))
         .payload(b"payload C".to_vec())
         .build()
         .unwrap();
@@ -286,7 +286,7 @@ fn receive_maximum_exceeded_send() {
         .topic_name("topic/a")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
-        .packet_id(packet_id_a)
+        .packet_id(Some(packet_id_a))
         .payload(b"payload A".to_vec())
         .build()
         .unwrap();
@@ -298,7 +298,7 @@ fn receive_maximum_exceeded_send() {
         .topic_name("topic/b")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
-        .packet_id(packet_id_b)
+        .packet_id(Some(packet_id_b))
         .payload(b"payload B".to_vec())
         .build()
         .unwrap();
@@ -361,7 +361,7 @@ fn receive_maximum_exceeded_recv() {
         .topic_name("topic/a")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
-        .packet_id(packet_id_a)
+        .packet_id(Some(packet_id_a))
         .payload(b"payload A".to_vec())
         .build()
         .unwrap();
@@ -374,7 +374,7 @@ fn receive_maximum_exceeded_recv() {
         .topic_name("topic/b")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
-        .packet_id(packet_id_b)
+        .packet_id(Some(packet_id_b))
         .payload(b"payload B".to_vec())
         .build()
         .unwrap();
@@ -451,7 +451,7 @@ fn receive_maximum_exceeded_recv_server() {
         .topic_name("topic/a")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
-        .packet_id(packet_id_a)
+        .packet_id(Some(packet_id_a))
         .payload(b"payload A".to_vec())
         .build()
         .unwrap();
@@ -464,7 +464,7 @@ fn receive_maximum_exceeded_recv_server() {
         .topic_name("topic/b")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
-        .packet_id(packet_id_b)
+        .packet_id(Some(packet_id_b))
         .payload(b"payload B".to_vec())
         .build()
         .unwrap();

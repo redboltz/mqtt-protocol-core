@@ -183,7 +183,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
         .payload(b"Hello, MQTT!")
-        .packet_id(connection.acquire_packet_id()?)
+        .packet_id(Some(connection.acquire_packet_id()?))
         .build()?;
 
     let events = connection.checked_send(publish_packet);

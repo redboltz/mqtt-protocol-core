@@ -49,7 +49,7 @@ fn v5_0_send_stored_success() {
 
     let pid_q1_a = con.acquire_packet_id().unwrap();
     let pub_q1_a = mqtt::packet::v5_0::Publish::builder()
-        .packet_id(pid_q1_a)
+        .packet_id(Some(pid_q1_a))
         .qos(mqtt::packet::Qos::AtLeastOnce)
         .topic_name("t")
         .unwrap()
@@ -60,7 +60,7 @@ fn v5_0_send_stored_success() {
 
     let pid_q2_b = con.acquire_packet_id().unwrap();
     let pub_q2_b = mqtt::packet::v5_0::Publish::builder()
-        .packet_id(pid_q2_b)
+        .packet_id(Some(pid_q2_b))
         .qos(mqtt::packet::Qos::ExactlyOnce)
         .topic_name("t")
         .unwrap()
@@ -71,7 +71,7 @@ fn v5_0_send_stored_success() {
 
     let pid_q2_c = con.acquire_packet_id().unwrap();
     let pub_q2_c = mqtt::packet::v5_0::Publish::builder()
-        .packet_id(pid_q2_c)
+        .packet_id(Some(pid_q2_c))
         .qos(mqtt::packet::Qos::ExactlyOnce)
         .topic_name("t")
         .unwrap()
@@ -197,7 +197,7 @@ fn v5_0_send_stored_oversize() {
     let pid = con.acquire_packet_id().unwrap();
     {
         let packet = mqtt::packet::v5_0::Publish::builder()
-            .packet_id(pid)
+            .packet_id(Some(pid))
             .qos(mqtt::packet::Qos::AtLeastOnce)
             .topic_name("t")
             .unwrap()
@@ -305,7 +305,7 @@ fn restore_packets_v3_1_1() {
         .topic_name("topic/a")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
-        .packet_id(1)
+        .packet_id(Some(1))
         .payload(b"payload A".to_vec())
         .build()
         .unwrap();
@@ -314,7 +314,7 @@ fn restore_packets_v3_1_1() {
         .topic_name("topic/b")
         .unwrap()
         .qos(mqtt::packet::Qos::ExactlyOnce)
-        .packet_id(2)
+        .packet_id(Some(2))
         .payload(b"payload B".to_vec())
         .build()
         .unwrap();
@@ -460,7 +460,7 @@ fn restore_packets_v5_0_server() {
         .topic_name("topic/a")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
-        .packet_id(1)
+        .packet_id(Some(1))
         .payload(b"payload A".to_vec())
         .build()
         .unwrap();
@@ -469,7 +469,7 @@ fn restore_packets_v5_0_server() {
         .topic_name("topic/b")
         .unwrap()
         .qos(mqtt::packet::Qos::ExactlyOnce)
-        .packet_id(2)
+        .packet_id(Some(2))
         .payload(b"payload B".to_vec())
         .build()
         .unwrap();
@@ -640,7 +640,7 @@ fn qos2_publish_handled_restore_v5_0() {
         .topic_name("topic/a")
         .unwrap()
         .qos(mqtt::packet::Qos::ExactlyOnce)
-        .packet_id(packet_id_a)
+        .packet_id(Some(packet_id_a))
         .payload(b"payload A".to_vec())
         .build()
         .unwrap();
@@ -692,7 +692,7 @@ fn v5_0_send_stored_success_server() {
         .topic_name("topic/a")
         .unwrap()
         .qos(mqtt::packet::Qos::AtLeastOnce)
-        .packet_id(packet_id_a)
+        .packet_id(Some(packet_id_a))
         .payload(b"payload A".to_vec())
         .build()
         .unwrap();
@@ -703,7 +703,7 @@ fn v5_0_send_stored_success_server() {
         .topic_name("topic/b")
         .unwrap()
         .qos(mqtt::packet::Qos::ExactlyOnce)
-        .packet_id(packet_id_b)
+        .packet_id(Some(packet_id_b))
         .payload(b"payload B".to_vec())
         .build()
         .unwrap();
