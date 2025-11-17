@@ -19,9 +19,10 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-use crate::mqtt::common::Cursor;
+
+use crate::mqtt::common::{Arc, Cursor};
 use crate::mqtt::result_code::MqttError;
-use alloc::{sync::Arc, vec::Vec};
+use alloc::vec::Vec;
 
 #[derive(Debug, Clone)]
 pub enum PacketData {

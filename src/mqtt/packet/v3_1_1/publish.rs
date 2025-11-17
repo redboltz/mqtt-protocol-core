@@ -20,7 +20,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-use alloc::sync::Arc;
 use alloc::vec::Vec;
 use core::fmt;
 use core::mem;
@@ -42,7 +41,7 @@ use crate::mqtt::packet::GenericPacketDisplay;
 use crate::mqtt::packet::GenericPacketTrait;
 use crate::mqtt::packet::IsPacketId;
 use crate::mqtt::result_code::MqttError;
-use crate::mqtt::{ArcPayload, IntoPayload};
+use crate::mqtt::{Arc, ArcPayload, IntoPayload};
 
 /// MQTT 3.1.1 PUBLISH packet representation
 ///
