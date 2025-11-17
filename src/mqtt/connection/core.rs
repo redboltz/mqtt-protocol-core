@@ -2611,6 +2611,8 @@ where
                     } else {
                         self.clear_store_related();
                     }
+                } else {
+                    events.push(GenericEvent::RequestClose);
                 }
                 events.push(GenericEvent::NotifyPacketReceived(
                     GenericPacket::V3_1_1Connack(packet),
@@ -2683,6 +2685,8 @@ where
                     } else {
                         self.clear_store_related();
                     }
+                } else {
+                    events.push(GenericEvent::RequestClose);
                 }
                 events.push(GenericEvent::NotifyPacketReceived(
                     GenericPacket::V5_0Connack(packet),
