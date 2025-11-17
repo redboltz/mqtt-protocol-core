@@ -60,6 +60,7 @@ use std::io::IoSlice;
 /// assert_eq!(property_id.as_str(), "message_expiry_interval");
 /// ```
 #[derive(Deserialize, PartialEq, Eq, Copy, Clone, TryFromPrimitive)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[repr(u8)]
 pub enum PropertyId {
     /// Indicates the format of the payload in PUBLISH packets (0=binary, 1=UTF-8)
@@ -224,6 +225,7 @@ impl fmt::Debug for PropertyId {
 /// assert_eq!(format as u8, 1);
 /// ```
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, TryFromPrimitive)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[repr(u8)]
 pub enum PayloadFormat {
     /// Payload is unspecified bytes (binary data)
