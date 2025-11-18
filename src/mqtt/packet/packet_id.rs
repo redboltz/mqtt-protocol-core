@@ -70,3 +70,70 @@ impl IsPacketId for u32 {
         }
     }
 }
+
+/// Trait for types that can be converted into an optional packet ID
+///
+/// This trait enables the packet_id() builder method to accept both direct values
+/// (e.g., `packet_id(42)`) and optional values (e.g., `packet_id(Some(42))` or `packet_id(None)`).
+///
+/// # Examples
+///
+/// ```
+/// use mqtt_protocol_core::mqtt::packet::IntoPacketId;
+///
+/// // Direct value
+/// let id1: Option<u16> = 42u16.into_packet_id();
+/// assert_eq!(id1, Some(42));
+///
+/// // Optional value
+/// let id2: Option<u16> = Some(42u16).into_packet_id();
+/// assert_eq!(id2, Some(42));
+///
+/// // None value
+/// let id3: Option<u16> = None::<u16>.into_packet_id();
+/// assert_eq!(id3, None);
+/// ```
+pub trait IntoPacketId<T> {
+    /// Convert self into an optional packet ID
+    fn into_packet_id(self) -> Option<T>;
+}
+
+// Implementations for u16
+
+/// Implementation for direct u16 packet ID values
+///
+/// Allows direct u16 values like `42u16` to be converted to `Some(42)`
+impl IntoPacketId<u16> for u16 {
+    fn into_packet_id(self) -> Option<u16> {
+        Some(self)
+    }
+}
+
+/// Implementation for optional u16 packet ID values
+///
+/// Allows optional values like `Some(42u16)` or `None::<u16>` to be passed through
+impl IntoPacketId<u16> for Option<u16> {
+    fn into_packet_id(self) -> Option<u16> {
+        self
+    }
+}
+
+// Implementations for u32
+
+/// Implementation for direct u32 packet ID values
+///
+/// Allows direct u32 values like `42u32` to be converted to `Some(42)`
+impl IntoPacketId<u32> for u32 {
+    fn into_packet_id(self) -> Option<u32> {
+        Some(self)
+    }
+}
+
+/// Implementation for optional u32 packet ID values
+///
+/// Allows optional values like `Some(42u32)` or `None::<u32>` to be passed through
+impl IntoPacketId<u32> for Option<u32> {
+    fn into_packet_id(self) -> Option<u32> {
+        self
+    }
+}
