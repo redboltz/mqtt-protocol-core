@@ -27,7 +27,7 @@ use crate::mqtt::packet::DecodeResult;
 use crate::mqtt::packet::VariableByteInteger;
 use crate::mqtt::result_code::MqttError;
 use alloc::{string::String, vec::Vec};
-use core::convert::TryFrom;
+use core::convert::{TryFrom, TryInto};
 use core::fmt;
 use num_enum::TryFromPrimitive;
 use serde::ser::SerializeStruct;
@@ -372,9 +372,9 @@ macro_rules! mqtt_property_binary {
             /// ```
             pub fn new<T>(v: T) -> Result<Self, MqttError>
             where
-                T: AsRef<[u8]>,
+                T: TryInto<MqttBinary, Error = MqttError>,
             {
-                let binary = MqttBinary::new(v)?;
+                let binary = v.try_into()?;
 
                 Ok(Self {
                     id_bytes: [$id as u8],
@@ -553,9 +553,9 @@ macro_rules! mqtt_property_string {
             /// ```
             pub fn new<T>(s: T) -> Result<Self, MqttError>
             where
-                T: AsRef<str>,
+                T: TryInto<MqttString, Error = MqttError>,
             {
-                let value = MqttString::new(s)?;
+                let value = s.try_into()?;
 
                 Ok(Self {
                     id_bytes: [$id as u8],
@@ -716,11 +716,11 @@ macro_rules! mqtt_property_string_pair {
             /// ```
             pub fn new<K, V>(key: K, val: V) -> Result<Self, MqttError>
             where
-                K: AsRef<str>,
-                V: AsRef<str>,
+                K: TryInto<MqttString, Error = MqttError>,
+                V: TryInto<MqttString, Error = MqttError>,
             {
-                let key_mqtt = MqttString::new(key)?;
-                let val_mqtt = MqttString::new(val)?;
+                let key_mqtt = key.try_into()?;
+                let val_mqtt = val.try_into()?;
 
                 Ok(Self {
                     id_bytes: [$id as u8],

@@ -1004,9 +1004,16 @@ where
     /// is published. Topic names cannot contain wildcard characters (+ or #)
     /// in PUBLISH packets, as these are only allowed in SUBSCRIBE packets.
     ///
+    /// This method accepts both string types (&str, String) and pre-constructed
+    /// `MqttString` instances. When passing a pre-constructed `MqttString`, no
+    /// additional heap allocation occurs, making it efficient for cross-thread
+    /// message passing scenarios.
+    ///
     /// # Parameters
     ///
-    /// - `topic`: The topic name as any type that can be referenced as a string
+    /// - `topic`: The topic name. Can be:
+    ///   - `&str` or `String` (will be converted to `MqttString`)
+    ///   - `MqttString` (passed by value without additional allocation)
     ///
     /// # Returns
     ///
@@ -1023,12 +1030,22 @@ where
     /// ```ignore
     /// use mqtt_protocol_core::mqtt;
     ///
+    /// // From &str (backward compatible)
     /// let builder = mqtt::packet::v5_0::Publish::builder()
     ///     .topic_name("sensors/temperature/room1")
     ///     .unwrap();
+    ///
+    /// // From pre-constructed MqttString (no additional allocation)
+    /// let topic = mqtt::packet::MqttString::new("sensors/temperature/room1").unwrap();
+    /// let builder = mqtt::packet::v5_0::Publish::builder()
+    ///     .topic_name(topic)
+    ///     .unwrap();
     /// ```
-    pub fn topic_name<T: AsRef<str>>(mut self, topic: T) -> Result<Self, MqttError> {
-        let mqtt_str = MqttString::new(topic)?;
+    pub fn topic_name<T>(mut self, topic: T) -> Result<Self, MqttError>
+    where
+        T: TryInto<MqttString, Error = MqttError>,
+    {
+        let mqtt_str = topic.try_into()?;
         if mqtt_str.as_str().contains('#') || mqtt_str.as_str().contains('+') {
             return Err(MqttError::MalformedPacket);
         }

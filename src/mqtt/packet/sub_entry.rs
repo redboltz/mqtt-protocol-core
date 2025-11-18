@@ -26,6 +26,7 @@ use crate::mqtt::packet::RetainHandling;
 use crate::mqtt::result_code::MqttError;
 use alloc::string::ToString;
 use alloc::{string::String, vec::Vec};
+use core::convert::TryInto;
 use core::fmt;
 use serde::ser::{SerializeStruct, Serializer};
 use serde::Serialize;
@@ -564,8 +565,11 @@ impl SubEntry {
     /// let opts = mqtt::packet::SubOpts::new().set_qos(mqtt::packet::Qos::AtLeastOnce);
     /// let entry = mqtt::packet::SubEntry::new("home/+/status", opts).unwrap();
     /// ```
-    pub fn new(topic_filter: impl AsRef<str>, sub_opts: SubOpts) -> Result<Self, MqttError> {
-        let topic_filter = MqttString::new(topic_filter)?;
+    pub fn new<T>(topic_filter: T, sub_opts: SubOpts) -> Result<Self, MqttError>
+    where
+        T: TryInto<MqttString, Error = MqttError>,
+    {
+        let topic_filter = topic_filter.try_into()?;
         Ok(Self {
             topic_filter,
             sub_opts,

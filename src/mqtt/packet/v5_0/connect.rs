@@ -37,6 +37,7 @@ use crate::mqtt::packet::mqtt_string::MqttString;
 use crate::mqtt::packet::packet_type::{FixedHeader, PacketType};
 use crate::mqtt::packet::GenericPacketDisplay;
 use crate::mqtt::packet::GenericPacketTrait;
+use core::convert::TryInto;
 
 use crate::mqtt::packet::property::PropertiesToContinuousBuffer;
 use crate::mqtt::packet::qos::Qos;
@@ -734,8 +735,11 @@ impl ConnectBuilder {
     ///     .build()
     ///     .unwrap();
     /// ```
-    pub fn client_id(mut self, id: impl AsRef<str>) -> Result<Self, MqttError> {
-        let mqtt_str = MqttString::new(id.as_ref())?;
+    pub fn client_id<T>(mut self, id: T) -> Result<Self, MqttError>
+    where
+        T: TryInto<MqttString, Error = MqttError>,
+    {
+        let mqtt_str = id.try_into()?;
         self.client_id_buf = Some(mqtt_str);
         Ok(self)
     }
@@ -814,15 +818,19 @@ impl ConnectBuilder {
     ///     .build()
     ///     .unwrap();
     /// ```
-    pub fn will_message(
+    pub fn will_message<T, B>(
         mut self,
-        topic: impl AsRef<str>,
-        payload: impl AsRef<[u8]>,
+        topic: T,
+        payload: B,
         qos: Qos,
         retain: bool,
-    ) -> Result<Self, MqttError> {
-        let will_topic = MqttString::new(topic.as_ref())?;
-        let will_payload = MqttBinary::new(payload.as_ref().to_vec())?;
+    ) -> Result<Self, MqttError>
+    where
+        T: TryInto<MqttString, Error = MqttError>,
+        B: TryInto<MqttBinary, Error = MqttError>,
+    {
+        let will_topic = topic.try_into()?;
+        let will_payload = payload.try_into()?;
 
         self.will_topic_buf = Some(will_topic);
         self.will_payload_buf = Some(will_payload);
@@ -863,8 +871,11 @@ impl ConnectBuilder {
     ///     .build()
     ///     .unwrap();
     /// ```
-    pub fn user_name(mut self, name: impl AsRef<str>) -> Result<Self, MqttError> {
-        let mqtt_str = MqttString::new(name.as_ref())?;
+    pub fn user_name<T>(mut self, name: T) -> Result<Self, MqttError>
+    where
+        T: TryInto<MqttString, Error = MqttError>,
+    {
+        let mqtt_str = name.try_into()?;
         self.user_name_buf = Some(mqtt_str);
 
         let mut flags = self.connect_flags_buf.unwrap_or([0b0000_0010])[0];
@@ -900,8 +911,11 @@ impl ConnectBuilder {
     ///     .build()
     ///     .unwrap();
     /// ```
-    pub fn password(mut self, pwd: impl AsRef<[u8]>) -> Result<Self, MqttError> {
-        let mqtt_bin = MqttBinary::new(pwd.as_ref().to_vec())?;
+    pub fn password<B>(mut self, pwd: B) -> Result<Self, MqttError>
+    where
+        B: TryInto<MqttBinary, Error = MqttError>,
+    {
+        let mqtt_bin = pwd.try_into()?;
         self.password_buf = Some(mqtt_bin);
 
         let mut flags = self.connect_flags_buf.unwrap_or([0b0000_0010])[0];
