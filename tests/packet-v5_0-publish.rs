@@ -1504,3 +1504,95 @@ fn test_packet_type() {
     let packet_type = mqtt::packet::v5_0::Publish::packet_type();
     assert_eq!(packet_type, mqtt::packet::PacketType::Publish);
 }
+
+// Tests for packet_id() with Option interface
+
+#[test]
+fn test_qos1_with_some_packet_id_success() {
+    common::init_tracing();
+    let result = mqtt::packet::v5_0::Publish::builder()
+        .topic_name("test/topic")
+        .unwrap()
+        .qos(mqtt::packet::Qos::AtLeastOnce)
+        .packet_id(Some(42u16))
+        .build()
+        .unwrap();
+    assert_eq!(result.packet_id(), Some(42u16));
+}
+
+#[test]
+fn test_qos2_with_some_packet_id_success() {
+    common::init_tracing();
+    let result = mqtt::packet::v5_0::Publish::builder()
+        .topic_name("test/topic")
+        .unwrap()
+        .qos(mqtt::packet::Qos::ExactlyOnce)
+        .packet_id(Some(123u16))
+        .build()
+        .unwrap();
+    assert_eq!(result.packet_id(), Some(123u16));
+}
+
+#[test]
+fn test_qos1_with_none_packet_id_error() {
+    common::init_tracing();
+    let err = mqtt::packet::v5_0::Publish::builder()
+        .topic_name("test/topic")
+        .unwrap()
+        .qos(mqtt::packet::Qos::AtLeastOnce)
+        .packet_id(None::<u16>)
+        .build()
+        .unwrap_err();
+    assert_eq!(err, mqtt::result_code::MqttError::MalformedPacket);
+}
+
+#[test]
+fn test_qos2_with_none_packet_id_error() {
+    common::init_tracing();
+    let err = mqtt::packet::v5_0::Publish::builder()
+        .topic_name("test/topic")
+        .unwrap()
+        .qos(mqtt::packet::Qos::ExactlyOnce)
+        .packet_id(None::<u16>)
+        .build()
+        .unwrap_err();
+    assert_eq!(err, mqtt::result_code::MqttError::MalformedPacket);
+}
+
+#[test]
+fn test_qos0_with_none_packet_id_success() {
+    common::init_tracing();
+    let result = mqtt::packet::v5_0::Publish::builder()
+        .topic_name("test/topic")
+        .unwrap()
+        .qos(mqtt::packet::Qos::AtMostOnce)
+        .packet_id(None::<u16>)
+        .build()
+        .unwrap();
+    assert_eq!(result.packet_id(), None);
+}
+
+#[test]
+fn test_qos0_with_some_packet_id_error() {
+    common::init_tracing();
+    let err = mqtt::packet::v5_0::Publish::builder()
+        .topic_name("test/topic")
+        .unwrap()
+        .qos(mqtt::packet::Qos::AtMostOnce)
+        .packet_id(Some(42u16))
+        .build()
+        .unwrap_err();
+    assert_eq!(err, mqtt::result_code::MqttError::MalformedPacket);
+}
+
+#[test]
+fn test_qos0_without_packet_id_success() {
+    common::init_tracing();
+    let result = mqtt::packet::v5_0::Publish::builder()
+        .topic_name("test/topic")
+        .unwrap()
+        .qos(mqtt::packet::Qos::AtMostOnce)
+        .build()
+        .unwrap();
+    assert_eq!(result.packet_id(), None);
+}

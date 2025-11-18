@@ -38,7 +38,7 @@ pub use self::variable_byte_integer::{DecodeResult, VariableByteInteger};
 mod packet_type;
 pub use self::packet_type::{FixedHeader, PacketType};
 mod packet_id;
-pub use self::packet_id::IsPacketId;
+pub use self::packet_id::{IntoPacketId, IsPacketId};
 pub mod v3_1_1;
 pub mod v5_0;
 pub use self::enum_packet::{GenericPacket, GenericPacketDisplay, GenericPacketTrait, Packet};

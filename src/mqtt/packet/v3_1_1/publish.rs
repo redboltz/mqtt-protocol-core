@@ -39,7 +39,7 @@ use crate::mqtt::packet::qos::Qos;
 use crate::mqtt::packet::variable_byte_integer::VariableByteInteger;
 use crate::mqtt::packet::GenericPacketDisplay;
 use crate::mqtt::packet::GenericPacketTrait;
-use crate::mqtt::packet::IsPacketId;
+use crate::mqtt::packet::{IntoPacketId, IsPacketId};
 use crate::mqtt::result_code::MqttError;
 use crate::mqtt::{Arc, ArcPayload, IntoPayload};
 
@@ -843,9 +843,14 @@ where
     /// and must be a non-zero value. It is used to match the packet with its
     /// corresponding acknowledgment packets (PUBACK, PUBREC, etc.).
     ///
+    /// This method accepts both direct values and `Option<PacketIdType>`:
+    /// - `packet_id(42)` - Sets packet ID to 42 (for QoS 1/2, backward compatible)
+    /// - `packet_id(Some(42))` - Sets packet ID to 42 (for QoS 1/2)
+    /// - `packet_id(None)` - No packet ID (for QoS 0)
+    ///
     /// # Parameters
     ///
-    /// * `id` - The packet identifier (must be non-zero for QoS > 0)
+    /// * `id` - The packet identifier value or Option (must be non-zero for QoS > 0)
     ///
     /// # Returns
     ///
@@ -857,14 +862,32 @@ where
     /// use mqtt_protocol_core::mqtt;
     /// use mqtt_protocol_core::mqtt::packet::qos::Qos;
     ///
+    /// // Direct value (backward compatible)
     /// let builder = mqtt::packet::v3_1_1::Publish::builder()
     ///     .topic_name("test/topic")
     ///     .unwrap()
     ///     .qos(Qos::AtLeastOnce)
     ///     .packet_id(123);
+    ///
+    /// // Explicit Some
+    /// let builder = mqtt::packet::v3_1_1::Publish::builder()
+    ///     .topic_name("test/topic")
+    ///     .unwrap()
+    ///     .qos(Qos::AtLeastOnce)
+    ///     .packet_id(Some(123));
+    ///
+    /// // Explicit None for QoS 0
+    /// let builder = mqtt::packet::v3_1_1::Publish::builder()
+    ///     .topic_name("test/topic")
+    ///     .unwrap()
+    ///     .qos(Qos::AtMostOnce)
+    ///     .packet_id(None);
     /// ```
-    pub fn packet_id(mut self, id: PacketIdType) -> Self {
-        self.packet_id_buf = Some(Some(id.to_buffer()));
+    pub fn packet_id<T>(mut self, id: T) -> Self
+    where
+        T: IntoPacketId<PacketIdType>,
+    {
+        self.packet_id_buf = Some(id.into_packet_id().map(|i| i.to_buffer()));
         self
     }
 
