@@ -71,8 +71,8 @@ fn auto_map_topic_alias_send() {
             ..
         } = event
         {
-            // Verify topic name is empty and topic alias is 1
-            if p.topic_name().is_empty() {
+            // Verify topic name is present and topic alias is 1
+            if p.topic_name() == "topic/a" {
                 // Check for TopicAlias property with value 1
                 for prop in p.props().iter() {
                     if let mqtt::packet::Property::TopicAlias(ta) = prop {
@@ -87,7 +87,7 @@ fn auto_map_topic_alias_send() {
     }
     assert!(
         publish_a_mapped,
-        "PUBLISH A should have empty topic name and TopicAlias=1"
+        "PUBLISH A should have valid topic name and TopicAlias=1"
     );
 
     // Send QoS0 PUBLISH B
@@ -109,8 +109,8 @@ fn auto_map_topic_alias_send() {
             ..
         } = event
         {
-            // Verify topic name is empty and topic alias is 2
-            if p.topic_name().is_empty() {
+            // Verify topic name is present and topic alias is 2
+            if p.topic_name() == "topic/b" {
                 // Check for TopicAlias property with value 2
                 for prop in p.props().iter() {
                     if let mqtt::packet::Property::TopicAlias(ta) = prop {
@@ -125,7 +125,7 @@ fn auto_map_topic_alias_send() {
     }
     assert!(
         publish_b_mapped,
-        "PUBLISH B should have empty topic name and TopicAlias=2"
+        "PUBLISH B should have valid topic name and TopicAlias=2"
     );
 
     {

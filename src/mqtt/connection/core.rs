@@ -1630,7 +1630,7 @@ where
                     } else {
                         let lru_ta = topic_alias_send.get_lru_alias();
                         topic_alias_send.insert_or_update(packet.topic_name(), lru_ta);
-                        packet = packet.remove_topic_add_topic_alias(lru_ta);
+                        packet = packet.add_topic_alias(lru_ta);
                     }
                 }
             } else if self.auto_replace_topic_alias_send {
