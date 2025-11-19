@@ -285,6 +285,40 @@ impl TryFrom<&str> for MqttBinary {
     }
 }
 
+/// Implementation of `TryFrom<&[u8; N]>` for `MqttBinary`
+///
+/// Converts a fixed-size array reference to `MqttBinary`. This allows array literals
+/// like `b"data"` to be used with generic code that accepts `TryInto<MqttBinary>`.
+impl<const N: usize> TryFrom<&[u8; N]> for MqttBinary {
+    type Error = MqttError;
+
+    fn try_from(arr: &[u8; N]) -> Result<Self, Self::Error> {
+        Self::new(&arr[..])
+    }
+}
+
+/// Implementation of `TryFrom<Vec<u8>>` for `MqttBinary`
+///
+/// Converts an owned `Vec<u8>` to `MqttBinary`.
+impl TryFrom<Vec<u8>> for MqttBinary {
+    type Error = MqttError;
+
+    fn try_from(v: Vec<u8>) -> Result<Self, Self::Error> {
+        Self::new(&v)
+    }
+}
+
+/// Implementation of `TryFrom<&Vec<u8>>` for `MqttBinary`
+///
+/// Converts a `Vec<u8>` reference to `MqttBinary`.
+impl TryFrom<&Vec<u8>> for MqttBinary {
+    type Error = MqttError;
+
+    fn try_from(v: &Vec<u8>) -> Result<Self, Self::Error> {
+        Self::new(v.as_slice())
+    }
+}
+
 /// Implementation of `Default` for `MqttBinary`
 impl Default for MqttBinary {
     fn default() -> Self {

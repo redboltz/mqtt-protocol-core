@@ -645,7 +645,7 @@ impl core::hash::Hash for MqttString {
 /// The internal buffer contains only the 2-byte length prefix (0x00, 0x00).
 impl Default for MqttString {
     fn default() -> Self {
-        MqttString::new("").unwrap()
+        Self::new("").unwrap()
     }
 }
 
@@ -665,7 +665,7 @@ impl TryFrom<&str> for MqttString {
     type Error = MqttError;
 
     fn try_from(s: &str) -> Result<Self, Self::Error> {
-        MqttString::new(s)
+        Self::new(s)
     }
 }
 
@@ -677,7 +677,18 @@ impl TryFrom<String> for MqttString {
     type Error = MqttError;
 
     fn try_from(s: String) -> Result<Self, Self::Error> {
-        MqttString::new(s)
+        Self::new(s)
+    }
+}
+
+/// Implementation of `TryFrom<&String>` for `MqttString`
+///
+/// Converts a `String` reference to `MqttString`.
+impl TryFrom<&String> for MqttString {
+    type Error = MqttError;
+
+    fn try_from(s: &String) -> Result<Self, Self::Error> {
+        Self::new(s.as_str())
     }
 }
 
