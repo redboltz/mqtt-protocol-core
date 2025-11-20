@@ -688,6 +688,45 @@ where
         // Set topic name to empty string
         self.topic_name_buf = MqttString::new("").unwrap();
 
+        self.add_topic_alias(topic_alias)
+    }
+
+    /// Add TopicAlias property
+    ///
+    /// This method adds a TopicAlias property to the packet properties. This
+    /// is required to associate a topic alias with a topic name on the server.
+    /// Future messages can use only the topic alias and omit the topic name.
+    /// This is useful for reducing packet size when sending multiple messages
+    /// to the same topic.
+    ///
+    /// The method removes any existing TopicAlias property before adding the new one
+    /// to ensure only one TopicAlias property exists. It automatically recalculates
+    /// the property_length and remaining_length to reflect these changes.
+    ///
+    /// # Parameters
+    ///
+    /// - `topic_alias`: The numeric topic alias to associate with the topic name
+    ///
+    /// # Returns
+    ///
+    /// The modified `GenericPublish` instance with the TopicAlias property
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// use mqtt_protocol_core::mqtt;
+    ///
+    /// let publish_with_topic = mqtt::packet::v5_0::Publish::builder()
+    ///     .topic_name("sensors/temperature/room1")
+    ///     .unwrap()
+    ///     .payload(b"23.5")
+    ///     .build()
+    ///     .unwrap();
+    ///
+    /// let publish_with_alias = publish_with_topic.add_topic_alias(42);
+    /// // props() now contains TopicAlias property with value 42
+    /// ```
+    pub fn add_topic_alias(mut self, topic_alias: TopicAliasType) -> Self {
         // Add TopicAlias property to the end of properties
         let topic_alias_property =
             Property::TopicAlias(crate::mqtt::packet::TopicAlias::new(topic_alias).unwrap());
