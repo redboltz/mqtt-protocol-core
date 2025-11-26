@@ -116,12 +116,10 @@ use crate::mqtt::result_code::MqttError;
 /// let subscribe = mqtt::packet::v5_0::Subscribe::builder()
 ///     .packet_id(42)
 ///     .entries(vec![
-///         SubEntry::builder()
-///             .topic_filter("sensors/temperature")
-///             .unwrap()
-///             .qos(Qos::AtLeastOnce)
-///             .build()
-///             .unwrap()
+///         SubEntry::new(
+///             "sensors/temperature",
+///             mqtt::packet::SubOpts::new().set_qos(Qos::AtLeastOnce)
+///         )?
 ///     ])
 ///     .build()
 ///     .unwrap();
@@ -134,19 +132,16 @@ use crate::mqtt::result_code::MqttError;
 /// let subscribe = mqtt::packet::v5_0::Subscribe::builder()
 ///     .packet_id(123)
 ///     .entries(vec![
-///         SubEntry::builder()
-///             .topic_filter("home/+/temperature")
-///             .unwrap()
-///             .qos(Qos::AtMostOnce)
-///             .build()
-///             .unwrap(),
-///         SubEntry::builder()
-///             .topic_filter("alerts/#")
-///             .unwrap()
-///             .qos(Qos::ExactlyOnce)
-///             .no_local(true)
-///             .build()
-///             .unwrap()
+///         SubEntry::new(
+///             "home/+/temperature",
+///             mqtt::packet::SubOpts::new().set_qos(Qos::AtMostOnce)
+///         )?,
+///         SubEntry::new(
+///             "alerts/#",
+///             mqtt::packet::SubOpts::new()
+///                 .set_qos(Qos::ExactlyOnce)
+///                 .set_nl(true)
+///         )?
 ///     ])
 ///     .build()
 ///     .unwrap();
@@ -196,12 +191,10 @@ where
 /// let subscribe = mqtt::packet::v5_0::Subscribe::builder()
 ///     .packet_id(1)
 ///     .entries(vec![
-///         SubEntry::builder()
-///             .topic_filter("my/topic")
-///             .unwrap()
-///             .qos(Qos::AtLeastOnce)
-///             .build()
-///             .unwrap()
+///         SubEntry::new(
+///             "my/topic",
+///             mqtt::packet::SubOpts::new().set_qos(Qos::AtLeastOnce)
+///         )?
 ///     ])
 ///     .build()
 ///     .unwrap();
@@ -232,13 +225,12 @@ where
     /// let subscribe = mqtt::packet::v5_0::Subscribe::builder()
     ///     .packet_id(42)
     ///     .entries(vec![
-    ///         SubEntry::builder()
-    ///             .topic_filter("sensors/+")
-    ///             .unwrap()
-    ///             .qos(Qos::AtLeastOnce)
-    ///             .no_local(true)
-    ///             .build()
-    ///             .unwrap()
+    ///         SubEntry::new(
+    ///             "sensors/+",
+    ///             mqtt::packet::SubOpts::new()
+    ///                 .set_qos(Qos::AtLeastOnce)
+    ///                 .set_nl(true)
+    ///         )?
     ///     ])
     ///     .build()
     ///     .unwrap();
@@ -289,12 +281,10 @@ where
     /// let subscribe = mqtt::packet::v5_0::Subscribe::builder()
     ///     .packet_id(123)
     ///     .entries(vec![
-    ///         SubEntry::builder()
-    ///             .topic_filter("test/topic")
-    ///             .unwrap()
-    ///             .qos(Qos::AtMostOnce)
-    ///             .build()
-    ///             .unwrap()
+    ///         SubEntry::new(
+    ///             "test/topic",
+    ///             mqtt::packet::SubOpts::new().set_qos(Qos::AtMostOnce)
+    ///         )?
     ///     ])
     ///     .build()
     ///     .unwrap();
@@ -400,12 +390,10 @@ where
     /// let subscribe = mqtt::packet::v5_0::Subscribe::builder()
     ///     .packet_id(1)
     ///     .entries(vec![
-    ///         SubEntry::builder()
-    ///             .topic_filter("test")
-    ///             .unwrap()
-    ///             .qos(Qos::AtMostOnce)
-    ///             .build()
-    ///             .unwrap()
+    ///         SubEntry::new(
+    ///             "test",
+    ///             mqtt::packet::SubOpts::new().set_qos(Qos::AtMostOnce)
+    ///         )?
     ///     ])
     ///     .build()
     ///     .unwrap();
@@ -613,12 +601,10 @@ where
     /// let subscribe = mqtt::packet::v5_0::Subscribe::builder()
     ///     .packet_id(1)
     ///     .entries(vec![
-    ///         SubEntry::builder()
-    ///             .topic_filter("sensors/temperature")
-    ///             .unwrap()
-    ///             .qos(Qos::AtMostOnce)
-    ///             .build()
-    ///             .unwrap()
+    ///         SubEntry::new(
+    ///             "sensors/temperature",
+    ///             mqtt::packet::SubOpts::new().set_qos(Qos::AtMostOnce)
+    ///         )?
     ///     ])
     ///     .build()
     ///     .unwrap();
@@ -667,12 +653,10 @@ where
 /// let subscribe = mqtt::packet::v5_0::Subscribe::builder()
 ///     .packet_id(42)
 ///     .entries(vec![
-///         SubEntry::builder()
-///             .topic_filter("test/topic")
-///             .unwrap()
-///             .qos(Qos::AtLeastOnce)
-///             .build()
-///             .unwrap()
+///         SubEntry::new(
+///             "test/topic",
+///             mqtt::packet::SubOpts::new().set_qos(Qos::AtLeastOnce)
+///         )?
 ///     ])
 ///     .build()
 ///     .unwrap();
@@ -707,12 +691,10 @@ where
 /// let subscribe = mqtt::packet::v5_0::Subscribe::builder()
 ///     .packet_id(1)
 ///     .entries(vec![
-///         SubEntry::builder()
-///             .topic_filter("debug/topic")
-///             .unwrap()
-///             .qos(Qos::AtMostOnce)
-///             .build()
-///             .unwrap()
+///         SubEntry::new(
+///             "debug/topic",
+///             mqtt::packet::SubOpts::new().set_qos(Qos::AtMostOnce)
+///         )?
 ///     ])
 ///     .build()
 ///     .unwrap();
@@ -751,12 +733,10 @@ where
 /// let subscribe = mqtt::packet::v5_0::Subscribe::builder()
 ///     .packet_id(123)
 ///     .entries(vec![
-///         SubEntry::builder()
-///             .topic_filter("home/sensor")
-///             .unwrap()
-///             .qos(Qos::ExactlyOnce)
-///             .build()
-///             .unwrap()
+///         SubEntry::new(
+///             "home/sensor",
+///             mqtt::packet::SubOpts::new().set_qos(Qos::ExactlyOnce)
+///         )?
 ///     ])
 ///     .build()
 ///     .unwrap();
