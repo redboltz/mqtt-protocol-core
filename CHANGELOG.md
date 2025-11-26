@@ -1,3 +1,15 @@
+# 0.7.3
+
+* Fix SubEntry code example. #56
+* Fix auto_map_topic_alias_send logic. #55
+* Minimize copy for MqttString and MqttBinary. #54
+* Add Option type packet_id() support for Publish packet builder. #53
+* Optionally derive defmt::Format for some types. #48
+* Avoid duplicate libraries when building with -Zbuild-std. #47
+* Fall back to Rc on targets without atomics. #46
+
+
+
 # 0.7.2
 
 * Fix missing properties on CONNACK packet. #44
