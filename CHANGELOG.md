@@ -1,3 +1,7 @@
+# 0.7.4
+
+* Add erase_stored_publish() method to Connection. #57
+
 # 0.7.3
 
 * Fix SubEntry code example. #56
