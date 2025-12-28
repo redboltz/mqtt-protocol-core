@@ -1020,3 +1020,261 @@ fn pingresp_recv_timer_reset_v3_1_1() {
         "pingresp_recv timer reset with 10000ms should be found in events"
     );
 }
+
+#[test]
+fn erase_stored_publish_v3_1_1_qos1() {
+    common::init_tracing();
+    let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
+
+    // Setup connection
+    let connect = mqtt::packet::v3_1_1::Connect::builder()
+        .client_id("cid1")
+        .unwrap()
+        .keep_alive(10u16)
+        .clean_session(false)
+        .build()
+        .expect("Failed to build Connect packet");
+    let _events = con.send(connect.into());
+
+    let connack = mqtt::packet::v3_1_1::Connack::builder()
+        .session_present(false)
+        .return_code(mqtt::result_code::ConnectReturnCode::Accepted)
+        .build()
+        .unwrap();
+    let bytes = connack.to_continuous_buffer();
+    let _events = con.recv(&mut mqtt::common::Cursor::new(&bytes));
+
+    // Acquire packet ID and send QoS 1 PUBLISH
+    let packet_id = con.acquire_packet_id().unwrap();
+    let publish = mqtt::packet::v3_1_1::Publish::builder()
+        .topic_name("test/topic")
+        .unwrap()
+        .qos(mqtt::packet::Qos::AtLeastOnce)
+        .packet_id(Some(packet_id))
+        .payload(b"test payload")
+        .build()
+        .unwrap();
+    let _events = con.send(publish.into());
+
+    // Verify the packet is stored
+    let stored = con.get_stored_packets();
+    assert_eq!(stored.len(), 1);
+
+    // Erase the stored publish packet
+    let events = con.erase_stored_publish(packet_id);
+
+    // Verify NotifyPacketIdReleased event is generated
+    assert_eq!(events.len(), 1);
+    match &events[0] {
+        mqtt::connection::Event::NotifyPacketIdReleased(pid) => {
+            assert_eq!(*pid, packet_id);
+        }
+        _ => panic!("Expected NotifyPacketIdReleased event"),
+    }
+
+    // Verify the packet is removed from store
+    let stored = con.get_stored_packets();
+    assert_eq!(stored.len(), 0);
+
+    // Verify packet ID can be reacquired
+    let new_packet_id = con.acquire_packet_id().unwrap();
+    assert_eq!(new_packet_id, packet_id);
+}
+
+#[test]
+fn erase_stored_publish_v3_1_1_qos2() {
+    common::init_tracing();
+    let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
+
+    // Setup connection
+    let connect = mqtt::packet::v3_1_1::Connect::builder()
+        .client_id("cid1")
+        .unwrap()
+        .keep_alive(10u16)
+        .clean_session(false)
+        .build()
+        .expect("Failed to build Connect packet");
+    let _events = con.send(connect.into());
+
+    let connack = mqtt::packet::v3_1_1::Connack::builder()
+        .session_present(false)
+        .return_code(mqtt::result_code::ConnectReturnCode::Accepted)
+        .build()
+        .unwrap();
+    let bytes = connack.to_continuous_buffer();
+    let _events = con.recv(&mut mqtt::common::Cursor::new(&bytes));
+
+    // Acquire packet ID and send QoS 2 PUBLISH
+    let packet_id = con.acquire_packet_id().unwrap();
+    let publish = mqtt::packet::v3_1_1::Publish::builder()
+        .topic_name("test/topic")
+        .unwrap()
+        .qos(mqtt::packet::Qos::ExactlyOnce)
+        .packet_id(Some(packet_id))
+        .payload(b"test payload")
+        .build()
+        .unwrap();
+    let _events = con.send(publish.into());
+
+    // Verify the packet is stored
+    let stored = con.get_stored_packets();
+    assert_eq!(stored.len(), 1);
+
+    // Erase the stored publish packet
+    let events = con.erase_stored_publish(packet_id);
+
+    // Verify NotifyPacketIdReleased event is generated
+    assert_eq!(events.len(), 1);
+    match &events[0] {
+        mqtt::connection::Event::NotifyPacketIdReleased(pid) => {
+            assert_eq!(*pid, packet_id);
+        }
+        _ => panic!("Expected NotifyPacketIdReleased event"),
+    }
+
+    // Verify the packet is removed from store
+    let stored = con.get_stored_packets();
+    assert_eq!(stored.len(), 0);
+
+    // Verify packet ID can be reacquired
+    let new_packet_id = con.acquire_packet_id().unwrap();
+    assert_eq!(new_packet_id, packet_id);
+}
+
+#[test]
+fn erase_stored_publish_v5_0_qos1() {
+    common::init_tracing();
+    let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
+
+    // Setup connection - need SessionExpiryInterval to enable store
+    let connect = mqtt::packet::v5_0::Connect::builder()
+        .client_id("cid1")
+        .unwrap()
+        .keep_alive(10u16)
+        .clean_start(false)
+        .props(vec![mqtt::packet::SessionExpiryInterval::new(3600)
+            .unwrap()
+            .into()])
+        .build()
+        .expect("Failed to build Connect packet");
+    let _events = con.send(connect.into());
+
+    let connack = mqtt::packet::v5_0::Connack::builder()
+        .session_present(false)
+        .reason_code(mqtt::result_code::ConnectReasonCode::Success)
+        .build()
+        .unwrap();
+    let bytes = connack.to_continuous_buffer();
+    let _events = con.recv(&mut mqtt::common::Cursor::new(&bytes));
+
+    // Acquire packet ID and send QoS 1 PUBLISH
+    let packet_id = con.acquire_packet_id().unwrap();
+    let publish = mqtt::packet::v5_0::Publish::builder()
+        .topic_name("test/topic")
+        .unwrap()
+        .qos(mqtt::packet::Qos::AtLeastOnce)
+        .packet_id(Some(packet_id))
+        .payload(b"test payload")
+        .build()
+        .unwrap();
+    let _events = con.send(publish.into());
+
+    // Verify the packet is stored
+    let stored = con.get_stored_packets();
+    assert_eq!(stored.len(), 1);
+
+    // Erase the stored publish packet
+    let events = con.erase_stored_publish(packet_id);
+
+    // Verify NotifyPacketIdReleased event is generated
+    assert_eq!(events.len(), 1);
+    match &events[0] {
+        mqtt::connection::Event::NotifyPacketIdReleased(pid) => {
+            assert_eq!(*pid, packet_id);
+        }
+        _ => panic!("Expected NotifyPacketIdReleased event"),
+    }
+
+    // Verify the packet is removed from store
+    let stored = con.get_stored_packets();
+    assert_eq!(stored.len(), 0);
+
+    // Verify packet ID can be reacquired
+    let new_packet_id = con.acquire_packet_id().unwrap();
+    assert_eq!(new_packet_id, packet_id);
+}
+
+#[test]
+fn erase_stored_publish_v5_0_qos2() {
+    common::init_tracing();
+    let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
+
+    // Setup connection - need SessionExpiryInterval to enable store
+    let connect = mqtt::packet::v5_0::Connect::builder()
+        .client_id("cid1")
+        .unwrap()
+        .keep_alive(10u16)
+        .clean_start(false)
+        .props(vec![mqtt::packet::SessionExpiryInterval::new(3600)
+            .unwrap()
+            .into()])
+        .build()
+        .expect("Failed to build Connect packet");
+    let _events = con.send(connect.into());
+
+    let connack = mqtt::packet::v5_0::Connack::builder()
+        .session_present(false)
+        .reason_code(mqtt::result_code::ConnectReasonCode::Success)
+        .build()
+        .unwrap();
+    let bytes = connack.to_continuous_buffer();
+    let _events = con.recv(&mut mqtt::common::Cursor::new(&bytes));
+
+    // Acquire packet ID and send QoS 2 PUBLISH
+    let packet_id = con.acquire_packet_id().unwrap();
+    let publish = mqtt::packet::v5_0::Publish::builder()
+        .topic_name("test/topic")
+        .unwrap()
+        .qos(mqtt::packet::Qos::ExactlyOnce)
+        .packet_id(Some(packet_id))
+        .payload(b"test payload")
+        .build()
+        .unwrap();
+    let _events = con.send(publish.into());
+
+    // Verify the packet is stored
+    let stored = con.get_stored_packets();
+    assert_eq!(stored.len(), 1);
+
+    // Erase the stored publish packet
+    let events = con.erase_stored_publish(packet_id);
+
+    // Verify NotifyPacketIdReleased event is generated
+    assert_eq!(events.len(), 1);
+    match &events[0] {
+        mqtt::connection::Event::NotifyPacketIdReleased(pid) => {
+            assert_eq!(*pid, packet_id);
+        }
+        _ => panic!("Expected NotifyPacketIdReleased event"),
+    }
+
+    // Verify the packet is removed from store
+    let stored = con.get_stored_packets();
+    assert_eq!(stored.len(), 0);
+
+    // Verify packet ID can be reacquired
+    let new_packet_id = con.acquire_packet_id().unwrap();
+    assert_eq!(new_packet_id, packet_id);
+}
+
+#[test]
+fn erase_stored_publish_nonexistent() {
+    common::init_tracing();
+    let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
+
+    // Try to erase a packet that doesn't exist
+    let events = con.erase_stored_publish(42);
+
+    // Should return empty events
+    assert_eq!(events.len(), 0);
+}
