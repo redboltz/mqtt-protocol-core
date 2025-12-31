@@ -2730,6 +2730,14 @@ where
                                     }
                                 }
                             }
+                            Property::SessionExpiryInterval(val) => {
+                                if val.val() == 0 {
+                                    self.need_store = false;
+                                    self.clear_store_related();
+                                } else {
+                                    self.need_store = true;
+                                }
+                            }
                             _ => {
                                 // Ignore other properties
                             }

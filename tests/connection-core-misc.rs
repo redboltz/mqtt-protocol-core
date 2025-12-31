@@ -1278,3 +1278,192 @@ fn erase_stored_publish_nonexistent() {
     // Should return empty events
     assert_eq!(events.len(), 0);
 }
+
+#[test]
+fn connack_session_expiry_interval_zero_v5_0() {
+    common::init_tracing();
+    let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
+
+    // Send CONNECT with SessionExpiryInterval = 3600
+    let connect = mqtt::packet::v5_0::Connect::builder()
+        .client_id("cid1")
+        .unwrap()
+        .keep_alive(10u16)
+        .clean_start(false)
+        .props(vec![mqtt::packet::SessionExpiryInterval::new(3600)
+            .unwrap()
+            .into()])
+        .build()
+        .expect("Failed to build Connect packet");
+    let _events = con.send(connect.into());
+
+    // Acquire packet ID and send QoS 1 PUBLISH to populate store
+    let packet_id = con.acquire_packet_id().unwrap();
+    let publish = mqtt::packet::v5_0::Publish::builder()
+        .topic_name("test/topic")
+        .unwrap()
+        .qos(mqtt::packet::Qos::AtLeastOnce)
+        .packet_id(Some(packet_id))
+        .payload(b"test payload")
+        .build()
+        .unwrap();
+    let _events = con.send(publish.into());
+
+    // Verify packet is stored
+    let stored = con.get_stored_packets();
+    assert_eq!(stored.len(), 1);
+
+    // Receive CONNACK with SessionExpiryInterval = 0 (server overrides to 0)
+    let connack = mqtt::packet::v5_0::Connack::builder()
+        .session_present(true)
+        .reason_code(mqtt::result_code::ConnectReasonCode::Success)
+        .props(vec![mqtt::packet::SessionExpiryInterval::new(0)
+            .unwrap()
+            .into()])
+        .build()
+        .unwrap();
+    let bytes = connack.to_continuous_buffer();
+    let _events = con.recv(&mut mqtt::common::Cursor::new(&bytes));
+
+    // Verify store is cleared due to SessionExpiryInterval = 0
+    let stored = con.get_stored_packets();
+    assert_eq!(stored.len(), 0);
+}
+
+#[test]
+fn connack_session_expiry_interval_nonzero_v5_0() {
+    common::init_tracing();
+    let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
+
+    // Send CONNECT with SessionExpiryInterval = 0
+    let connect = mqtt::packet::v5_0::Connect::builder()
+        .client_id("cid1")
+        .unwrap()
+        .keep_alive(10u16)
+        .clean_start(false)
+        .props(vec![mqtt::packet::SessionExpiryInterval::new(0)
+            .unwrap()
+            .into()])
+        .build()
+        .expect("Failed to build Connect packet");
+    let _events = con.send(connect.into());
+
+    // Receive CONNACK with SessionExpiryInterval = 100 (server overrides to 100)
+    let connack = mqtt::packet::v5_0::Connack::builder()
+        .session_present(false)
+        .reason_code(mqtt::result_code::ConnectReasonCode::Success)
+        .props(vec![mqtt::packet::SessionExpiryInterval::new(100)
+            .unwrap()
+            .into()])
+        .build()
+        .unwrap();
+    let bytes = connack.to_continuous_buffer();
+    let _events = con.recv(&mut mqtt::common::Cursor::new(&bytes));
+
+    // Now send a QoS 1 PUBLISH and verify it's stored
+    let packet_id = con.acquire_packet_id().unwrap();
+    let publish = mqtt::packet::v5_0::Publish::builder()
+        .topic_name("test/topic")
+        .unwrap()
+        .qos(mqtt::packet::Qos::AtLeastOnce)
+        .packet_id(Some(packet_id))
+        .payload(b"test payload")
+        .build()
+        .unwrap();
+    let _events = con.send(publish.into());
+
+    // Verify packet is stored due to SessionExpiryInterval = 100
+    let stored = con.get_stored_packets();
+    assert_eq!(stored.len(), 1);
+}
+
+#[test]
+fn connack_session_expiry_interval_override_client_large_to_small_v5_0() {
+    common::init_tracing();
+    let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
+
+    // Send CONNECT with SessionExpiryInterval = 10000
+    let connect = mqtt::packet::v5_0::Connect::builder()
+        .client_id("cid1")
+        .unwrap()
+        .keep_alive(10u16)
+        .clean_start(false)
+        .props(vec![mqtt::packet::SessionExpiryInterval::new(10000)
+            .unwrap()
+            .into()])
+        .build()
+        .expect("Failed to build Connect packet");
+    let _events = con.send(connect.into());
+
+    // Receive CONNACK with SessionExpiryInterval = 100 (server limits to 100)
+    let connack = mqtt::packet::v5_0::Connack::builder()
+        .session_present(false)
+        .reason_code(mqtt::result_code::ConnectReasonCode::Success)
+        .props(vec![mqtt::packet::SessionExpiryInterval::new(100)
+            .unwrap()
+            .into()])
+        .build()
+        .unwrap();
+    let bytes = connack.to_continuous_buffer();
+    let _events = con.recv(&mut mqtt::common::Cursor::new(&bytes));
+
+    // Send QoS 1 PUBLISH
+    let packet_id = con.acquire_packet_id().unwrap();
+    let publish = mqtt::packet::v5_0::Publish::builder()
+        .topic_name("test/topic")
+        .unwrap()
+        .qos(mqtt::packet::Qos::AtLeastOnce)
+        .packet_id(Some(packet_id))
+        .payload(b"test payload")
+        .build()
+        .unwrap();
+    let _events = con.send(publish.into());
+
+    // Verify packet is stored (server's value 100 is used, which is > 0)
+    let stored = con.get_stored_packets();
+    assert_eq!(stored.len(), 1);
+}
+
+#[test]
+fn connack_session_expiry_interval_absent_v5_0() {
+    common::init_tracing();
+    let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
+
+    // Send CONNECT with SessionExpiryInterval = 3600
+    let connect = mqtt::packet::v5_0::Connect::builder()
+        .client_id("cid1")
+        .unwrap()
+        .keep_alive(10u16)
+        .clean_start(false)
+        .props(vec![mqtt::packet::SessionExpiryInterval::new(3600)
+            .unwrap()
+            .into()])
+        .build()
+        .expect("Failed to build Connect packet");
+    let _events = con.send(connect.into());
+
+    // Receive CONNACK without SessionExpiryInterval (CONNECT value is used)
+    let connack = mqtt::packet::v5_0::Connack::builder()
+        .session_present(false)
+        .reason_code(mqtt::result_code::ConnectReasonCode::Success)
+        .build()
+        .unwrap();
+    let bytes = connack.to_continuous_buffer();
+    let _events = con.recv(&mut mqtt::common::Cursor::new(&bytes));
+
+    // Send QoS 1 PUBLISH
+    let packet_id = con.acquire_packet_id().unwrap();
+    let publish = mqtt::packet::v5_0::Publish::builder()
+        .topic_name("test/topic")
+        .unwrap()
+        .qos(mqtt::packet::Qos::AtLeastOnce)
+        .packet_id(Some(packet_id))
+        .payload(b"test payload")
+        .build()
+        .unwrap();
+    let _events = con.send(publish.into());
+
+    // Verify packet is stored (CONNECT's value 3600 is used)
+    let stored = con.get_stored_packets();
+    assert_eq!(stored.len(), 1);
+}
