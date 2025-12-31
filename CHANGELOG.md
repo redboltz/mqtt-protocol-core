@@ -1,3 +1,7 @@
+# 0.7.5
+
+* Add SessionExpiryInterval receiving process. #58.
+
 # 0.7.4
 
 * Add erase_stored_publish() method to Connection. #57
