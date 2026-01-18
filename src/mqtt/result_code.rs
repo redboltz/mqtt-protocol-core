@@ -83,6 +83,8 @@ pub enum MqttError {
     InvalidQos = 0x018D,
 }
 
+impl core::error::Error for MqttError {}
+
 // Implement mapping from UninitializedFieldError to MqttError
 impl From<UninitializedFieldError> for MqttError {
     fn from(_: UninitializedFieldError) -> Self {
