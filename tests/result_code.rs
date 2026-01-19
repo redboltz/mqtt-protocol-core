@@ -1230,8 +1230,8 @@ fn test_debug_and_traits() {
     assert_ne!(MqttError::ProtocolError, MqttError::MalformedPacket);
 
     // Test Hash (by using in a HashSet)
-    use std::collections::HashSet;
-    let mut set = HashSet::new();
+    use mqtt_protocol_core::mqtt::common::HashSet;
+    let mut set = HashSet::default();
     set.insert(MqttError::ProtocolError);
     assert!(set.contains(&MqttError::ProtocolError));
 
@@ -1265,4 +1265,78 @@ fn test_try_from_primitive_derives() {
         Ok(SubackReturnCode::Failure)
     );
     assert!(SubackReturnCode::try_from_primitive(0x7F).is_err());
+}
+
+#[test]
+fn test_mqtt_error_implements_core_error() {
+    use core::error::Error;
+
+    // Verify MqttError implements core::error::Error trait
+    let error: &dyn Error = &MqttError::MalformedPacket;
+
+    // source() should return None (default implementation)
+    assert!(error.source().is_none());
+
+    // Display trait should work through Error trait
+    assert_eq!(error.to_string(), "MalformedPacket");
+}
+
+#[test]
+fn test_mqtt_error_can_be_boxed_as_dyn_error() {
+    use core::error::Error;
+    extern crate alloc;
+    use alloc::boxed::Box;
+
+    // Test that MqttError can be converted to Box<dyn Error>
+    let error = MqttError::ProtocolError;
+    let boxed: Box<dyn Error> = Box::new(error);
+
+    assert_eq!(boxed.to_string(), "ProtocolError");
+    assert!(boxed.source().is_none());
+}
+
+#[test]
+fn test_mqtt_error_can_be_boxed_as_dyn_error_send_sync() {
+    use core::error::Error;
+    extern crate alloc;
+    use alloc::boxed::Box;
+
+    // Test that MqttError can be converted to Box<dyn Error + Send + Sync>
+    // This is important for compatibility with anyhow and similar libraries
+    let error = MqttError::TopicNameInvalid;
+    let boxed: Box<dyn Error + Send + Sync> = Box::new(error);
+
+    assert_eq!(boxed.to_string(), "TopicNameInvalid");
+}
+
+#[test]
+fn test_mqtt_error_in_result_with_question_mark() {
+    use core::error::Error;
+    extern crate alloc;
+    use alloc::boxed::Box;
+
+    // Test using MqttError with ? operator in a function returning Box<dyn Error>
+    fn may_fail(should_fail: bool) -> Result<(), MqttError> {
+        if should_fail {
+            Err(MqttError::PacketTooLarge)
+        } else {
+            Ok(())
+        }
+    }
+
+    fn wrapper() -> Result<(), Box<dyn Error>> {
+        may_fail(false)?;
+        Ok(())
+    }
+
+    assert!(wrapper().is_ok());
+
+    fn wrapper_fail() -> Result<(), Box<dyn Error>> {
+        may_fail(true)?;
+        Ok(())
+    }
+
+    let result = wrapper_fail();
+    assert!(result.is_err());
+    assert_eq!(result.unwrap_err().to_string(), "PacketTooLarge");
 }

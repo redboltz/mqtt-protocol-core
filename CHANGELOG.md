@@ -1,6 +1,10 @@
+# 0.7.6
+
+* Implement core::error::Error for MqttError. #59, #60
+
 # 0.7.5
 
-* Add SessionExpiryInterval receiving process. #58.
+* Add SessionExpiryInterval receiving process. #58
 
 # 0.7.4
 
