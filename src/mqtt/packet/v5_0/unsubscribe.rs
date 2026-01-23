@@ -35,6 +35,7 @@ use getset::{CopyGetters, Getters};
 use crate::mqtt::packet::mqtt_string::MqttString;
 use crate::mqtt::packet::packet_type::{FixedHeader, PacketType};
 use crate::mqtt::packet::property::PropertiesToContinuousBuffer;
+use crate::mqtt::packet::v5_0::common::validate_share_name;
 use crate::mqtt::packet::variable_byte_integer::VariableByteInteger;
 use crate::mqtt::packet::GenericPacketDisplay;
 use crate::mqtt::packet::GenericPacketTrait;
@@ -365,6 +366,11 @@ where
             return Err(MqttError::ProtocolError);
         }
 
+        // Validate ShareName for shared subscriptions
+        for entry in &entries {
+            validate_share_name(entry.as_str())?;
+        }
+
         let remaining_size =
             buffer_size + property_length + entries.iter().map(|e| e.size()).sum::<usize>();
         let remaining_length = VariableByteInteger::from_u32(remaining_size as u32).unwrap();
@@ -578,7 +584,14 @@ where
             .map(|item| item.try_into().map_err(Into::into))
             .collect();
 
-        self.entry_bufs = Some(mqtt_strings?);
+        let mqtt_strings = mqtt_strings?;
+
+        // Validate ShareName for shared subscriptions
+        for entry in &mqtt_strings {
+            validate_share_name(entry.as_str())?;
+        }
+
+        self.entry_bufs = Some(mqtt_strings);
         Ok(self)
     }
 

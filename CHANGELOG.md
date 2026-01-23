@@ -1,3 +1,7 @@
+# 0.7.7
+
+* Add sharename character validation for v5.0 subscribe and unsubscribe. #61
+
 # 0.7.6
 
 * Implement core::error::Error for MqttError. #59, #60

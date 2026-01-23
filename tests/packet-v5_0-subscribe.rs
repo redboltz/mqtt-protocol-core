@@ -504,6 +504,57 @@ fn parse_invalid_property() {
     assert_eq!(err, mqtt::result_code::MqttError::ProtocolError);
 }
 
+#[test]
+fn parse_shared_subscription_valid_share_name() {
+    common::init_tracing();
+    let mut data = Vec::new();
+    data.extend_from_slice(&(1u16).to_be_bytes()); // packet ID
+    data.push(0x00); // property length = 0
+
+    // topic filter: "$share/a/t"
+    let topic_filter = "$share/a/t";
+    data.extend_from_slice(&(topic_filter.len() as u16).to_be_bytes());
+    data.extend_from_slice(topic_filter.as_bytes());
+    data.push(0x00); // subscription options
+
+    let (packet, _) = mqtt::packet::v5_0::Subscribe::parse(&data).unwrap();
+    assert_eq!(packet.entries()[0].topic_filter(), "$share/a/t");
+}
+
+#[test]
+fn parse_shared_subscription_invalid_plus_in_share_name() {
+    common::init_tracing();
+    let mut data = Vec::new();
+    data.extend_from_slice(&(1u16).to_be_bytes()); // packet ID
+    data.push(0x00); // property length = 0
+
+    // topic filter: "$share/+/t" (invalid: + in ShareName)
+    let topic_filter = "$share/+/t";
+    data.extend_from_slice(&(topic_filter.len() as u16).to_be_bytes());
+    data.extend_from_slice(topic_filter.as_bytes());
+    data.push(0x00); // subscription options
+
+    let err = mqtt::packet::v5_0::Subscribe::parse(&data).unwrap_err();
+    assert_eq!(err, mqtt::result_code::MqttError::MalformedPacket);
+}
+
+#[test]
+fn parse_shared_subscription_invalid_hash_in_share_name() {
+    common::init_tracing();
+    let mut data = Vec::new();
+    data.extend_from_slice(&(1u16).to_be_bytes()); // packet ID
+    data.push(0x00); // property length = 0
+
+    // topic filter: "$share/#/t" (invalid: # in ShareName)
+    let topic_filter = "$share/#/t";
+    data.extend_from_slice(&(topic_filter.len() as u16).to_be_bytes());
+    data.extend_from_slice(topic_filter.as_bytes());
+    data.push(0x00); // subscription options
+
+    let err = mqtt::packet::v5_0::Subscribe::parse(&data).unwrap_err();
+    assert_eq!(err, mqtt::result_code::MqttError::MalformedPacket);
+}
+
 // Size tests
 #[test]
 fn size_minimal() {
@@ -674,4 +725,119 @@ fn test_packet_type() {
     common::init_tracing();
     let packet_type = mqtt::packet::v5_0::Subscribe::packet_type();
     assert_eq!(packet_type, mqtt::packet::PacketType::Subscribe);
+}
+
+// ShareName validation tests
+
+#[test]
+fn test_shared_subscription_valid_share_name() {
+    common::init_tracing();
+    // Valid shared subscription
+    let subscribe = mqtt::packet::v5_0::Subscribe::builder()
+        .packet_id(1u16)
+        .entries(vec![mqtt::packet::SubEntry::new(
+            "$share/mygroup/sensors/temperature",
+            mqtt::packet::SubOpts::new(),
+        )
+        .unwrap()])
+        .build();
+
+    assert!(subscribe.is_ok());
+}
+
+#[test]
+fn test_shared_subscription_invalid_share_name_contains_plus() {
+    common::init_tracing();
+    // Invalid: ShareName contains "+"
+    let subscribe = mqtt::packet::v5_0::Subscribe::builder()
+        .packet_id(1u16)
+        .entries(vec![mqtt::packet::SubEntry::new(
+            "$share/my+group/sensors/temperature",
+            mqtt::packet::SubOpts::new(),
+        )
+        .unwrap()])
+        .build();
+
+    assert!(subscribe.is_err());
+    assert_eq!(
+        subscribe.unwrap_err(),
+        mqtt::result_code::MqttError::MalformedPacket
+    );
+}
+
+#[test]
+fn test_shared_subscription_invalid_share_name_contains_hash() {
+    common::init_tracing();
+    // Invalid: ShareName contains "#"
+    let subscribe = mqtt::packet::v5_0::Subscribe::builder()
+        .packet_id(1u16)
+        .entries(vec![mqtt::packet::SubEntry::new(
+            "$share/my#group/sensors/temperature",
+            mqtt::packet::SubOpts::new(),
+        )
+        .unwrap()])
+        .build();
+
+    assert!(subscribe.is_err());
+    assert_eq!(
+        subscribe.unwrap_err(),
+        mqtt::result_code::MqttError::MalformedPacket
+    );
+}
+
+#[test]
+fn test_shared_subscription_invalid_empty_share_name() {
+    common::init_tracing();
+    // Invalid: Empty ShareName
+    let subscribe = mqtt::packet::v5_0::Subscribe::builder()
+        .packet_id(1u16)
+        .entries(vec![mqtt::packet::SubEntry::new(
+            "$share//sensors/temperature",
+            mqtt::packet::SubOpts::new(),
+        )
+        .unwrap()])
+        .build();
+
+    assert!(subscribe.is_err());
+    assert_eq!(
+        subscribe.unwrap_err(),
+        mqtt::result_code::MqttError::MalformedPacket
+    );
+}
+
+#[test]
+fn test_shared_subscription_invalid_no_filter() {
+    common::init_tracing();
+    // Invalid: No filter portion
+    let subscribe = mqtt::packet::v5_0::Subscribe::builder()
+        .packet_id(1u16)
+        .entries(vec![mqtt::packet::SubEntry::new(
+            "$share/mygroup",
+            mqtt::packet::SubOpts::new(),
+        )
+        .unwrap()])
+        .build();
+
+    assert!(subscribe.is_err());
+    assert_eq!(
+        subscribe.unwrap_err(),
+        mqtt::result_code::MqttError::MalformedPacket
+    );
+}
+
+#[test]
+fn test_non_shared_subscription_passes_validation() {
+    common::init_tracing();
+    // Non-shared subscriptions should always pass
+    let subscribe = mqtt::packet::v5_0::Subscribe::builder()
+        .packet_id(1u16)
+        .entries(vec![
+            mqtt::packet::SubEntry::new("sensors/temperature", mqtt::packet::SubOpts::new())
+                .unwrap(),
+            mqtt::packet::SubEntry::new("home/+/status", mqtt::packet::SubOpts::new()).unwrap(),
+            mqtt::packet::SubEntry::new("alerts/#", mqtt::packet::SubOpts::new()).unwrap(),
+        ])
+        .build();
+
+    assert!(subscribe.is_ok());
 }
