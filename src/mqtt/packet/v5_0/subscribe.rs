@@ -34,6 +34,7 @@ use getset::{CopyGetters, Getters};
 
 use crate::mqtt::packet::packet_type::{FixedHeader, PacketType};
 use crate::mqtt::packet::property::PropertiesToContinuousBuffer;
+use crate::mqtt::packet::v5_0::common::validate_share_name;
 use crate::mqtt::packet::variable_byte_integer::VariableByteInteger;
 use crate::mqtt::packet::GenericPacketDisplay;
 use crate::mqtt::packet::GenericPacketTrait;
@@ -354,6 +355,11 @@ where
             return Err(MqttError::ProtocolError);
         }
 
+        // Validate ShareName for shared subscriptions
+        for entry in &entries {
+            validate_share_name(entry.topic_filter())?;
+        }
+
         let remaining_size =
             buffer_size + property_length + entries.iter().map(|e| e.size()).sum::<usize>();
         let remaining_length = VariableByteInteger::from_u32(remaining_size as u32).unwrap();
@@ -551,7 +557,8 @@ where
     ///
     /// # Errors
     ///
-    /// * `MqttError::MalformedPacket` - If packet identifier is missing or zero
+    /// * `MqttError::MalformedPacket` - If packet identifier is missing or zero,
+    ///   or if a shared subscription has an invalid ShareName
     /// * `MqttError::ProtocolError` - If no subscription entries or invalid properties
     fn validate(&self) -> Result<(), MqttError> {
         if self.packet_id_buf.is_none() {
@@ -566,6 +573,13 @@ where
 
         if self.entries.as_ref().map_or(true, |e| e.is_empty()) {
             return Err(MqttError::ProtocolError);
+        }
+
+        // Validate ShareName for shared subscriptions
+        if let Some(ref entries) = self.entries {
+            for entry in entries {
+                validate_share_name(entry.topic_filter())?;
+            }
         }
 
         if let Some(ref props) = self.props {

@@ -656,8 +656,7 @@ where
         if self.reason_code_buf.is_none() && self.props.is_some() {
             return Err(MqttError::MalformedPacket);
         }
-        if self.props.is_some() {
-            let inner_option = self.props.as_ref().unwrap();
+        if let Some(inner_option) = &self.props {
             let props = inner_option
                 .as_ref()
                 .expect("INTERNAL ERRORS: props was set with None value, this should never happen");
