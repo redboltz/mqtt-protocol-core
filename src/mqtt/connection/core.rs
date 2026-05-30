@@ -1644,6 +1644,7 @@ where
                 if let Some(packet_id) = packet_id_opt {
                     if self.pid_man.is_used_id(packet_id) {
                         self.pid_man.release_id(packet_id);
+                        self.store.erase_publish(packet_id);
                         events.push(GenericEvent::NotifyPacketIdReleased(packet_id));
                     }
                 }
@@ -1665,6 +1666,7 @@ where
                 if let Some(packet_id) = packet_id_opt {
                     if self.pid_man.is_used_id(packet_id) {
                         self.pid_man.release_id(packet_id);
+                        self.store.erase_publish(packet_id);
                         events.push(GenericEvent::NotifyPacketIdReleased(packet_id));
                     }
                 }
@@ -1709,6 +1711,7 @@ where
                     if let Some(packet_id) = packet_id_opt {
                         if self.pid_man.is_used_id(packet_id) {
                             self.pid_man.release_id(packet_id);
+                            self.store.erase_publish(packet_id);
                             events.push(GenericEvent::NotifyPacketIdReleased(packet_id));
                         }
                     }
