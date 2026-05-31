@@ -285,3 +285,58 @@ fn server_recv_auth_v5_0() {
         _ => panic!("Expected NotifyPacketReceived event, got {:?}", events[1]),
     }
 }
+
+#[test]
+fn client_recv_publish_qos0_v3_1_1_edge_remaining_length() {
+    common::init_tracing();
+
+    // Target remaining lengths to test boundary conditions:
+    // 1-byte max: 127
+    // 2-byte max: 16,383
+    // 3-byte max: 2,097,151
+    // 4-byte min: 2,097,152 (Using 4-byte minimum to prevent OOM errors in CI while testing 4-byte logic)
+    let target_remaining_lengths = [127, 16383, 2097151, 2097152];
+
+    for target_remaining_length in target_remaining_lengths {
+        let mut connection = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V3_1_1);
+        v3_1_1_client_establish_connection(&mut connection, true, false);
+
+        // Topic name "a" has a length of 1 byte.
+        // In MQTT v3.1.1 PUBLISH packets, the topic name is preceded by a 2-byte length indicator (MSB, LSB).
+        // Therefore, the variable header overhead is: [Topic Length (2 bytes)] + [Topic Name (1 byte)] = 3 bytes.
+        let topic_name = "a";
+        let header_overhead = 2 + topic_name.len(); // 3 bytes
+
+        // Calculate the required payload size to match the target remaining length exactly.
+        let payload_size = target_remaining_length - header_overhead;
+
+        // Create a zero-filled payload of the calculated size.
+        let payload = vec![0u8; payload_size];
+
+        let publish_packet = mqtt::packet::v3_1_1::Publish::builder()
+            .topic_name(topic_name)
+            .unwrap()
+            .qos(mqtt::packet::Qos::AtMostOnce)
+            .payload(payload)
+            .build()
+            .unwrap();
+
+        let bytes = publish_packet.to_continuous_buffer();
+
+        let events = connection.recv(&mut mqtt::common::Cursor::new(&bytes));
+
+        assert_eq!(
+            events.len(),
+            1,
+            "Failed at remaining length: {}",
+            target_remaining_length
+        );
+
+        match &events[0] {
+            mqtt::connection::Event::NotifyPacketReceived(packet) => {
+                assert_eq!(*packet, publish_packet.into());
+            }
+            _ => panic!("Expected NotifyPacketReceived event, got {:?}", events[0]),
+        }
+    }
+}

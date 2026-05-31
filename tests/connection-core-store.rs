@@ -389,11 +389,9 @@ fn restore_packets_v3_1_1() {
             mqtt::connection::Event::RequestSendPacket {
                 packet: mqtt::packet::Packet::V3_1_1Pubrel(p),
                 ..
-            } => {
-                if p.packet_id() == 3 {
-                    pubrel_found = true;
-                    pubrel_index = Some(index);
-                }
+            } if p.packet_id() == 3 => {
+                pubrel_found = true;
+                pubrel_index = Some(index);
             }
             _ => {}
         }
@@ -430,10 +428,8 @@ fn restore_packets_v3_1_1() {
                     stored_publish_b_found = true;
                 }
             }
-            mqtt::packet::GenericStorePacket::V3_1_1Pubrel(p) => {
-                if p.packet_id() == 3 {
-                    stored_pubrel_found = true;
-                }
+            mqtt::packet::GenericStorePacket::V3_1_1Pubrel(p) if p.packet_id() == 3 => {
+                stored_pubrel_found = true;
             }
             _ => {}
         }
@@ -544,11 +540,9 @@ fn restore_packets_v5_0_server() {
             mqtt::connection::Event::RequestSendPacket {
                 packet: mqtt::packet::Packet::V5_0Pubrel(p),
                 ..
-            } => {
-                if p.packet_id() == 3 {
-                    pubrel_found = true;
-                    pubrel_index = Some(index);
-                }
+            } if p.packet_id() == 3 => {
+                pubrel_found = true;
+                pubrel_index = Some(index);
             }
             _ => {}
         }
@@ -585,10 +579,8 @@ fn restore_packets_v5_0_server() {
                     stored_publish_b_found = true;
                 }
             }
-            mqtt::packet::GenericStorePacket::V5_0Pubrel(p) => {
-                if p.packet_id() == 3 {
-                    stored_pubrel_found = true;
-                }
+            mqtt::packet::GenericStorePacket::V5_0Pubrel(p) if p.packet_id() == 3 => {
+                stored_pubrel_found = true;
             }
             _ => {}
         }
