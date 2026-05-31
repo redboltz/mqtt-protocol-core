@@ -181,15 +181,15 @@ impl PacketBuilder {
                     self.header_buf.push(byte[0]);
                     let encoded_byte = byte[0];
 
-                    self.remaining_length +=
-                        ((encoded_byte & 0x7F) as usize) * (self.multiplier as usize);
-                    self.multiplier *= 128;
-
                     // Variable-length integer limit check
-                    if self.multiplier > 128 * 128 * 128 {
+                    if self.multiplier == 128 * 128 * 128 && (encoded_byte & 0x80) != 0 {
                         self.reset();
                         return PacketBuildResult::Error(MqttError::MalformedPacket);
                     }
+
+                    self.remaining_length +=
+                        ((encoded_byte & 0x7F) as usize) * (self.multiplier as usize);
+                    self.multiplier *= 128;
 
                     if (encoded_byte & 0x80) == 0 {
                         if self.remaining_length == 0 {

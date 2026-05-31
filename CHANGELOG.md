@@ -1,3 +1,7 @@
+# 0.7.8
+
+*  Fix Remaining Length checking logic. #64
+
 # 0.7.7
 
 * Add sharename character validation for v5.0 subscribe and unsubscribe. #61
