@@ -1,6 +1,7 @@
 # 0.7.8
 
-*  Fix Remaining Length checking logic. #64
+* Fix missing cleanup when an error occurs while sending a publish request. #63, #65
+* Fix Remaining Length checking logic. #64
 
 # 0.7.7
 
