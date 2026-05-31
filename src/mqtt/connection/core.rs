@@ -1372,10 +1372,8 @@ where
         // Process properties
         for prop in packet.props() {
             match prop {
-                Property::TopicAliasMaximum(val) => {
-                    if val.val() != 0 {
-                        self.topic_alias_recv = Some(TopicAliasRecv::new(val.val()));
-                    }
+                Property::TopicAliasMaximum(val) if val.val() != 0 => {
+                    self.topic_alias_recv = Some(TopicAliasRecv::new(val.val()));
                 }
                 Property::ReceiveMaximum(val) => {
                     debug_assert!(val.val() != 0, "ReceiveMaximum must not be 0");
@@ -1385,10 +1383,8 @@ where
                     debug_assert!(val.val() != 0, "MaximumPacketSize must not be 0");
                     self.maximum_packet_size_recv = val.val();
                 }
-                Property::SessionExpiryInterval(val) => {
-                    if val.val() != 0 {
-                        self.need_store = true;
-                    }
+                Property::SessionExpiryInterval(val) if val.val() != 0 => {
+                    self.need_store = true;
                 }
                 _ => {
                     // Ignore other properties (equivalent to [](auto const&){} in C++)
@@ -2619,10 +2615,8 @@ where
                     Property::MaximumPacketSize(p) => {
                         self.maximum_packet_size_send = p.val();
                     }
-                    Property::SessionExpiryInterval(p) => {
-                        if p.val() != 0 {
-                            self.need_store = true;
-                        }
+                    Property::SessionExpiryInterval(p) if p.val() != 0 => {
+                        self.need_store = true;
                     }
                     _ => {}
                 });
