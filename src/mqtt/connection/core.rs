@@ -1645,6 +1645,8 @@ where
                     if self.pid_man.is_used_id(packet_id) {
                         self.pid_man.release_id(packet_id);
                         self.store.erase_publish(packet_id);
+                        self.pid_puback.remove(&packet_id);
+                        self.pid_pubrec.remove(&packet_id);
                         events.push(GenericEvent::NotifyPacketIdReleased(packet_id));
                     }
                 }
@@ -1667,6 +1669,8 @@ where
                     if self.pid_man.is_used_id(packet_id) {
                         self.pid_man.release_id(packet_id);
                         self.store.erase_publish(packet_id);
+                        self.pid_puback.remove(&packet_id);
+                        self.pid_pubrec.remove(&packet_id);
                         events.push(GenericEvent::NotifyPacketIdReleased(packet_id));
                     }
                 }
@@ -1712,6 +1716,8 @@ where
                         if self.pid_man.is_used_id(packet_id) {
                             self.pid_man.release_id(packet_id);
                             self.store.erase_publish(packet_id);
+                            self.pid_puback.remove(&packet_id);
+                            self.pid_pubrec.remove(&packet_id);
                             events.push(GenericEvent::NotifyPacketIdReleased(packet_id));
                         }
                     }
