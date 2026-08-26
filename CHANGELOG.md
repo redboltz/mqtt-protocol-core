@@ -1,4 +1,6 @@
 # 0.7.9
+* Add receive_maximum settings on connection create. #67
+* Add maximu_packet_size_recv settings on connection create. #67
 * Fix extra invalid bytes cheking. #66
 
 # 0.7.8

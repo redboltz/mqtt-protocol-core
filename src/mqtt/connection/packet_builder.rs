@@ -21,6 +21,7 @@
 // SOFTWARE.
 
 use crate::mqtt::common::{Arc, Cursor};
+use crate::mqtt::connection::options::MQTT_PACKET_SIZE_NO_LIMIT;
 use crate::mqtt::result_code::MqttError;
 use alloc::vec::Vec;
 
@@ -121,6 +122,8 @@ pub struct PacketBuilder {
     raw_buf: Option<Vec<u8>>,
     /// Current position in buffer
     raw_buf_offset: usize,
+    /// Maximum total packet size accepted (fixed header + remaining length bytes + body)
+    maximum_packet_size: u32,
 }
 
 /// Packet reading state
@@ -135,8 +138,18 @@ enum ReadState {
 }
 
 impl PacketBuilder {
-    /// Create new packet builder
+    /// Create new packet builder without packet size limit
     pub fn new() -> Self {
+        Self::with_maximum_packet_size(MQTT_PACKET_SIZE_NO_LIMIT)
+    }
+
+    /// Create new packet builder that rejects packets larger than `maximum_packet_size`
+    ///
+    /// The size is the total packet size (fixed header + remaining length
+    /// bytes + body). A packet exceeding the limit is rejected with
+    /// `MqttError::PacketTooLarge` as soon as its Remaining Length is decoded,
+    /// before any buffer for the body is allocated.
+    pub fn with_maximum_packet_size(maximum_packet_size: u32) -> Self {
         Self {
             state: ReadState::FixedHeader,
             header_buf: Vec::with_capacity(5),
@@ -144,7 +157,21 @@ impl PacketBuilder {
             multiplier: 1,
             raw_buf: None,
             raw_buf_offset: 0,
+            maximum_packet_size,
         }
+    }
+
+    /// Update the maximum packet size limit
+    ///
+    /// Takes effect for the next Remaining Length decoded. A packet whose
+    /// Remaining Length has already been accepted is not re-checked.
+    pub fn set_maximum_packet_size(&mut self, maximum_packet_size: u32) {
+        self.maximum_packet_size = maximum_packet_size;
+    }
+
+    /// Get the maximum packet size limit
+    pub fn maximum_packet_size(&self) -> u32 {
+        self.maximum_packet_size
     }
 
     /// Reset builder for reuse
@@ -210,6 +237,16 @@ impl PacketBuilder {
                     self.multiplier *= 128;
 
                     if (encoded_byte & 0x80) == 0 {
+                        // Packet size limit check.
+                        // This MUST happen before allocating the body buffer, otherwise a
+                        // peer could force a huge allocation just by sending a large
+                        // Remaining Length (DoS).
+                        let total_size = self.header_buf.len() + self.remaining_length;
+                        if total_size > self.maximum_packet_size as usize {
+                            self.reset();
+                            return PacketBuildResult::Error(MqttError::PacketTooLarge);
+                        }
+
                         if self.remaining_length == 0 {
                             let fixed_header = self.header_buf[0];
                             let packet_data = if self.is_publish_packet() {

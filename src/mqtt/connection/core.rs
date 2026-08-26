@@ -29,6 +29,7 @@ use crate::mqtt::common::tracing::{error, info, trace, warn};
 use crate::mqtt::common::Cursor;
 use crate::mqtt::common::HashSet;
 use crate::mqtt::connection::event::{GenericEvent, TimerKind};
+use crate::mqtt::connection::options::{ConnectionOptions, MQTT_PACKET_SIZE_NO_LIMIT};
 use crate::mqtt::connection::GenericStore;
 use crate::mqtt::result_code;
 
@@ -63,30 +64,6 @@ use crate::mqtt::prelude::GenericPacketTrait;
 use crate::mqtt::result_code::{
     ConnectReasonCode, ConnectReturnCode, DisconnectReasonCode, MqttError, PubrecReasonCode,
 };
-
-/// MQTT protocol maximum packet size limit
-/// 1 (fixed header) + 4 (remaining length) + 128^4 (maximum remaining length value)
-const MQTT_PACKET_SIZE_NO_LIMIT: u32 = 1 + 4 + 128 * 128 * 128 * 128;
-
-/// Calculate total packet size from remaining length
-///
-/// The total packet size consists of:
-/// - 1 byte for the fixed header
-/// - 1-4 bytes for the remaining length encoding
-/// - The remaining length value itself
-fn remaining_length_to_total_size(remaining_length: u32) -> u32 {
-    let remaining_length_bytes = if remaining_length < 128 {
-        1
-    } else if remaining_length < 16384 {
-        2
-    } else if remaining_length < 2097152 {
-        3
-    } else {
-        4
-    };
-
-    1 + remaining_length_bytes + remaining_length
-}
 
 /// Type alias for Event with u16 packet ID (most common case)
 ///
@@ -170,8 +147,10 @@ where
     topic_alias_send: Option<TopicAliasSend>,
 
     publish_send_max: Option<u16>,
-    // Maximum number of concurrent PUBLISH packets for receiving
+    // Maximum number of concurrent PUBLISH packets for receiving (currently effective)
     publish_recv_max: Option<u16>,
+    // Maximum number of concurrent PUBLISH packets for receiving fixed at construction
+    publish_recv_max_limit: Option<u16>,
     // Maximum number of concurrent PUBLISH packets for sending
     // Current count of PUBLISH packets being sent
     publish_send_count: u16,
@@ -181,8 +160,10 @@ where
 
     // Maximum packet size for sending
     maximum_packet_size_send: u32,
-    // Maximum packet size for receiving
+    // Maximum packet size for receiving (currently effective)
     maximum_packet_size_recv: u32,
+    // Maximum packet size for receiving fixed at construction (ConnectionOptions)
+    maximum_packet_size_recv_limit: u32,
 
     // Connection state
     status: ConnectionStatus,
@@ -252,6 +233,15 @@ where
     /// let mut server = mqtt::connection::Connection::<mqtt::connection::role::Server>::new(mqtt::version::Version::V3_1_1);
     /// ```
     pub fn new(version: Version) -> Self {
+        Self::with_options(version, ConnectionOptions::default())
+    }
+
+    /// Create a new connection with construction-time options
+    ///
+    /// See `ConnectionOptions` for the available settings. The options are
+    /// fixed for the lifetime of the connection.
+    pub fn with_options(version: Version, options: ConnectionOptions) -> Self {
+        let limit = options.maximum_packet_size_recv;
         Self {
             _marker: PhantomData,
             protocol_version: version,
@@ -271,11 +261,13 @@ where
             topic_alias_recv: None,
             topic_alias_send: None,
             publish_send_max: None,
-            publish_recv_max: None,
+            publish_recv_max: options.receive_maximum,
+            publish_recv_max_limit: options.receive_maximum,
             publish_send_count: 0,
             publish_recv: HashSet::default(),
             maximum_packet_size_send: MQTT_PACKET_SIZE_NO_LIMIT,
-            maximum_packet_size_recv: MQTT_PACKET_SIZE_NO_LIMIT,
+            maximum_packet_size_recv: limit,
+            maximum_packet_size_recv_limit: limit,
             status: ConnectionStatus::Disconnected,
             pingreq_user_send_interval_ms: None,
             pingreq_keep_alive_ms: 0,
@@ -286,7 +278,7 @@ where
             pingreq_send_set: false,
             pingreq_recv_set: false,
             pingresp_recv_set: false,
-            packet_builder: PacketBuilder::new(),
+            packet_builder: PacketBuilder::with_maximum_packet_size(limit),
             is_client: false,
         }
     }
@@ -601,6 +593,25 @@ where
                 events.extend(self.process_recv_packet(raw_packet));
             }
             PacketBuildResult::Incomplete => {}
+            PacketBuildResult::Error(MqttError::PacketTooLarge) => {
+                if self.protocol_version == Version::V5_0
+                    && self.status == ConnectionStatus::Connected
+                {
+                    // The peer has been told the limit (CONNECT/CONNACK), so
+                    // DISCONNECT with the reason code is the right notification.
+                    let disconnect_packet = v5_0::Disconnect::builder()
+                        .reason_code(DisconnectReasonCode::PacketTooLarge)
+                        .build()
+                        .unwrap();
+                    events.extend(self.process_send_v5_0_disconnect(disconnect_packet));
+                } else {
+                    // v3.1.1 has no way to notify, and on v5.0 DISCONNECT is not
+                    // allowed before the connection is established. Just close.
+                    self.cancel_timers(&mut events);
+                    events.push(GenericEvent::RequestClose);
+                }
+                events.push(GenericEvent::NotifyError(MqttError::PacketTooLarge));
+            }
             PacketBuildResult::Error(e) => {
                 self.cancel_timers(&mut events);
                 events.push(GenericEvent::RequestClose);
@@ -609,6 +620,66 @@ where
         }
 
         events
+    }
+
+    /// Update the effective receive packet size limit (connection state and packet builder)
+    fn set_maximum_packet_size_recv(&mut self, size: u32) {
+        self.maximum_packet_size_recv = size;
+        self.packet_builder.set_maximum_packet_size(size);
+    }
+
+    /// Apply `ConnectionOptions` capabilities to an outgoing v5.0 CONNECT/CONNACK
+    ///
+    /// Returns the properties to add for capabilities the packet does not
+    /// mention (`MaximumPacketSize`, `ReceiveMaximum`), or an error when the
+    /// packet promises the peer more than this connection accepts.
+    fn capability_properties_to_add(&self, props: &[Property]) -> Result<Vec<Property>, MqttError> {
+        let mut to_add = Vec::new();
+
+        let size_limit = self.maximum_packet_size_recv_limit;
+        if size_limit != MQTT_PACKET_SIZE_NO_LIMIT {
+            let explicit = props.iter().find_map(|p| match p {
+                Property::MaximumPacketSize(v) => Some(v.val()),
+                _ => None,
+            });
+            match explicit {
+                Some(v) if v > size_limit => {
+                    error!(
+                        "MaximumPacketSize property {v} exceeds ConnectionOptions limit {size_limit}"
+                    );
+                    return Err(MqttError::ProtocolError);
+                }
+                Some(_) => {}
+                None => to_add.push(
+                    crate::mqtt::packet::MaximumPacketSize::new(size_limit)
+                        .unwrap()
+                        .into(),
+                ),
+            }
+        }
+
+        if let Some(recv_limit) = self.publish_recv_max_limit {
+            let explicit = props.iter().find_map(|p| match p {
+                Property::ReceiveMaximum(v) => Some(v.val()),
+                _ => None,
+            });
+            match explicit {
+                Some(v) if v > recv_limit => {
+                    error!(
+                        "ReceiveMaximum property {v} exceeds ConnectionOptions limit {recv_limit}"
+                    );
+                    return Err(MqttError::ProtocolError);
+                }
+                Some(_) => {}
+                None => to_add.push(
+                    crate::mqtt::packet::ReceiveMaximum::new(recv_limit)
+                        .unwrap()
+                        .into(),
+                ),
+            }
+        }
+
+        Ok(to_add)
     }
 
     /// Notify that a timer has fired (Event-based API)
@@ -726,7 +797,7 @@ where
 
         // Reset packet size limits to MQTT protocol maximum
         self.maximum_packet_size_send = MQTT_PACKET_SIZE_NO_LIMIT;
-        self.maximum_packet_size_recv = MQTT_PACKET_SIZE_NO_LIMIT;
+        self.set_maximum_packet_size_recv(self.maximum_packet_size_recv_limit);
 
         // Set status to disconnected
         self.status = ConnectionStatus::Disconnected;
@@ -1215,7 +1286,7 @@ where
     /// * `is_client` - true for client mode, false for server mode
     fn initialize(&mut self, is_client: bool) {
         self.publish_send_max = None;
-        self.publish_recv_max = None;
+        self.publish_recv_max = self.publish_recv_max_limit;
         self.publish_send_count = 0;
         self.topic_alias_send = None;
         self.topic_alias_recv = None;
@@ -1351,6 +1422,11 @@ where
         packet: v5_0::Connect,
     ) -> Vec<GenericEvent<PacketIdType>> {
         info!("send connect v5.0: {packet}");
+        let mut packet = packet;
+        match self.capability_properties_to_add(packet.props()) {
+            Ok(props) => props.into_iter().for_each(|p| packet.push_property(p)),
+            Err(e) => return vec![GenericEvent::NotifyError(e)],
+        }
         if !self.validate_maximum_packet_size_send(packet.size()) {
             return vec![GenericEvent::NotifyError(MqttError::PacketTooLarge)];
         }
@@ -1381,7 +1457,7 @@ where
                 }
                 Property::MaximumPacketSize(val) => {
                     debug_assert!(val.val() != 0, "MaximumPacketSize must not be 0");
-                    self.maximum_packet_size_recv = val.val();
+                    self.set_maximum_packet_size_recv(val.val());
                 }
                 Property::SessionExpiryInterval(val) if val.val() != 0 => {
                     self.need_store = true;
@@ -1434,6 +1510,13 @@ where
         packet: v5_0::Connack,
     ) -> Vec<GenericEvent<PacketIdType>> {
         info!("send connack v5.0: {packet}");
+        let mut packet = packet;
+        if packet.reason_code() == ConnectReasonCode::Success {
+            match self.capability_properties_to_add(packet.props()) {
+                Ok(props) => props.into_iter().for_each(|p| packet.push_property(p)),
+                Err(e) => return vec![GenericEvent::NotifyError(e)],
+            }
+        }
         if !self.validate_maximum_packet_size_send(packet.size()) {
             return vec![GenericEvent::NotifyError(MqttError::PacketTooLarge)];
         }
@@ -1458,7 +1541,7 @@ where
                     }
                     Property::MaximumPacketSize(val) => {
                         debug_assert!(val.val() != 0, "MaximumPacketSize must not be 0");
-                        self.maximum_packet_size_recv = val.val();
+                        self.set_maximum_packet_size_recv(val.val());
                     }
                     Property::ServerKeepAlive(val) => {
                         let val = val.val();
@@ -1746,6 +1829,7 @@ where
             return vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)];
         }
         let mut events = Vec::new();
+        self.publish_recv.remove(&packet.packet_id());
 
         events.push(GenericEvent::RequestSendPacket {
             packet: packet.into(),
@@ -1903,6 +1987,7 @@ where
             return vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)];
         }
         let mut events = Vec::new();
+        self.publish_recv.remove(&packet.packet_id());
 
         events.push(GenericEvent::RequestSendPacket {
             packet: packet.into(),
@@ -2355,24 +2440,6 @@ where
     fn process_recv_packet(&mut self, raw_packet: RawPacket) -> Vec<GenericEvent<PacketIdType>> {
         let mut events = Vec::new();
 
-        // packet size limit validation (v3.1.1 is always satisfied)
-        let total_size = remaining_length_to_total_size(raw_packet.remaining_length());
-        if total_size > self.maximum_packet_size_recv {
-            // This happens only when protocol version is V5.0.
-            // On v3.1.1, the maximum packet size is always 268435455 (2^32 - 1).
-            // If the packet size is over 268434555, feed() return an error.
-            // maximum_packet_size_recv is set by sending CONNECT or CONNACK packet.
-            // So DISCONNECT packet is the right choice to notify the error.
-            let disconnect_packet = v5_0::Disconnect::builder()
-                .reason_code(DisconnectReasonCode::PacketTooLarge)
-                .build()
-                .unwrap();
-            // Send disconnect packet directly without generic constraints
-            events.extend(self.process_send_v5_0_disconnect(disconnect_packet));
-            events.push(GenericEvent::NotifyError(MqttError::PacketTooLarge));
-            return events;
-        }
-
         let packet_type = raw_packet.packet_type();
         if !self.can_receive(packet_type) {
             events.push(GenericEvent::NotifyError(MqttError::ProtocolError));
@@ -2780,6 +2847,24 @@ where
             PacketData::Publish(arc) => {
                 match v3_1_1::GenericPublish::parse(flags, arc.clone()) {
                     Ok((packet, _consumed)) => {
+                        // Receive maximum (ConnectionOptions) check for QoS 1/2.
+                        // A QoS 2 re-delivery of an already tracked packet id is not
+                        // a new in-flight message.
+                        if packet.qos() != Qos::AtMostOnce {
+                            let packet_id = packet.packet_id().unwrap();
+                            if let Some(max) = self.publish_recv_max {
+                                if !self.publish_recv.contains(&packet_id)
+                                    && self.publish_recv.len() >= max as usize
+                                {
+                                    Self::handle_v3_1_1_error(
+                                        MqttError::ReceiveMaximumExceeded,
+                                        &mut events,
+                                    );
+                                    return events;
+                                }
+                            }
+                            self.publish_recv.insert(packet_id);
+                        }
                         match packet.qos() {
                             Qos::AtMostOnce => {
                                 events.extend(self.refresh_pingreq_recv());
@@ -2851,7 +2936,12 @@ where
                         let mut check_receive_maximum =
                             |events: &mut Vec<GenericEvent<PacketIdType>>| {
                                 if let Some(max) = self.publish_recv_max {
-                                    if self.publish_recv.len() >= max as usize {
+                                    // A re-delivery of an already tracked packet id is
+                                    // not a new in-flight message.
+                                    let packet_id = packet.packet_id().unwrap();
+                                    if !self.publish_recv.contains(&packet_id)
+                                        && self.publish_recv.len() >= max as usize
+                                    {
                                         self.handle_v5_0_error(
                                             MqttError::ReceiveMaximumExceeded,
                                             events,
@@ -3609,11 +3699,18 @@ where
     }
 
     fn handle_v5_0_error(&mut self, e: MqttError, events: &mut Vec<GenericEvent<PacketIdType>>) {
-        let disconnect = v5_0::Disconnect::builder()
-            .reason_code(e.into())
-            .build()
-            .unwrap();
-        events.extend(self.process_send_v5_0_disconnect(disconnect));
+        if self.status == ConnectionStatus::Connected {
+            let disconnect = v5_0::Disconnect::builder()
+                .reason_code(e.into())
+                .build()
+                .unwrap();
+            events.extend(self.process_send_v5_0_disconnect(disconnect));
+        } else {
+            // DISCONNECT is not allowed before the connection is established
+            // (e.g. a server before sending CONNACK). Just close.
+            self.cancel_timers(events);
+            events.push(GenericEvent::RequestClose);
+        }
         events.push(GenericEvent::NotifyError(e));
     }
 
@@ -3858,24 +3955,5 @@ mod tests {
         assert!(connection.pid_suback.is_empty());
         assert!(connection.pid_unsuback.is_empty());
         assert!(connection.is_client);
-    }
-
-    #[test]
-    fn test_remaining_length_to_total_size() {
-        // Test 1-byte remaining length encoding (0-127)
-        assert_eq!(remaining_length_to_total_size(0), 2); // 1 + 1 + 0
-        assert_eq!(remaining_length_to_total_size(127), 129); // 1 + 1 + 127
-
-        // Test 2-byte remaining length encoding (128-16383)
-        assert_eq!(remaining_length_to_total_size(128), 131); // 1 + 2 + 128
-        assert_eq!(remaining_length_to_total_size(16383), 16386); // 1 + 2 + 16383
-
-        // Test 3-byte remaining length encoding (16384-2097151)
-        assert_eq!(remaining_length_to_total_size(16384), 16388); // 1 + 3 + 16384
-        assert_eq!(remaining_length_to_total_size(2097151), 2097155); // 1 + 3 + 2097151
-
-        // Test 4-byte remaining length encoding (2097152-268435455)
-        assert_eq!(remaining_length_to_total_size(2097152), 2097157); // 1 + 4 + 2097152
-        assert_eq!(remaining_length_to_total_size(268435455), 268435460); // 1 + 4 + 268435455
     }
 }
