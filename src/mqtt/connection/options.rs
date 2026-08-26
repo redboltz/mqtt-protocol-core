@@ -60,12 +60,30 @@ pub struct ConnectionOptions {
     ///
     /// Default: `MQTT_PACKET_SIZE_NO_LIMIT`.
     pub maximum_packet_size_recv: u32,
+
+    /// Maximum number of in-flight QoS 1/2 PUBLISH packets accepted on receive
+    ///
+    /// Enforced from the first PUBLISH received, before any CONNECT/CONNACK
+    /// negotiation, on both MQTT v3.1.1 and v5.0. Receiving a QoS 1/2 PUBLISH
+    /// while this many are already in flight (not yet acknowledged by
+    /// PUBACK/PUBCOMP sent by this side) is rejected with
+    /// `MqttError::ReceiveMaximumExceeded`.
+    ///
+    /// On MQTT v5.0, if the CONNECT/CONNACK packet being sent has no
+    /// `ReceiveMaximum` property, one carrying this value is added
+    /// automatically. An explicit `ReceiveMaximum` property is allowed only if
+    /// it is not larger than this value; a larger value is rejected with
+    /// `MqttError::ProtocolError`.
+    ///
+    /// Default: `None` (no limit).
+    pub receive_maximum: Option<u16>,
 }
 
 impl Default for ConnectionOptions {
     fn default() -> Self {
         Self {
             maximum_packet_size_recv: MQTT_PACKET_SIZE_NO_LIMIT,
+            receive_maximum: None,
         }
     }
 }
@@ -86,6 +104,14 @@ impl ConnectionOptions {
         } else {
             size.min(MQTT_PACKET_SIZE_NO_LIMIT)
         };
+        self
+    }
+
+    /// Set the maximum number of in-flight QoS 1/2 PUBLISH packets accepted on receive
+    ///
+    /// `0` is not a valid MQTT value and is treated as no limit.
+    pub fn receive_maximum(mut self, max: u16) -> Self {
+        self.receive_maximum = if max == 0 { None } else { Some(max) };
         self
     }
 }

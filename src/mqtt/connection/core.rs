@@ -147,8 +147,10 @@ where
     topic_alias_send: Option<TopicAliasSend>,
 
     publish_send_max: Option<u16>,
-    // Maximum number of concurrent PUBLISH packets for receiving
+    // Maximum number of concurrent PUBLISH packets for receiving (currently effective)
     publish_recv_max: Option<u16>,
+    // Maximum number of concurrent PUBLISH packets for receiving fixed at construction
+    publish_recv_max_limit: Option<u16>,
     // Maximum number of concurrent PUBLISH packets for sending
     // Current count of PUBLISH packets being sent
     publish_send_count: u16,
@@ -259,7 +261,8 @@ where
             topic_alias_recv: None,
             topic_alias_send: None,
             publish_send_max: None,
-            publish_recv_max: None,
+            publish_recv_max: options.receive_maximum,
+            publish_recv_max_limit: options.receive_maximum,
             publish_send_count: 0,
             publish_recv: HashSet::default(),
             maximum_packet_size_send: MQTT_PACKET_SIZE_NO_LIMIT,
@@ -625,35 +628,58 @@ where
         self.packet_builder.set_maximum_packet_size(size);
     }
 
-    /// Apply `ConnectionOptions::maximum_packet_size_recv` to an outgoing v5.0 CONNECT/CONNACK
+    /// Apply `ConnectionOptions` capabilities to an outgoing v5.0 CONNECT/CONNACK
     ///
-    /// Returns the `MaximumPacketSize` property to add when the packet has none,
-    /// or an error when the packet promises a larger size than this connection accepts.
-    fn maximum_packet_size_property_to_add(
-        &self,
-        props: &[Property],
-    ) -> Result<Option<Property>, MqttError> {
-        let limit = self.maximum_packet_size_recv_limit;
-        if limit == MQTT_PACKET_SIZE_NO_LIMIT {
-            return Ok(None);
-        }
-        for prop in props {
-            if let Property::MaximumPacketSize(val) = prop {
-                if val.val() > limit {
+    /// Returns the properties to add for capabilities the packet does not
+    /// mention (`MaximumPacketSize`, `ReceiveMaximum`), or an error when the
+    /// packet promises the peer more than this connection accepts.
+    fn capability_properties_to_add(&self, props: &[Property]) -> Result<Vec<Property>, MqttError> {
+        let mut to_add = Vec::new();
+
+        let size_limit = self.maximum_packet_size_recv_limit;
+        if size_limit != MQTT_PACKET_SIZE_NO_LIMIT {
+            let explicit = props.iter().find_map(|p| match p {
+                Property::MaximumPacketSize(v) => Some(v.val()),
+                _ => None,
+            });
+            match explicit {
+                Some(v) if v > size_limit => {
                     error!(
-                        "MaximumPacketSize property {} exceeds ConnectionOptions limit {limit}",
-                        val.val()
+                        "MaximumPacketSize property {v} exceeds ConnectionOptions limit {size_limit}"
                     );
                     return Err(MqttError::ProtocolError);
                 }
-                return Ok(None);
+                Some(_) => {}
+                None => to_add.push(
+                    crate::mqtt::packet::MaximumPacketSize::new(size_limit)
+                        .unwrap()
+                        .into(),
+                ),
             }
         }
-        Ok(Some(
-            crate::mqtt::packet::MaximumPacketSize::new(limit)
-                .unwrap()
-                .into(),
-        ))
+
+        if let Some(recv_limit) = self.publish_recv_max_limit {
+            let explicit = props.iter().find_map(|p| match p {
+                Property::ReceiveMaximum(v) => Some(v.val()),
+                _ => None,
+            });
+            match explicit {
+                Some(v) if v > recv_limit => {
+                    error!(
+                        "ReceiveMaximum property {v} exceeds ConnectionOptions limit {recv_limit}"
+                    );
+                    return Err(MqttError::ProtocolError);
+                }
+                Some(_) => {}
+                None => to_add.push(
+                    crate::mqtt::packet::ReceiveMaximum::new(recv_limit)
+                        .unwrap()
+                        .into(),
+                ),
+            }
+        }
+
+        Ok(to_add)
     }
 
     /// Notify that a timer has fired (Event-based API)
@@ -1260,7 +1286,7 @@ where
     /// * `is_client` - true for client mode, false for server mode
     fn initialize(&mut self, is_client: bool) {
         self.publish_send_max = None;
-        self.publish_recv_max = None;
+        self.publish_recv_max = self.publish_recv_max_limit;
         self.publish_send_count = 0;
         self.topic_alias_send = None;
         self.topic_alias_recv = None;
@@ -1397,9 +1423,8 @@ where
     ) -> Vec<GenericEvent<PacketIdType>> {
         info!("send connect v5.0: {packet}");
         let mut packet = packet;
-        match self.maximum_packet_size_property_to_add(packet.props()) {
-            Ok(Some(prop)) => packet.push_property(prop),
-            Ok(None) => {}
+        match self.capability_properties_to_add(packet.props()) {
+            Ok(props) => props.into_iter().for_each(|p| packet.push_property(p)),
             Err(e) => return vec![GenericEvent::NotifyError(e)],
         }
         if !self.validate_maximum_packet_size_send(packet.size()) {
@@ -1487,9 +1512,8 @@ where
         info!("send connack v5.0: {packet}");
         let mut packet = packet;
         if packet.reason_code() == ConnectReasonCode::Success {
-            match self.maximum_packet_size_property_to_add(packet.props()) {
-                Ok(Some(prop)) => packet.push_property(prop),
-                Ok(None) => {}
+            match self.capability_properties_to_add(packet.props()) {
+                Ok(props) => props.into_iter().for_each(|p| packet.push_property(p)),
                 Err(e) => return vec![GenericEvent::NotifyError(e)],
             }
         }
@@ -1805,6 +1829,7 @@ where
             return vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)];
         }
         let mut events = Vec::new();
+        self.publish_recv.remove(&packet.packet_id());
 
         events.push(GenericEvent::RequestSendPacket {
             packet: packet.into(),
@@ -1962,6 +1987,7 @@ where
             return vec![GenericEvent::NotifyError(MqttError::PacketNotAllowedToSend)];
         }
         let mut events = Vec::new();
+        self.publish_recv.remove(&packet.packet_id());
 
         events.push(GenericEvent::RequestSendPacket {
             packet: packet.into(),
@@ -2821,6 +2847,24 @@ where
             PacketData::Publish(arc) => {
                 match v3_1_1::GenericPublish::parse(flags, arc.clone()) {
                     Ok((packet, _consumed)) => {
+                        // Receive maximum (ConnectionOptions) check for QoS 1/2.
+                        // A QoS 2 re-delivery of an already tracked packet id is not
+                        // a new in-flight message.
+                        if packet.qos() != Qos::AtMostOnce {
+                            let packet_id = packet.packet_id().unwrap();
+                            if let Some(max) = self.publish_recv_max {
+                                if !self.publish_recv.contains(&packet_id)
+                                    && self.publish_recv.len() >= max as usize
+                                {
+                                    Self::handle_v3_1_1_error(
+                                        MqttError::ReceiveMaximumExceeded,
+                                        &mut events,
+                                    );
+                                    return events;
+                                }
+                            }
+                            self.publish_recv.insert(packet_id);
+                        }
                         match packet.qos() {
                             Qos::AtMostOnce => {
                                 events.extend(self.refresh_pingreq_recv());
@@ -2892,7 +2936,12 @@ where
                         let mut check_receive_maximum =
                             |events: &mut Vec<GenericEvent<PacketIdType>>| {
                                 if let Some(max) = self.publish_recv_max {
-                                    if self.publish_recv.len() >= max as usize {
+                                    // A re-delivery of an already tracked packet id is
+                                    // not a new in-flight message.
+                                    let packet_id = packet.packet_id().unwrap();
+                                    if !self.publish_recv.contains(&packet_id)
+                                        && self.publish_recv.len() >= max as usize
+                                    {
                                         self.handle_v5_0_error(
                                             MqttError::ReceiveMaximumExceeded,
                                             events,
@@ -3650,11 +3699,18 @@ where
     }
 
     fn handle_v5_0_error(&mut self, e: MqttError, events: &mut Vec<GenericEvent<PacketIdType>>) {
-        let disconnect = v5_0::Disconnect::builder()
-            .reason_code(e.into())
-            .build()
-            .unwrap();
-        events.extend(self.process_send_v5_0_disconnect(disconnect));
+        if self.status == ConnectionStatus::Connected {
+            let disconnect = v5_0::Disconnect::builder()
+                .reason_code(e.into())
+                .build()
+                .unwrap();
+            events.extend(self.process_send_v5_0_disconnect(disconnect));
+        } else {
+            // DISCONNECT is not allowed before the connection is established
+            // (e.g. a server before sending CONNACK). Just close.
+            self.cancel_timers(events);
+            events.push(GenericEvent::RequestClose);
+        }
         events.push(GenericEvent::NotifyError(e));
     }
 
