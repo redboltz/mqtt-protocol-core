@@ -1,3 +1,6 @@
+# 0.7.9
+* Fix extra invalid bytes cheking. #66
+
 # 0.7.8
 
 * Fix missing cleanup when an error occurs while sending a publish request. #63, #65

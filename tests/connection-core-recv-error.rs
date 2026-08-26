@@ -509,3 +509,146 @@ fn recv_error_malformed_packet_v5_0_connect_on_connected() {
         _ => panic!("Expected NotifyError event, got {:?}", events[1]),
     }
 }
+
+///////////////////////////////////////////////////////////////////////////////
+
+// Remaining Length boundary tests for v5.0 CONNACK / PUBACK / PUBREC / PUBREL / PUBCOMP
+//
+// - Remaining Length too short to hold the mandatory fields => MalformedPacket
+// - Remaining Length larger than what the packet format consumes (trailing
+//   bytes) => MalformedPacket
+
+fn assert_malformed(events: &[mqtt::connection::Event]) {
+    assert!(
+        events.iter().any(|e| matches!(
+            e,
+            mqtt::connection::Event::NotifyError(mqtt::result_code::MqttError::MalformedPacket)
+        )),
+        "Expected NotifyError(MalformedPacket), got {:?}",
+        events
+    );
+    assert!(
+        !events
+            .iter()
+            .any(|e| matches!(e, mqtt::connection::Event::NotifyPacketReceived(_))),
+        "Unexpected NotifyPacketReceived, got {:?}",
+        events
+    );
+}
+
+fn recv_v5_0_client(data: &[u8]) -> Vec<mqtt::connection::Event> {
+    let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
+    let mut cursor = mqtt::common::Cursor::new(data);
+    con.recv(&mut cursor)
+}
+
+fn recv_v5_0_client_connected(data: &[u8]) -> Vec<mqtt::connection::Event> {
+    let mut con = mqtt::Connection::<mqtt::role::Client>::new(mqtt::Version::V5_0);
+    common::v5_0_client_establish_connection(&mut con);
+    let mut cursor = mqtt::common::Cursor::new(data);
+    con.recv(&mut cursor)
+}
+
+#[test]
+fn recv_error_malformed_packet_v5_0_connack_remaining_length_1() {
+    common::init_tracing();
+    // RL=1: only ack flags, no reason code / property length
+    assert_malformed(&recv_v5_0_client(&[0x20, 0x01, 0x00]));
+}
+
+#[test]
+fn recv_error_malformed_packet_v5_0_connack_remaining_length_2() {
+    common::init_tracing();
+    // RL=2: ack flags + reason code, property length is missing (mandatory in v5.0)
+    assert_malformed(&recv_v5_0_client(&[0x20, 0x02, 0x00, 0x00]));
+}
+
+#[test]
+fn recv_error_malformed_packet_v5_0_connack_short_remaining_length_not_read_next_bytes() {
+    common::init_tracing();
+    // RL=1 followed by bytes that would make a valid CONNACK if read beyond RL
+    assert_malformed(&recv_v5_0_client(&[0x20, 0x01, 0x00, 0x00, 0x00]));
+}
+
+#[test]
+fn recv_error_malformed_packet_v5_0_connack_trailing_bytes() {
+    common::init_tracing();
+    // RL=4: ack flags, reason code, property length 0, and one extra byte
+    assert_malformed(&recv_v5_0_client(&[0x20, 0x04, 0x00, 0x00, 0x00, 0xFF]));
+}
+
+#[test]
+fn recv_error_malformed_packet_v5_0_puback_remaining_length_1() {
+    common::init_tracing();
+    assert_malformed(&recv_v5_0_client_connected(&[0x40, 0x01, 0x00]));
+}
+
+#[test]
+fn recv_error_malformed_packet_v5_0_puback_trailing_bytes() {
+    common::init_tracing();
+    // packet id, reason code, property length 0, one extra byte
+    assert_malformed(&recv_v5_0_client_connected(&[
+        0x40, 0x05, 0x00, 0x01, 0x00, 0x00, 0xFF,
+    ]));
+}
+
+#[test]
+fn recv_error_malformed_packet_v5_0_pubrec_remaining_length_1() {
+    common::init_tracing();
+    assert_malformed(&recv_v5_0_client_connected(&[0x50, 0x01, 0x00]));
+}
+
+#[test]
+fn recv_error_malformed_packet_v5_0_pubrec_trailing_bytes() {
+    common::init_tracing();
+    assert_malformed(&recv_v5_0_client_connected(&[
+        0x50, 0x05, 0x00, 0x01, 0x00, 0x00, 0xFF,
+    ]));
+}
+
+#[test]
+fn recv_error_malformed_packet_v5_0_pubrel_remaining_length_1() {
+    common::init_tracing();
+    assert_malformed(&recv_v5_0_client_connected(&[0x62, 0x01, 0x00]));
+}
+
+#[test]
+fn recv_error_malformed_packet_v5_0_pubrel_trailing_bytes() {
+    common::init_tracing();
+    assert_malformed(&recv_v5_0_client_connected(&[
+        0x62, 0x05, 0x00, 0x01, 0x00, 0x00, 0xFF,
+    ]));
+}
+
+#[test]
+fn recv_error_malformed_packet_v5_0_pubcomp_remaining_length_1() {
+    common::init_tracing();
+    assert_malformed(&recv_v5_0_client_connected(&[0x70, 0x01, 0x00]));
+}
+
+#[test]
+fn recv_error_malformed_packet_v5_0_pubcomp_trailing_bytes() {
+    common::init_tracing();
+    assert_malformed(&recv_v5_0_client_connected(&[
+        0x70, 0x05, 0x00, 0x01, 0x00, 0x00, 0xFF,
+    ]));
+}
+
+#[test]
+fn recv_success_v5_0_pubrel_remaining_length_2_and_3() {
+    common::init_tracing();
+    // RL=2 (packet id only) and RL=3 (packet id + reason code) are valid per spec
+    for data in [
+        &[0x62, 0x02, 0x00, 0x01][..],
+        &[0x62, 0x03, 0x00, 0x01, 0x00][..],
+    ] {
+        let events = recv_v5_0_client_connected(data);
+        assert!(
+            events
+                .iter()
+                .any(|e| matches!(e, mqtt::connection::Event::NotifyPacketReceived(_))),
+            "Expected NotifyPacketReceived, got {:?}",
+            events
+        );
+    }
+}

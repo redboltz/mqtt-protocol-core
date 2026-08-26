@@ -76,6 +76,24 @@ impl RawPacket {
     pub fn remaining_length(&self) -> u32 {
         self.data.len()
     }
+
+    /// Parse the packet body and require that the whole body is consumed.
+    ///
+    /// The body is exactly the Remaining Length bytes of the packet. If the
+    /// parser consumes fewer bytes than that, the packet carries trailing
+    /// bytes that are not part of the packet format, which is a Malformed
+    /// Packet.
+    pub fn parse_exact<T>(
+        &self,
+        parse: impl FnOnce(&[u8]) -> Result<(T, usize), MqttError>,
+    ) -> Result<T, MqttError> {
+        let data = self.data_as_slice();
+        let (packet, consumed) = parse(data)?;
+        if consumed != data.len() {
+            return Err(MqttError::MalformedPacket);
+        }
+        Ok(packet)
+    }
 }
 
 /// Enum representing packet construction results
