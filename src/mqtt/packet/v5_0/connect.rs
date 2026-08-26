@@ -178,6 +178,16 @@ pub struct Connect {
 }
 
 impl Connect {
+    /// Append a property, keeping the encoded lengths consistent
+    pub(crate) fn push_property(&mut self, prop: Property) {
+        let old_size = self.property_length.size() + self.props.size();
+        self.props.push(prop);
+        self.property_length = VariableByteInteger::from_u32(self.props.size() as u32).unwrap();
+        let new_size = self.property_length.size() + self.props.size();
+        let remaining = self.remaining_length.to_u32() as usize + new_size - old_size;
+        self.remaining_length = VariableByteInteger::from_u32(remaining as u32).unwrap();
+    }
+
     /// Creates a new builder for constructing a CONNECT packet
     ///
     /// # Returns

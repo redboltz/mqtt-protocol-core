@@ -36,6 +36,9 @@ pub use self::event::Event;
 pub use self::event::GenericEvent;
 pub use self::event::TimerKind;
 
+mod options;
+pub use self::options::{ConnectionOptions, MQTT_PACKET_SIZE_NO_LIMIT};
+
 mod packet_builder;
 pub use self::packet_builder::PacketBuildResult;
 pub use self::packet_builder::PacketBuilder;
