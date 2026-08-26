@@ -68,6 +68,22 @@ use crate::mqtt::result_code::{
 /// 1 (fixed header) + 4 (remaining length) + 128^4 (maximum remaining length value)
 const MQTT_PACKET_SIZE_NO_LIMIT: u32 = 1 + 4 + 128 * 128 * 128 * 128;
 
+/// Parse a packet body and require that the whole body is consumed.
+///
+/// `data` is exactly the Remaining Length bytes of the packet. If the parser
+/// consumes fewer bytes than that, the packet carries trailing bytes that are
+/// not part of the packet format, which is a Malformed Packet.
+fn parse_exact<T>(
+    data: &[u8],
+    parse: impl FnOnce(&[u8]) -> Result<(T, usize), MqttError>,
+) -> Result<T, MqttError> {
+    let (packet, consumed) = parse(data)?;
+    if consumed != data.len() {
+        return Err(MqttError::MalformedPacket);
+    }
+    Ok(packet)
+}
+
 /// Calculate total packet size from remaining length
 ///
 /// The total packet size consists of:
@@ -2558,8 +2574,8 @@ where
             return events;
         }
         self.status = ConnectionStatus::Connecting;
-        match v3_1_1::Connect::parse(raw_packet.data_as_slice()) {
-            Ok((packet, _)) => {
+        match parse_exact(raw_packet.data_as_slice(), v3_1_1::Connect::parse) {
+            Ok(packet) => {
                 self.initialize(false);
                 if packet.keep_alive() > 0 {
                     self.pingreq_recv_timeout_ms = (packet.keep_alive() as u64) * 1000 * 3 / 2;
@@ -2605,8 +2621,8 @@ where
             return events;
         }
         self.status = ConnectionStatus::Connecting;
-        match v5_0::Connect::parse(raw_packet.data_as_slice()) {
-            Ok((packet, _)) => {
+        match parse_exact(raw_packet.data_as_slice(), v5_0::Connect::parse) {
+            Ok(packet) => {
                 self.initialize(false);
                 if packet.keep_alive() > 0 {
                     self.pingreq_recv_timeout_ms = (packet.keep_alive() as u64) * 1000 * 3 / 2;
@@ -2663,8 +2679,8 @@ where
     ) -> Vec<GenericEvent<PacketIdType>> {
         let mut events = Vec::new();
 
-        match v3_1_1::Connack::parse(raw_packet.data_as_slice()) {
-            Ok((packet, _consumed)) => {
+        match parse_exact(raw_packet.data_as_slice(), v3_1_1::Connack::parse) {
+            Ok(packet) => {
                 if packet.return_code() == ConnectReturnCode::Accepted {
                     self.status = ConnectionStatus::Connected;
                     if packet.session_present() {
@@ -2691,8 +2707,8 @@ where
     ) -> Vec<GenericEvent<PacketIdType>> {
         let mut events = Vec::new();
 
-        match v5_0::Connack::parse(raw_packet.data_as_slice()) {
-            Ok((packet, _consumed)) => {
+        match parse_exact(raw_packet.data_as_slice(), v5_0::Connack::parse) {
+            Ok(packet) => {
                 if packet.reason_code() == ConnectReasonCode::Success {
                     self.status = ConnectionStatus::Connected;
 
@@ -3004,8 +3020,11 @@ where
     ) -> Vec<GenericEvent<PacketIdType>> {
         let mut events = Vec::new();
 
-        match v3_1_1::GenericPuback::<PacketIdType>::parse(raw_packet.data_as_slice()) {
-            Ok((packet, _)) => {
+        match parse_exact(
+            raw_packet.data_as_slice(),
+            v3_1_1::GenericPuback::<PacketIdType>::parse,
+        ) {
+            Ok(packet) => {
                 let packet_id = packet.packet_id();
                 if self.pid_puback.remove(&packet_id) {
                     self.store.erase(ResponsePacket::V3_1_1Puback, packet_id);
@@ -3033,8 +3052,11 @@ where
     ) -> Vec<GenericEvent<PacketIdType>> {
         let mut events = Vec::new();
 
-        match v5_0::GenericPuback::<PacketIdType>::parse(raw_packet.data_as_slice()) {
-            Ok((packet, _)) => {
+        match parse_exact(
+            raw_packet.data_as_slice(),
+            v5_0::GenericPuback::<PacketIdType>::parse,
+        ) {
+            Ok(packet) => {
                 let packet_id = packet.packet_id();
                 if self.pid_puback.remove(&packet_id) {
                     self.store.erase(ResponsePacket::V5_0Puback, packet_id);
@@ -3065,8 +3087,11 @@ where
     ) -> Vec<GenericEvent<PacketIdType>> {
         let mut events = Vec::new();
 
-        match v3_1_1::GenericPubrec::<PacketIdType>::parse(raw_packet.data_as_slice()) {
-            Ok((packet, _)) => {
+        match parse_exact(
+            raw_packet.data_as_slice(),
+            v3_1_1::GenericPubrec::<PacketIdType>::parse,
+        ) {
+            Ok(packet) => {
                 let packet_id = packet.packet_id();
                 if self.pid_pubrec.remove(&packet_id) {
                     self.store.erase(ResponsePacket::V3_1_1Pubrec, packet_id);
@@ -3097,8 +3122,11 @@ where
     ) -> Vec<GenericEvent<PacketIdType>> {
         let mut events = Vec::new();
 
-        match v5_0::GenericPubrec::<PacketIdType>::parse(raw_packet.data_as_slice()) {
-            Ok((packet, _)) => {
+        match parse_exact(
+            raw_packet.data_as_slice(),
+            v5_0::GenericPubrec::<PacketIdType>::parse,
+        ) {
+            Ok(packet) => {
                 let packet_id = packet.packet_id();
                 if self.pid_pubrec.remove(&packet_id) {
                     self.store.erase(ResponsePacket::V5_0Pubrec, packet_id);
@@ -3143,8 +3171,11 @@ where
     ) -> Vec<GenericEvent<PacketIdType>> {
         let mut events = Vec::new();
 
-        match v3_1_1::GenericPubrel::<PacketIdType>::parse(raw_packet.data_as_slice()) {
-            Ok((packet, _)) => {
+        match parse_exact(
+            raw_packet.data_as_slice(),
+            v3_1_1::GenericPubrel::<PacketIdType>::parse,
+        ) {
+            Ok(packet) => {
                 let packet_id = packet.packet_id();
                 self.qos2_publish_handled.remove(&packet_id);
                 if self.auto_pub_response && self.status == ConnectionStatus::Connected {
@@ -3171,8 +3202,11 @@ where
     ) -> Vec<GenericEvent<PacketIdType>> {
         let mut events = Vec::new();
 
-        match v5_0::GenericPubrel::<PacketIdType>::parse(raw_packet.data_as_slice()) {
-            Ok((packet, _)) => {
+        match parse_exact(
+            raw_packet.data_as_slice(),
+            v5_0::GenericPubrel::<PacketIdType>::parse,
+        ) {
+            Ok(packet) => {
                 let packet_id = packet.packet_id();
                 let removed = self.qos2_publish_handled.remove(&packet_id);
                 if self.auto_pub_response && self.status == ConnectionStatus::Connected {
@@ -3208,8 +3242,11 @@ where
     ) -> Vec<GenericEvent<PacketIdType>> {
         let mut events = Vec::new();
 
-        match v3_1_1::GenericPubcomp::<PacketIdType>::parse(raw_packet.data_as_slice()) {
-            Ok((packet, _)) => {
+        match parse_exact(
+            raw_packet.data_as_slice(),
+            v3_1_1::GenericPubcomp::<PacketIdType>::parse,
+        ) {
+            Ok(packet) => {
                 let packet_id = packet.packet_id();
                 if self.pid_pubcomp.remove(&packet_id) {
                     self.store.erase(ResponsePacket::V3_1_1Pubcomp, packet_id);
@@ -3237,8 +3274,11 @@ where
     ) -> Vec<GenericEvent<PacketIdType>> {
         let mut events = Vec::new();
 
-        match v5_0::GenericPubcomp::<PacketIdType>::parse(raw_packet.data_as_slice()) {
-            Ok((packet, _)) => {
+        match parse_exact(
+            raw_packet.data_as_slice(),
+            v5_0::GenericPubcomp::<PacketIdType>::parse,
+        ) {
+            Ok(packet) => {
                 let packet_id = packet.packet_id();
                 if self.pid_pubcomp.remove(&packet_id) {
                     self.store.erase(ResponsePacket::V5_0Pubcomp, packet_id);
@@ -3269,8 +3309,11 @@ where
     ) -> Vec<GenericEvent<PacketIdType>> {
         let mut events = Vec::new();
 
-        match v3_1_1::GenericSubscribe::<PacketIdType>::parse(raw_packet.data_as_slice()) {
-            Ok((packet, _)) => {
+        match parse_exact(
+            raw_packet.data_as_slice(),
+            v3_1_1::GenericSubscribe::<PacketIdType>::parse,
+        ) {
+            Ok(packet) => {
                 events.extend(self.refresh_pingreq_recv());
                 events.push(GenericEvent::NotifyPacketReceived(packet.into()));
             }
@@ -3288,8 +3331,11 @@ where
     ) -> Vec<GenericEvent<PacketIdType>> {
         let mut events = Vec::new();
 
-        match v5_0::GenericSubscribe::<PacketIdType>::parse(raw_packet.data_as_slice()) {
-            Ok((packet, _)) => {
+        match parse_exact(
+            raw_packet.data_as_slice(),
+            v5_0::GenericSubscribe::<PacketIdType>::parse,
+        ) {
+            Ok(packet) => {
                 events.extend(self.refresh_pingreq_recv());
                 events.push(GenericEvent::NotifyPacketReceived(packet.into()));
             }
@@ -3307,8 +3353,11 @@ where
     ) -> Vec<GenericEvent<PacketIdType>> {
         let mut events = Vec::new();
 
-        match v3_1_1::GenericSuback::<PacketIdType>::parse(raw_packet.data_as_slice()) {
-            Ok((packet, _)) => {
+        match parse_exact(
+            raw_packet.data_as_slice(),
+            v3_1_1::GenericSuback::<PacketIdType>::parse,
+        ) {
+            Ok(packet) => {
                 let packet_id = packet.packet_id();
                 if self.pid_suback.remove(&packet_id) {
                     if self.pid_man.is_used_id(packet_id) {
@@ -3335,8 +3384,11 @@ where
     ) -> Vec<GenericEvent<PacketIdType>> {
         let mut events = Vec::new();
 
-        match v5_0::GenericSuback::<PacketIdType>::parse(raw_packet.data_as_slice()) {
-            Ok((packet, _)) => {
+        match parse_exact(
+            raw_packet.data_as_slice(),
+            v5_0::GenericSuback::<PacketIdType>::parse,
+        ) {
+            Ok(packet) => {
                 let packet_id = packet.packet_id();
                 if self.pid_suback.remove(&packet_id) {
                     if self.pid_man.is_used_id(packet_id) {
@@ -3363,8 +3415,11 @@ where
     ) -> Vec<GenericEvent<PacketIdType>> {
         let mut events = Vec::new();
 
-        match v3_1_1::GenericUnsubscribe::<PacketIdType>::parse(raw_packet.data_as_slice()) {
-            Ok((packet, _)) => {
+        match parse_exact(
+            raw_packet.data_as_slice(),
+            v3_1_1::GenericUnsubscribe::<PacketIdType>::parse,
+        ) {
+            Ok(packet) => {
                 events.extend(self.refresh_pingreq_recv());
                 events.push(GenericEvent::NotifyPacketReceived(packet.into()));
             }
@@ -3382,8 +3437,11 @@ where
     ) -> Vec<GenericEvent<PacketIdType>> {
         let mut events = Vec::new();
 
-        match v5_0::GenericUnsubscribe::<PacketIdType>::parse(raw_packet.data_as_slice()) {
-            Ok((packet, _)) => {
+        match parse_exact(
+            raw_packet.data_as_slice(),
+            v5_0::GenericUnsubscribe::<PacketIdType>::parse,
+        ) {
+            Ok(packet) => {
                 events.extend(self.refresh_pingreq_recv());
                 events.push(GenericEvent::NotifyPacketReceived(packet.into()));
             }
@@ -3401,8 +3459,11 @@ where
     ) -> Vec<GenericEvent<PacketIdType>> {
         let mut events = Vec::new();
 
-        match v3_1_1::GenericUnsuback::<PacketIdType>::parse(raw_packet.data_as_slice()) {
-            Ok((packet, _)) => {
+        match parse_exact(
+            raw_packet.data_as_slice(),
+            v3_1_1::GenericUnsuback::<PacketIdType>::parse,
+        ) {
+            Ok(packet) => {
                 let packet_id = packet.packet_id();
                 if self.pid_unsuback.remove(&packet_id) {
                     if self.pid_man.is_used_id(packet_id) {
@@ -3429,8 +3490,11 @@ where
     ) -> Vec<GenericEvent<PacketIdType>> {
         let mut events = Vec::new();
 
-        match v5_0::GenericUnsuback::<PacketIdType>::parse(raw_packet.data_as_slice()) {
-            Ok((packet, _)) => {
+        match parse_exact(
+            raw_packet.data_as_slice(),
+            v5_0::GenericUnsuback::<PacketIdType>::parse,
+        ) {
+            Ok(packet) => {
                 let packet_id = packet.packet_id();
                 if self.pid_unsuback.remove(&packet_id) {
                     if self.pid_man.is_used_id(packet_id) {
@@ -3457,8 +3521,8 @@ where
     ) -> Vec<GenericEvent<PacketIdType>> {
         let mut events = Vec::new();
 
-        match v3_1_1::Pingreq::parse(raw_packet.data_as_slice()) {
-            Ok((packet, _)) => {
+        match parse_exact(raw_packet.data_as_slice(), v3_1_1::Pingreq::parse) {
+            Ok(packet) => {
                 if (Role::IS_SERVER || Role::IS_ANY)
                     && !self.is_client
                     && self.auto_ping_response
@@ -3484,8 +3548,8 @@ where
     ) -> Vec<GenericEvent<PacketIdType>> {
         let mut events = Vec::new();
 
-        match v5_0::Pingreq::parse(raw_packet.data_as_slice()) {
-            Ok((packet, _)) => {
+        match parse_exact(raw_packet.data_as_slice(), v5_0::Pingreq::parse) {
+            Ok(packet) => {
                 if (Role::IS_SERVER || Role::IS_ANY)
                     && !self.is_client
                     && self.auto_ping_response
@@ -3511,8 +3575,8 @@ where
     ) -> Vec<GenericEvent<PacketIdType>> {
         let mut events = Vec::new();
 
-        match v3_1_1::Pingresp::parse(raw_packet.data_as_slice()) {
-            Ok((packet, _)) => {
+        match parse_exact(raw_packet.data_as_slice(), v3_1_1::Pingresp::parse) {
+            Ok(packet) => {
                 if self.pingresp_recv_set {
                     self.pingresp_recv_set = false;
                     events.push(GenericEvent::RequestTimerCancel(TimerKind::PingrespRecv));
@@ -3533,8 +3597,8 @@ where
     ) -> Vec<GenericEvent<PacketIdType>> {
         let mut events = Vec::new();
 
-        match v5_0::Pingresp::parse(raw_packet.data_as_slice()) {
-            Ok((packet, _)) => {
+        match parse_exact(raw_packet.data_as_slice(), v5_0::Pingresp::parse) {
+            Ok(packet) => {
                 if self.pingresp_recv_set {
                     self.pingresp_recv_set = false;
                     events.push(GenericEvent::RequestTimerCancel(TimerKind::PingrespRecv));
@@ -3555,8 +3619,8 @@ where
     ) -> Vec<GenericEvent<PacketIdType>> {
         let mut events = Vec::new();
 
-        match v3_1_1::Disconnect::parse(raw_packet.data_as_slice()) {
-            Ok((packet, _)) => {
+        match parse_exact(raw_packet.data_as_slice(), v3_1_1::Disconnect::parse) {
+            Ok(packet) => {
                 self.cancel_timers(&mut events);
                 events.push(GenericEvent::NotifyPacketReceived(packet.into()));
             }
@@ -3574,8 +3638,8 @@ where
     ) -> Vec<GenericEvent<PacketIdType>> {
         let mut events = Vec::new();
 
-        match v5_0::Disconnect::parse(raw_packet.data_as_slice()) {
-            Ok((packet, _)) => {
+        match parse_exact(raw_packet.data_as_slice(), v5_0::Disconnect::parse) {
+            Ok(packet) => {
                 self.cancel_timers(&mut events);
                 events.push(GenericEvent::NotifyPacketReceived(packet.into()));
             }
@@ -3590,8 +3654,8 @@ where
     fn process_recv_v5_0_auth(&mut self, raw_packet: RawPacket) -> Vec<GenericEvent<PacketIdType>> {
         let mut events = Vec::new();
 
-        match v5_0::Auth::parse(raw_packet.data_as_slice()) {
-            Ok((packet, _)) => {
+        match parse_exact(raw_packet.data_as_slice(), v5_0::Auth::parse) {
+            Ok(packet) => {
                 events.extend(self.refresh_pingreq_recv());
                 events.push(GenericEvent::NotifyPacketReceived(packet.into()));
             }
